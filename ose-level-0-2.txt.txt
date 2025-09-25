@@ -1,0 +1,96 @@
+Level 0 Demihumans (Optional Rule)
+
+Optionally, 1-in-6 level 0 characters is a
+demihuman. Roll 1d4: 1. dwarf, 2. elf, 3.
+gnome, 4. halfling.
+
+All demihumans speak additional native
+languages and have a 2-in-6 chance of
+hearing noises when listening at a door.
+Each race also has its own bons:
+
+Dwarf: Infravision to 60'. 2-in-6 chance
+of detecting room traps when searching.
+
+Elf: Infravision to 60'. Immunity to
+ghoul paralysis.
+
+Gnome: Infravision to 90’. +2 AC when
+attacked by large opponents.
+
+Halfling: +1 to missile attack rolls. +2
+AC when attacked by large opponents.
+
+EXPERIENCE POINTS
+AND ADVANCEMENT
+
+After gaining XP on an adventure, a level
+0 character becomes a Ist level adventur-
+er. This is handled as follows.
+
+1. Choose a Class
+
+Choose a character class that the level 0
+character graduates into, bearing in mind
+the minimum ability score requirements
+of some classes. Class selection can be
+based on the character's ability scores,
+background, or deeds at level 0.
+
+Demihuman characters: May select the
+equivalent demihuman class.
+
+2. Roll Hit Points
+
+Roll the Hit Die type for the chosen class
+and apply the character's CON modifier.
+If this number is higher than the charac-
+ter’s hit points rolled at level 0, this be-
+comes their new hp total. Otherwise, the
+character keeps the hp rolled at level 0.
+
+Re-rolling 1s and 2s: The referee may
+allow the player to re-roll 1s and 2s.
+
+Funnel Adventures
+
+Funnel adventures were popularised by
+the Dungeon Crawl Classics RPG. In a
+funnel, a large group of level 0 charac-
+ters is whittled down to a small number
+of survivors, who then go on to become
+full 1st level PCs. A funnel can be a fun
+way to start a campaign and provides a
+compelling backstory of the deeds that
+led PCs to a life of adventure together,
+
+1. Roll characters: Players roll up a
+group of 10-20 level 0 characters.
+These are everyday folk whose village
+is threatened by some evil force.
+
+2. Embark on adventure: The charac-
+ters venture forth into peril to save
+their village. Any normal adventure
+suitable for 1st level characters can
+be used (for example, the adventure
+in this issue—see p26).
+
+3. Play: During the adventure, each
+player controls 3-5 of the characters.
+Lacking the skills of true adventur-
+ers, they must rely on their collective
+wits and creativity to overcome the
+odds. It is likely that some individu-
+als will have to sacrifice their lives for
+the good of the group.
+
+4. Survivors: Of the characters who
+survive the adventure, some are in-
+spired to take up the life of an adven-
+turer. Each player picks one of the
+survivors as their PC for the contin-
+uing campaign, choosing a character
+class and advancing them to Ist level
+as discussed in this article.
+

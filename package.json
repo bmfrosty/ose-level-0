@@ -1,0 +1,22 @@
+{
+  "name": "ose-level-0-generator",
+  "version": "1.0.0",
+  "description": "OSE 0-Level Character Generator with PDF output",
+  "main": "node-pdf-generator.js",
+  "scripts": {
+    "generate": "node node-pdf-generator.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "pdfkit": "^0.14.0"
+  },
+  "keywords": [
+    "ose",
+    "old-school-essentials",
+    "character-generator",
+    "pdf",
+    "rpg"
+  ],
+  "author": "OSE Character Generator",
+  "license": "MIT"
+}
