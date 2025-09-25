@@ -145,35 +145,38 @@ class CanvasCharacterSheet {
         const dexMod = character.results.find(r => r.ability === "DEX").modifier;
         const strMod = character.results.find(r => r.ability === "STR").modifier;
         
+        // Combat boxes - evenly sized and spaced like saving throws (57.5pt each to fill 230pt width)
+        const combatBoxWidth = 57.5;
+        
         // MAX HP box with perfect centering
         this.setFont('Arial', 8, 'bold');
-        this.drawRect(72, 185, 45, 30, null, '#000000');
-        this.drawCenteredText("MAX HP", 72, 185, 45, 12);
+        this.drawRect(72, 185, combatBoxWidth, 30, null, '#000000');
+        this.drawCenteredText("MAX HP", 72, 185, combatBoxWidth, 12);
         this.setFont('Arial', 14, 'normal');
         const hpText = finalHP.toString();
-        this.drawCenteredText(hpText, 72, 197, 45, 18);
+        this.drawCenteredText(hpText, 72, 197, combatBoxWidth, 18);
         
         // CUR HP box with perfect centering (empty for player to fill in)
         this.setFont('Arial', 8, 'bold');
-        this.drawRect(127, 185, 45, 30, null, '#000000');
-        this.drawCenteredText("CUR HP", 127, 185, 45, 12);
+        this.drawRect(72 + combatBoxWidth, 185, combatBoxWidth, 30, null, '#000000');
+        this.drawCenteredText("CUR HP", 72 + combatBoxWidth, 185, combatBoxWidth, 12);
         // No number - leave empty for player to track current HP
         
         // INIT box with perfect centering
-        this.setFont('Arial', 10, 'bold');
-        this.drawRect(182, 185, 45, 30, null, '#000000');
-        this.drawCenteredText("INIT", 182, 185, 45, 12);
+        this.setFont('Arial', 8, 'bold');
+        this.drawRect(72 + (combatBoxWidth * 2), 185, combatBoxWidth, 30, null, '#000000');
+        this.drawCenteredText("INIT", 72 + (combatBoxWidth * 2), 185, combatBoxWidth, 12);
         this.setFont('Arial', 12, 'normal');
         const initText = dexMod >= 0 ? `+${dexMod}` : dexMod.toString();
-        this.drawCenteredText(initText, 182, 197, 45, 18);
+        this.drawCenteredText(initText, 72 + (combatBoxWidth * 2), 197, combatBoxWidth, 18);
         
         // AC box with perfect centering
-        this.setFont('Arial', 10, 'bold');
-        this.drawRect(237, 185, 65, 30, null, '#000000');
-        this.drawCenteredText("AC", 237, 185, 65, 12);
+        this.setFont('Arial', 8, 'bold');
+        this.drawRect(72 + (combatBoxWidth * 3), 185, combatBoxWidth, 30, null, '#000000');
+        this.drawCenteredText("AC", 72 + (combatBoxWidth * 3), 185, combatBoxWidth, 12);
         this.setFont('Arial', 16, 'normal');
         const acText = character.armorClass.toString();
-        this.drawCenteredText(acText, 237, 197, 65, 18);
+        this.drawCenteredText(acText, 72 + (combatBoxWidth * 3), 197, combatBoxWidth, 18);
         
         // ABILITY SCORES section (moved down to avoid combat overlap)
         this.setFont('Arial', 10, 'bold');
@@ -357,15 +360,15 @@ function generateCanvasPDF() {
     // Generate character sheet on canvas
     canvasGen.generateCharacterSheet(character);
     
-    // Create PDF with embedded image
+    // Create PDF with embedded image and Flate compression
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF('portrait', 'pt', 'letter');
     
     // Get image data from canvas
     const imgData = canvasGen.toDataURL('image/png', 1.0);
     
-    // Add image to PDF (full page)
-    doc.addImage(imgData, 'PNG', 0, 0, 612, 792);
+    // Add image to PDF with Flate compression (full page)
+    doc.addImage(imgData, 'PNG', 0, 0, 612, 792, '', 'FAST');
     
     // Save the PDF
     const characterName = character.background.profession.replace(/[^a-zA-Z0-9]/g, '_');
@@ -402,8 +405,8 @@ function generateCanvasBulkPDF() {
         // Get image data from canvas
         const imgData = canvasGen.toDataURL('image/png', 1.0);
         
-        // Add image to PDF (full page)
-        doc.addImage(imgData, 'PNG', 0, 0, 612, 792);
+        // Add image to PDF with Flate compression (full page)
+        doc.addImage(imgData, 'PNG', 0, 0, 612, 792, '', 'FAST');
     }
     
     // Save the PDF
