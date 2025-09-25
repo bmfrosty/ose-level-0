@@ -47,6 +47,37 @@ function generate0LevelCharacter() {
     const dexModifier = results.find(r => r.ability === "DEX").modifier;
     const hitPoints = calculateHitPoints(conModifier);
     
+    // If character has less than 1 HP, they don't become an adventurer - reroll automatically
+    if (hitPoints.total < 1) {
+        generate0LevelCharacter();
+        return;
+    }
+    
+    // Check if character has at least one ability score of 9 or above
+    const hasHighAbility = results.some(r => r.roll >= 9);
+    if (!hasHighAbility) {
+        generate0LevelCharacter();
+        return;
+    }
+    
+    // Check "Tough Guys" mode requirements if enabled
+    const toughGuysEnabled = document.getElementById('toughGuys').checked;
+    if (toughGuysEnabled) {
+        // Must have at least one of STR, DEX, INT, WIS at 13 or above
+        const hasToughAbility = results.some(r => 
+            (r.ability === "STR" || r.ability === "DEX" || r.ability === "INT" || r.ability === "WIS") && 
+            r.roll >= 13
+        );
+        
+        // Must have at least 2 HP
+        const hasEnoughHP = hitPoints.total >= 2;
+        
+        if (!hasToughAbility || !hasEnoughHP) {
+            generate0LevelCharacter();
+            return;
+        }
+    }
+    
     // Get background based on hit points (capped at 4, minimum 1)
     const background = getBackgroundByHitPoints(hitPoints.total);
     const armorClass = calculateArmorClass(background.armor, dexModifier);

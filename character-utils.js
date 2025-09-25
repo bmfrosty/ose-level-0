@@ -60,7 +60,7 @@ function generateSingleCharacter() {
     const wisMin = parseInt(document.getElementById('wisMin').value) || 3;
     const chaMin = parseInt(document.getElementById('chaMin').value) || 3;
 
-    // Keep rolling until we get valid scores
+    // Keep rolling until we get valid scores AND at least 1 HP
     do {
         total = 0;
         results = [];
@@ -87,9 +87,43 @@ function generateSingleCharacter() {
             if (abilities[i] === "WIS" && roll < wisMin) isValidArray = false;
             if (abilities[i] === "CHA" && roll < chaMin) isValidArray = false;
         }
+
+        // If ability scores are valid, check hit points and high ability requirement
+        if (isValidArray) {
+            const conModifier = results.find(r => r.ability === "CON").modifier;
+            const hitPoints = calculateHitPoints(conModifier);
+            
+            // If character has less than 1 HP, they don't become an adventurer - reroll
+            if (hitPoints.total < 1) {
+                isValidArray = false;
+            }
+            
+            // Check if character has at least one ability score of 9 or above
+            const hasHighAbility = results.some(r => r.roll >= 9);
+            if (!hasHighAbility) {
+                isValidArray = false;
+            }
+            
+            // Check "Tough Guys" mode requirements if enabled
+            const toughGuysEnabled = document.getElementById('toughGuys') && document.getElementById('toughGuys').checked;
+            if (toughGuysEnabled) {
+                // Must have at least one of STR, DEX, INT, WIS at 13 or above
+                const hasToughAbility = results.some(r => 
+                    (r.ability === "STR" || r.ability === "DEX" || r.ability === "INT" || r.ability === "WIS") && 
+                    r.roll >= 13
+                );
+                
+                // Must have at least 2 HP
+                const hasEnoughHP = hitPoints.total >= 2;
+                
+                if (!hasToughAbility || !hasEnoughHP) {
+                    isValidArray = false;
+                }
+            }
+        }
     } while (!isValidArray);
 
-    // Generate 0-level character details
+    // Generate 0-level character details (we know HP is at least 1 now)
     const conModifier = results.find(r => r.ability === "CON").modifier;
     const dexModifier = results.find(r => r.ability === "DEX").modifier;
     const hitPoints = calculateHitPoints(conModifier);
