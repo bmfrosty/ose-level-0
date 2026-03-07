@@ -10,6 +10,9 @@ yarn-error.log*
 # Generated images (testing/debugging)
 *.png
 
+# Generated JSON files
+OSE_0Level_*.json
+
 # Text extraction files (keep specific ones, ignore others)
 # Keep: ose-level-0.txt, ose-level-0-*.txt.txt, get-new-pdf.sh
 # Ignore other temporary text files

@@ -88,8 +88,8 @@ while [[ $# -gt 0 ]]; do
             ;;
         -f|--format)
             FORMAT=$(echo "$2" | tr '[:upper:]' '[:lower:]')
-            if [[ "$FORMAT" != "pdf" && "$FORMAT" != "png" ]]; then
-                echo "Error: Format must be 'pdf' or 'png'"
+            if [[ "$FORMAT" != "pdf" && "$FORMAT" != "png" && "$FORMAT" != "json" ]]; then
+                echo "Error: Format must be 'pdf', 'png', or 'json'"
                 exit 1
             fi
             shift 2
@@ -199,13 +199,36 @@ const outputFile = process.env.OUTPUT;
             const { CanvasCharacterSheet } = require('./canvas-sheet-renderer.js');
             let filename = outputFile || CanvasCharacterSheet.generateSingleCharacterFilename(character);
             
-            // Handle PNG format
+            // Handle different formats
             if (format === 'png') {
                 filename = filename.replace('.pdf', '.png');
                 await createCanvasPNG(character, filename);
+            } else if (format === 'json') {
+                filename = filename.replace('.pdf', '.json');
+                fs.writeFileSync(filename, JSON.stringify(character, null, 2));
             } else {
                 await createCanvasPDF(character, filename);
             }
+            console.log(`Success! Generated: ${filename}`);
+        } else if (format === 'json') {
+            // Generate multiple characters as JSON array
+            console.log(`Generating ${count} characters...`);
+            const characters = [];
+            
+            for (let i = 0; i < count; i++) {
+                console.log(`  Generating character ${i + 1}/${count}...`);
+                const character = generateSingleCharacterNode(options);
+                characters.push(character);
+            }
+            
+            // Use shared filename generator
+            const { CanvasCharacterSheet } = require('./canvas-sheet-renderer.js');
+            const forceRace = process.env.FORCE_RACE || '';
+            let filename = outputFile || CanvasCharacterSheet.generateMultiCharacterFilename(forceRace);
+            filename = filename.replace('.pdf', '.json');
+            
+            // Write as JSON array
+            fs.writeFileSync(filename, JSON.stringify(characters, null, 2));
             console.log(`Success! Generated: ${filename}`);
         } else {
             // Generate 4 characters

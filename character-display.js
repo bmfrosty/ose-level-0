@@ -1,4 +1,4 @@
-t// Character display functions
+// Character display functions
 
 function display0LevelCharacter(results, total, background, hitPoints, armorClass, race, name, startingGold) {
     // Get the minimum values from the input fields
@@ -9,69 +9,146 @@ function display0LevelCharacter(results, total, background, hitPoints, armorClas
     const wisMin = parseInt(document.getElementById('wisMin').value) || 3;
     const chaMin = parseInt(document.getElementById('chaMin').value) || 3;
 
-    // All characters passed to this function are guaranteed to be valid adventurers
-    // due to automatic rerolling in main-generator.js (lines 48-51: rerolls if hitPoints.total < 1)
+    // Check if Advanced mode is enabled
+    const advancedCheckbox = document.getElementById('advanced');
+    const isAdvanced = advancedCheckbox ? advancedCheckbox.checked : false;
     
-    // Build HTML for successful adventurer character
+    // Build HTML for successful adventurer character - PDF-like layout (balanced for printing)
     let resultHtml = `
-        <h2 style='text-align: center;'>0-Level Character</h2>
-        <div style='text-align: center; margin-bottom: 20px;'>
-            <h3>Name: ${name || 'Unknown'}</h3>
-            <h3>Race: ${race || 'Human'}</h3>
-            <h3>Occupation: ${background.profession}</h3>
-            <h3>Hit Points: ${Math.max(1, hitPoints.total)}</h3>
-            <p>Hit Point Roll: ${hitPoints.roll} + CON modifier (${results.find(r => r.ability === "CON").modifier}) = ${hitPoints.total}${hitPoints.total < 1 ? ' (minimum 1)' : ''}</p>
-        </div>
-    `;
-
-    // Build HTML for the results table with modifier effects
-    resultHtml += "<table><tr><th>Ability</th><th>Roll</th><th>Modifier</th><th>Effects</th></tr>";
+        <div style='max-width: 800px; margin: 12px auto; text-align: left; font-family: Arial, sans-serif; font-size: 0.95em;'>
+            <h2 style='text-align: left; margin: 8px 0; font-size: 1.4em;'>${isAdvanced ? 'OLD-SCHOOL ESSENTIALS ADVANCED' : 'OLD-SCHOOL ESSENTIALS'}</h2>
+            <p style='margin: 2px 0; font-size: 0.95em;'>RETRO ADVENTURE GAME</p>
+            <hr style='margin: 8px 0;'>
+            
+            <div style='margin: 12px 0;'>
+                <p style='margin: 4px 0;'><strong>Character Name:</strong> ${name || 'Unknown'}</p>
+                <p style='margin: 4px 0;'><strong>Race:</strong> ${race || 'Human'} | <strong>Level:</strong> 0 | <strong>Occupation:</strong> ${background.profession} | <strong>HD:</strong> 1d4</p>
+            </div>
+            
+            <h3 style='margin: 10px 0; font-size: 1.15em;'>COMBAT</h3>
+            <div style='display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 12px;'>
+                <div style='border: 1px solid #000; padding: 6px; text-align: center; font-size: 0.9em;'>
+                    <strong>MAX HP</strong><br>${Math.max(1, hitPoints.total)}
+                </div>
+                <div style='border: 1px solid #000; padding: 6px; text-align: center; font-size: 0.9em;'>
+                    <strong>CUR HP</strong><br>___
+                </div>
+                <div style='border: 1px solid #000; padding: 6px; text-align: center; font-size: 0.9em;'>
+                    <strong>INIT</strong><br>${results.find(r => r.ability === "DEX").modifier >= 0 ? '+' : ''}${results.find(r => r.ability === "DEX").modifier}
+                </div>
+                <div style='border: 1px solid #000; padding: 6px; text-align: center; font-size: 0.9em;'>
+                    <strong>AC</strong><br>${armorClass}
+                </div>
+            </div>
+            
+            <h3 style='margin: 10px 0; font-size: 1.15em;'>ABILITY SCORES</h3>
+            <table style='width: 100%; border-collapse: collapse; margin-bottom: 12px; font-size: 0.9em;'>
+                <tr style='background-color: #f0f0f0;'>
+                    <th style='border: 1px solid #000; padding: 5px; text-align: center;'>Ability</th>
+                    <th style='border: 1px solid #000; padding: 5px; text-align: center;'>Score</th>
+                    <th style='border: 1px solid #000; padding: 5px; text-align: left;'>Effects</th>
+                </tr>`;
+    
     for (let result of results) {
         const effects = getModifierEffects(result.ability, result.modifier, result.roll);
-        resultHtml += `<tr><td>${result.ability}</td><td>${result.roll}</td><td>${result.modifier}</td><td style='text-align: left; padding-left: 10px;'>${effects}</td></tr>`;
+        resultHtml += `
+                <tr>
+                    <td style='border: 1px solid #000; padding: 5px; text-align: center;'><strong>${result.ability}</strong></td>
+                    <td style='border: 1px solid #000; padding: 5px; text-align: center;'>${result.roll}</td>
+                    <td style='border: 1px solid #000; padding: 5px;'>${effects}</td>
+                </tr>`;
     }
-    resultHtml += "</table>";
-
-    // Display equipment and combat info
-    resultHtml += `
-        <div style='text-align: center; margin-top: 20px;'>
-            <h3>Equipment & Combat</h3>
-            <p><strong>Armor:</strong> ${background.armor}</p>
-            <p><strong>Armor Class:</strong> ${armorClass}</p>
-            <p><strong>Weapon:</strong> ${background.weapon}</p>
-            <p><strong>Item(s):</strong> ${Array.isArray(background.item) ? background.item.join(', ') : background.item}</p>
-            <p><strong>Starting Gold:</strong> ${startingGold || 'Not rolled'} gp</p>
-            <p><strong>Attack Bonus:</strong> +0</p>
-            <p><strong>Saving Throws:</strong> As Normal Human</p>
-    `;
     
-    // Add racial abilities if not human
+    resultHtml += `
+            </table>
+            
+            <div style='display: grid; grid-template-columns: 1fr 1fr; gap: 12px;'>
+                <div>
+                    <h3 style='margin: 10px 0; font-size: 1.15em;'>WEAPONS AND SKILLS</h3>
+                    <div style='border: 1px solid #000; padding: 9px; min-height: 65px; font-size: 0.9em;'>
+                        <p style='margin: 4px 0;'><strong>Weapon:</strong> ${background.weapon}</p>
+                        <p style='margin: 4px 0;'><strong>Attack Bonus:</strong> +0 (0-level)</p>
+                    </div>
+                    
+                    <h3 style='margin: 10px 0; font-size: 1.15em;'>RACIAL ABILITIES</h3>
+                    <div style='border: 1px solid #000; padding: 9px; min-height: 65px; font-size: 0.9em;'>`;
+    
     const racialAbilities = getRacialAbilities(race);
     if (racialAbilities && racialAbilities.length > 0) {
-        resultHtml += `<p><strong>Racial Abilities:</strong></p><ul style='text-align: left; display: inline-block;'>`;
+        resultHtml += `<ul style='margin: 0; padding-left: 20px;'>`;
         for (let ability of racialAbilities) {
             resultHtml += `<li>${ability}</li>`;
         }
         resultHtml += `</ul>`;
+    } else {
+        resultHtml += `<p>None</p>`;
     }
     
-    resultHtml += `</div>`;
-
-    // Display the minimum values used and generation info
     resultHtml += `
-        <h3 style='text-align: center;'>Total Modifiers Combined: ${total}</h3>
-        <p style='text-align: center;'>It took <strong>${rerollCount}</strong> attempts to generate valid scores.</p>
-        <p style='text-align: center;'>Minimum values used: <br>
-            <strong>STR:</strong> ${strMin}, 
-            <strong>DEX:</strong> ${dexMin}, 
-            <strong>CON:</strong> ${conMin}, <br>
-            <strong>INT:</strong> ${intMin}, 
-            <strong>WIS:</strong> ${wisMin}, 
-            <strong>CHA:</strong> ${chaMin}.
-        </p>`;
+                    </div>
+                </div>
+                
+                <div>
+                    <h3 style='margin: 10px 0; font-size: 1.15em;'>SAVING THROWS</h3>
+                    <div style='display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; margin-bottom: 12px; font-size: 0.9em;'>
+                        <div style='border: 1px solid #000; padding: 4px; text-align: center;'><strong>Death</strong><br>14</div>
+                        <div style='border: 1px solid #000; padding: 4px; text-align: center;'><strong>Wands</strong><br>15</div>
+                        <div style='border: 1px solid #000; padding: 4px; text-align: center;'><strong>Petrify</strong><br>16</div>
+                        <div style='border: 1px solid #000; padding: 4px; text-align: center;'><strong>Breath</strong><br>17</div>
+                        <div style='border: 1px solid #000; padding: 4px; text-align: center;'><strong>Spells</strong><br>18</div>
+                    </div>
+                    
+                    <h3 style='margin: 10px 0; font-size: 1.15em;'>EQUIPMENT</h3>
+                    <div style='border: 1px solid #000; padding: 9px; min-height: 110px; font-size: 0.9em;'>
+                        <p style='margin: 4px 0;'><strong>Armor:</strong> ${background.armor}</p>
+                        <p style='margin: 4px 0;'><strong>Item(s):</strong></p>
+                        <ul style='margin: 4px 0; padding-left: 20px;'>`;
+    
+    const items = Array.isArray(background.item) ? background.item : [background.item];
+    for (let item of items) {
+        resultHtml += `<li>${item}</li>`;
+    }
+    
+    resultHtml += `
+                        </ul>
+                        <p><strong>Starting AC:</strong> ${armorClass}</p>
+                        <p><strong>Starting Gold:</strong> ${startingGold || 0} gp</p>
+                    </div>
+                </div>
+            </div>
+            
+            <hr style='margin-top: 20px;'>
+            <p style='font-size: 0.9em;'><strong>Generation Info:</strong> Total Modifiers: ${total} | Attempts: ${rerollCount} | Minimums: STR ${strMin}, DEX ${dexMin}, CON ${conMin}, INT ${intMin}, WIS ${wisMin}, CHA ${chaMin}</p>
+        </div>
+    `;
 
-    // Display the final results
-    document.getElementById('result').innerHTML = resultHtml;
+    // Check if we should open in new tab
+    const openInNewTabCheckbox = document.getElementById('openInNewTab');
+    const openInNewTab = openInNewTabCheckbox ? openInNewTabCheckbox.checked : false;
+    
+    if (openInNewTab) {
+        // Open in new tab
+        const newWindow = window.open('', '_blank');
+        newWindow.document.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <title>${name} - OSE 0-Level Character</title>
+            </head>
+            <body>
+                ${resultHtml}
+            </body>
+            </html>
+        `);
+        newWindow.document.close();
+        
+        // Clear the result div on main page
+        document.getElementById('result').innerHTML = '<p style="text-align: center;">Character opened in new tab.</p>';
+    } else {
+        // Display in current page
+        document.getElementById('result').innerHTML = resultHtml;
+    }
 
     // Reset reroll counter for the next generation
     rerollCount = 0;
