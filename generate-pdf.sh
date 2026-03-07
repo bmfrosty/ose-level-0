@@ -16,6 +16,7 @@ TOUGH_GUYS=false
 FORCE_DEMIHUMAN=false
 FORCE_RACE=""
 OUTPUT=""
+ADVANCED=true
 
 # Store original arguments before parsing
 ORIGINAL_ARGS="$@"
@@ -44,6 +45,7 @@ OPTIONS:
     -t, --tough-guys         Enable Tough Guys mode (requires STR/DEX/INT/WIS ≥ 13 and HP ≥ 2)
     -d, --demihuman          Force demihuman characters only
     -r, --race RACE          Force specific race (Human, Dwarf, Elf, Gnome, or Halfling)
+    --not-advanced           Disable Advanced mode (humans get no racial abilities)
     
     Other:
     -h, --help               Show this help message
@@ -144,6 +146,10 @@ while [[ $# -gt 0 ]]; do
                     ;;
             esac
             shift 2
+            ;;
+        --not-advanced)
+            ADVANCED=false
+            shift
             ;;
         *)
             echo "Unknown option: $1"
@@ -252,6 +258,7 @@ export TOUGH_GUYS
 export FORCE_DEMIHUMAN
 export FORCE_RACE
 export OUTPUT
+export ADVANCED
 
 # Detect if running on Bazzite (immutable OS) and use distrobox if needed
 if [[ -f /etc/os-release ]]; then

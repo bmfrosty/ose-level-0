@@ -59,9 +59,28 @@ function generateSingleCharacterNode(options = {}) {
         
         if (!meetsMinimums) continue;
         
-        // Calculate hit points
+        // Generate race early so we can use it for HP calculation
+        let race;
+        
+        // Force specific race if requested
+        if (forceRace) {
+            race = forceRace;
+        } else {
+            race = rollRace();
+            
+            // Force demihuman if requested
+            if (forceDemihuman) {
+                let demihumanAttempts = 0;
+                while (!isDemihuman(race) && demihumanAttempts < 100) {
+                    race = rollRace();
+                    demihumanAttempts++;
+                }
+            }
+        }
+        
+        // Calculate hit points with race for Blessed ability
         const conModifier = results.find(r => r.ability === 'CON').modifier;
-        const hitPoints = calculateHitPoints(conModifier);
+        const hitPoints = calculateHitPoints(conModifier, race);
         
         // Must have at least 1 HP to be an adventurer
         if (hitPoints.total < 1) continue;
@@ -86,25 +105,7 @@ function generateSingleCharacterNode(options = {}) {
         const dexModifier = results.find(r => r.ability === 'DEX').modifier;
         const armorClass = calculateArmorClass(background.armor, dexModifier);
         
-        // Generate race and name
-        let race;
-        
-        // Force specific race if requested
-        if (forceRace) {
-            race = forceRace;
-        } else {
-            race = rollRace();
-            
-            // Force demihuman if requested
-            if (forceDemihuman) {
-                let demihumanAttempts = 0;
-                while (!isDemihuman(race) && demihumanAttempts < 100) {
-                    race = rollRace();
-                    demihumanAttempts++;
-                }
-            }
-        }
-        
+        // Generate name (race already determined above)
         const name = getRandomName(race);
         const startingGold = rollDice(3, 6);
         

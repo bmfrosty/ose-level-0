@@ -93,9 +93,24 @@ class CanvasCharacterSheet {
         // Set default font
         this.setFont('Arial', 12, 'normal');
         
+        // Check if Advanced mode is enabled
+        let isAdvanced = false;
+        if (typeof document !== 'undefined') {
+            // Browser: check checkbox
+            const advancedCheckbox = document.getElementById('advanced');
+            isAdvanced = advancedCheckbox ? advancedCheckbox.checked : false;
+        } else if (typeof process !== 'undefined' && process.env) {
+            // Node.js: check environment variable
+            isAdvanced = process.env.ADVANCED === 'true';
+        }
+        
         // Title
         this.setFont('Arial', 16, 'bold');
-        this.drawText("OLD-SCHOOL ESSENTIALS", 72, 90);
+        if (isAdvanced) {
+            this.drawText("OLD-SCHOOL ESSENTIALS ADVANCED", 72, 90);
+        } else {
+            this.drawText("OLD-SCHOOL ESSENTIALS", 72, 90);
+        }
         this.setFont('Arial', 12, 'normal');
         this.drawText("RETRO ADVENTURE GAME", 72, 105);
         

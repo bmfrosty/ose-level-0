@@ -8,16 +8,46 @@ let rerollCount = 0;
 let currentCharacter = null;
 
 // Function to calculate hit points for 0-level character
-function calculateHitPoints(conModifier) {
+function calculateHitPoints(conModifier, race = 'Human') {
+    // Check if Advanced mode is enabled
+    let isAdvanced = false;
+    if (typeof document !== 'undefined') {
+        // Browser: check checkbox
+        const advancedCheckbox = document.getElementById('advanced');
+        isAdvanced = advancedCheckbox ? advancedCheckbox.checked : false;
+    } else if (typeof process !== 'undefined' && process.env) {
+        // Node.js: check environment variable
+        isAdvanced = process.env.ADVANCED === 'true';
+    }
+    
     // Use rollDice if available (Node.js), otherwise fall back to roll1d4 (browser)
     let hpRoll;
-    if (typeof rollDice !== 'undefined') {
-        hpRoll = rollDice(1, 4);
-    } else if (typeof roll1d4 !== 'undefined') {
-        hpRoll = roll1d4();
+    
+    // Humans get Blessed ability: roll twice, take best (only in Advanced mode)
+    if (race === 'Human' && isAdvanced) {
+        let roll1, roll2;
+        if (typeof rollDice !== 'undefined') {
+            roll1 = rollDice(1, 4);
+            roll2 = rollDice(1, 4);
+        } else if (typeof roll1d4 !== 'undefined') {
+            roll1 = roll1d4();
+            roll2 = roll1d4();
+        } else {
+            roll1 = Math.floor(Math.random() * 4) + 1;
+            roll2 = Math.floor(Math.random() * 4) + 1;
+        }
+        hpRoll = Math.max(roll1, roll2);
     } else {
-        hpRoll = Math.floor(Math.random() * 4) + 1;
+        // Non-humans roll once
+        if (typeof rollDice !== 'undefined') {
+            hpRoll = rollDice(1, 4);
+        } else if (typeof roll1d4 !== 'undefined') {
+            hpRoll = roll1d4();
+        } else {
+            hpRoll = Math.floor(Math.random() * 4) + 1;
+        }
     }
+    
     let hp = hpRoll + conModifier;
     return { roll: hpRoll, total: hp, isAdventurer: hp > 0 };
 }
@@ -88,10 +118,12 @@ function generateSingleCharacter() {
             if (abilities[i] === "CHA" && roll < chaMin) isValidArray = false;
         }
 
-        // If ability scores are valid, check hit points and high ability requirement
+        // If ability scores are valid, generate race first, then check hit points
         if (isValidArray) {
+            // Generate race early so we can use it for HP calculation
+            const tempRace = rollRace();
             const conModifier = results.find(r => r.ability === "CON").modifier;
-            const hitPoints = calculateHitPoints(conModifier);
+            const hitPoints = calculateHitPoints(conModifier, tempRace);
             
             // If character has less than 1 HP, they don't become an adventurer - reroll
             if (hitPoints.total < 1) {
@@ -124,17 +156,15 @@ function generateSingleCharacter() {
     } while (!isValidArray);
 
     // Generate 0-level character details (we know HP is at least 1 now)
+    const race = rollRace();
+    const name = getRandomName(race);
     const conModifier = results.find(r => r.ability === "CON").modifier;
     const dexModifier = results.find(r => r.ability === "DEX").modifier;
-    const hitPoints = calculateHitPoints(conModifier);
+    const hitPoints = calculateHitPoints(conModifier, race);
     
     // Get background based on hit points (capped at 4, minimum 1)
     const background = getBackgroundByHitPoints(hitPoints.total);
     const armorClass = calculateArmorClass(background.armor, dexModifier);
-
-    // Generate race and name
-    const race = rollRace();
-    const name = getRandomName(race);
 
     // Roll 3d6 for starting gold
     const startingGold = roll3d6();

@@ -108,8 +108,23 @@ function isDemihuman(race) {
 
 // Function to get racial abilities text (returns array of lines)
 function getRacialAbilities(race) {
+    // Check if Advanced mode is enabled
+    let isAdvanced = false;
+    if (typeof document !== 'undefined') {
+        // Browser: check checkbox
+        const advancedCheckbox = document.getElementById('advanced');
+        isAdvanced = advancedCheckbox ? advancedCheckbox.checked : false;
+    } else if (typeof process !== 'undefined' && process.env) {
+        // Node.js: check environment variable
+        isAdvanced = process.env.ADVANCED === 'true';
+    }
+    
     const abilities = {
-        "Human": [],
+        "Human": isAdvanced ? [
+            "Roll HP twice, take best.",
+            "Act first on tied initiative.",
+            "Retainers/mercenaries +1 loyalty/morale."
+        ] : [],
         "Dwarf": [
             "Speak additional native languages.",
             "2-in-6 chance of hearing noises at doors.",
