@@ -43,8 +43,19 @@ function display0LevelCharacter(results, total, background, hitPoints, armorClas
             <p><strong>Starting Gold:</strong> ${startingGold || 'Not rolled'} gp</p>
             <p><strong>Attack Bonus:</strong> +0</p>
             <p><strong>Saving Throws:</strong> As Normal Human</p>
-        </div>
     `;
+    
+    // Add racial abilities if not human
+    const racialAbilities = getRacialAbilities(race);
+    if (racialAbilities && racialAbilities.length > 0) {
+        resultHtml += `<p><strong>Racial Abilities:</strong></p><ul style='text-align: left; display: inline-block;'>`;
+        for (let ability of racialAbilities) {
+            resultHtml += `<li>${ability}</li>`;
+        }
+        resultHtml += `</ul>`;
+    }
+    
+    resultHtml += `</div>`;
 
     // Display the minimum values used and generation info
     resultHtml += `

@@ -2,13 +2,16 @@
   "name": "ose-level-0-generator",
   "version": "1.0.0",
   "description": "OSE 0-Level Character Generator with PDF output",
-  "main": "node-pdf-generator.js",
+  "main": "node-canvas-generator.js",
   "scripts": {
-    "generate": "node node-pdf-generator.js",
+    "generate": "node node-canvas-generator.js",
+    "generate-old": "node node-pdf-generator.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "pdfkit": "^0.14.0"
+    "pdfkit": "^0.14.0",
+    "canvas": "^2.11.2",
+    "jspdf": "^2.5.1"
   },
   "keywords": [
     "ose",

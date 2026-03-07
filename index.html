@@ -22,16 +22,22 @@
             background-color: #f2f2f2;
         }
         button {
-            display: block;
-            margin: 20px auto;
             padding: 10px 20px;
             background-color: #4CAF50;
             color: white;
             border: none;
             cursor: pointer;
+            margin: 5px;
         }
         button:hover {
             background-color: #45a049;
+        }
+        .button-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            max-width: 1200px;
+            margin: 20px auto;
         }
         #config {
             text-align: center;
@@ -63,10 +69,77 @@
         <input type="number" id="chaMin" value="3" min="3" max="18"><br><br>
         <label for="toughGuys">
             <input type="checkbox" id="toughGuys"> Tough Guys (Requires STR/DEX/INT/WIS ≥ 13 and HP ≥ 2)
-        </label><br>
-        <button id="generateButton" onclick="generate0LevelCharacter()">Generate 0-Level Character</button>
-        <button id="canvasPdfButton" onclick="generateCanvasPDF()" style="background-color: #9C27B0;">Generate PDF Character Sheet</button>
-        <button id="canvasBulkPdfButton" onclick="generateCanvasBulkPDF()" style="background-color: #E91E63;">Generate 4 Character PDF</button>
+        </label><br><br>
+        
+        <!-- Hidden select for backward compatibility -->
+        <select id="forceRace" style="display:none;">
+            <option value="">Random</option>
+        </select>
+        <input type="checkbox" id="forceDemihuman" style="display:none;">
+        
+        <div class="button-grid">
+            <!-- Row 1: Generate Character -->
+            <button onclick="setRaceAndGenerate('')">Random</button>
+            <button onclick="setRaceAndGenerate('Demihuman')">Demihuman</button>
+            <button onclick="setRaceAndGenerate('Human')">Human</button>
+            <button onclick="setRaceAndGenerate('Dwarf')">Dwarf</button>
+            <button onclick="setRaceAndGenerate('Elf')">Elf</button>
+            <button onclick="setRaceAndGenerate('Gnome')">Gnome</button>
+            <button onclick="setRaceAndGenerate('Halfling')">Halfling</button>
+            
+            <!-- Row 2: Generate PNG -->
+            <button onclick="setRaceAndGeneratePNG('')" style="background-color: #FF9800;">Random PNG</button>
+            <button onclick="setRaceAndGeneratePNG('Demihuman')" style="background-color: #FF9800;">Demihuman PNG</button>
+            <button onclick="setRaceAndGeneratePNG('Human')" style="background-color: #FF9800;">Human PNG</button>
+            <button onclick="setRaceAndGeneratePNG('Dwarf')" style="background-color: #FF9800;">Dwarf PNG</button>
+            <button onclick="setRaceAndGeneratePNG('Elf')" style="background-color: #FF9800;">Elf PNG</button>
+            <button onclick="setRaceAndGeneratePNG('Gnome')" style="background-color: #FF9800;">Gnome PNG</button>
+            <button onclick="setRaceAndGeneratePNG('Halfling')" style="background-color: #FF9800;">Halfling PNG</button>
+            
+            <!-- Row 3: Generate PDF -->
+            <button onclick="setRaceAndGeneratePDF('')" style="background-color: #9C27B0;">Random PDF</button>
+            <button onclick="setRaceAndGeneratePDF('Demihuman')" style="background-color: #9C27B0;">Demihuman PDF</button>
+            <button onclick="setRaceAndGeneratePDF('Human')" style="background-color: #9C27B0;">Human PDF</button>
+            <button onclick="setRaceAndGeneratePDF('Dwarf')" style="background-color: #9C27B0;">Dwarf PDF</button>
+            <button onclick="setRaceAndGeneratePDF('Elf')" style="background-color: #9C27B0;">Elf PDF</button>
+            <button onclick="setRaceAndGeneratePDF('Gnome')" style="background-color: #9C27B0;">Gnome PDF</button>
+            <button onclick="setRaceAndGeneratePDF('Halfling')" style="background-color: #9C27B0;">Halfling PDF</button>
+            
+            <!-- Row 4: Generate 4 Character PDF -->
+            <button onclick="setRaceAndGenerateBulkPDF('')" style="background-color: #E91E63;">Random 4-PDF</button>
+            <button onclick="setRaceAndGenerateBulkPDF('Demihuman')" style="background-color: #E91E63;">Demihuman 4-PDF</button>
+            <button onclick="setRaceAndGenerateBulkPDF('Human')" style="background-color: #E91E63;">Human 4-PDF</button>
+            <button onclick="setRaceAndGenerateBulkPDF('Dwarf')" style="background-color: #E91E63;">Dwarf 4-PDF</button>
+            <button onclick="setRaceAndGenerateBulkPDF('Elf')" style="background-color: #E91E63;">Elf 4-PDF</button>
+            <button onclick="setRaceAndGenerateBulkPDF('Gnome')" style="background-color: #E91E63;">Gnome 4-PDF</button>
+            <button onclick="setRaceAndGenerateBulkPDF('Halfling')" style="background-color: #E91E63;">Halfling 4-PDF</button>
+        </div>
+        
+        <script>
+        function setRaceAndGenerate(race) {
+            document.getElementById('forceRace').value = race === 'Demihuman' ? '' : race;
+            document.getElementById('forceDemihuman').checked = race === 'Demihuman';
+            generate0LevelCharacter();
+        }
+        
+        function setRaceAndGeneratePNG(race) {
+            document.getElementById('forceRace').value = race === 'Demihuman' ? '' : race;
+            document.getElementById('forceDemihuman').checked = race === 'Demihuman';
+            generateCanvasPNG();
+        }
+        
+        function setRaceAndGeneratePDF(race) {
+            document.getElementById('forceRace').value = race === 'Demihuman' ? '' : race;
+            document.getElementById('forceDemihuman').checked = race === 'Demihuman';
+            generateCanvasPDF();
+        }
+        
+        function setRaceAndGenerateBulkPDF(race) {
+            document.getElementById('forceRace').value = race === 'Demihuman' ? '' : race;
+            document.getElementById('forceDemihuman').checked = race === 'Demihuman';
+            generateCanvasBulkPDF();
+        }
+        </script>
     </div>
 
     <div id="result"></div>
@@ -79,7 +152,7 @@
     <script src="character-utils.js"></script>
     <script src="character-display.js"></script>
     <script src="main-generator.js"></script>
-    <script src="pdf-generator.js"></script>
+    <script src="canvas-sheet-renderer.js"></script>
     <script src="canvas-generator.js"></script>
 </body>
 </html>
