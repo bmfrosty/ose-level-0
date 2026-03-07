@@ -7,11 +7,14 @@ yarn-error.log*
 # Generated PDFs (examples/testing)
 *.pdf
 
-# Generated images (testing/debugging)
+# Generated and non-distributable images (testing/debugging)
 *.png
+*.jpg
 
-# Generated JSON files
+# Generated JSON and MD files
 OSE_0Level_*.json
+OSE_0Level_*.md
+
 
 # Text extraction files (keep specific ones, ignore others)
 # Keep: ose-level-0.txt, ose-level-0-*.txt.txt, get-new-pdf.sh

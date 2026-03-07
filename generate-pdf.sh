@@ -6,6 +6,7 @@
 # Default values
 COUNT=1
 FORMAT="pdf"
+SHEET_STYLE="classic"
 STR_MIN=3
 DEX_MIN=3
 CON_MIN=3
@@ -17,6 +18,7 @@ FORCE_DEMIHUMAN=false
 FORCE_RACE=""
 OUTPUT=""
 ADVANCED=true
+STDOUT=false
 
 # Store original arguments before parsing
 ORIGINAL_ARGS="$@"
@@ -30,7 +32,7 @@ Generate OSE 0-Level Character PDFs from the command line.
 
 OPTIONS:
     -n, --count NUM          Number of characters to generate (1 or 4, default: 1)
-    -f, --format FORMAT      Output format: pdf or png (default: pdf)
+    -f, --format FORMAT      Output format: pdf, png, json, or md (default: pdf)
     -o, --output FILE        Output filename (default: auto-generated)
     
     Ability Score Minimums:
@@ -45,7 +47,9 @@ OPTIONS:
     -t, --tough-guys         Enable Tough Guys mode (requires STR/DEX/INT/WIS ≥ 13 and HP ≥ 2)
     -d, --demihuman          Force demihuman characters only
     -r, --race RACE          Force specific race (Human, Dwarf, Elf, Gnome, or Halfling)
+    -s, --style STYLE        Sheet style: classic or underground (default: classic)
     --not-advanced           Disable Advanced mode (humans get no racial abilities)
+    --stdout                 Output to stdout instead of file (json/md only)
     
     Other:
     -h, --help               Show this help message
@@ -88,8 +92,12 @@ while [[ $# -gt 0 ]]; do
             ;;
         -f|--format)
             FORMAT=$(echo "$2" | tr '[:upper:]' '[:lower:]')
-            if [[ "$FORMAT" != "pdf" && "$FORMAT" != "png" && "$FORMAT" != "json" ]]; then
-                echo "Error: Format must be 'pdf', 'png', or 'json'"
+            # Accept 'md' or 'markdown'
+            if [[ "$FORMAT" == "markdown" ]]; then
+                FORMAT="md"
+            fi
+            if [[ "$FORMAT" != "pdf" && "$FORMAT" != "png" && "$FORMAT" != "json" && "$FORMAT" != "md" ]]; then
+                echo "Error: Format must be 'pdf', 'png', 'json', or 'md'"
                 exit 1
             fi
             shift 2
@@ -151,6 +159,22 @@ while [[ $# -gt 0 ]]; do
             ADVANCED=false
             shift
             ;;
+        --stdout)
+            STDOUT=true
+            shift
+            ;;
+        -s|--style)
+            STYLE_INPUT=$(echo "$2" | tr '[:upper:]' '[:lower:]')
+            case "$STYLE_INPUT" in
+                classic|c) SHEET_STYLE="classic" ;;
+                underground|u) SHEET_STYLE="underground" ;;
+                *)
+                    echo "Error: Unknown style '$2'. Valid styles: classic, underground"
+                    exit 1
+                    ;;
+            esac
+            shift 2
+            ;;
         *)
             echo "Unknown option: $1"
             echo "Use --help for usage information"
@@ -186,30 +210,101 @@ const options = {
 
 const count = parseInt(process.env.COUNT);
 const format = process.env.FORMAT || 'pdf';
+const sheetStyle = process.env.SHEET_STYLE || 'classic';
 const outputFile = process.env.OUTPUT;
+const useStdout = process.env.STDOUT === 'true';
 
 (async () => {
     try {
         if (count === 1) {
             // Generate single character
-            console.log('Generating character...');
+            if (!useStdout) console.error('Generating character...');
             const character = generateSingleCharacterNode(options);
             
-            // Use shared filename generator
-            const { CanvasCharacterSheet } = require('./canvas-sheet-renderer.js');
-            let filename = outputFile || CanvasCharacterSheet.generateSingleCharacterFilename(character);
-            
             // Handle different formats
-            if (format === 'png') {
-                filename = filename.replace('.pdf', '.png');
-                await createCanvasPNG(character, filename);
-            } else if (format === 'json') {
-                filename = filename.replace('.pdf', '.json');
-                fs.writeFileSync(filename, JSON.stringify(character, null, 2));
+            if (format === 'json') {
+                const output = JSON.stringify(character, null, 2);
+                if (useStdout) {
+                    console.log(output);
+                } else {
+                    const { CanvasCharacterSheet } = require('./canvas-sheet-renderer.js');
+                    const filename = outputFile || CanvasCharacterSheet.generateSingleCharacterFilename(character).replace('.pdf', '.json');
+                    fs.writeFileSync(filename, output);
+                    console.error(`Success! Generated: ${filename}`);
+                }
+            } else if (format === 'md') {
+                const { generateCharacterMarkdown } = require('./markdown-generator.js');
+                const isAdvanced = process.env.ADVANCED === 'true';
+                const output = generateCharacterMarkdown(character, isAdvanced);
+                
+                if (useStdout) {
+                    console.log(output);
+                } else {
+                    const { CanvasCharacterSheet } = require('./canvas-sheet-renderer.js');
+                    const filename = outputFile || CanvasCharacterSheet.generateSingleCharacterFilename(character).replace('.pdf', '.md');
+                    fs.writeFileSync(filename, output);
+                    console.error(`Success! Generated: ${filename}`);
+                }
+            } else if (format === 'png') {
+                if (useStdout) {
+                    console.error('Error: PNG format cannot be output to stdout');
+                    process.exit(1);
+                }
+                
+                // Choose renderer based on sheet style
+                let SheetClass, filename;
+                if (sheetStyle === 'underground') {
+                    const { UndergroundCharacterSheet } = require('./underground-sheet-renderer.js');
+                    SheetClass = UndergroundCharacterSheet;
+                    filename = outputFile || UndergroundCharacterSheet.generateFilename(character, 'OSE_Underground').replace('.pdf', '.png');
+                } else {
+                    const { CanvasCharacterSheet } = require('./canvas-sheet-renderer.js');
+                    SheetClass = CanvasCharacterSheet;
+                    filename = outputFile || CanvasCharacterSheet.generateSingleCharacterFilename(character).replace('.pdf', '.png');
+                }
+                
+                // Create canvas and render
+                const canvas = createCanvas(2700, 3495);
+                const sheetGen = new SheetClass(canvas);
+                await sheetGen.generateCharacterSheet(character);
+                
+                // Save as PNG
+                const pngBuffer = sheetGen.toBuffer('image/png');
+                fs.writeFileSync(filename, pngBuffer);
+                console.error(`Success! Generated: ${filename}`);
             } else {
-                await createCanvasPDF(character, filename);
+                if (useStdout) {
+                    console.error('Error: PDF format cannot be output to stdout');
+                    process.exit(1);
+                }
+                
+                // Choose renderer based on sheet style
+                let SheetClass, filename;
+                if (sheetStyle === 'underground') {
+                    const { UndergroundCharacterSheet } = require('./underground-sheet-renderer.js');
+                    SheetClass = UndergroundCharacterSheet;
+                    filename = outputFile || UndergroundCharacterSheet.generateFilename(character, 'OSE_Underground');
+                } else {
+                    const { CanvasCharacterSheet } = require('./canvas-sheet-renderer.js');
+                    SheetClass = CanvasCharacterSheet;
+                    filename = outputFile || CanvasCharacterSheet.generateSingleCharacterFilename(character);
+                }
+                
+                // Create canvas and render
+                const canvas = createCanvas(2700, 3495);
+                const sheetGen = new SheetClass(canvas);
+                await sheetGen.generateCharacterSheet(character);
+                
+                // Create PDF
+                const doc = new jsPDF('portrait', 'pt', 'letter');
+                const pngBuffer = sheetGen.toBuffer('image/png');
+                const base64Image = 'data:image/png;base64,' + pngBuffer.toString('base64');
+                doc.addImage(base64Image, 'PNG', 0, 0, 612, 792, '', 'FAST');
+                
+                const pdfBuffer = Buffer.from(doc.output('arraybuffer'));
+                fs.writeFileSync(filename, pdfBuffer);
+                console.error(`Success! Generated: ${filename}`);
             }
-            console.log(`Success! Generated: ${filename}`);
         } else if (format === 'json') {
             // Generate multiple characters as JSON array
             console.log(`Generating ${count} characters...`);
@@ -271,6 +366,7 @@ ENDSCRIPT
 # Export environment variables for Node.js script
 export COUNT
 export FORMAT
+export SHEET_STYLE
 export STR_MIN
 export DEX_MIN
 export CON_MIN
@@ -282,6 +378,7 @@ export FORCE_DEMIHUMAN
 export FORCE_RACE
 export OUTPUT
 export ADVANCED
+export STDOUT
 
 # Detect if running on Bazzite (immutable OS) and use distrobox if needed
 if [[ -f /etc/os-release ]]; then
