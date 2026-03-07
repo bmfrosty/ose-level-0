@@ -8,7 +8,7 @@
 // - ctx.textBaseline is set to 'top', meaning Y coordinate is the TOP of the text
 // - Example: fillText("Hello", 100, 200) draws text with top-left at (100, 200)
 //
-// Canvas dimensions: 2700x3495 pixels (3x scale of 900x1165 template)
+// Canvas dimensions: 3828x4953 pixels (3x scale of 1276x1651 PNG template)
 // To find coordinates:
 // 1. Open the PNG in an image editor
 // 2. Use the ruler/coordinate tool to find pixel positions
@@ -23,10 +23,10 @@ class UndergroundCharacterSheet {
         this.canvas = canvas;
         this.ctx = canvas.getContext('2d');
         
-        // Sheet dimensions (900x1165 from template)
-        // Scale up for high resolution: 3x = 2700x3495
-        this.width = 2700;
-        this.height = 3495;
+        // Sheet dimensions (1276x1651 from PNG template)
+        // Scale up for high resolution: 3x = 3828x4953
+        this.width = 3828;
+        this.height = 4953;
         
         // Set canvas size
         this.canvas.width = this.width;
@@ -34,9 +34,9 @@ class UndergroundCharacterSheet {
     }
     
     async loadBackgroundImage() {
-        // Load the underground sheet template
+        // Load the underground sheet template (PNG version)
         const { loadImage } = require('canvas');
-        const imagePath = path.join(__dirname, 'underground-sheet.jpg');
+        const imagePath = path.join(__dirname, 'underground-sheet.png');
         const image = await loadImage(imagePath);
         
         // Draw scaled background
@@ -73,22 +73,22 @@ class UndergroundCharacterSheet {
     drawCharacterName(character) {
         // Character name - top of sheet
         this.ctx.font = 'bold 72px Arial';
-        this.ctx.fillText(character.name, 650, 310);
+        this.ctx.fillText(character.name, 900, 450);
     }
     
     drawRaceAndClass(character) {
         // Race and occupation
-        this.ctx.font = '48px Arial';
-        this.ctx.fillText(`${character.race} - ${character.background.profession}`, 150, 220);
+        this.ctx.font = 'bold 72px Arial';
+        this.ctx.fillText(`${character.race}\n${character.background.profession}`, 800, 650);
     }
     
     drawAbilityScores(character) {
         // Ability scores - typically in boxes on the left side
         // These positions are estimates and will need adjustment based on actual template
-        const startY = 400;
-        const spacing = 140;
+        const startY = 1600;
+        const spacing = 240;
         const labelX = 200;
-        const scoreX = 400;
+        const scoreX = 600;
         
         this.ctx.font = 'bold 48px Arial';
         
@@ -98,16 +98,16 @@ class UndergroundCharacterSheet {
             const y = startY + (index * spacing);
             
             // Draw ability name
-            this.ctx.fillText(ability, labelX, y);
+            // this.ctx.fillText(ability, labelX, y);
             
             // Draw score
-            this.ctx.font = 'bold 60px Arial';
+            this.ctx.font = 'bold 72px Arial';
             this.ctx.fillText(result.roll.toString(), scoreX, y);
             
             // Draw modifier
-            this.ctx.font = '42px Arial';
+            this.ctx.font = 'bold 72px Arial';
             const modText = result.modifier >= 0 ? `+${result.modifier}` : result.modifier.toString();
-            this.ctx.fillText(modText, scoreX + 120, y + 10);
+            this.ctx.fillText(modText, scoreX + 250, y + 10);
             
             this.ctx.font = 'bold 48px Arial';
         });
@@ -249,9 +249,16 @@ class UndergroundCharacterSheet {
     
     // Static helper for filename generation
     static generateFilename(character, prefix = 'OSE_Underground') {
-        const race = character.race.replace(/[^a-zA-Z0-9]/g, '_');
-        const profession = character.background.profession.replace(/[^a-zA-Z0-9]/g, '_');
-        const name = character.name.replace(/[^a-zA-Z0-9]/g, '_');
+        // Normalize accented characters to ASCII equivalents
+        const normalizeString = (str) => {
+            return str.normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '') // Remove diacritics
+                .replace(/[^a-zA-Z0-9]/g, '_');   // Replace remaining non-alphanumeric with underscore
+        };
+        
+        const race = normalizeString(character.race);
+        const profession = normalizeString(character.background.profession);
+        const name = normalizeString(character.name);
         return `${prefix}_${race}_${profession}_${name}.pdf`;
     }
 }

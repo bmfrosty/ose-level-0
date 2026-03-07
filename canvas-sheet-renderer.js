@@ -377,9 +377,16 @@ class CanvasCharacterSheet {
     
     // Static method: Generate filename for single character
     static generateSingleCharacterFilename(character) {
-        const race = character.race.replace(/[^a-zA-Z0-9]/g, '_');
-        const profession = character.background.profession.replace(/[^a-zA-Z0-9]/g, '_');
-        const name = character.name.replace(/[^a-zA-Z0-9]/g, '_');
+        // Normalize accented characters to ASCII equivalents
+        const normalizeString = (str) => {
+            return str.normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '') // Remove diacritics
+                .replace(/[^a-zA-Z0-9]/g, '_');   // Replace remaining non-alphanumeric with underscore
+        };
+        
+        const race = normalizeString(character.race);
+        const profession = normalizeString(character.background.profession);
+        const name = normalizeString(character.name);
         return `OSE_0Level_${race}_${profession}_${name}.pdf`;
     }
     
@@ -387,6 +394,13 @@ class CanvasCharacterSheet {
     static generateMultiCharacterFilename(forceRace = '') {
         const now = new Date();
         const timestamp = now.toISOString().slice(0, 16).replace(/:/g, '-');
+        
+        // Normalize accented characters to ASCII equivalents
+        const normalizeString = (str) => {
+            return str.normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '') // Remove diacritics
+                .replace(/[^a-zA-Z0-9]/g, '_');   // Replace remaining non-alphanumeric with underscore
+        };
         
         // If a specific race is forced, use plural form in filename
         if (forceRace) {
@@ -398,7 +412,8 @@ class CanvasCharacterSheet {
                 'Halfling': 'Halflings'
             };
             const racePlural = racePlurals[forceRace] || forceRace + 's';
-            return `OSE_0Level_4_${racePlural}_${timestamp}.pdf`;
+            const normalizedRacePlural = normalizeString(racePlural);
+            return `OSE_0Level_4_${normalizedRacePlural}_${timestamp}.pdf`;
         }
         
         return `OSE_0Level_4_Characters_${timestamp}.pdf`;

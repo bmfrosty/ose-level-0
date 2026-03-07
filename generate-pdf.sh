@@ -19,6 +19,7 @@ FORCE_RACE=""
 OUTPUT=""
 ADVANCED=true
 STDOUT=false
+PRINT_MARKDOWN=false
 
 # Store original arguments before parsing
 ORIGINAL_ARGS="$@"
@@ -50,6 +51,7 @@ OPTIONS:
     -s, --style STYLE        Sheet style: classic or underground (default: classic)
     --not-advanced           Disable Advanced mode (humans get no racial abilities)
     --stdout                 Output to stdout instead of file (json/md only)
+    --print-markdown         Print character data as markdown to stderr (for PDF/PNG debugging)
     
     Other:
     -h, --help               Show this help message
@@ -163,6 +165,10 @@ while [[ $# -gt 0 ]]; do
             STDOUT=true
             shift
             ;;
+        --print-markdown)
+            PRINT_MARKDOWN=true
+            shift
+            ;;
         -s|--style)
             STYLE_INPUT=$(echo "$2" | tr '[:upper:]' '[:lower:]')
             case "$STYLE_INPUT" in
@@ -213,6 +219,7 @@ const format = process.env.FORMAT || 'pdf';
 const sheetStyle = process.env.SHEET_STYLE || 'classic';
 const outputFile = process.env.OUTPUT;
 const useStdout = process.env.STDOUT === 'true';
+const printMarkdown = process.env.PRINT_MARKDOWN === 'true';
 
 (async () => {
     try {
@@ -220,6 +227,16 @@ const useStdout = process.env.STDOUT === 'true';
             // Generate single character
             if (!useStdout) console.error('Generating character...');
             const character = generateSingleCharacterNode(options);
+            
+            // Print markdown if requested (for PDF/PNG debugging)
+            if (printMarkdown && (format === 'pdf' || format === 'png')) {
+                const { generateCharacterMarkdown } = require('./markdown-generator.js');
+                const isAdvanced = process.env.ADVANCED === 'true';
+                const markdown = generateCharacterMarkdown(character, isAdvanced);
+                console.error('\n--- Character Data (Markdown) ---');
+                console.error(markdown);
+                console.error('--- End Character Data ---\n');
+            }
             
             // Handle different formats
             if (format === 'json') {
@@ -263,8 +280,10 @@ const useStdout = process.env.STDOUT === 'true';
                     filename = outputFile || CanvasCharacterSheet.generateSingleCharacterFilename(character).replace('.pdf', '.png');
                 }
                 
-                // Create canvas and render
-                const canvas = createCanvas(2700, 3495);
+                // Create canvas and render (size depends on sheet style)
+                const canvasWidth = sheetStyle === 'underground' ? 3828 : 2700;
+                const canvasHeight = sheetStyle === 'underground' ? 4953 : 3495;
+                const canvas = createCanvas(canvasWidth, canvasHeight);
                 const sheetGen = new SheetClass(canvas);
                 await sheetGen.generateCharacterSheet(character);
                 
@@ -290,8 +309,10 @@ const useStdout = process.env.STDOUT === 'true';
                     filename = outputFile || CanvasCharacterSheet.generateSingleCharacterFilename(character);
                 }
                 
-                // Create canvas and render
-                const canvas = createCanvas(2700, 3495);
+                // Create canvas and render (size depends on sheet style)
+                const canvasWidth = sheetStyle === 'underground' ? 3828 : 2700;
+                const canvasHeight = sheetStyle === 'underground' ? 4953 : 3495;
+                const canvas = createCanvas(canvasWidth, canvasHeight);
                 const sheetGen = new SheetClass(canvas);
                 await sheetGen.generateCharacterSheet(character);
                 
@@ -379,6 +400,7 @@ export FORCE_RACE
 export OUTPUT
 export ADVANCED
 export STDOUT
+export PRINT_MARKDOWN
 
 # Detect if running on Bazzite (immutable OS) and use distrobox if needed
 if [[ -f /etc/os-release ]]; then
