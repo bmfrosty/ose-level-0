@@ -22,10 +22,10 @@ function getModifierEffects(ability, modifier, score) {
             else if (score <= 15) doorChance = "3-in-6";
             else if (score <= 17) doorChance = "4-in-6";
             else doorChance = "5-in-6";
-            return `Melee: ${modifier >= 0 ? '+' : ''}${modifier}, Open Doors: ${doorChance}`;
+            return `Melee: ${modifier >= 0 ? '+' : ''}${modifier} (Attack & Damage), Open Doors: ${doorChance}`;
         
         case "DEX":
-            return `AC: ${modifier >= 0 ? '+' : ''}${modifier}, Missile: ${modifier >= 0 ? '+' : ''}${modifier}, Initiative: ${modifier >= 0 ? '+' : ''}${modifier}`;
+            return `AC: ${modifier >= 0 ? '+' : ''}${modifier}, Missile: ${modifier >= 0 ? '+' : ''}${modifier} (Just Attacks), Initiative: ${modifier >= 0 ? '+' : ''}${modifier}`;
         
         case "CON":
             return `Hit Points: ${modifier >= 0 ? '+' : ''}${modifier}`;
