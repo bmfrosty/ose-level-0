@@ -118,11 +118,26 @@ function generateSingleCharacter() {
             if (abilities[i] === "CHA" && roll < chaMin) isValidArray = false;
         }
 
-        // If ability scores are valid, generate race first, then check hit points
+        // If ability scores are valid, generate race first, apply adjustments, then check requirements
         if (isValidArray) {
-            // Generate race early so we can use it for HP calculation
+            // Generate race early
             const tempRace = rollRace();
-            const conModifier = results.find(r => r.ability === "CON").modifier;
+            
+            // Check if Advanced mode is enabled
+            const advancedCheckbox = document.getElementById('advanced');
+            const isAdvanced = advancedCheckbox ? advancedCheckbox.checked : false;
+            
+            // Apply race adjustments if Advanced mode
+            const adjustedResults = applyRaceAdjustments(results, tempRace, isAdvanced);
+            
+            // Check race minimums if Advanced mode
+            if (!meetsRaceMinimums(adjustedResults, tempRace, isAdvanced)) {
+                isValidArray = false;
+                continue;
+            }
+            
+            // Use adjusted results for further checks
+            const conModifier = adjustedResults.find(r => r.ability === "CON").modifier;
             const hitPoints = calculateHitPoints(conModifier, tempRace);
             
             // If character has less than 1 HP, they don't become an adventurer - reroll
@@ -158,8 +173,16 @@ function generateSingleCharacter() {
     // Generate 0-level character details (we know HP is at least 1 now)
     const race = rollRace();
     const name = getRandomName(race);
-    const conModifier = results.find(r => r.ability === "CON").modifier;
-    const dexModifier = results.find(r => r.ability === "DEX").modifier;
+    
+    // Check if Advanced mode is enabled
+    const advancedCheckbox = document.getElementById('advanced');
+    const isAdvanced = advancedCheckbox ? advancedCheckbox.checked : false;
+    
+    // Apply race adjustments to final results
+    const finalResults = applyRaceAdjustments(results, race, isAdvanced);
+    
+    const conModifier = finalResults.find(r => r.ability === "CON").modifier;
+    const dexModifier = finalResults.find(r => r.ability === "DEX").modifier;
     const hitPoints = calculateHitPoints(conModifier, race);
     
     // Get background based on hit points (capped at 4, minimum 1)
@@ -170,14 +193,14 @@ function generateSingleCharacter() {
     const startingGold = roll3d6();
     
     return {
-        results,
+        results: finalResults,
         background,
         race,
         name,
         hitPoints,
         armorClass,
         startingGold,
-        total: results.reduce((sum, r) => sum + r.modifier, 0)
+        total: finalResults.reduce((sum, r) => sum + r.modifier, 0)
     };
 }
 

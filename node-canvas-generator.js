@@ -10,6 +10,7 @@ const { backgroundTables } = require('./background-tables.js');
 const { rollRace, getRandomName, getRacialAbilities, isDemihuman, getCommonDemihumanAbilities } = require('./names-tables.js');
 const { getModifier, getModifierEffects } = require('./ose-modifiers.js');
 const { abilities, calculateHitPoints, getBackgroundByHitPoints, calculateArmorClass } = require('./character-utils.js');
+const { applyRaceAdjustments, meetsRaceMinimums } = require('./race-adjustments.js');
 
 // Import the shared canvas renderer
 const { CanvasCharacterSheet } = require('./canvas-sheet-renderer.js');
@@ -78,8 +79,19 @@ function generateSingleCharacterNode(options = {}) {
             }
         }
         
-        // Calculate hit points with race for Blessed ability
-        const conModifier = results.find(r => r.ability === 'CON').modifier;
+        // Check if Advanced mode is enabled
+        const isAdvanced = process.env.ADVANCED === 'true';
+        
+        // Apply race adjustments if Advanced mode
+        const adjustedResults = applyRaceAdjustments(results, race, isAdvanced);
+        
+        // Check race minimums if Advanced mode
+        if (!meetsRaceMinimums(adjustedResults, race, isAdvanced)) {
+            continue;
+        }
+        
+        // Calculate hit points with race for Blessed ability (use adjusted results)
+        const conModifier = adjustedResults.find(r => r.ability === 'CON').modifier;
         const hitPoints = calculateHitPoints(conModifier, race);
         
         // Must have at least 1 HP to be an adventurer
@@ -100,9 +112,9 @@ function generateSingleCharacterNode(options = {}) {
             if (!hasToughAbility || !hasEnoughHP) continue;
         }
         
-        // Get background and armor class
+        // Get background and armor class (use adjusted results)
         const background = getBackgroundByHitPoints(hitPoints.total);
-        const dexModifier = results.find(r => r.ability === 'DEX').modifier;
+        const dexModifier = adjustedResults.find(r => r.ability === 'DEX').modifier;
         const armorClass = calculateArmorClass(background.armor, dexModifier);
         
         // Generate name (race already determined above)
@@ -110,14 +122,14 @@ function generateSingleCharacterNode(options = {}) {
         const startingGold = rollDice(3, 6);
         
         return {
-            results,
+            results: adjustedResults,
             background,
             race,
             name,
             hitPoints,
             armorClass,
             startingGold,
-            total: results.reduce((sum, r) => sum + r.modifier, 0)
+            total: adjustedResults.reduce((sum, r) => sum + r.modifier, 0)
         };
     }
     
