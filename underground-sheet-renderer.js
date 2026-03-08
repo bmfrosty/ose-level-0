@@ -117,52 +117,84 @@ class UndergroundCharacterSheet {
     
     drawCombatStats(character) {
         // Combat stats - HP, AC, Initiative
-        // Right side of sheet, estimated positions
-        const rightX = 1600;
+        // Each stat gets its own positioning and font settings
+        // Comment out individual lines to hide specific labels or values
         
-        this.ctx.font = 'bold 54px Arial';
-        
-        // HP
-        this.ctx.fillText('HP', rightX, 400);
-        this.ctx.font = 'bold 72px Arial';
-        this.ctx.fillText(Math.max(1, character.hitPoints.total).toString(), rightX + 150, 390);
-        
-        // AC
-        this.ctx.font = 'bold 54px Arial';
-        this.ctx.fillText('AC', rightX, 540);
-        this.ctx.font = 'bold 72px Arial';
-        this.ctx.fillText(character.armorClass.toString(), rightX + 150, 530);
-        
-        // Initiative
         const dexMod = character.results.find(r => r.ability === 'DEX').modifier;
-        this.ctx.font = 'bold 54px Arial';
-        this.ctx.fillText('INIT', rightX, 680);
-        this.ctx.font = 'bold 72px Arial';
         const initText = dexMod >= 0 ? `+${dexMod}` : dexMod.toString();
-        this.ctx.fillText(initText, rightX + 150, 670);
+        
+        // HP Label
+        // this.ctx.font = 'bold 54px Arial';
+        // this.ctx.fillText('HP', 1600, 400);
+        
+        // HP Value
+        this.ctx.font = 'bold 72px Arial';
+        this.ctx.fillText(Math.max(1, character.hitPoints.total).toString(), 1800, 1300);
+        
+        // AC Label
+        // this.ctx.font = 'bold 54px Arial';
+        // this.ctx.fillText('AC', 1600, 540);
+        
+        // AC Value
+        // this.ctx.font = 'bold 72px Arial';
+        // this.ctx.fillText(character.armorClass.toString(), 1750, 530);
+        
+        // INIT Label
+        // this.ctx.font = 'bold 54px Arial';
+        // this.ctx.fillText('INIT', 1600, 680);
+        
+        // INIT Value
+        // this.ctx.font = 'bold 72px Arial';
+        // this.ctx.fillText(initText, 1750, 670);
     }
     
     drawSavingThrows(character) {
-        // Saving throws - typically in middle section
-        const startY = 1400;
-        const startX = 200;
+        // Saving throws - each label and value gets its own positioning
+        // Comment out individual lines to hide specific labels or values
         
-        this.ctx.font = 'bold 42px Arial';
-        this.ctx.fillText('SAVING THROWS', startX, startY);
+        // Section Title
+        // this.ctx.font = 'bold 42px Arial';
+        // this.ctx.fillText('SAVING THROWS', 200, 1400);
         
-        this.ctx.font = '36px Arial';
-        const saves = [
-            { name: 'Death', value: 14 },
-            { name: 'Wands', value: 15 },
-            { name: 'Paralysis', value: 16 },
-            { name: 'Breath', value: 17 },
-            { name: 'Spells', value: 18 }
-        ];
+        // // Death Save Label
+        // this.ctx.font = '36px Arial';
+        // this.ctx.fillText('Death:', 250, 1460);
         
-        saves.forEach((save, index) => {
-            const y = startY + 60 + (index * 50);
-            this.ctx.fillText(`${save.name}: ${save.value}`, startX + 50, y);
-        });
+        // Death Save Value
+        this.ctx.font = 'bold 72px Arial';
+        this.ctx.fillText('14', 2525, 1485);
+        
+        // Wands Save Label
+        // this.ctx.font = '36px Arial';
+        // this.ctx.fillText('Wands:', 250, 1510);
+        
+        // Wands Save Value
+        this.ctx.font = 'bold 72px Arial';
+        this.ctx.fillText('15', 2525, 1750);
+        
+        // Paralysis Save Label
+        // this.ctx.font = '36px Arial';
+        // this.ctx.fillText('Paralysis:', 250, 1560);
+        
+        // Paralysis Save Value
+        this.ctx.font = 'bold 72px Arial';
+        this.ctx.fillText('16', 2525, 1960);
+        
+        // Breath Save Label
+        // this.ctx.font = '36px Arial';
+        // this.ctx.fillText('Breath:', 250, 1610);
+        
+        // Breath Save Value
+        this.ctx.font = 'bold 72px Arial';
+        this.ctx.fillText('17', 2525, 2200);
+        
+        // Spells Save Label
+        // this.ctx.font = '36px Arial';
+        // this.ctx.fillText('Spells:', 250, 1660);
+        
+        // Spells Save Value
+        this.ctx.font = 'bold 72px Arial';
+        this.ctx.fillText('18', 2525, 2435);
     }
     
     drawEquipment(character) {
