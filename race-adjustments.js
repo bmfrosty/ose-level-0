@@ -25,9 +25,14 @@ function getRaceMinimums(race) {
 }
 
 // Apply race adjustments to ability scores
-function applyRaceAdjustments(results, race, isAdvanced) {
+function applyRaceAdjustments(results, race, isAdvanced, humanRacialAbilities) {
     if (!isAdvanced) {
         return results; // No adjustments in classic mode
+    }
+    
+    // If race is Human and humanRacialAbilities is false, don't apply adjustments
+    if (race === "Human" && humanRacialAbilities === false) {
+        return results;
     }
     
     // Get getModifier function from global scope or require it

@@ -127,8 +127,12 @@ function generateSingleCharacter() {
             const advancedCheckbox = document.getElementById('advanced');
             const isAdvanced = advancedCheckbox ? advancedCheckbox.checked : false;
             
+            // Check if human racial abilities are enabled
+            const humanAbilitiesCheckbox = document.getElementById('humanRacialAbilities');
+            const humanRacialAbilities = humanAbilitiesCheckbox ? humanAbilitiesCheckbox.checked : true;
+            
             // Apply race adjustments if Advanced mode
-            const adjustedResults = applyRaceAdjustments(results, tempRace, isAdvanced);
+            const adjustedResults = applyRaceAdjustments(results, tempRace, isAdvanced, humanRacialAbilities);
             
             // Check race minimums if Advanced mode
             if (!meetsRaceMinimums(adjustedResults, tempRace, isAdvanced)) {
@@ -178,8 +182,12 @@ function generateSingleCharacter() {
     const advancedCheckbox = document.getElementById('advanced');
     const isAdvanced = advancedCheckbox ? advancedCheckbox.checked : false;
     
+    // Check if human racial abilities are enabled
+    const humanAbilitiesCheckbox = document.getElementById('humanRacialAbilities');
+    const humanRacialAbilities = humanAbilitiesCheckbox ? humanAbilitiesCheckbox.checked : true;
+    
     // Apply race adjustments to final results
-    const finalResults = applyRaceAdjustments(results, race, isAdvanced);
+    const finalResults = applyRaceAdjustments(results, race, isAdvanced, humanRacialAbilities);
     
     const conModifier = finalResults.find(r => r.ability === "CON").modifier;
     const dexModifier = finalResults.find(r => r.ability === "DEX").modifier;

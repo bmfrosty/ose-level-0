@@ -110,17 +110,22 @@ function isDemihuman(race) {
 function getRacialAbilities(race) {
     // Check if Advanced mode is enabled
     let isAdvanced = false;
+    let humanRacialAbilities = false;
+    
     if (typeof document !== 'undefined') {
-        // Browser: check checkbox
+        // Browser: check checkboxes
         const advancedCheckbox = document.getElementById('advanced');
+        const humanAbilitiesCheckbox = document.getElementById('humanRacialAbilities');
         isAdvanced = advancedCheckbox ? advancedCheckbox.checked : false;
+        humanRacialAbilities = humanAbilitiesCheckbox ? humanAbilitiesCheckbox.checked : false;
     } else if (typeof process !== 'undefined' && process.env) {
-        // Node.js: check environment variable
+        // Node.js: check environment variables
         isAdvanced = process.env.ADVANCED === 'true';
+        humanRacialAbilities = process.env.HUMAN_RACIAL_ABILITIES === 'true';
     }
     
     const abilities = {
-        "Human": isAdvanced ? [
+        "Human": (isAdvanced && humanRacialAbilities) ? [
             "Roll HP twice, take best.",
             "Act first on tied initiative.",
             "Retainers/mercenaries +1 loyalty/morale."

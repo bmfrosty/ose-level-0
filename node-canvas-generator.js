@@ -82,8 +82,11 @@ function generateSingleCharacterNode(options = {}) {
         // Check if Advanced mode is enabled
         const isAdvanced = process.env.ADVANCED === 'true';
         
+        // Check if human racial abilities are enabled
+        const humanRacialAbilities = process.env.HUMAN_RACIAL_ABILITIES === 'true';
+        
         // Apply race adjustments if Advanced mode
-        const adjustedResults = applyRaceAdjustments(results, race, isAdvanced);
+        const adjustedResults = applyRaceAdjustments(results, race, isAdvanced, humanRacialAbilities);
         
         // Check race minimums if Advanced mode
         if (!meetsRaceMinimums(adjustedResults, race, isAdvanced)) {
