@@ -131,17 +131,14 @@ function getRacialAbilities(race) {
             "Retainers/mercenaries +1 loyalty/morale."
         ] : [],
         "Dwarf": isAdvanced ? [
-            "Speak additional native languages.",
-            "2-in-6 chance of hearing noises at doors.",
+            "Languages: Alignment, Common, Dwarvish, Gnomish, Goblin, Kobold",
+            "Combat: Can only use small or normal sized weapons. Cannot use longbows or two-handed swords.",
+            "Detect Construction Tricks: 2-in-6 chance to detect new construction, sliding walls, or sloping passages when searching.",
+            "Detect Room Traps: 2-in-6 chance of detecting non-magical room traps when searching.",
             "Infravision to 60'.",
-            "2-in-6 chance of detecting room traps.",
+            "Listening at Doors: 2-in-6 chance of hearing noises.",
             "Resilience: Bonus to Death/Wands/Spells saves based on CON (7-10: +2, 11-14: +3, 15-17: +4, 18: +5)."
-        ] : [
-            "Speak additional native languages.",
-            "2-in-6 chance of hearing noises at doors.",
-            "Infravision to 60'.",
-            "2-in-6 chance of detecting room traps."
-        ],
+        ] : [],
         "Elf": [
             "Speak additional native languages.",
             "2-in-6 chance of hearing noises at doors.",
