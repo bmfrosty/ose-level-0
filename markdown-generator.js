@@ -38,7 +38,10 @@ function generateCharacterMarkdown(character, isAdvanced) {
     
     markdown += `## Weapons and Skills\n\n`;
     markdown += `- **Weapon:** ${character.background.weapon}\n`;
-    markdown += `- **Attack Bonus:** +0 (0-level)\n\n`;
+    // Use dynamic attack bonus if available, otherwise default to +0
+    const attackBonus = character.attackBonus !== undefined ? character.attackBonus : 0;
+    const attackBonusText = attackBonus >= 0 ? `+${attackBonus}` : attackBonus.toString();
+    markdown += `- **Attack Bonus:** ${attackBonusText} (0-level)\n\n`;
     
     markdown += `## Racial Abilities\n\n`;
     const racialAbilities = getRacialAbilitiesFunc(character.race);
@@ -54,7 +57,13 @@ function generateCharacterMarkdown(character, isAdvanced) {
     markdown += `## Saving Throws\n\n`;
     markdown += `| Death | Wands | Petrify | Breath | Spells |\n`;
     markdown += `|-------|-------|---------|--------|--------|\n`;
-    markdown += `| 14 | 15 | 16 | 17 | 18 |\n\n`;
+    // Use dynamic saving throws if available, otherwise use defaults
+    const deathSave = character.savingThrows ? character.savingThrows.Death : 14;
+    const wandsSave = character.savingThrows ? character.savingThrows.Wands : 15;
+    const paralysisSave = character.savingThrows ? character.savingThrows.Paralysis : 16;
+    const breathSave = character.savingThrows ? character.savingThrows.Breath : 17;
+    const spellsSave = character.savingThrows ? character.savingThrows.Spells : 18;
+    markdown += `| ${deathSave} | ${wandsSave} | ${paralysisSave} | ${breathSave} | ${spellsSave} |\n\n`;
     
     markdown += `## Equipment\n\n`;
     markdown += `- **Armor:** ${character.background.armor}\n`;

@@ -67,7 +67,7 @@ function display0LevelCharacter(results, total, background, hitPoints, armorClas
                     <h3 style='margin: 10px 0; font-size: 1.15em;'>WEAPONS AND SKILLS</h3>
                     <div style='border: 1px solid #000; padding: 9px; min-height: 65px; font-size: 0.9em;'>
                         <p style='margin: 4px 0;'><strong>Weapon:</strong> ${background.weapon}</p>
-                        <p style='margin: 4px 0;'><strong>Attack Bonus:</strong> +0 (0-level)</p>
+                        <p style='margin: 4px 0;'><strong>Attack Bonus:</strong> ${currentCharacter.attackBonus !== undefined ? (currentCharacter.attackBonus >= 0 ? '+' + currentCharacter.attackBonus : currentCharacter.attackBonus) : '+0'} (0-level)</p>
                     </div>
                     
                     <h3 style='margin: 10px 0; font-size: 1.15em;'>RACIAL ABILITIES</h3>
@@ -91,11 +91,11 @@ function display0LevelCharacter(results, total, background, hitPoints, armorClas
                 <div>
                     <h3 style='margin: 10px 0; font-size: 1.15em;'>SAVING THROWS</h3>
                     <div style='display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; margin-bottom: 12px; font-size: 0.9em;'>
-                        <div style='border: 1px solid #000; padding: 4px; text-align: center;'><strong>Death</strong><br>14</div>
-                        <div style='border: 1px solid #000; padding: 4px; text-align: center;'><strong>Wands</strong><br>15</div>
-                        <div style='border: 1px solid #000; padding: 4px; text-align: center;'><strong>Petrify</strong><br>16</div>
-                        <div style='border: 1px solid #000; padding: 4px; text-align: center;'><strong>Breath</strong><br>17</div>
-                        <div style='border: 1px solid #000; padding: 4px; text-align: center;'><strong>Spells</strong><br>18</div>
+                        <div style='border: 1px solid #000; padding: 4px; text-align: center;'><strong>Death</strong><br>${currentCharacter.savingThrows ? currentCharacter.savingThrows.Death : 14}</div>
+                        <div style='border: 1px solid #000; padding: 4px; text-align: center;'><strong>Wands</strong><br>${currentCharacter.savingThrows ? currentCharacter.savingThrows.Wands : 15}</div>
+                        <div style='border: 1px solid #000; padding: 4px; text-align: center;'><strong>Petrify</strong><br>${currentCharacter.savingThrows ? currentCharacter.savingThrows.Paralysis : 16}</div>
+                        <div style='border: 1px solid #000; padding: 4px; text-align: center;'><strong>Breath</strong><br>${currentCharacter.savingThrows ? currentCharacter.savingThrows.Breath : 17}</div>
+                        <div style='border: 1px solid #000; padding: 4px; text-align: center;'><strong>Spells</strong><br>${currentCharacter.savingThrows ? currentCharacter.savingThrows.Spells : 18}</div>
                     </div>
                     
                     <h3 style='margin: 10px 0; font-size: 1.15em;'>EQUIPMENT</h3>

@@ -130,7 +130,13 @@ function getRacialAbilities(race) {
             "Act first on tied initiative.",
             "Retainers/mercenaries +1 loyalty/morale."
         ] : [],
-        "Dwarf": [
+        "Dwarf": isAdvanced ? [
+            "Speak additional native languages.",
+            "2-in-6 chance of hearing noises at doors.",
+            "Infravision to 60'.",
+            "2-in-6 chance of detecting room traps.",
+            "Resilience: Bonus to Death/Wands/Spells saves based on CON (7-10: +2, 11-14: +3, 15-17: +4, 18: +5)."
+        ] : [
             "Speak additional native languages.",
             "2-in-6 chance of hearing noises at doors.",
             "Infravision to 60'.",
@@ -201,6 +207,51 @@ function getDwarfResilienceBonus(conScore) {
     return 0; // Fallback
 }
 
+// Calculate saving throws for a character
+// Inputs: level, race, CON score, isAdvanced, isGygar
+// Output: Object with Death, Wands, Paralysis, Breath, Spells
+function calculateSavingThrows(level, race, conScore, isAdvanced, isGygar) {
+    // Start with base values for level 0
+    // (Future: will use different tables for higher levels)
+    const saves = {
+        Death: savingThrowsLevel0.Death,
+        Wands: savingThrowsLevel0.Wands,
+        Paralysis: savingThrowsLevel0.Paralysis,
+        Breath: savingThrowsLevel0.Breath,
+        Spells: savingThrowsLevel0.Spells
+    };
+    
+    // Apply Dwarf Resilience bonus if Advanced Mode and race is Dwarf
+    if (isAdvanced && race === "Dwarf") {
+        const resilienceBonus = getDwarfResilienceBonus(conScore);
+        // Resilience applies to Death, Wands, and Spells (not Paralysis or Breath)
+        saves.Death -= resilienceBonus;
+        saves.Wands -= resilienceBonus;
+        saves.Spells -= resilienceBonus;
+    }
+    
+    return saves;
+}
+
+// Calculate attack bonus for a character
+// Inputs: level, race, isAdvanced, isGygar
+// Output: Number (attack bonus)
+function calculateAttackBonus(level, race, isAdvanced, isGygar) {
+    // For level 0 characters
+    if (level === 0) {
+        // Gygar Mode: no penalty at level 0
+        if (isGygar) {
+            return attackBonusLevel0.Gygar;  // 0
+        }
+        // Normal Mode: penalty at level 0
+        return attackBonusLevel0.Normal;  // -1
+    }
+    
+    // Future: will use different tables for higher levels
+    // For now, just return 0 for any level above 0
+    return 0;
+}
+
 // Export for Node.js
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
@@ -212,6 +263,8 @@ if (typeof module !== 'undefined' && module.exports) {
         getCommonDemihumanAbilities,
         savingThrowsLevel0,
         attackBonusLevel0,
-        getDwarfResilienceBonus
+        getDwarfResilienceBonus,
+        calculateSavingThrows,
+        calculateAttackBonus
     };
 }

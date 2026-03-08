@@ -107,6 +107,15 @@ function generate0LevelCharacter() {
 
     // Roll 3d6 for starting gold
     const startingGold = roll3d6();
+    
+    // Check if Gygar mode is enabled
+    const gygarCheckbox = document.getElementById('gygar');
+    const isGygar = gygarCheckbox ? gygarCheckbox.checked : true;
+    
+    // Calculate saving throws and attack bonus
+    const conScore = adjustedResults.find(r => r.ability === "CON").roll;
+    const savingThrows = calculateSavingThrows(0, race, conScore, isAdvanced, isGygar);
+    const attackBonus = calculateAttackBonus(0, race, isAdvanced, isGygar);
 
     // Store character data for PDF generation (use adjusted results)
     currentCharacter = {
@@ -117,7 +126,10 @@ function generate0LevelCharacter() {
         armorClass: armorClass,
         race: race,
         name: name,
-        startingGold: startingGold
+        startingGold: startingGold,
+        level: 0,
+        attackBonus: attackBonus,
+        savingThrows: savingThrows
     };
 
     // Display results if all rolls are valid (use adjusted results)

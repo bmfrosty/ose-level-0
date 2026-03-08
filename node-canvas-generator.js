@@ -7,7 +7,7 @@ const fs = require('fs');
 // Import the character generation logic from existing modules
 const { rollDice } = require('./dice-utils.js');
 const { backgroundTables } = require('./background-tables.js');
-const { rollRace, getRandomName, getRacialAbilities, isDemihuman, getCommonDemihumanAbilities } = require('./names-tables.js');
+const { rollRace, getRandomName, getRacialAbilities, isDemihuman, getCommonDemihumanAbilities, calculateSavingThrows, calculateAttackBonus } = require('./names-tables.js');
 const { getModifier, getModifierEffects } = require('./ose-modifiers.js');
 const { abilities, calculateHitPoints, getBackgroundByHitPoints, calculateArmorClass } = require('./character-utils.js');
 const { applyRaceAdjustments, meetsRaceMinimums } = require('./race-adjustments.js');
@@ -124,6 +124,14 @@ function generateSingleCharacterNode(options = {}) {
         const name = getRandomName(race);
         const startingGold = rollDice(3, 6);
         
+        // Check if Gygar mode is enabled
+        const isGygar = process.env.GYGAR === 'true';
+        
+        // Calculate saving throws and attack bonus
+        const conScore = adjustedResults.find(r => r.ability === 'CON').roll;
+        const savingThrows = calculateSavingThrows(0, race, conScore, isAdvanced, isGygar);
+        const attackBonus = calculateAttackBonus(0, race, isAdvanced, isGygar);
+        
         return {
             results: adjustedResults,
             background,
@@ -132,7 +140,10 @@ function generateSingleCharacterNode(options = {}) {
             hitPoints,
             armorClass,
             startingGold,
-            total: adjustedResults.reduce((sum, r) => sum + r.modifier, 0)
+            total: adjustedResults.reduce((sum, r) => sum + r.modifier, 0),
+            level: 0,
+            attackBonus: attackBonus,
+            savingThrows: savingThrows
         };
     }
     

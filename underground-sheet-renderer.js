@@ -151,6 +151,13 @@ class UndergroundCharacterSheet {
     drawSavingThrows(character) {
         // Saving throws - each label and value gets its own positioning
         // Comment out individual lines to hide specific labels or values
+        // Use dynamic values from character object if available, otherwise use defaults
+        
+        const deathSave = character.savingThrows ? character.savingThrows.Death.toString() : '14';
+        const wandsSave = character.savingThrows ? character.savingThrows.Wands.toString() : '15';
+        const paralysisSave = character.savingThrows ? character.savingThrows.Paralysis.toString() : '16';
+        const breathSave = character.savingThrows ? character.savingThrows.Breath.toString() : '17';
+        const spellsSave = character.savingThrows ? character.savingThrows.Spells.toString() : '18';
         
         // Section Title
         // this.ctx.font = 'bold 42px Arial';
@@ -162,7 +169,7 @@ class UndergroundCharacterSheet {
         
         // Death Save Value
         this.ctx.font = 'bold 72px Arial';
-        this.ctx.fillText('14', 2525, 1485);
+        this.ctx.fillText(deathSave, 2525, 1485);
         
         // Wands Save Label
         // this.ctx.font = '36px Arial';
@@ -170,7 +177,7 @@ class UndergroundCharacterSheet {
         
         // Wands Save Value
         this.ctx.font = 'bold 72px Arial';
-        this.ctx.fillText('15', 2525, 1750);
+        this.ctx.fillText(wandsSave, 2525, 1750);
         
         // Paralysis Save Label
         // this.ctx.font = '36px Arial';
@@ -178,7 +185,7 @@ class UndergroundCharacterSheet {
         
         // Paralysis Save Value
         this.ctx.font = 'bold 72px Arial';
-        this.ctx.fillText('16', 2525, 1960);
+        this.ctx.fillText(paralysisSave, 2525, 1960);
         
         // Breath Save Label
         // this.ctx.font = '36px Arial';
@@ -186,7 +193,7 @@ class UndergroundCharacterSheet {
         
         // Breath Save Value
         this.ctx.font = 'bold 72px Arial';
-        this.ctx.fillText('17', 2525, 2200);
+        this.ctx.fillText(breathSave, 2525, 2200);
         
         // Spells Save Label
         // this.ctx.font = '36px Arial';
@@ -194,7 +201,7 @@ class UndergroundCharacterSheet {
         
         // Spells Save Value
         this.ctx.font = 'bold 72px Arial';
-        this.ctx.fillText('18', 2525, 2435);
+        this.ctx.fillText(spellsSave, 2525, 2435);
     }
     
     drawEquipment(character) {

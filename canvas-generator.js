@@ -20,10 +20,24 @@ function generateCanvasPNG() {
     
     // Create download link
     const filename = CanvasCharacterSheet.generateSingleCharacterFilename(character).replace('.pdf', '.png');
-    const link = document.createElement('a');
-    link.download = filename;
-    link.href = imgData;
-    link.click();
+    
+    // Check if "Open file instead of saving" is enabled
+    const openFileCheckbox = document.getElementById('openFileInsteadOfSave');
+    const shouldOpenFile = openFileCheckbox ? openFileCheckbox.checked : false;
+    
+    if (shouldOpenFile) {
+        // Open in new tab/window
+        const win = window.open();
+        if (win) {
+            win.document.write('<html><head><title>' + filename + '</title></head><body style="margin:0;"><img src="' + imgData + '" style="width:100%;height:auto;"/></body></html>');
+        }
+    } else {
+        // Download file
+        const link = document.createElement('a');
+        link.download = filename;
+        link.href = imgData;
+        link.click();
+    }
 }
 
 // Generate PDF with embedded high-resolution image
@@ -50,9 +64,23 @@ function generateCanvasPDF() {
     // Add image to PDF with Flate compression (full page)
     doc.addImage(imgData, 'PNG', 0, 0, 612, 792, '', 'FAST');
     
-    // Save the PDF using shared filename generator
+    // Get filename
     const filename = CanvasCharacterSheet.generateSingleCharacterFilename(character);
-    doc.save(filename);
+    
+    // Check if "Open file instead of saving" is enabled
+    const openFileCheckbox = document.getElementById('openFileInsteadOfSave');
+    const shouldOpenFile = openFileCheckbox ? openFileCheckbox.checked : false;
+    
+    if (shouldOpenFile) {
+        // Open in new tab/window
+        const pdfBlob = doc.output('blob');
+        const url = URL.createObjectURL(pdfBlob);
+        window.open(url, '_blank');
+        // Note: URL will be revoked when the window is closed
+    } else {
+        // Download file
+        doc.save(filename);
+    }
 }
 
 // Generate bulk PDF with canvas rendering
@@ -125,14 +153,24 @@ function generateMarkdown() {
     const name = character.name.replace(/[^a-zA-Z0-9]/g, '_');
     const filename = `OSE_0Level_${race}_${profession}_${name}.md`;
     
-    // Create download link and trigger download
-    const link = document.createElement('a');
-    link.download = filename;
-    link.href = url;
-    link.click();
+    // Check if "Open file instead of saving" is enabled
+    const openFileCheckbox = document.getElementById('openFileInsteadOfSave');
+    const shouldOpenFile = openFileCheckbox ? openFileCheckbox.checked : false;
     
-    // Clean up
-    URL.revokeObjectURL(url);
+    if (shouldOpenFile) {
+        // Open in new tab/window
+        window.open(url, '_blank');
+        // Note: URL will be revoked when the window is closed
+    } else {
+        // Create download link and trigger download
+        const link = document.createElement('a');
+        link.download = filename;
+        link.href = url;
+        link.click();
+        
+        // Clean up
+        URL.revokeObjectURL(url);
+    }
 }
 
 // Generate JSON file
@@ -153,14 +191,24 @@ function generateJSON() {
     const name = character.name.replace(/[^a-zA-Z0-9]/g, '_');
     const filename = `OSE_0Level_${race}_${profession}_${name}.json`;
     
-    // Create download link and trigger download
-    const link = document.createElement('a');
-    link.download = filename;
-    link.href = url;
-    link.click();
+    // Check if "Open file instead of saving" is enabled
+    const openFileCheckbox = document.getElementById('openFileInsteadOfSave');
+    const shouldOpenFile = openFileCheckbox ? openFileCheckbox.checked : false;
     
-    // Clean up
-    URL.revokeObjectURL(url);
+    if (shouldOpenFile) {
+        // Open in new tab/window
+        window.open(url, '_blank');
+        // Note: URL will be revoked when the window is closed
+    } else {
+        // Create download link and trigger download
+        const link = document.createElement('a');
+        link.download = filename;
+        link.href = url;
+        link.click();
+        
+        // Clean up
+        URL.revokeObjectURL(url);
+    }
 }
 
 // Generate bulk JSON file (4 characters as array)

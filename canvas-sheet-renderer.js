@@ -263,7 +263,11 @@ class CanvasCharacterSheet {
         this.drawRect(72, 419, 230, 101, null, '#000000');
         this.setFont('Arial', 12, 'normal');
         this.drawText(`Weapon: ${character.background.weapon}`, 82, 435);
-        this.drawText("Attack Bonus: +0 (0-level)", 82, 450);
+        
+        // Use dynamic attack bonus if available, otherwise default to +0
+        const attackBonus = character.attackBonus !== undefined ? character.attackBonus : 0;
+        const attackBonusText = attackBonus >= 0 ? `+${attackBonus}` : attackBonus.toString();
+        this.drawText(`Attack Bonus: ${attackBonusText} (0-level)`, 82, 450);
         
         // RACIAL ABILITIES section
         this.setFont('Arial', 10, 'bold');
@@ -293,12 +297,13 @@ class CanvasCharacterSheet {
         this.drawText("SAVING THROWS", 325, 169, '#FFFFFF');
         
         // Saving throw boxes (wider to fill column width with centered text)
+        // Use dynamic values from character object if available, otherwise use defaults
         const saves = [
-            { name: "Death", value: "14" },
-            { name: "Wands", value: "15" },
-            { name: "Petrify", value: "16" },
-            { name: "Breath", value: "17" },
-            { name: "Spells", value: "18" }
+            { name: "Death", value: character.savingThrows ? character.savingThrows.Death.toString() : "14" },
+            { name: "Wands", value: character.savingThrows ? character.savingThrows.Wands.toString() : "15" },
+            { name: "Petrify", value: character.savingThrows ? character.savingThrows.Paralysis.toString() : "16" },
+            { name: "Breath", value: character.savingThrows ? character.savingThrows.Breath.toString() : "17" },
+            { name: "Spells", value: character.savingThrows ? character.savingThrows.Spells.toString() : "18" }
         ];
         
         for (let i = 0; i < 5; i++) {

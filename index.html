@@ -80,12 +80,20 @@
             <input type="checkbox" id="gygar" checked> <a href="https://www.drivethrurpg.com/en/product/510225/the-ruins-of-castle-gygar" target="_blank">Gygar Mode</a> (Minor adjustments to base OSE)
         </label><br>
         <label for="openInNewTab">
-            <input type="checkbox" id="openInNewTab"> Open character display in new tab
+            <input type="checkbox" id="openInNewTab" checked> Open character display in new tab
+        </label><br>
+        <label for="openFileInsteadOfSave" title="Best effort - may not work in all browsers/settings">
+            <input type="checkbox" id="openFileInsteadOfSave"> Open file instead of saving (PNG/PDF/MD/JSON - best effort)
         </label><br><br>
         
         <!-- Hidden select for backward compatibility -->
         <select id="forceRace" style="display:none;">
             <option value="">Random</option>
+            <option value="Human">Human</option>
+            <option value="Dwarf">Dwarf</option>
+            <option value="Elf">Elf</option>
+            <option value="Gnome">Gnome</option>
+            <option value="Halfling">Halfling</option>
         </select>
         <input type="checkbox" id="forceDemihuman" style="display:none;">
         
