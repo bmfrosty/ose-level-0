@@ -13,29 +13,32 @@ Add support for higher-level characters with dynamic attack bonuses and saving t
 1. Add level, attackBonus, and savingThrows to character object
 2. Support Advanced Mode (race-based bonuses)
 3. Support Basic Mode (class-based, no race)
-4. Implement Dwarf Resilience ability (Advanced Mode only)
+4. Support Gygar Mode (different saving throws and attack bonuses)
+5. Implement Dwarf Resilience ability (Advanced Mode only)
 
 ## Implementation Checklist
 
 ### Phase 1: Data Structures and Tables
-- [ ] Create `UPPER_LEVEL_PLAN.md` (this file)
+- [x] Create `UPPER_LEVEL_PLAN.md` (this file)
+- [ ] Add Gygar Mode checkbox to UI (default: ON)
 - [ ] Add saving throw tables to `names-tables.js`
-  - [ ] Level 0 base values
-  - [ ] Tables for future level support
+  - [ ] Level 0 base values (same for both Normal and Gygar modes)
+  - [ ] Tables for future level support (will differ between modes)
 - [ ] Add attack bonus tables to `names-tables.js`
-  - [ ] Level 0 base value (+0)
+  - [ ] Level 0 base value: -1 (Normal Mode), 0 (Gygar Mode)
   - [ ] Tables for future level support
 
 ### Phase 2: Core Functions
 - [ ] Create `calculateSavingThrows()` function
-  - [ ] Input: level, race/class, CON score, isAdvanced
+  - [ ] Input: level, race/class, CON score, isAdvanced, isGygar
   - [ ] Output: Object with Death, Wands, Paralysis, Breath, Spells
-  - [ ] Apply base values for level 0
+  - [ ] Apply base values for level 0 (Normal or Gygar)
   - [ ] Apply Dwarf Resilience bonus (Advanced Mode only)
 - [ ] Create `calculateAttackBonus()` function
-  - [ ] Input: level, race/class, isAdvanced
+  - [ ] Input: level, race/class, isAdvanced, isGygar
   - [ ] Output: Number (attack bonus)
-  - [ ] Return +0 for level 0
+  - [ ] Return -1 for level 0 (Normal Mode)
+  - [ ] Return 0 for level 0 (Gygar Mode)
 
 ### Phase 3: Dwarf Resilience Implementation
 - [ ] Add `getDwarfResilienceBonus()` function
@@ -116,14 +119,30 @@ Add support for higher-level characters with dynamic attack bonuses and saving t
 - Attack bonus determined by class + level
 - No racial abilities
 
+### Gygar Mode Details
+- **Default: ON** (checkbox in UI)
+- Named after "The Ruins of Castle Gygar" module
+- Link: https://www.drivethrurpg.com/en/product/510225/the-ruins-of-castle-gygar
+- Different saving throw values than Normal Mode
+- Different attack bonus progression (future levels)
+- Applies to both Advanced and Basic modes
+- **TODO:** Get specific Gygar Mode values from user
+
 ### Level 0 Specifics
-- Attack Bonus: Always +0
+
+**Normal Mode:**
+- Attack Bonus: **-1** (penalty at level 0)
 - Saving Throws: Base values (before racial bonuses)
   - Death: 14
   - Wands: 15
   - Paralysis: 16
   - Breath: 17
   - Spells: 18
+
+**Gygar Mode:**
+- Attack Bonus: **0** (no penalty at level 0)
+- Saving Throws: **Same as Normal Mode** (Death: 14, Wands: 15, Paralysis: 16, Breath: 17, Spells: 18)
+  - Gygar Mode only differs at higher levels
 
 ## Progress Tracking
 - **Started:** 2026-03-07
