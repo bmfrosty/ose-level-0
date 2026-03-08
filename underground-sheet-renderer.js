@@ -83,33 +83,35 @@ class UndergroundCharacterSheet {
     }
     
     drawAbilityScores(character) {
-        // Ability scores - typically in boxes on the left side
-        // These positions are estimates and will need adjustment based on actual template
-        const startY = 1600;
-        const spacing = 240;
-        const labelX = 200;
-        const scoreX = 600;
+        // Ability scores - each ability gets its own positioning
+        // Coordinates are (X from left, Y from top) in pixels at 3x scale
+        // Old values: startY=1600, spacing=240, labelX=200, scoreX=600
+        // Calculated positions: y = 1600 + (index * 240), modX = scoreX + 120 = 720, modY = y + 10
         
-        this.ctx.font = 'bold 48px Arial';
+        const abilities = [
+            { name: 'STR', labelX: 200, labelY: 1600, scoreX: 600, scoreY: 1600, modX: 875, modY: 1600 },
+            { name: 'DEX', labelX: 200, labelY: 1825, scoreX: 600, scoreY: 1825, modX: 875, modY: 1825 },
+            { name: 'CON', labelX: 200, labelY: 2045, scoreX: 600, scoreY: 2045, modX: 875, modY: 2045 },
+            { name: 'INT', labelX: 200, labelY: 2320, scoreX: 600, scoreY: 2320, modX: 875, modY: 2320 },
+            { name: 'WIS', labelX: 200, labelY: 2560, scoreX: 600, scoreY: 2560, modX: 875, modY: 2560 },
+            { name: 'CHA', labelX: 200, labelY: 2840, scoreX: 600, scoreY: 2840, modX: 875, modY: 2840 }
+        ];
         
-        const abilities = ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'];
-        abilities.forEach((ability, index) => {
-            const result = character.results.find(r => r.ability === ability);
-            const y = startY + (index * spacing);
+        abilities.forEach(abilityPos => {
+            const result = character.results.find(r => r.ability === abilityPos.name);
             
             // Draw ability name
-            // this.ctx.fillText(ability, labelX, y);
+            // this.ctx.font = 'bold 48px Arial';
+            // this.ctx.fillText(abilityPos.name, abilityPos.labelX, abilityPos.labelY);
             
             // Draw score
             this.ctx.font = 'bold 72px Arial';
-            this.ctx.fillText(result.roll.toString(), scoreX, y);
+            this.ctx.fillText(result.roll.toString(), abilityPos.scoreX, abilityPos.scoreY);
             
             // Draw modifier
             this.ctx.font = 'bold 72px Arial';
             const modText = result.modifier >= 0 ? `+${result.modifier}` : result.modifier.toString();
-            this.ctx.fillText(modText, scoreX + 250, y + 10);
-            
-            this.ctx.font = 'bold 48px Arial';
+            this.ctx.fillText(modText, abilityPos.modX, abilityPos.modY);
         });
     }
     
