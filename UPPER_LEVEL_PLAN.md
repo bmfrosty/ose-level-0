@@ -1,0 +1,131 @@
+# Upper Level Character Support Implementation Plan
+
+## Overview
+Add support for higher-level characters with dynamic attack bonuses and saving throws. Currently, the tool only generates level 0 characters with fixed values.
+
+## Current State
+- Level: Always 0
+- Attack Bonus: Always +0
+- Saving Throws: Fixed values (Death: 14, Wands: 15, Paralysis: 16, Breath: 17, Spells: 18)
+- No racial bonuses to saves
+
+## Goals
+1. Add level, attackBonus, and savingThrows to character object
+2. Support Advanced Mode (race-based bonuses)
+3. Support Basic Mode (class-based, no race)
+4. Implement Dwarf Resilience ability (Advanced Mode only)
+
+## Implementation Checklist
+
+### Phase 1: Data Structures and Tables
+- [ ] Create `UPPER_LEVEL_PLAN.md` (this file)
+- [ ] Add saving throw tables to `names-tables.js`
+  - [ ] Level 0 base values
+  - [ ] Tables for future level support
+- [ ] Add attack bonus tables to `names-tables.js`
+  - [ ] Level 0 base value (+0)
+  - [ ] Tables for future level support
+
+### Phase 2: Core Functions
+- [ ] Create `calculateSavingThrows()` function
+  - [ ] Input: level, race/class, CON score, isAdvanced
+  - [ ] Output: Object with Death, Wands, Paralysis, Breath, Spells
+  - [ ] Apply base values for level 0
+  - [ ] Apply Dwarf Resilience bonus (Advanced Mode only)
+- [ ] Create `calculateAttackBonus()` function
+  - [ ] Input: level, race/class, isAdvanced
+  - [ ] Output: Number (attack bonus)
+  - [ ] Return +0 for level 0
+
+### Phase 3: Dwarf Resilience Implementation
+- [ ] Add `getDwarfResilienceBonus()` function
+  - [ ] Input: CON score
+  - [ ] Output: Bonus value
+  - [ ] CON 6 or lower: +0
+  - [ ] CON 7-10: +2
+  - [ ] CON 11-14: +3
+  - [ ] CON 15-17: +4
+  - [ ] CON 18: +5
+- [ ] Apply bonus to Death, Wands, and Spells saves only
+- [ ] Add "Resilience" to Dwarf racial abilities text
+
+### Phase 4: Character Object Updates
+- [ ] Update `main-generator.js`
+  - [ ] Add `level: 0` to character object
+  - [ ] Add `attackBonus` to character object
+  - [ ] Add `savingThrows` object to character object
+  - [ ] Call `calculateSavingThrows()` during generation
+  - [ ] Call `calculateAttackBonus()` during generation
+- [ ] Update `node-canvas-generator.js`
+  - [ ] Same changes as main-generator.js
+
+### Phase 5: Renderer Updates
+- [ ] Update `canvas-sheet-renderer.js`
+  - [ ] Use `character.savingThrows.Death` instead of hardcoded 14
+  - [ ] Use `character.savingThrows.Wands` instead of hardcoded 15
+  - [ ] Use `character.savingThrows.Paralysis` instead of hardcoded 16
+  - [ ] Use `character.savingThrows.Breath` instead of hardcoded 17
+  - [ ] Use `character.savingThrows.Spells` instead of hardcoded 18
+  - [ ] Use `character.attackBonus` instead of hardcoded +0
+- [ ] Update `underground-sheet-renderer.js`
+  - [ ] Use `character.savingThrows.Death` instead of hardcoded 14
+  - [ ] Use `character.savingThrows.Wands` instead of hardcoded 15
+  - [ ] Use `character.savingThrows.Paralysis` instead of hardcoded 16
+  - [ ] Use `character.savingThrows.Breath` instead of hardcoded 17
+  - [ ] Use `character.savingThrows.Spells` instead of hardcoded 18
+  - [ ] Use `character.attackBonus` instead of hardcoded +0
+- [ ] Update `markdown-generator.js`
+  - [ ] Use dynamic saving throw values
+  - [ ] Use dynamic attack bonus
+
+### Phase 6: Display Updates
+- [ ] Update `character-display.js`
+  - [ ] Display dynamic saving throws
+  - [ ] Display dynamic attack bonus
+  - [ ] Show Dwarf Resilience bonus in Advanced Mode
+
+### Phase 7: Testing
+- [ ] Test level 0 characters (should work as before)
+- [ ] Test Dwarf characters in Advanced Mode
+  - [ ] Verify Resilience bonus applies correctly
+  - [ ] Test all CON score ranges
+- [ ] Test non-Dwarf characters (no bonus)
+- [ ] Test JSON output includes new fields
+- [ ] Test Markdown output shows correct values
+- [ ] Test PDF/PNG rendering with dynamic values
+- [ ] Test Classic sheet style
+- [ ] Test Underground sheet style
+
+### Phase 8: Documentation
+- [ ] Update README.md with new features
+- [ ] Document Dwarf Resilience ability
+- [ ] Note that Basic Mode support is planned but not yet implemented
+
+## Notes
+
+### Dwarf Resilience Details
+- **Only applies in Advanced Mode**
+- Bonus applies to: Death, Wands, Spells saves
+- Bonus does NOT apply to: Paralysis, Breath saves
+- Based on CON score (not modifier)
+
+### Basic Mode (Future)
+- Race field will be "Basic"
+- Dwarf, Elf, Halfling become classes
+- Saving throws determined by class + level
+- Attack bonus determined by class + level
+- No racial abilities
+
+### Level 0 Specifics
+- Attack Bonus: Always +0
+- Saving Throws: Base values (before racial bonuses)
+  - Death: 14
+  - Wands: 15
+  - Paralysis: 16
+  - Breath: 17
+  - Spells: 18
+
+## Progress Tracking
+- **Started:** 2026-03-07
+- **Current Phase:** Phase 1 (Planning)
+- **Completion:** 0/8 phases complete
