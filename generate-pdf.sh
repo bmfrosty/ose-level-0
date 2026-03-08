@@ -18,6 +18,7 @@ FORCE_DEMIHUMAN=false
 FORCE_RACE=""
 OUTPUT=""
 ADVANCED=true
+GYGAR=true
 STDOUT=false
 PRINT_MARKDOWN=false
 
@@ -50,6 +51,8 @@ OPTIONS:
     -r, --race RACE          Force specific race (Human, Dwarf, Elf, Gnome, or Halfling)
     -s, --style STYLE        Sheet style: classic or underground (default: classic)
     --not-advanced           Disable Advanced mode (humans get no racial abilities)
+    --gygar                  Enable Gygar Mode (0-level attack bonus: 0, default: ON)
+    --not-gygar              Disable Gygar Mode (0-level attack bonus: -1)
     --stdout                 Output to stdout instead of file (json/md only)
     --print-markdown         Print character data as markdown to stderr (for PDF/PNG debugging)
     
@@ -159,6 +162,14 @@ while [[ $# -gt 0 ]]; do
             ;;
         --not-advanced)
             ADVANCED=false
+            shift
+            ;;
+        --gygar)
+            GYGAR=true
+            shift
+            ;;
+        --not-gygar)
+            GYGAR=false
             shift
             ;;
         --stdout)
@@ -399,6 +410,7 @@ export FORCE_DEMIHUMAN
 export FORCE_RACE
 export OUTPUT
 export ADVANCED
+export GYGAR
 export STDOUT
 export PRINT_MARKDOWN
 

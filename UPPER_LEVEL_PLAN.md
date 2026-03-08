@@ -18,31 +18,20 @@ Add support for higher-level characters with dynamic attack bonuses and saving t
 
 ## Implementation Checklist
 
-### Phase 1: Data Structures and Tables
+### Phase 1: Data Structures and Tables ✅ COMPLETE
 - [x] Create `UPPER_LEVEL_PLAN.md` (this file)
-- [ ] Add Gygar Mode checkbox to UI (default: ON)
-- [ ] Add Gygar Mode option to shell script (--gygar / --not-gygar)
-- [ ] Add saving throw tables to `names-tables.js`
-  - [ ] Level 0 base values (same for both Normal and Gygar modes)
-  - [ ] Tables for future level support (will differ between modes)
-- [ ] Add attack bonus tables to `names-tables.js`
-  - [ ] Level 0 base value: -1 (Normal Mode), 0 (Gygar Mode)
-  - [ ] Tables for future level support
+- [x] Add Gygar Mode checkbox to UI (default: ON)
+- [x] Add Gygar Mode option to shell script (--gygar / --not-gygar)
+- [x] Add saving throw tables to `names-tables.js`
+  - [x] Level 0 base values (same for both Normal and Gygar modes)
+  - [x] Tables for future level support (will differ between modes)
+- [x] Add attack bonus tables to `names-tables.js`
+  - [x] Level 0 base value: -1 (Normal Mode), 0 (Gygar Mode)
+  - [x] Tables for future level support
 
-### Phase 2: Core Functions
-- [ ] Create `calculateSavingThrows()` function
-  - [ ] Input: level, race/class, CON score, isAdvanced, isGygar
-  - [ ] Output: Object with Death, Wands, Paralysis, Breath, Spells
-  - [ ] Apply base values for level 0 (Normal or Gygar)
-  - [ ] Apply Dwarf Resilience bonus (Advanced Mode only)
-- [ ] Create `calculateAttackBonus()` function
-  - [ ] Input: level, race/class, isAdvanced, isGygar
-  - [ ] Output: Number (attack bonus)
-  - [ ] Return -1 for level 0 (Normal Mode)
-  - [ ] Return 0 for level 0 (Gygar Mode)
-
-### Phase 3: Dwarf Resilience Implementation
-- [ ] Add `getDwarfResilienceBonus()` function
+### Phase 2A: Dwarf Resilience Function
+**IMPORTANT:** Update UPPER_LEVEL_PLAN.md progress after each task
+- [ ] Create `getDwarfResilienceBonus()` function in `names-tables.js`
   - [ ] Input: CON score
   - [ ] Output: Bonus value
   - [ ] CON 6 or lower: +0
@@ -50,8 +39,37 @@ Add support for higher-level characters with dynamic attack bonuses and saving t
   - [ ] CON 11-14: +3
   - [ ] CON 15-17: +4
   - [ ] CON 18: +5
-- [ ] Apply bonus to Death, Wands, and Spells saves only
-- [ ] Add "Resilience" to Dwarf racial abilities text
+- [ ] Export function for use in other modules
+- [ ] Update UPPER_LEVEL_PLAN.md with completion
+
+### Phase 2B: Calculate Saving Throws Function
+**IMPORTANT:** Update UPPER_LEVEL_PLAN.md progress after each task
+- [ ] Create `calculateSavingThrows()` function in `names-tables.js`
+  - [ ] Input: level, race, CON score, isAdvanced, isGygar
+  - [ ] Output: Object with Death, Wands, Paralysis, Breath, Spells
+  - [ ] Apply base values from savingThrowsLevel0
+  - [ ] If Advanced Mode AND race is Dwarf: apply Resilience bonus to Death, Wands, Spells
+  - [ ] Return final saving throw object
+- [ ] Export function for use in other modules
+- [ ] Update UPPER_LEVEL_PLAN.md with completion
+
+### Phase 2C: Calculate Attack Bonus Function
+**IMPORTANT:** Update UPPER_LEVEL_PLAN.md progress after each task
+- [ ] Create `calculateAttackBonus()` function in `names-tables.js`
+  - [ ] Input: level, race, isAdvanced, isGygar
+  - [ ] Output: Number (attack bonus)
+  - [ ] If level 0 and Gygar Mode: return 0
+  - [ ] If level 0 and Normal Mode: return -1
+  - [ ] Return final attack bonus
+- [ ] Export function for use in other modules
+- [ ] Update UPPER_LEVEL_PLAN.md with completion
+
+### Phase 2D: Update Dwarf Racial Abilities Text
+**IMPORTANT:** Update UPPER_LEVEL_PLAN.md progress after each task
+- [ ] Update `getRacialAbilities()` function in `names-tables.js`
+  - [ ] Add Resilience description to Dwarf abilities (Advanced Mode only)
+  - [ ] Include CON-based bonus explanation
+- [ ] Update UPPER_LEVEL_PLAN.md with completion
 
 ### Phase 4: Character Object Updates
 - [ ] Update `main-generator.js`
@@ -147,5 +165,11 @@ Add support for higher-level characters with dynamic attack bonuses and saving t
 
 ## Progress Tracking
 - **Started:** 2026-03-07
-- **Current Phase:** Phase 1 (Planning)
-- **Completion:** 0/8 phases complete
+- **Current Phase:** Phase 2 (Core Functions)
+- **Completion:** 1/8 phases complete
+
+### Completed Phases
+- ✅ **Phase 1:** Data Structures and Tables (2026-03-07)
+  - Added Gygar Mode UI checkbox with link to Castle Gygar module
+  - Added --gygar / --not-gygar CLI options
+  - Added savingThrowsLevel0 and attackBonusLevel0 tables to names-tables.js

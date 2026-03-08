@@ -168,6 +168,23 @@ function getRandomName(race) {
     return names[roll];
 }
 
+// Saving throw tables for level 0 characters
+// Same values for both Normal and Gygar modes at level 0
+const savingThrowsLevel0 = {
+    Death: 14,
+    Wands: 15,
+    Paralysis: 16,
+    Breath: 17,
+    Spells: 18
+};
+
+// Attack bonus tables for level 0 characters
+// Different values for Normal vs Gygar mode
+const attackBonusLevel0 = {
+    Normal: -1,  // Penalty for untrained characters
+    Gygar: 0     // No penalty in Gygar Mode (Castle Gygar house rules)
+};
+
 // Export for Node.js
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
@@ -176,6 +193,8 @@ if (typeof module !== 'undefined' && module.exports) {
         getRandomName,
         getRacialAbilities,
         isDemihuman,
-        getCommonDemihumanAbilities
+        getCommonDemihumanAbilities,
+        savingThrowsLevel0,
+        attackBonusLevel0
     };
 }
