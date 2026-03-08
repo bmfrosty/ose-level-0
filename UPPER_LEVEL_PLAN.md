@@ -29,18 +29,18 @@ Add support for higher-level characters with dynamic attack bonuses and saving t
   - [x] Level 0 base value: -1 (Normal Mode), 0 (Gygar Mode)
   - [x] Tables for future level support
 
-### Phase 2A: Dwarf Resilience Function
+### Phase 2A: Dwarf Resilience Function ✅ COMPLETE
 **IMPORTANT:** Update UPPER_LEVEL_PLAN.md progress after each task
-- [ ] Create `getDwarfResilienceBonus()` function in `names-tables.js`
-  - [ ] Input: CON score
-  - [ ] Output: Bonus value
-  - [ ] CON 6 or lower: +0
-  - [ ] CON 7-10: +2
-  - [ ] CON 11-14: +3
-  - [ ] CON 15-17: +4
-  - [ ] CON 18: +5
-- [ ] Export function for use in other modules
-- [ ] Update UPPER_LEVEL_PLAN.md with completion
+- [x] Create `getDwarfResilienceBonus()` function in `names-tables.js`
+  - [x] Input: CON score
+  - [x] Output: Bonus value
+  - [x] CON 6 or lower: +0
+  - [x] CON 7-10: +2
+  - [x] CON 11-14: +3
+  - [x] CON 15-17: +4
+  - [x] CON 18: +5
+- [x] Export function for use in other modules
+- [x] Update UPPER_LEVEL_PLAN.md with completion
 
 ### Phase 2B: Calculate Saving Throws Function
 **IMPORTANT:** Update UPPER_LEVEL_PLAN.md progress after each task
@@ -165,11 +165,14 @@ Add support for higher-level characters with dynamic attack bonuses and saving t
 
 ## Progress Tracking
 - **Started:** 2026-03-07
-- **Current Phase:** Phase 2 (Core Functions)
-- **Completion:** 1/8 phases complete
+- **Current Phase:** Phase 2B (Calculate Saving Throws Function)
+- **Completion:** 1.25/8 phases complete (Phase 1 + Phase 2A)
 
 ### Completed Phases
 - ✅ **Phase 1:** Data Structures and Tables (2026-03-07)
   - Added Gygar Mode UI checkbox with link to Castle Gygar module
   - Added --gygar / --not-gygar CLI options
   - Added savingThrowsLevel0 and attackBonusLevel0 tables to names-tables.js
+- ✅ **Phase 2A:** Dwarf Resilience Function (2026-03-07)
+  - Created getDwarfResilienceBonus() function with CON-based bonuses
+  - Exported function for use in other modules

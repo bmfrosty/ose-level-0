@@ -190,6 +190,17 @@ const attackBonusLevel0 = {
     Gygar: 0     // No penalty in Gygar Mode (Castle Gygar house rules)
 };
 
+// Calculate Dwarf Resilience bonus based on CON score
+// Only applies in Advanced Mode
+function getDwarfResilienceBonus(conScore) {
+    if (conScore <= 6) return 0;
+    if (conScore >= 7 && conScore <= 10) return 2;
+    if (conScore >= 11 && conScore <= 14) return 3;
+    if (conScore >= 15 && conScore <= 17) return 4;
+    if (conScore >= 18) return 5;
+    return 0; // Fallback
+}
+
 // Export for Node.js
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
@@ -200,6 +211,7 @@ if (typeof module !== 'undefined' && module.exports) {
         isDemihuman,
         getCommonDemihumanAbilities,
         savingThrowsLevel0,
-        attackBonusLevel0
+        attackBonusLevel0,
+        getDwarfResilienceBonus
     };
 }
