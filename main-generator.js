@@ -42,10 +42,30 @@ function generate0LevelCharacter() {
         return;
     }
 
-    // Generate 0-level character details
-    const conModifier = results.find(r => r.ability === "CON").modifier;
-    const dexModifier = results.find(r => r.ability === "DEX").modifier;
-    const hitPoints = calculateHitPoints(conModifier);
+    // Generate race early (before HP calculation)
+    const race = rollRace();
+    
+    // Check if Advanced mode is enabled
+    const advancedCheckbox = document.getElementById('advanced');
+    const isAdvanced = advancedCheckbox ? advancedCheckbox.checked : false;
+    
+    // Check if human racial abilities are enabled
+    const humanAbilitiesCheckbox = document.getElementById('humanRacialAbilities');
+    const humanRacialAbilities = humanAbilitiesCheckbox ? humanAbilitiesCheckbox.checked : true;
+    
+    // Apply race adjustments if Advanced mode
+    const adjustedResults = applyRaceAdjustments(results, race, isAdvanced, humanRacialAbilities);
+    
+    // Check race minimums if Advanced mode
+    if (!meetsRaceMinimums(adjustedResults, race, isAdvanced)) {
+        generate0LevelCharacter();
+        return;
+    }
+    
+    // Generate 0-level character details (use adjusted results)
+    const conModifier = adjustedResults.find(r => r.ability === "CON").modifier;
+    const dexModifier = adjustedResults.find(r => r.ability === "DEX").modifier;
+    const hitPoints = calculateHitPoints(conModifier, race);
     
     // If character has less than 1 HP, they don't become an adventurer - reroll automatically
     if (hitPoints.total < 1) {
@@ -82,17 +102,16 @@ function generate0LevelCharacter() {
     const background = getBackgroundByHitPoints(hitPoints.total);
     const armorClass = calculateArmorClass(background.armor, dexModifier);
 
-    // Generate race and name
-    const race = rollRace();
+    // Generate name (race already determined above)
     const name = getRandomName(race);
 
     // Roll 3d6 for starting gold
     const startingGold = roll3d6();
 
-    // Store character data for PDF generation
+    // Store character data for PDF generation (use adjusted results)
     currentCharacter = {
-        results: results,
-        total: total,
+        results: adjustedResults,
+        total: adjustedResults.reduce((sum, r) => sum + r.modifier, 0),
         background: background,
         hitPoints: hitPoints,
         armorClass: armorClass,
@@ -101,13 +120,15 @@ function generate0LevelCharacter() {
         startingGold: startingGold
     };
 
-    // Display results if all rolls are valid
-    display0LevelCharacter(results, total, background, hitPoints, armorClass, race, name, startingGold);
+    // Display results if all rolls are valid (use adjusted results)
+    const adjustedTotal = adjustedResults.reduce((sum, r) => sum + r.modifier, 0);
+    display0LevelCharacter(adjustedResults, adjustedTotal, background, hitPoints, armorClass, race, name, startingGold);
 }
 
 // Auto-generate character on page load
 window.onload = function() {
-    document.getElementById('generateButton').click();
+    // Generate a random character on page load
+    generate0LevelCharacter();
 };
 
 // Export for Node.js
