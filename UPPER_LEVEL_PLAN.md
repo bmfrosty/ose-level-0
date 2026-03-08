@@ -21,6 +21,7 @@ Add support for higher-level characters with dynamic attack bonuses and saving t
 ### Phase 1: Data Structures and Tables
 - [x] Create `UPPER_LEVEL_PLAN.md` (this file)
 - [ ] Add Gygar Mode checkbox to UI (default: ON)
+- [ ] Add Gygar Mode option to shell script (--gygar / --not-gygar)
 - [ ] Add saving throw tables to `names-tables.js`
   - [ ] Level 0 base values (same for both Normal and Gygar modes)
   - [ ] Tables for future level support (will differ between modes)
