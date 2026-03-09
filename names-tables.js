@@ -126,36 +126,42 @@ function getRacialAbilities(race) {
     
     const abilities = {
         "Human": (isAdvanced && humanRacialAbilities) ? [
-            "Roll HP twice, take best.",
-            "Act first on tied initiative.",
-            "Retainers/mercenaries +1 loyalty/morale."
+            "Blessed: Roll HP twice, take best (including at 1st level)",
+            "Decisiveness: Act first on tied initiative (+1 to individual initiative)",
+            "Leadership: Retainers/mercenaries +1 loyalty and morale"
         ] : [],
-        "Dwarf": isAdvanced ? [
+        "Dwarf": [
             "Languages: Alignment, Common, Dwarvish, Gnomish, Goblin, Kobold",
-            "Combat: Can only use small or normal sized weapons. Cannot use longbows or two-handed swords.",
-            "Detect Construction Tricks: 2-in-6 chance to detect new construction, sliding walls, or sloping passages when searching.",
-            "Detect Room Traps: 2-in-6 chance of detecting non-magical room traps when searching.",
-            "Infravision to 60'.",
-            "Listening at Doors: 2-in-6 chance of hearing noises.",
-            "Resilience: Bonus to Death/Wands/Spells saves based on CON (7-10: +2, 11-14: +3, 15-17: +4, 18: +5)."
-        ] : [],
+            "Small/normal weapons only (no longbows or two-handed swords)",
+            "Detect construction tricks 2-in-6",
+            "Detect room traps 2-in-6",
+            "Infravision 60'",
+            "Listen at doors 2-in-6",
+            "Resilience: Bonus to Death/Wands/Spells saves based on CON (7-10: +2, 11-14: +3, 15-17: +4, 18: +5)"
+        ],
         "Elf": [
-            "Speak additional native languages.",
-            "2-in-6 chance of hearing noises at doors.",
-            "Infravision to 60'.",
-            "Immunity to ghoul paralysis."
+            "Languages: Alignment, Common, Elvish, Gnoll, Hobgoblin, Orcish",
+            "Detect secret doors 2-in-6 when actively searching",
+            "Infravision 60'",
+            "Listen at doors 2-in-6",
+            "Immunity to ghoul paralysis"
         ],
         "Gnome": [
-            "Speak additional native languages.",
-            "2-in-6 chance of hearing noises at doors.",
-            "Infravision to 90'.",
-            "+2 AC vs large opponents."
+            "Languages: Alignment, Common, Dwarvish, Gnomish, Kobold, burrowing mammals",
+            "Small/normal weapons only (no longbows or two-handed swords)",
+            "Detect construction tricks 2-in-6",
+            "Infravision 90'",
+            "Listen at doors 2-in-6",
+            "+2 AC vs large opponents",
+            "Magic Resistance: Bonus to saves vs spells/wands/rods/staves based on CON (7-10: +2, 11-14: +3, 15-17: +4, 18: +5)"
         ],
         "Halfling": [
-            "Speak additional native languages.",
-            "2-in-6 chance of hearing noises at doors.",
-            "+1 to missile attack rolls.",
-            "+2 AC vs large opponents."
+            "Languages: Alignment, Common, Halfling",
+            "Small/normal weapons only (no longbows or two-handed swords)",
+            "Listen at doors 2-in-6",
+            "+1 to missile attack rolls",
+            "+2 AC vs large opponents",
+            "Resilience: Bonus to Death/Wands/Spells saves based on CON (7-10: +2, 11-14: +3, 15-17: +4, 18: +5)"
         ]
     };
     return abilities[race] || [];
@@ -194,8 +200,31 @@ const attackBonusLevel0 = {
 };
 
 // Calculate Dwarf Resilience bonus based on CON score
-// Only applies in Advanced Mode
+// Applies in both Basic and Advanced modes for Level 0 Dwarves
 function getDwarfResilienceBonus(conScore) {
+    if (conScore <= 6) return 0;
+    if (conScore >= 7 && conScore <= 10) return 2;
+    if (conScore >= 11 && conScore <= 14) return 3;
+    if (conScore >= 15 && conScore <= 17) return 4;
+    if (conScore >= 18) return 5;
+    return 0; // Fallback
+}
+
+// Calculate Gnome Magic Resistance bonus based on CON score
+// Applies in both Basic and Advanced modes for Level 0 Gnomes
+function getGnomeMagicResistanceBonus(conScore) {
+    if (conScore <= 6) return 0;
+    if (conScore >= 7 && conScore <= 10) return 2;
+    if (conScore >= 11 && conScore <= 14) return 3;
+    if (conScore >= 15 && conScore <= 17) return 4;
+    if (conScore >= 18) return 5;
+    return 0; // Fallback
+}
+
+// Calculate Halfling Resilience bonus based on CON score
+// Applies in both Basic and Advanced modes for Level 0 Halflings
+// Same formula as Dwarf Resilience but applies to different save categories
+function getHalflingResilienceBonus(conScore) {
     if (conScore <= 6) return 0;
     if (conScore >= 7 && conScore <= 10) return 2;
     if (conScore >= 11 && conScore <= 14) return 3;
@@ -218,10 +247,27 @@ function calculateSavingThrows(level, race, conScore, isAdvanced, isGygar) {
         Spells: savingThrowsLevel0.Spells
     };
     
-    // Apply Dwarf Resilience bonus if Advanced Mode and race is Dwarf
-    if (isAdvanced && race === "Dwarf") {
+    // Apply Dwarf Resilience bonus if race is Dwarf (both Basic and Advanced modes)
+    if (race === "Dwarf") {
         const resilienceBonus = getDwarfResilienceBonus(conScore);
         // Resilience applies to Death, Wands, and Spells (not Paralysis or Breath)
+        saves.Death -= resilienceBonus;
+        saves.Wands -= resilienceBonus;
+        saves.Spells -= resilienceBonus;
+    }
+    
+    // Apply Gnome Magic Resistance bonus if race is Gnome (both Basic and Advanced modes)
+    if (race === "Gnome") {
+        const magicResistanceBonus = getGnomeMagicResistanceBonus(conScore);
+        // Magic Resistance applies to Wands and Spells only
+        saves.Wands -= magicResistanceBonus;
+        saves.Spells -= magicResistanceBonus;
+    }
+    
+    // Apply Halfling Resilience bonus if race is Halfling (both Basic and Advanced modes)
+    if (race === "Halfling") {
+        const resilienceBonus = getHalflingResilienceBonus(conScore);
+        // Halfling Resilience applies to Death (poison), Wands, and Spells
         saves.Death -= resilienceBonus;
         saves.Wands -= resilienceBonus;
         saves.Spells -= resilienceBonus;
@@ -261,6 +307,8 @@ if (typeof module !== 'undefined' && module.exports) {
         savingThrowsLevel0,
         attackBonusLevel0,
         getDwarfResilienceBonus,
+        getGnomeMagicResistanceBonus,
+        getHalflingResilienceBonus,
         calculateSavingThrows,
         calculateAttackBonus
     };
