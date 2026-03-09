@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OSE Advanced Character Generator (Levels 1+)</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        nav {
+            background-color: #f0f0f0;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+        nav a {
+            margin-right: 20px;
+            text-decoration: none;
+            color: #333;
+            font-weight: bold;
+        }
+        nav a:hover {
+            color: #4CAF50;
+        }
+        nav a.active {
+            color: #4CAF50;
+            text-decoration: underline;
+        }
+        .coming-soon {
+            background-color: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 5px;
+            padding: 30px;
+            margin: 20px 0;
+        }
+        .coming-soon h2 {
+            color: #856404;
+            margin-top: 0;
+        }
+        .feature-list {
+            background-color: #f8f9fa;
+            border-left: 4px solid #4CAF50;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .feature-list h3 {
+            margin-top: 0;
+        }
+        .feature-list ul {
+            line-height: 1.8;
+        }
+        .doc-links {
+            background-color: #e7f3ff;
+            border-left: 4px solid #2196F3;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .doc-links h3 {
+            margin-top: 0;
+        }
+        .doc-links a {
+            display: inline-block;
+            margin: 5px 10px 5px 0;
+            padding: 8px 15px;
+            background-color: #2196F3;
+            color: white;
+            text-decoration: none;
+            border-radius: 3px;
+        }
+        .doc-links a:hover {
+            background-color: #0b7dda;
+        }
+        .gygar-section {
+            background-color: #f3e5f5;
+            border-left: 4px solid #9C27B0;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .gygar-section h3 {
+            margin-top: 0;
+            color: #6a1b9a;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="index.html">Level 0 Generator</a>
+        <a href="basic.html">Basic (Levels 1+)</a>
+        <a href="advanced.html" class="active">Advanced (Levels 1+)</a>
+        <a href="classes.html">Class Reference</a>
+    </nav>
+
+    <h1>OSE Advanced Character Generator (Levels 1+)</h1>
+    
+    <div class="coming-soon">
+        <h2>🚧 Coming Soon!</h2>
+        <p>This page will allow you to generate Advanced OSE characters for levels 1-14.</p>
+        <p><strong>Advanced Mode</strong> separates race from class, allowing combinations like Dwarf Fighter, Elf Magic-User, etc.</p>
+    </div>
+
+    <div class="feature-list">
+        <h3>Planned Features:</h3>
+        <ul>
+            <li><strong>Level Selection:</strong> Choose character level (1-14)</li>
+            <li><strong>Race Selection:</strong> Human, Dwarf, Elf, Gnome, Halfling</li>
+            <li><strong>Class Selection:</strong> Cleric, Fighter, Magic-User, Thief (+ Spellblade in Gygar Mode)</li>
+            <li><strong>Racial Abilities:</strong> Infravision, detect doors, saving throw bonuses, etc.</li>
+            <li><strong>Ability Score Adjustments:</strong> Racial modifiers (e.g., Dwarf +1 CON, -1 CHA)</li>
+            <li><strong>Ability Score Generation:</strong> Roll 3d6 for each ability, apply racial adjustments</li>
+            <li><strong>Class Requirements:</strong> Enforce minimum ability scores</li>
+            <li><strong>Hit Points:</strong> Roll appropriate hit dice for class and level</li>
+            <li><strong>Saving Throws:</strong> Use class-based progression tables + racial bonuses</li>
+            <li><strong>Attack Bonus:</strong> Use class-based progression tables</li>
+            <li><strong>Spell Slots:</strong> For Clerics, Magic-Users, and Spellblades</li>
+            <li><strong>Thief Skills:</strong> For Thieves</li>
+            <li><strong>Class Abilities:</strong> Display abilities gained at each level</li>
+            <li><strong>XP Tracking:</strong> Show XP required for current and next level</li>
+            <li><strong>Equipment:</strong> Starting equipment based on class</li>
+            <li><strong>Export Options:</strong> PDF, PNG, Markdown, JSON</li>
+        </ul>
+    </div>
+
+    <div class="gygar-section">
+        <h3>🏰 Gygar Mode Support:</h3>
+        <p>Advanced mode includes support for <a href="https://www.drivethrurpg.com/en/product/510225/the-ruins-of-castle-gygar" target="_blank">The Ruins of Castle Gygar</a> campaign setting:</p>
+        <ul>
+            <li><strong>Modified Progressions:</strong> Different saving throw and attack bonus tables</li>
+            <li><strong>Spellblade Class:</strong> Unique fighter/magic-user hybrid class</li>
+            <li><strong>Elves as Spellblades:</strong> Elves use Spellblade progression in Gygar Mode</li>
+            <li><strong>Smoothed Progressions:</strong> More gradual advancement curves</li>
+        </ul>
+    </div>
+
+    <div class="doc-links">
+        <h3>📚 OSE Standard Class Documentation:</h3>
+        <p>View the complete class progressions and abilities:</p>
+        <a href="classes.html?class=OSE_CLERIC">Cleric</a>
+        <a href="classes.html?class=OSE_FIGHTER">Fighter</a>
+        <a href="classes.html?class=OSE_MAGIC_USER">Magic-User</a>
+        <a href="classes.html?class=OSE_THIEF">Thief</a>
+    </div>
+
+    <div class="doc-links">
+        <h3>🏰 Gygar Mode Class Documentation:</h3>
+        <p>View the Gygar Mode variants:</p>
+        <a href="classes.html?class=GYGAR_CLERIC">Cleric</a>
+        <a href="classes.html?class=GYGAR_FIGHTER">Fighter</a>
+        <a href="classes.html?class=GYGAR_MAGIC_USER">Magic-User</a>
+        <a href="classes.html?class=GYGAR_THIEF">Thief</a>
+        <a href="classes.html?class=GYGAR_SPELLBLADE">Spellblade</a>
+    </div>
+
+    <div class="doc-links">
+        <h3>📚 Racial Class Documentation:</h3>
+        <p>View demihuman racial abilities and progressions:</p>
+        <a href="classes.html?class=OSE_DWARF">OSE Dwarf</a>
+        <a href="classes.html?class=OSE_ELF">OSE Elf</a>
+        <a href="classes.html?class=OSE_HALFLING">OSE Halfling</a>
+        <a href="classes.html?class=OSE_GNOME">OSE Gnome</a>
+        <br>
+        <a href="classes.html?class=GYGAR_DWARF">Gygar Dwarf</a>
+        <a href="classes.html?class=GYGAR_ELF">Gygar Elf</a>
+        <a href="classes.html?class=GYGAR_HALFLING">Gygar Halfling</a>
+        <a href="classes.html?class=GYGAR_GNOME">Gygar Gnome</a>
+    </div>
+
+    <div class="feature-list">
+        <h3>Implementation Status:</h3>
+        <ul>
+            <li>✅ <strong>Phase 1-4 Complete:</strong> All OSE and Gygar class documentation created</li>
+            <li>⏳ <strong>Phase 5:</strong> Extract data from markdown files (pending)</li>
+            <li>⏳ <strong>Phase 6:</strong> Create class-data-ose.js and class-data-gygar.js (pending)</li>
+            <li>⏳ <strong>Phase 7:</strong> Build character generator UI (pending)</li>
+            <li>⏳ <strong>Phase 8:</strong> Add export functionality (pending)</li>
+            <li>⏳ <strong>Phase 9:</strong> Testing and refinement (pending)</li>
+        </ul>
+        <p><em>See PLAN_OSE_IMPORT.md and PLAN_GYGAR_IMPORT.md for detailed implementation plans.</em></p>
+    </div>
+
+    <div class="doc-links">
+        <h3>🔗 Related Resources:</h3>
+        <a href="index.html">Generate Level 0 Character</a>
+        <a href="classes.html">View All Classes</a>
+        <a href="classes.html?compare=OSE_VS_GYGAR">OSE vs Gygar Comparison</a>
+        <a href="classes.html?compare=ELF_VS_SPELLBLADE">Elf vs Spellblade Comparison</a>
+    </div>
+</body>
+</html>

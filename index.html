@@ -8,6 +8,26 @@
         body {
             font-family: Arial, sans-serif;
         }
+        nav {
+            background-color: #f0f0f0;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            text-align: center;
+        }
+        nav a {
+            margin-right: 20px;
+            text-decoration: none;
+            color: #333;
+            font-weight: bold;
+        }
+        nav a:hover {
+            color: #4CAF50;
+        }
+        nav a.active {
+            color: #4CAF50;
+            text-decoration: underline;
+        }
         table {
             width: 80%;
             margin: 20px auto;
@@ -51,6 +71,12 @@
     </style>
 </head>
 <body>
+    <nav>
+        <a href="index.html" class="active">Level 0 Generator</a>
+        <a href="basic.html">Basic (Levels 1+)</a>
+        <a href="advanced.html">Advanced (Levels 1+)</a>
+        <a href="classes.html">Class Reference</a>
+    </nav>
 
     <h1 style="text-align: center;">OSE 0-Level Character Generator</h1>
     <div id="config">
@@ -80,7 +106,7 @@
             <input type="checkbox" id="gygar" checked> <a href="https://www.drivethrurpg.com/en/product/510225/the-ruins-of-castle-gygar" target="_blank">Gygar Mode</a> (Minor adjustments to base OSE)
         </label><br>
         <label for="openInNewTab">
-            <input type="checkbox" id="openInNewTab" checked> Open character display in new tab
+            <input type="checkbox" id="openInNewTab"> Open character display in new tab
         </label><br>
         <label for="openFileInsteadOfSave" title="Best effort - may not work in all browsers/settings">
             <input type="checkbox" id="openFileInsteadOfSave"> Open file instead of saving (PNG/PDF/MD/JSON - best effort)
@@ -235,6 +261,7 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="background-tables.js"></script>
+    <script src="racial-abilities.js"></script>
     <script src="names-tables.js"></script>
     <script src="dice-utils.js"></script>
     <script src="ose-modifiers.js"></script>

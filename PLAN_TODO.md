@@ -120,63 +120,58 @@ The implementation in `names-tables.js` already works correctly:
 - [x] Test all races to verify bonuses apply correctly
 - [x] Update README.md with complete racial bonus tables
 
-### Import Character Classes from Gygar Project
+### Import Character Classes from Gygar Project ✅ COMPLETE (Documentation Phase)
 **Source:** Gygar project (user's other project)
-**See:** PLAN_UPPER_LEVEL.md
+**See:** PLAN_GYGAR_IMPORT.md
 
-- [ ] Import class data for Gygar Mode:
-  - [ ] Cleric
-  - [ ] Fighter
-  - [ ] Thief
-  - [ ] Magic-User
-  - [ ] Spellblade (Gygar-specific class)
-- [ ] Create new file: `class-data-gygar.js`
-- [ ] Add class-specific data:
-  - [ ] Hit dice
-  - [ ] Attack bonus progression
-  - [ ] Saving throw progressions
-  - [ ] Class abilities
-  - [ ] Prime requisites
-  - [ ] XP requirements
-- [ ] Update character generation to support class selection
-- [ ] Add UI controls for class selection (when level > 0)
+- [x] Import class data for Gygar Mode (as markdown documentation): ✅
+  - [x] Cleric → GYGAR_CLERIC.md ✅
+  - [x] Fighter → GYGAR_FIGHTER.md ✅
+  - [x] Thief → GYGAR_THIEF.md ✅
+  - [x] Magic-User → GYGAR_MAGIC_USER.md ✅
+  - [x] Spellblade (Gygar-specific class) → GYGAR_SPELLBLADE.md ✅
+- [ ] Create new file: `class-data-gygar.js` (PENDING - for level 1+ implementation)
+- [ ] Add class-specific data to JavaScript (PENDING - for level 1+ implementation)
+- [ ] Update character generation to support class selection (PENDING - for level 1+ implementation)
+- [ ] Add UI controls for class selection (when level > 0) (PENDING - for level 1+ implementation)
 
-### Create Gygar Versions of Demihuman Classes
+### Create Gygar Versions of Demihuman Classes ✅ COMPLETE (Documentation Phase)
 **Note:** Gygar Mode has different saving throw/attack progressions for demihumans
 
-- [ ] Create Gygar Dwarf class data
-  - [ ] Use Gygar-specific saving throw progression (different from Basic Mode Dwarf)
-  - [ ] Use Gygar-specific attack bonus progression
-  - [ ] Keep Dwarf racial abilities (including Resilience)
-- [ ] Create Gygar Elf class data
-  - [ ] **Use Spellblade saving throw progression** (Elf = Spellblade in Gygar Mode)
-  - [ ] Use Gygar-specific attack bonus progression
-  - [ ] Keep Elf racial abilities
-  - [ ] Note: Elf in Gygar Mode uses Spellblade tables
-- [ ] Create Gygar Halfling class data
-  - [ ] Use Gygar-specific saving throw progression (different from Basic Mode Halfling)
-  - [ ] Use Gygar-specific attack bonus progression
-  - [ ] Keep Halfling racial abilities
-- [ ] Add mode detection: Basic Mode vs Gygar Mode for demihuman classes
-- [ ] Update documentation to explain Gygar demihuman differences
+- [x] Create Gygar Dwarf class documentation → GYGAR_DWARF.md ✅
+  - [x] Use Gygar-specific saving throw progression ✅
+  - [x] Use Gygar-specific attack bonus progression ✅
+  - [x] Keep Dwarf racial abilities (including Resilience) ✅
+- [x] Create Gygar Elf class documentation → GYGAR_ELF.md ✅
+  - [x] **Use Spellblade saving throw progression** (Elf = Spellblade in Gygar Mode) ✅
+  - [x] Use Gygar-specific attack bonus progression ✅
+  - [x] Keep Elf racial abilities ✅
+  - [x] Note: Elf in Gygar Mode uses Spellblade tables ✅
+- [x] Create Gygar Halfling class documentation → GYGAR_HALFLING.md ✅
+  - [x] Use Gygar-specific saving throw progression ✅
+  - [x] Use Gygar-specific attack bonus progression ✅
+  - [x] Keep Halfling racial abilities ✅
+- [x] Create Gygar Gnome class documentation → GYGAR_GNOME.md ✅
+- [ ] Add mode detection: Basic Mode vs Gygar Mode for demihuman classes (PENDING - for level 1+ implementation)
+- [x] Update documentation to explain Gygar demihuman differences → OSE_VS_GYGAR.md ✅
 
-### Import Character Classes from OSE Website
+### Import Character Classes from OSE Website ✅ COMPLETE (Documentation Phase)
 **Source:** OSE SRD website (https://oldschoolessentials.necroticgnome.com/)
-**See:** PLAN_UPPER_LEVEL.md
+**See:** PLAN_OSE_IMPORT.md
 
-- [ ] Import class data for Basic Mode (non-Gygar):
-  - [ ] Cleric
-  - [ ] Fighter
-  - [ ] Thief
-  - [ ] Magic-User
-  - [ ] Dwarf (as class, not race)
-  - [ ] Elf (as class, not race)
-  - [ ] Halfling (as class, not race)
-- [ ] Create new file: `class-data-basic.js`
-- [ ] Add class-specific data (same structure as Gygar classes)
-- [ ] Note: Gnome NOT available in Basic Mode
-- [ ] Update character generation to support Basic Mode
-- [ ] Add UI toggle for Basic Mode vs Advanced Mode
+- [x] Import class data for OSE Standard (as markdown documentation): ✅
+  - [x] Cleric → OSE_CLERIC.md ✅
+  - [x] Fighter → OSE_FIGHTER.md ✅
+  - [x] Thief → OSE_THIEF.md ✅
+  - [x] Magic-User → OSE_MAGIC_USER.md ✅
+  - [x] Dwarf (as class, not race) → OSE_DWARF.md ✅
+  - [x] Elf (as class, not race) → OSE_ELF.md ✅
+  - [x] Halfling (as class, not race) → OSE_HALFLING.md ✅
+  - [x] Gnome → OSE_GNOME.md ✅
+- [ ] Create new file: `class-data-ose.js` (PENDING - for level 1+ implementation)
+- [ ] Add class-specific data to JavaScript (PENDING - for level 1+ implementation)
+- [ ] Update character generation to support OSE Standard Mode (PENDING - for level 1+ implementation)
+- [ ] Add UI toggle for OSE Standard vs Gygar Mode (PENDING - for level 1+ implementation)
 
 ## Medium Priority
 
@@ -320,3 +315,10 @@ The implementation in `names-tables.js` already works correctly:
   - ✅ Saving throw bonuses apply in both modes
   - ✅ Ability score adjustments only apply in Advanced mode
 - ✅ Planning documents created (PLAN_0LEVEL_BASIC_ADVANCED.md, PLAN_UPPER_LEVEL.md, CHARACTER_CREATION_*.md)
+- ✅ **OSE Import Phase 1-4 Complete** (PLAN_OSE_IMPORT.md):
+  - ✅ All 8 OSE classes imported as markdown (Cleric, Fighter, Magic-User, Thief, Dwarf, Elf, Halfling, Gnome)
+  - ✅ All 9 Gygar classes created as markdown (Cleric, Fighter, Magic-User, Thief, Dwarf, Elf, Halfling, Gnome, Spellblade)
+  - ✅ Comparison documents created (OSE_VS_GYGAR.md, ELF_VS_SPELLBLADE.md, RACIAL_FEATURES_AUDIT.md)
+  - ✅ Code refactoring: Created racial-abilities.js for better organization
+  - ✅ Updated index.html to load racial-abilities.js
+  - ✅ All tests passing

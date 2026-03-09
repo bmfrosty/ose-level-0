@@ -1,5 +1,7 @@
 # Gnome (Gygar Mode)
 
+> **Note:** The Gnome class is not included in the Old-School Essentials System Reference Document (SRD) and therefore is not available in this character generator. This documentation is provided for reference purposes only. If you own the full Old-School Essentials rules or The Ruins of Castle Gygar, you can use this information for your games.
+
 Gnomes are a race of short demihumans with long noses and beards. They are cousins of the dwarves and the two races are on friendly terms. Gnomes prefer to dwell in underground complexes in forests or foothills. They love mining, precious stones, and machinery—from miniature marvels of clockwork to great construction engines. Gnomes are also famed for their penchant for pointy, red, felt hats. Gnomes are typically around 3½' tall and weigh around 100 pounds.
 
 ## Requirements

@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OSE Class Reference</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        nav {
+            background-color: #f0f0f0;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+        nav a {
+            margin-right: 20px;
+            text-decoration: none;
+            color: #333;
+            font-weight: bold;
+        }
+        nav a:hover {
+            color: #4CAF50;
+        }
+        nav a.active {
+            color: #4CAF50;
+            text-decoration: underline;
+        }
+        .class-selector {
+            background-color: #f8f9fa;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+        .class-selector h3 {
+            margin-top: 0;
+        }
+        .class-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .class-buttons button {
+            padding: 10px 15px;
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .class-buttons button:hover {
+            background-color: #0b7dda;
+        }
+        .class-buttons button.active {
+            background-color: #4CAF50;
+        }
+        .class-buttons button.gygar {
+            background-color: #9C27B0;
+        }
+        .class-buttons button.gygar:hover {
+            background-color: #7B1FA2;
+        }
+        .class-buttons button.gygar.active {
+            background-color: #6a1b9a;
+        }
+        .class-buttons button.comparison {
+            background-color: #FF9800;
+        }
+        .class-buttons button.comparison:hover {
+            background-color: #F57C00;
+        }
+        #markdown-content {
+            background-color: white;
+            padding: 30px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            line-height: 1.6;
+        }
+        #markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 20px 0;
+        }
+        #markdown-content th, #markdown-content td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        #markdown-content th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        #markdown-content h1 {
+            color: #333;
+            border-bottom: 2px solid #4CAF50;
+            padding-bottom: 10px;
+        }
+        #markdown-content h2 {
+            color: #555;
+            margin-top: 30px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+        }
+        #markdown-content h3 {
+            color: #666;
+            margin-top: 20px;
+        }
+        #markdown-content code {
+            background-color: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+        #markdown-content pre {
+            background-color: #f4f4f4;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        .error {
+            background-color: #ffebee;
+            border: 2px solid #f44336;
+            padding: 20px;
+            border-radius: 5px;
+            color: #c62828;
+        }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="index.html">Level 0 Generator</a>
+        <a href="basic.html">Basic (Levels 1+)</a>
+        <a href="advanced.html">Advanced (Levels 1+)</a>
+        <a href="classes.html" class="active">Class Reference</a>
+    </nav>
+
+    <h1>OSE Class Reference</h1>
+
+    <div class="class-selector">
+        <h3>📚 OSE Standard Classes:</h3>
+        <div class="class-buttons">
+            <button onclick="loadClass('OSE_CLERIC')">Cleric</button>
+            <button onclick="loadClass('OSE_FIGHTER')">Fighter</button>
+            <button onclick="loadClass('OSE_MAGIC_USER')">Magic-User</button>
+            <button onclick="loadClass('OSE_THIEF')">Thief</button>
+            <button onclick="loadClass('OSE_DWARF')">Dwarf</button>
+            <button onclick="loadClass('OSE_ELF')">Elf</button>
+            <button onclick="loadClass('OSE_HALFLING')">Halfling</button>
+        </div>
+    </div>
+
+    <div class="class-selector">
+        <h3>🏰 Gygar Mode Classes:</h3>
+        <div class="class-buttons">
+            <button class="gygar" onclick="loadClass('GYGAR_CLERIC')">Cleric</button>
+            <button class="gygar" onclick="loadClass('GYGAR_FIGHTER')">Fighter</button>
+            <button class="gygar" onclick="loadClass('GYGAR_MAGIC_USER')">Magic-User</button>
+            <button class="gygar" onclick="loadClass('GYGAR_THIEF')">Thief</button>
+            <button class="gygar" onclick="loadClass('GYGAR_SPELLBLADE')">Spellblade</button>
+            <button class="gygar" onclick="loadClass('GYGAR_DWARF')">Dwarf</button>
+            <button class="gygar" onclick="loadClass('GYGAR_ELF')">Elf</button>
+            <button class="gygar" onclick="loadClass('GYGAR_HALFLING')">Halfling</button>
+        </div>
+    </div>
+
+    <div class="class-selector">
+        <h3>📊 Comparisons & Analysis:</h3>
+        <div class="class-buttons">
+            <button class="comparison" onclick="loadClass('OSE_VS_GYGAR')">OSE vs Gygar</button>
+            <button class="comparison" onclick="loadClass('ELF_VS_SPELLBLADE')">Elf vs Spellblade</button>
+            <button class="comparison" onclick="loadClass('RACIAL_FEATURES_AUDIT')">Racial Features Audit</button>
+        </div>
+    </div>
+
+    <div id="markdown-content">
+        <div class="loading">
+            <p>Select a class above to view its documentation.</p>
+            <p>Or use the URL parameter: <code>?class=OSE_FIGHTER</code> or <code>?compare=OSE_VS_GYGAR</code></p>
+        </div>
+    </div>
+
+    <script>
+        // Get URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const classParam = urlParams.get('class');
+        const compareParam = urlParams.get('compare');
+
+        // Load class on page load if specified in URL
+        if (classParam) {
+            loadClass(classParam);
+        } else if (compareParam) {
+            loadClass(compareParam);
+        }
+
+        async function loadClass(className) {
+            const contentDiv = document.getElementById('markdown-content');
+            contentDiv.innerHTML = '<div class="loading">Loading...</div>';
+
+            // Update active button
+            document.querySelectorAll('.class-buttons button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event?.target?.classList.add('active');
+
+            try {
+                const response = await fetch(`${className}.md`);
+                if (!response.ok) {
+                    throw new Error(`Failed to load ${className}.md (${response.status})`);
+                }
+                
+                const markdown = await response.text();
+                const html = marked.parse(markdown);
+                contentDiv.innerHTML = html;
+
+                // Update URL without reloading page
+                const newUrl = new URL(window.location);
+                newUrl.searchParams.set('class', className);
+                window.history.pushState({}, '', newUrl);
+
+            } catch (error) {
+                contentDiv.innerHTML = `
+                    <div class="error">
+                        <h2>Error Loading Class</h2>
+                        <p><strong>File:</strong> ${className}.md</p>
+                        <p><strong>Error:</strong> ${error.message}</p>
+                        <p>Make sure the markdown file exists in the same directory as this HTML file.</p>
+                    </div>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>
