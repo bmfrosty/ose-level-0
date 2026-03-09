@@ -81,25 +81,111 @@ A web-based and command-line tool for generating Old-School Essentials (OSE) 0-l
 - Disable Advanced Mode: No racial adjustments or abilities
 - Disable Gygar Mode: Attack bonus -1 at level 0
 
-## Dwarf Resilience
+## Racial Abilities and Bonuses
 
-In Advanced Mode, Dwarves have a special **Resilience** ability that grants bonuses to certain saving throws based on their Constitution score:
+All races have unique abilities and bonuses. In Advanced Mode, races also have ability score modifiers.
 
-| CON Score | Bonus to Death/Wands/Spells |
-|-----------|----------------------------|
+### Ability Score Modifiers (Advanced Mode Only)
+
+| Race | Modifiers | Requirements |
+|------|-----------|--------------|
+| **Human** | +1 CON, +1 CHA | None |
+| **Dwarf** | +1 CON, -1 CHA | CON 9+ |
+| **Elf** | +1 DEX, -1 CON | INT 9+ |
+| **Gnome** | None | CON 9+, INT 9+ |
+| **Halfling** | +1 DEX, -1 STR | CON 9+, DEX 9+ |
+
+**Note:** Ability score modifiers only apply when Advanced Mode is enabled. Requirements are enforced in Advanced Mode.
+
+### Racial Abilities
+
+#### Human (Optional - Advanced Mode Only)
+When Advanced Mode and Human Racial Abilities are both enabled:
+- **Blessed:** Roll HP twice, take best (including at 1st level)
+- **Decisiveness:** Act first on tied initiative (+1 to individual initiative)
+- **Leadership:** Retainers/mercenaries +1 loyalty and morale
+
+#### Dwarf
+- **Languages:** Alignment, Common, Dwarvish, Gnomish, Goblin, Kobold
+- **Weapon Restrictions:** Small/normal weapons only (no longbows or two-handed swords)
+- **Detect Construction Tricks:** 2-in-6 when searching
+- **Detect Room Traps:** 2-in-6 when searching
+- **Infravision:** 60'
+- **Listen at Doors:** 2-in-6
+- **Resilience:** CON-based bonus to Death/Wands/Spells saves (see table below)
+
+#### Elf
+- **Languages:** Alignment, Common, Elvish, Gnoll, Hobgoblin, Orcish
+- **Detect Secret Doors:** 2-in-6 when actively searching
+- **Infravision:** 60'
+- **Listen at Doors:** 2-in-6
+- **Immunity to Ghoul Paralysis**
+
+#### Gnome
+- **Languages:** Alignment, Common, Dwarvish, Gnomish, Kobold, burrowing mammals
+- **Weapon Restrictions:** Small/normal weapons only (no longbows or two-handed swords)
+- **Detect Construction Tricks:** 2-in-6 when searching
+- **Infravision:** 90'
+- **Listen at Doors:** 2-in-6
+- **Defensive Bonus:** +2 AC vs large opponents (greater than human-sized)
+- **Magic Resistance:** CON-based bonus to Wands/Spells saves (see table below)
+
+#### Halfling
+- **Languages:** Alignment, Common, Halfling
+- **Weapon Restrictions:** Small/normal weapons only (no longbows or two-handed swords)
+- **Listen at Doors:** 2-in-6
+- **Missile Attack Bonus:** +1 to all missile attack rolls
+- **Defensive Bonus:** +2 AC vs large opponents (greater than human-sized)
+- **Resilience:** CON-based bonus to Death/Wands/Spells saves (see table below)
+
+### Saving Throw Bonuses
+
+Some races have natural resistances that provide bonuses to saving throws based on Constitution:
+
+#### Dwarf Resilience
+Applies to: **Death, Wands, Spells** (not Paralysis or Breath)
+
+| CON Score | Bonus |
+|-----------|-------|
 | 6 or lower | +0 |
 | 7-10 | +2 |
 | 11-14 | +3 |
 | 15-17 | +4 |
 | 18 | +5 |
 
-**Important Notes:**
-- Resilience only applies in Advanced Mode
-- Bonus applies to: Death, Wands, and Spells saves
-- Bonus does NOT apply to: Paralysis or Breath saves
-- Based on CON score (not modifier)
+**Example:** A Dwarf with CON 12 has saves of D11 W12 P16 B17 S15 (instead of base D14 W15 P16 B17 S18).
 
-**Example:** A Dwarf with CON 12 has saving throws of Death 11, Wands 12, Paralysis 16, Breath 17, Spells 15 (instead of the base 14/15/16/17/18).
+#### Gnome Magic Resistance
+Applies to: **Wands, Spells** (not Death, Paralysis, or Breath)
+
+| CON Score | Bonus |
+|-----------|-------|
+| 6 or lower | +0 |
+| 7-10 | +2 |
+| 11-14 | +3 |
+| 15-17 | +4 |
+| 18 | +5 |
+
+**Example:** A Gnome with CON 15 has saves of D14 W11 P16 B17 S14 (instead of base D14 W15 P16 B17 S18).
+
+#### Halfling Resilience
+Applies to: **Death, Wands, Spells** (not Paralysis or Breath)
+
+| CON Score | Bonus |
+|-----------|-------|
+| 6 or lower | +0 |
+| 7-10 | +2 |
+| 11-14 | +3 |
+| 15-17 | +4 |
+| 18 | +5 |
+
+**Example:** A Halfling with CON 9 has saves of D12 W13 P16 B17 S16 (instead of base D14 W15 P16 B17 S18).
+
+**Important Notes:**
+- Saving throw bonuses apply in **both** Basic and Advanced modes
+- Bonuses are based on CON score (not modifier)
+- Lower saving throw values are better (easier to roll)
+- See `SAVING_THROWS.md` for complete documentation
 
 ## Command Line Options
 
