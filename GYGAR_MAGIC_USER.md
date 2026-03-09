@@ -6,7 +6,9 @@ Magic-users are adventurers whose study of secret arcane lore has taught them ho
 Human or Elf. Elf Requires Int of 9+.
 
 ## Prime Requisite
-INT. Magic-users with an Intelligence score of 13 or greater gain a +5% bonus to experience.
+INT.
+
+**XP bonus for INT:** 3–5: -20%, 6–8: -10%, 9–12: None, 13–15: +5%, 16–18: +10%.
 
 ## Hit Dice
 1d4 per level until 9th level. After 9th level, +1 hit point per level, and Constitution modifiers no longer apply.

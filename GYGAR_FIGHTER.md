@@ -6,7 +6,9 @@ Fighters are adventurers trained in warfare and combat. In a group of adventurer
 None.
 
 ## Prime Requisite
-STR. Fighters with a Strength score of 13 or greater gain a +5% bonus to experience.
+STR.
+
+**XP bonus for STR:** 3–5: -20%, 6–8: -10%, 9–12: None, 13–15: +5%, 16–18: +10%.
 
 ## Hit Dice
 1d8 per level until 9th level. After 9th level, +2 hit points per level, and Constitution modifiers no longer apply.

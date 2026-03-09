@@ -8,7 +8,9 @@ Dwarves are stout demihumans, about 4' tall and weighing about 150 pounds. They 
 Dwarf. Minimum CON 9.
 
 ## Prime Requisite
-STR. Dwarves with a Strength score of 13 or greater gain a +5% bonus to experience.
+STR.
+
+**XP bonus for STR:** 13–15: +5%, 16–18: +10%.
 
 ## Hit Dice
 1d8 per level until 9th level. After 9th level, +2 hit points per level, and Constitution modifiers no longer apply.

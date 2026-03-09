@@ -8,7 +8,7 @@ Gnomes are a race of short demihumans with long noses and beards. They are cousi
 Human or Gnome. Gnome Requires CON of 9+.
 
 ## Prime Requisite
-DEX and INT. A gnome with at least 13 DEX and INT gains a 5% bonus to experience.
+DEX and INT. A gnome with at least 13 DEX and INT gains a 5% bonus to experience. A gnome with DEX of at least 13 and INT of at least 16 receives a +10% XP bonus.
 
 ## Hit Dice
 1d4 per level until 8th level.

@@ -1,4 +1,4 @@
-# Spellblade (Gygar Mode)
+# Spellblade (OSE Standard)
 
 The spellblade is a warrior-scholar who combines martial training with arcane study. Both elves and humans can become spellblades. Unlike wizards, spellblades train with blades and armor while retaining the ability to prepare and cast spells. Their abilities come from discipline and training.
 
@@ -18,7 +18,7 @@ Strength and Intelligence. Spellblades with both scores 13+ gain a +5% experienc
 Spellblades may use all weapons and may wear any armor type, though heavy armor may interfere with spellcasting depending on the referee's ruling.
 
 ### To-Hit Bonus
-Spellblades advance in attack capability from +1 at 1st level to +7 at 10th level.
+Spellblades advance in attack capability using the Fighter progression.
 
 ## Arcane Magic
 Spellblades prepare and cast spells from spellbooks, using the magic-user list unless a custom list is provided by the referee. They must study their spellbook daily to prepare spells, and may cast only the number of spells indicated on the advancement table.
@@ -34,29 +34,32 @@ Upon reaching 9th level, a Spellblade may establish a stronghold. Followers, stu
 
 ## Spellblade Level Progression
 
-| Lvl | XP Needed | Hit Dice | To-Hit | Death | Wands | Paralysis | Breath | Spells | 1st | 2nd | 3rd | 4th | 5th |
-|-----|-----------|----------|--------|-------|-------|-----------|--------|--------|-----|-----|-----|-----|-----|
-| 1 | 0 | 1d6 | +1 | 12 | 13 | 13 | 15 | 15 | 1 | — | — | — | — |
-| 2 | 4,000 | 2d6 | +2 | 12 | 13 | 13 | 15 | 14 | 2 | — | — | — | — |
-| 3 | 8,000 | 3d6 | +3 | 11 | 12 | 12 | 14 | 13 | 2 | 1 | — | — | — |
-| 4 | 16,000 | 4d6 | +4 | 10 | 11 | 11 | 13 | 12 | 2 | 2 | — | — | — |
-| 5 | 32,000 | 5d6 | +5 | 10 | 11 | 11 | 12 | 12 | 2 | 2 | 1 | — | — |
-| 6 | 64,000 | 6d6 | +5 | 9 | 10 | 10 | 11 | 11 | 2 | 2 | 2 | — | — |
-| 7 | 120,000 | 7d6 | +6 | 8 | 9 | 9 | 10 | 10 | 3 | 2 | 2 | 1 | — |
-| 8 | 250,000 | 8d6 | +6 | 8 | 9 | 9 | 10 | 10 | 3 | 3 | 2 | 2 | — |
-| 9 | 400,000 | 9d6 | +7 | 7 | 8 | 9 | 9 | 9 | 3 | 3 | 3 | 2 | 1 |
-| 10 | 600,000 | 9d6+2 | +7 | 6 | 7 | 8 | 8 | 8 | 3 | 3 | 3 | 3 | 2 |
+| Level | XP      | HD      | THAC0    | D  | W  | P  | B  | S  | 1 | 2 | 3 | 4 | 5 |
+|-------|---------|---------|----------|----|----|----|----|-------|---|---|---|---|---|
+| 1     | 0       | 1d6     | 19 [0]   | 12 | 13 | 13 | 15 | 15 | 1 | — | — | — | — |
+| 2     | 4,000   | 2d6     | 19 [0]   | 12 | 13 | 13 | 15 | 15 | 2 | — | — | — | — |
+| 3     | 8,000   | 3d6     | 19 [0]   | 12 | 13 | 13 | 15 | 15 | 2 | 1 | — | — | — |
+| 4     | 16,000  | 4d6     | 17 [+2]  | 10 | 11 | 11 | 13 | 12 | 2 | 2 | — | — | — |
+| 5     | 32,000  | 5d6     | 17 [+2]  | 10 | 11 | 11 | 13 | 12 | 2 | 2 | 1 | — | — |
+| 6     | 64,000  | 6d6     | 17 [+2]  | 10 | 11 | 11 | 13 | 12 | 2 | 2 | 2 | — | — |
+| 7     | 120,000 | 7d6     | 14 [+5]  | 8  | 9  | 9  | 10 | 10 | 3 | 2 | 2 | 1 | — |
+| 8     | 250,000 | 8d6     | 14 [+5]  | 8  | 9  | 9  | 10 | 10 | 3 | 3 | 2 | 2 | — |
+| 9     | 400,000 | 9d6     | 14 [+5]  | 8  | 9  | 9  | 10 | 10 | 3 | 3 | 3 | 2 | 1 |
+| 10    | 600,000 | 9d6+2*  | 12 [+7]  | 6  | 7  | 8  | 8  | 8  | 3 | 3 | 3 | 3 | 2 |
+
+**\* Modifiers from CON no longer apply.**
 
 **Saving Throws:**
-- **Death:** Death / poison
-- **Wands:** Wands
-- **Paralysis:** Paralysis / petrify
-- **Breath:** Breath attacks
-- **Spells:** Spells / rods / staves
+- **D:** Death / poison
+- **W:** Wands
+- **P:** Paralysis / petrify
+- **B:** Breath attacks
+- **S:** Spells / rods / staves
 
 **Spell Slots:** Number of spells per day by spell level (1st-5th)
 
 ## Notes
-- **Elves in Gygar Mode use Spellblade progression** instead of standard Elf class
-- Spellblades are unique to Gygar Mode
+- **Spellblades in OSE Standard** use the OSE Elf progression table with irregular to-hit and saving throw jumps
+- Spellblades are a pure class option without racial abilities
 - Maximum level is 10 (not 14 like other classes)
+- For the smoothed Gygar Mode version, see GYGAR_SPELLBLADE.md

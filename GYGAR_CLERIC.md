@@ -8,6 +8,8 @@ Human, Dwarf, or Gnome. Dwarf and Gnome Require WIS of 9+.
 ## Prime Requisite
 Wisdom (WIS).
 
+**XP bonus for WIS:** 3–5: -20%, 6–8: -10%, 9–12: None, 13–15: +5%, 16–18: +10%.
+
 ## Hit Dice
 1d6 per level until 9th level.
 

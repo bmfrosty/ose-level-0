@@ -12,6 +12,8 @@
 
 Dwarves are stout demihumans, about 4' tall and weighing about 150 pounds. They live in clans, each with its own underground stronghold. Clans are usually on good terms and will cooperate in times of need. Dwarves are known for their stubbornness, practicality, and their love of fine craftsmanship, gold, hearty food, and strong drink. Their hair and long beards are black, grey, or brown, and their skin is earthy brown. They are strongly resilient to magic, as indicated in their saving throw values.
 
+**XP bonus for STR:** 13–15: +5%, 16–18: +10%.
+
 ## Combat
 
 Dwarves can use all types of armour. Their stature means they can only use small or normal sized weapons. They cannot use longbows or two-handed swords.

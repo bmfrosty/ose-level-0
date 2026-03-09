@@ -6,7 +6,7 @@ Elves are slender, fey demihumans with pointed ears, about 5 to 5½ feet tall an
 Elf. Minimum INT 9.
 
 ## Prime Requisite
-INT and STR. An elf with at least 13 INT and STR gains a 5% bonus to experience.
+INT and STR. An elf with at least 13 INT and STR gains a 5% bonus to experience. An elf with an INT of at least 16 and a STR of at least 13 receives a +10% XP bonus.
 
 ## Hit Dice
 1d6 per level until 9th level.

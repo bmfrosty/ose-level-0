@@ -17,9 +17,15 @@
             padding: 15px;
             margin-bottom: 20px;
             border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        nav .nav-left {
+            display: flex;
+            gap: 20px;
         }
         nav a {
-            margin-right: 20px;
             text-decoration: none;
             color: #333;
             font-weight: bold;
@@ -138,10 +144,13 @@
 </head>
 <body>
     <nav>
-        <a href="index.html">Level 0 Generator</a>
-        <a href="basic.html">Basic (Levels 1+)</a>
-        <a href="advanced.html">Advanced (Levels 1+)</a>
-        <a href="classes.html" class="active">Class Reference</a>
+        <div class="nav-left">
+            <a href="index.html">Level 0 Generator</a>
+            <a href="basic.html">Basic (Levels 1+)</a>
+            <a href="advanced.html">Advanced (Levels 1+)</a>
+            <a href="classes.html" class="active">Class Reference</a>
+        </div>
+        <a href="about.html">About</a>
     </nav>
 
     <h1>OSE Class Reference</h1>
@@ -150,12 +159,13 @@
         <h3>📚 OSE Standard Classes:</h3>
         <div class="class-buttons">
             <button onclick="loadClass('OSE_CLERIC')">Cleric</button>
-            <button onclick="loadClass('OSE_FIGHTER')">Fighter</button>
-            <button onclick="loadClass('OSE_MAGIC_USER')">Magic-User</button>
-            <button onclick="loadClass('OSE_THIEF')">Thief</button>
             <button onclick="loadClass('OSE_DWARF')">Dwarf</button>
             <button onclick="loadClass('OSE_ELF')">Elf</button>
+            <button onclick="loadClass('OSE_FIGHTER')">Fighter</button>
             <button onclick="loadClass('OSE_HALFLING')">Halfling</button>
+            <button onclick="loadClass('OSE_MAGIC_USER')">Magic-User</button>
+            <button onclick="loadClass('OSE_SPELLBLADE')">Spellblade</button>
+            <button onclick="loadClass('OSE_THIEF')">Thief</button>
         </div>
     </div>
 
@@ -163,22 +173,13 @@
         <h3>🏰 Gygar Mode Classes:</h3>
         <div class="class-buttons">
             <button class="gygar" onclick="loadClass('GYGAR_CLERIC')">Cleric</button>
-            <button class="gygar" onclick="loadClass('GYGAR_FIGHTER')">Fighter</button>
-            <button class="gygar" onclick="loadClass('GYGAR_MAGIC_USER')">Magic-User</button>
-            <button class="gygar" onclick="loadClass('GYGAR_THIEF')">Thief</button>
-            <button class="gygar" onclick="loadClass('GYGAR_SPELLBLADE')">Spellblade</button>
             <button class="gygar" onclick="loadClass('GYGAR_DWARF')">Dwarf</button>
             <button class="gygar" onclick="loadClass('GYGAR_ELF')">Elf</button>
+            <button class="gygar" onclick="loadClass('GYGAR_FIGHTER')">Fighter</button>
             <button class="gygar" onclick="loadClass('GYGAR_HALFLING')">Halfling</button>
-        </div>
-    </div>
-
-    <div class="class-selector">
-        <h3>📊 Comparisons & Analysis:</h3>
-        <div class="class-buttons">
-            <button class="comparison" onclick="loadClass('OSE_VS_GYGAR')">OSE vs Gygar</button>
-            <button class="comparison" onclick="loadClass('ELF_VS_SPELLBLADE')">Elf vs Spellblade</button>
-            <button class="comparison" onclick="loadClass('RACIAL_FEATURES_AUDIT')">Racial Features Audit</button>
+            <button class="gygar" onclick="loadClass('GYGAR_MAGIC_USER')">Magic-User</button>
+            <button class="gygar" onclick="loadClass('GYGAR_SPELLBLADE')">Spellblade</button>
+            <button class="gygar" onclick="loadClass('GYGAR_THIEF')">Thief</button>
         </div>
     </div>
 

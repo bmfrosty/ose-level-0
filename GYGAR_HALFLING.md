@@ -8,7 +8,7 @@ Halflings are small, rotund demihumans with curly hair upon their heads and feet
 Halfling. Minimum CON 9, minimum DEX 9.
 
 ## Prime Requisite
-DEX and STR. A halfling with at least 13 in one prime requisite gains a 5% bonus to experience.
+DEX and STR. A halfling with at least 13 in one prime requisite gains a 5% bonus to experience. A halfling with DEX and STR of at least 13 receives a +10% XP bonus.
 
 ## Hit Dice
 1d6 per level until 8th level.

@@ -7,16 +7,24 @@
     <style>
         body {
             font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
         }
         nav {
             background-color: #f0f0f0;
             padding: 15px;
             margin-bottom: 20px;
             border-radius: 5px;
-            text-align: center;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        nav .nav-left {
+            display: flex;
+            gap: 20px;
         }
         nav a {
-            margin-right: 20px;
             text-decoration: none;
             color: #333;
             font-weight: bold;
@@ -72,10 +80,13 @@
 </head>
 <body>
     <nav>
-        <a href="index.html" class="active">Level 0 Generator</a>
-        <a href="basic.html">Basic (Levels 1+)</a>
-        <a href="advanced.html">Advanced (Levels 1+)</a>
-        <a href="classes.html">Class Reference</a>
+        <div class="nav-left">
+            <a href="index.html" class="active">Level 0 Generator</a>
+            <a href="basic.html">Basic (Levels 1+)</a>
+            <a href="advanced.html">Advanced (Levels 1+)</a>
+            <a href="classes.html">Class Reference</a>
+        </div>
+        <a href="about.html">About</a>
     </nav>
 
     <h1 style="text-align: center;">OSE 0-Level Character Generator</h1>

@@ -10,6 +10,8 @@
 
 Magic-users are adventurers whose study of secret arcane lore has taught them how to cast spells and to wield powerful magic items. Magic-users begin play with knowledge of just a single spell, but gain access to extremely potent magic as they advance.
 
+**XP bonus for INT:** 3–5: -20%, 6–8: -10%, 9–12: None, 13–15: +5%, 16–18: +10%.
+
 ## Arcane Magic
 
 See **Spells** for full details on arcane magic.

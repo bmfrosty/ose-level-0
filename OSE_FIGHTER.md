@@ -10,6 +10,8 @@
 
 Fighters are adventurers trained in warfare and combat. In a group of adventurers, the role of fighters is to battle monsters and to defend other characters.
 
+**XP bonus for STR:** 3–5: -20%, 6–8: -10%, 9–12: None, 13–15: +5%, 16–18: +10%.
+
 ## Combat
 
 Fighters can use all types of weapons and armour.

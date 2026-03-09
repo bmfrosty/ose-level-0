@@ -10,6 +10,8 @@
 
 Clerics are adventurers sworn to the service of a deity. They are trained for battle and channel the power of their deity.
 
+**XP bonus for WIS:** 3–5: -20%, 6–8: -10%, 9–12: None, 13–15: +5%, 16–18: +10%.
+
 ## Combat
 
 Clerics can use all types of armour. The edicts of their holy order forbid them from using weapons that have a sharp, cutting edge or stabbing point. They may use the following weapons: club, mace, sling, staff, war hammer.

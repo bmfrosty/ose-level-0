@@ -16,9 +16,15 @@
             padding: 15px;
             margin-bottom: 20px;
             border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        nav .nav-left {
+            display: flex;
+            gap: 20px;
         }
         nav a {
-            margin-right: 20px;
             text-decoration: none;
             color: #333;
             font-weight: bold;
@@ -78,10 +84,13 @@
 </head>
 <body>
     <nav>
-        <a href="index.html">Level 0 Generator</a>
-        <a href="basic.html" class="active">Basic (Levels 1+)</a>
-        <a href="advanced.html">Advanced (Levels 1+)</a>
-        <a href="classes.html">Class Reference</a>
+        <div class="nav-left">
+            <a href="index.html">Level 0 Generator</a>
+            <a href="basic.html" class="active">Basic (Levels 1+)</a>
+            <a href="advanced.html">Advanced (Levels 1+)</a>
+            <a href="classes.html">Class Reference</a>
+        </div>
+        <a href="about.html">About</a>
     </nav>
 
     <h1>OSE Basic Character Generator (Levels 1+)</h1>
@@ -113,15 +122,8 @@
 
     <div class="doc-links">
         <h3>📚 Class Documentation:</h3>
-        <p>View the complete class progressions and abilities:</p>
-        <a href="classes.html?class=OSE_CLERIC">Cleric</a>
-        <a href="classes.html?class=OSE_FIGHTER">Fighter</a>
-        <a href="classes.html?class=OSE_MAGIC_USER">Magic-User</a>
-        <a href="classes.html?class=OSE_THIEF">Thief</a>
-        <a href="classes.html?class=OSE_DWARF">Dwarf</a>
-        <a href="classes.html?class=OSE_ELF">Elf</a>
-        <a href="classes.html?class=OSE_HALFLING">Halfling</a>
-        <a href="classes.html?class=OSE_GNOME">Gnome</a>
+        <p>View complete class progressions and abilities for both OSE Standard and Gygar Mode:</p>
+        <a href="classes.html">View All Classes</a>
     </div>
 
     <div class="feature-list">
@@ -137,11 +139,5 @@
         <p><em>See PLAN_OSE_IMPORT.md for detailed implementation plan.</em></p>
     </div>
 
-    <div class="doc-links">
-        <h3>🔗 Related Resources:</h3>
-        <a href="index.html">Generate Level 0 Character</a>
-        <a href="classes.html">View All Classes</a>
-        <a href="classes.html?compare=OSE_VS_GYGAR">OSE vs Gygar Comparison</a>
-    </div>
 </body>
 </html>

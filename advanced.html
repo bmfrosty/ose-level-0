@@ -16,9 +16,15 @@
             padding: 15px;
             margin-bottom: 20px;
             border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        nav .nav-left {
+            display: flex;
+            gap: 20px;
         }
         nav a {
-            margin-right: 20px;
             text-decoration: none;
             color: #333;
             font-weight: bold;
@@ -88,10 +94,13 @@
 </head>
 <body>
     <nav>
-        <a href="index.html">Level 0 Generator</a>
-        <a href="basic.html">Basic (Levels 1+)</a>
-        <a href="advanced.html" class="active">Advanced (Levels 1+)</a>
-        <a href="classes.html">Class Reference</a>
+        <div class="nav-left">
+            <a href="index.html">Level 0 Generator</a>
+            <a href="basic.html">Basic (Levels 1+)</a>
+            <a href="advanced.html" class="active">Advanced (Levels 1+)</a>
+            <a href="classes.html">Class Reference</a>
+        </div>
+        <a href="about.html">About</a>
     </nav>
 
     <h1>OSE Advanced Character Generator (Levels 1+)</h1>
@@ -136,36 +145,9 @@
     </div>
 
     <div class="doc-links">
-        <h3>📚 OSE Standard Class Documentation:</h3>
-        <p>View the complete class progressions and abilities:</p>
-        <a href="classes.html?class=OSE_CLERIC">Cleric</a>
-        <a href="classes.html?class=OSE_FIGHTER">Fighter</a>
-        <a href="classes.html?class=OSE_MAGIC_USER">Magic-User</a>
-        <a href="classes.html?class=OSE_THIEF">Thief</a>
-    </div>
-
-    <div class="doc-links">
-        <h3>🏰 Gygar Mode Class Documentation:</h3>
-        <p>View the Gygar Mode variants:</p>
-        <a href="classes.html?class=GYGAR_CLERIC">Cleric</a>
-        <a href="classes.html?class=GYGAR_FIGHTER">Fighter</a>
-        <a href="classes.html?class=GYGAR_MAGIC_USER">Magic-User</a>
-        <a href="classes.html?class=GYGAR_THIEF">Thief</a>
-        <a href="classes.html?class=GYGAR_SPELLBLADE">Spellblade</a>
-    </div>
-
-    <div class="doc-links">
-        <h3>📚 Racial Class Documentation:</h3>
-        <p>View demihuman racial abilities and progressions:</p>
-        <a href="classes.html?class=OSE_DWARF">OSE Dwarf</a>
-        <a href="classes.html?class=OSE_ELF">OSE Elf</a>
-        <a href="classes.html?class=OSE_HALFLING">OSE Halfling</a>
-        <a href="classes.html?class=OSE_GNOME">OSE Gnome</a>
-        <br>
-        <a href="classes.html?class=GYGAR_DWARF">Gygar Dwarf</a>
-        <a href="classes.html?class=GYGAR_ELF">Gygar Elf</a>
-        <a href="classes.html?class=GYGAR_HALFLING">Gygar Halfling</a>
-        <a href="classes.html?class=GYGAR_GNOME">Gygar Gnome</a>
+        <h3>📚 Class Documentation:</h3>
+        <p>View complete class progressions and abilities for both OSE Standard and Gygar Mode:</p>
+        <a href="classes.html">View All Classes</a>
     </div>
 
     <div class="feature-list">
@@ -181,12 +163,5 @@
         <p><em>See PLAN_OSE_IMPORT.md and PLAN_GYGAR_IMPORT.md for detailed implementation plans.</em></p>
     </div>
 
-    <div class="doc-links">
-        <h3>🔗 Related Resources:</h3>
-        <a href="index.html">Generate Level 0 Character</a>
-        <a href="classes.html">View All Classes</a>
-        <a href="classes.html?compare=OSE_VS_GYGAR">OSE vs Gygar Comparison</a>
-        <a href="classes.html?compare=ELF_VS_SPELLBLADE">Elf vs Spellblade Comparison</a>
-    </div>
 </body>
 </html>
