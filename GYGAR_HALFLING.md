@@ -1,4 +1,4 @@
-# Halfling (Gygar Mode)
+# Halfling (Smoothified Mode)
 
 **Demihuman Class**
 
@@ -77,6 +77,6 @@ Any time a halfling wishes (and has sufficient money), they may build a strongho
 - **S:** Spells / rods / staves
 
 ## Notes
-- **Halflings in Gygar Mode** use this progression with smoothed to-hit bonuses
-- Halflings are available in Gygar Mode
+- **Halflings in Smoothified Mode** use this progression with smoothed to-hit bonuses
+- Halflings are available in Smoothified Mode
 - Maximum level is 8

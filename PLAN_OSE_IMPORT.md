@@ -138,7 +138,7 @@ Create `class-data-ose.js` with all standard OSE class data.
 Integrate OSE class data into the character generator.
 
 - [ ] Update character generation to support mode selection:
-  - [ ] Gygar Mode: Use `class-data-gygar.js`
+  - [ ] Smoothified Mode: Use `class-data-gygar.js`
   - [ ] Normal Mode: Use `class-data-ose.js`
 - [ ] Add mode toggle in UI
 - [ ] Update class selection based on mode
@@ -191,7 +191,7 @@ Test all OSE classes at various levels.
 - Standard saving throw progressions
 - Standard attack bonus progressions
 
-### Gygar Mode
+### Smoothified Mode
 - Modified saving throw progressions
 - Modified attack bonus progressions
 - Spellblade class (unique to Gygar)
@@ -218,7 +218,7 @@ Test all OSE classes at various levels.
 - This generator will support both approaches
 - Level 0 characters are always Advanced-style (races with abilities)
 - Level 1+ can use either Basic (classes) or Advanced (races + classes)
-- Gygar Mode is a variant of Advanced rules
+- Smoothified Mode is a variant of Advanced rules
 
 ## Success Criteria
 
@@ -232,7 +232,7 @@ Test all OSE classes at various levels.
 - [ ] Phase 8: Documentation complete (PENDING - for level 1+ implementation)
 - [ ] Phase 9: All tests passing (PENDING - for level 1+ implementation)
 - [ ] Can generate level 1-14 characters in Normal Mode (PENDING - for level 1+ implementation)
-- [ ] Can generate level 1-14 characters in Gygar Mode (PENDING - for level 1+ implementation)
+- [ ] Can generate level 1-14 characters in Smoothified Mode (PENDING - for level 1+ implementation)
 - [ ] Can switch between modes seamlessly (PENDING - for level 1+ implementation)
 
 ## Phase 1-4 Complete! ✅

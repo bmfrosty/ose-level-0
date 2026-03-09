@@ -1,4 +1,4 @@
-# Spellblade (Gygar Mode)
+# Spellblade (Smoothified Mode)
 
 The spellblade is a warrior-scholar who combines martial training with arcane study. Both elves and humans can become spellblades. Unlike wizards, spellblades train with blades and armor while retaining the ability to prepare and cast spells. Their abilities come from discipline and training.
 
@@ -57,6 +57,6 @@ Upon reaching 9th level, a Spellblade may establish a stronghold. Followers, stu
 **Spell Slots:** Number of spells per day by spell level (1st-5th)
 
 ## Notes
-- **Elves in Gygar Mode use Spellblade progression** instead of standard Elf class
-- Spellblades are unique to Gygar Mode
+- **Elves in Smoothified Mode use Spellblade progression** instead of standard Elf class
+- Spellblades are unique to Smoothified Mode
 - Maximum level is 10 (not 14 like other classes)

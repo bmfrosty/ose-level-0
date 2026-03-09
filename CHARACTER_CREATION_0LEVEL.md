@@ -38,10 +38,10 @@ Record all bonuses/penalties from ability scores.
 
 **Our Implementation:**
 - **Normal Mode:** THAC0 20 [-1] (attack bonus -1)
-- **Gygar Mode:** THAC0 20 [0] (attack bonus 0 - no penalty for untrained)
+- **Smoothified Mode:** THAC0 20 [0] (attack bonus 0 - no penalty for untrained)
 - **Saves:** D14 W15 P16 B17 S18 (with Dwarf Resilience bonuses if applicable)
 
-**Implementation Note:** Gygar Mode removes the attack penalty for Level 0 characters.
+**Implementation Note:** Smoothified Mode removes the attack penalty for Level 0 characters.
 
 ### 4. Roll Hit Points
 Roll 1d4 for hit points, modified by CON as usual. Characters always start with at least 1 hit point, regardless of CON modifier.
@@ -234,7 +234,7 @@ Funnel adventures were popularized by Dungeon Crawl Classics RPG. In a funnel, a
 
 ### Our Expansions:
 1. ✅ **Ascending AC** - Always use ascending AC values
-2. ✅ **Gygar Mode** - No attack penalty at level 0 (THAC0 20 [0])
+2. ✅ **Smoothified Mode** - No attack penalty at level 0 (THAC0 20 [0])
 3. ✅ **Advanced Mode** - Racial ability modifiers and minimums
 4. ✅ **Human Racial Abilities** - Optional human abilities in Advanced mode
 5. ✅ **Dwarf Resilience** - CON-based saving throw bonuses
@@ -253,7 +253,7 @@ Funnel adventures were popularized by Dungeon Crawl Classics RPG. In a funnel, a
 
 ### Mode System:
 - **Normal Mode:** Standard OSE rules with attack penalty
-- **Gygar Mode:** Castle Gygar house rules (no attack penalty)
+- **Smoothified Mode:** Castle Gygar house rules (no attack penalty)
 - **Advanced Mode:** Racial modifiers and minimums (checkbox)
 - **Human Racial Abilities:** Optional human abilities (checkbox, requires Advanced)
 
@@ -274,7 +274,7 @@ Funnel adventures were popularized by Dungeon Crawl Classics RPG. In a funnel, a
 
 - **OSE Level 0 Article** - Original rules (ose-level-0-*.txt.txt files)
 - **OSE Advanced Fantasy Player's Tome** - Racial abilities and modifiers
-- **Castle Gygar Module** - Gygar Mode rules
+- **Castle Gygar Module** - Smoothified Mode rules
 - **Current Implementation** - Expanded tables and features
 
 ## Notes
@@ -284,6 +284,6 @@ Funnel adventures were popularized by Dungeon Crawl Classics RPG. In a funnel, a
 - No class abilities or special training
 - Ideal for funnel adventures or retainer generation
 - Can advance to any class that meets ability requirements
-- Gygar Mode makes Level 0 slightly more viable in combat
+- Smoothified Mode makes Level 0 slightly more viable in combat
 - Advanced Mode makes characters more like their Level 1+ counterparts
 - Dwarf Resilience applies in both Basic and Advanced modes

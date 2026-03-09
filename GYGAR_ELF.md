@@ -1,4 +1,4 @@
-# Elf (Gygar Mode)
+# Elf (Smoothified Mode)
 
 Elves are slender, fey demihumans with pointed ears, about 5 to 5½ feet tall and weighing about 120 pounds. Elves are seldom met in human settlements, preferring to feast and make merry in the woods. Elves are fascinated by spells and beautifully constructed magic items and love to collect both. If crossed, they are dangerous enemies, as they are masters of both sword and spell.
 
@@ -89,6 +89,6 @@ An elf ruler may only hire elven mercenaries. Specialists and retainers of any r
 **Spell Slots:** Number of spells per day by spell level (1st-5th)
 
 ## Notes
-- **Elves in Gygar Mode** use this progression with smoothed to-hit and saving throw progressions
-- This is the race-as-class Elf with Gygar Mode improvements
+- **Elves in Smoothified Mode** use this progression with smoothed to-hit and saving throw progressions
+- This is the race-as-class Elf with Smoothified Mode improvements
 - For the pure class option, see Spellblade

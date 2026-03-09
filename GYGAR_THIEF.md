@@ -1,4 +1,4 @@
-# Thief (Gygar Mode)
+# Thief (Smoothified Mode)
 
 Thieves are adventurers who live by their skills of deception and stealth. They have a range of specialised adventuring skills unavailable to other characters. However, thieves are not always to be trusted.
 

@@ -1,4 +1,4 @@
-# Dwarf (Gygar Mode)
+# Dwarf (Smoothified Mode)
 
 **Demihuman Class**
 
@@ -80,6 +80,6 @@ A dwarf ruler may only hire dwarven mercenaries. Specialists and retainers of an
 - **S:** Spells / rods / staves
 
 ## Notes
-- **Dwarves in Gygar Mode** use this progression with smoothed to-hit bonuses
-- Dwarves are available in Gygar Mode
+- **Dwarves in Smoothified Mode** use this progression with smoothed to-hit bonuses
+- Dwarves are available in Smoothified Mode
 - Maximum level is 12

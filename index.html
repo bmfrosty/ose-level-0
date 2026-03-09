@@ -68,8 +68,11 @@
             margin: 20px auto;
         }
         #config {
-            text-align: center;
             margin-bottom: 20px;
+        }
+        #config > label {
+            display: block;
+            margin: 5px 0;
         }
         input[type="number"] {
             width: 50px;
@@ -91,35 +94,37 @@
 
     <h1 style="text-align: center;">OSE 0-Level Character Generator</h1>
     <div id="config">
-        Minimums:<br>
-        <label for="strMin">STR:</label>
-        <input type="number" id="strMin" value="3" min="3" max="18">
-        <label for="dexMin">DEX:</label>
-        <input type="number" id="dexMin" value="3" min="3" max="18">
-        <label for="conMin">CON:</label>
-        <input type="number" id="conMin" value="3" min="3" max="18"><br>
-        <label for="intMin">INT:</label>
-        <input type="number" id="intMin" value="3" min="3" max="18">
-        <label for="wisMin">WIS:</label>
-        <input type="number" id="wisMin" value="3" min="3" max="18">
-        <label for="chaMin">CHA:</label>
-        <input type="number" id="chaMin" value="3" min="3" max="18"><br><br>
+        <div style="text-align: center;">
+            Minimums:<br>
+            <label for="strMin">STR:</label>
+            <input type="number" id="strMin" value="3" min="3" max="18">
+            <label for="dexMin">DEX:</label>
+            <input type="number" id="dexMin" value="3" min="3" max="18">
+            <label for="conMin">CON:</label>
+            <input type="number" id="conMin" value="3" min="3" max="18"><br>
+            <label for="intMin">INT:</label>
+            <input type="number" id="intMin" value="3" min="3" max="18">
+            <label for="wisMin">WIS:</label>
+            <input type="number" id="wisMin" value="3" min="3" max="18">
+            <label for="chaMin">CHA:</label>
+            <input type="number" id="chaMin" value="3" min="3" max="18"><br><br>
+        </div>
         <label for="toughGuys">
             <input type="checkbox" id="toughGuys"> Tough Guys (Requires STR/DEX/INT/WIS ≥ 13 and HP ≥ 2)
-        </label><br>
-        <label for="advanced" title="Separate Race and Class">
-            <input type="checkbox" id="advanced" checked> Advanced (Separate Race and Class)
-        </label><br>
-        <label for="humanRacialAbilities" title="Optional adjustment to make up for higher level demihumans in advanced mode" style="margin-left: 20px;">
-            <input type="checkbox" id="humanRacialAbilities" checked> Humans get racial features/abilities
-        </label><br>
-        <label for="gygar" title="0-level attack bonus: 0 instead of -1">
-            <input type="checkbox" id="gygar" checked> <a href="https://www.drivethrurpg.com/en/product/510225/the-ruins-of-castle-gygar" target="_blank">Gygar Mode</a> (Minor adjustments to base OSE)
-        </label><br>
+        </label>
+        <label for="advanced">
+            <input type="checkbox" id="advanced" checked> Advanced Mode (Racial ability modifiers & minimums for all races)
+        </label>
+        <label for="humanRacialAbilities" style="margin-left: 20px;">
+            <input type="checkbox" id="humanRacialAbilities" checked> Human Racial Abilities (+1 CON/CHA, Blessed HP, initiative, loyalty)
+        </label>
+        <label for="gygar">
+            <input type="checkbox" id="gygar" checked> Smoothified Mode (Attack bonus 0 instead of -1)
+        </label>
         <label for="openInNewTab">
             <input type="checkbox" id="openInNewTab"> Open character display in new tab
-        </label><br>
-        <label for="openFileInsteadOfSave" title="Best effort - may not work in all browsers/settings">
+        </label>
+        <label for="openFileInsteadOfSave">
             <input type="checkbox" id="openFileInsteadOfSave"> Open file instead of saving (PNG/PDF/MD/JSON - best effort)
         </label><br><br>
         

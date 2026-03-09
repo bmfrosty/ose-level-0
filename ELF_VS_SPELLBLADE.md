@@ -1,6 +1,6 @@
-# Elf vs Spellblade Comparison (Gygar Mode)
+# Elf vs Spellblade Comparison (Smoothified Mode)
 
-This document compares the Elf (race-as-class) and Spellblade (pure class) options in Gygar Mode.
+This document compares the Elf (race-as-class) and Spellblade (pure class) options in Smoothified Mode.
 
 ## Overview
 

@@ -1,10 +1,10 @@
-# OSE Standard vs Gygar Mode Comparison
+# OSE Standard vs Smoothified Mode Comparison
 
-This document compares the progression differences between OSE Standard and Gygar Mode classes.
+This document compares the progression differences between OSE Standard and Smoothified Mode classes.
 
 ## Overview
 
-Gygar Mode takes the OSE Standard classes and applies consistent smoothing to their progression tables, particularly for to-hit bonuses and saving throws. The goal is to provide more frequent, incremental improvements rather than large jumps at specific levels.
+Smoothified Mode takes the OSE Standard classes and applies consistent smoothing to their progression tables, particularly for to-hit bonuses and saving throws. The goal is to provide more frequent, incremental improvements rather than large jumps at specific levels.
 
 **Key Difference:** OSE uses irregular progression with large jumps at specific breakpoints, while Gygar smooths progressions to provide more consistent, gradual improvements nearly every level.
 
@@ -12,7 +12,7 @@ Gygar Mode takes the OSE Standard classes and applies consistent smoothing to th
 
 ## Section 1: To-Hit Progressions
 
-Both OSE Standard and Gygar Mode use three distinct to-hit progression tracks, carefully assigned to classes based on their combat role. The key difference is that OSE uses irregular jumps while Gygar smooths them into gradual increases.
+Both OSE Standard and Smoothified Mode use three distinct to-hit progression tracks, carefully assigned to classes based on their combat role. The key difference is that OSE uses irregular jumps while Gygar smooths them into gradual increases.
 
 ### Fighter Progression (Best Combat Capability)
 
@@ -27,7 +27,7 @@ Both OSE Standard and Gygar Mode use three distinct to-hit progression tracks, c
 - Levels 10-12: 12 [+7] (jump of +2)
 - Levels 13-14: 10 [+9] (jump of +2)
 
-**Gygar Mode Progression:**
+**Smoothified Mode Progression:**
 - +1, +2, +3, +4, +5, +5, +6, +6, +7, +7, +7, +8, +9, +9
 - Increases nearly every level or every other level
 - Same final value at level 14: +9
@@ -46,7 +46,7 @@ Both OSE Standard and Gygar Mode use three distinct to-hit progression tracks, c
 - Levels 9-12: 14 [+5] (jump of +3)
 - Levels 13-14: 12 [+7] (jump of +2)
 
-**Gygar Mode Progression:**
+**Smoothified Mode Progression:**
 - +0, +1, +1, +2, +2, +3, +3, +4, +5, +5, +6, +6, +7, +7
 - Increases nearly every level or every other level
 - Same final value at level 14: +7
@@ -64,7 +64,7 @@ Both OSE Standard and Gygar Mode use three distinct to-hit progression tracks, c
 - Levels 6-10: 17 [+2] (jump of +2)
 - Levels 11-14: 14 [+5] (jump of +3)
 
-**Gygar Mode Progression:**
+**Smoothified Mode Progression:**
 - +0, +0, +1, +1, +2, +2, +2, +3, +3, +4, +4, +5, +5, +5
 - Increases every 1-2 levels instead of every 5-6 levels
 - Same final value at level 14: +5
@@ -75,7 +75,7 @@ Both OSE Standard and Gygar Mode use three distinct to-hit progression tracks, c
 
 ## Section 2: Saving Throw Progressions
 
-OSE Standard uses irregular saving throw progressions with long flat periods followed by sudden jumps. Gygar Mode smooths these into more frequent, incremental improvements.
+OSE Standard uses irregular saving throw progressions with long flat periods followed by sudden jumps. Smoothified Mode smooths these into more frequent, incremental improvements.
 
 ### Example: Cleric Saving Throws
 
@@ -99,7 +99,7 @@ OSE Standard uses irregular saving throw progressions with long flat periods fol
 
 ### Spellblade (Gygar Only)
 
-**Gygar Mode introduces the Spellblade class:**
+**Smoothified Mode introduces the Spellblade class:**
 - Pure class without racial abilities
 - Same smooth progressions as Gygar Elf
 - Available to both humans and elves
@@ -140,7 +140,7 @@ OSE Standard uses irregular saving throw progressions with long flat periods fol
 - Higher XP bonuses available for exceptional ability scores
 - Emphasizes milestone moments and clear power tiers
 
-**Gygar Mode** maintains the same overall power level but:
+**Smoothified Mode** maintains the same overall power level but:
 - Distributes improvements more evenly, reducing "dead levels"
 - Provides more frequent rewards for leveling up
 - Emphasizes consistent growth and flexible character creation

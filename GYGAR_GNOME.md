@@ -1,4 +1,4 @@
-# Gnome (Gygar Mode)
+# Gnome (Smoothified Mode)
 
 > **Note:** The Gnome class is not included in the Old-School Essentials System Reference Document (SRD) and therefore is not available in this character generator. This documentation is provided for reference purposes only. If you own the full Old-School Essentials rules or The Ruins of Castle Gygar, you can use this information for your games.
 
@@ -100,6 +100,6 @@ Gnome rulers can hire members of other races in the capacity of retainers or spe
 **Spells:** Number of spells per day by spell level (1st-4th)
 
 ## Notes
-- **Gnomes in Gygar Mode** use this progression with smoothed to-hit bonuses
-- Gnomes are available in Gygar Mode
+- **Gnomes in Smoothified Mode** use this progression with smoothed to-hit bonuses
+- Gnomes are available in Smoothified Mode
 - Maximum level is 8

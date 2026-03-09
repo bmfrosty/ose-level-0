@@ -124,7 +124,7 @@ The implementation in `names-tables.js` already works correctly:
 **Source:** Gygar project (user's other project)
 **See:** PLAN_GYGAR_IMPORT.md
 
-- [x] Import class data for Gygar Mode (as markdown documentation): ✅
+- [x] Import class data for Smoothified Mode (as markdown documentation): ✅
   - [x] Cleric → GYGAR_CLERIC.md ✅
   - [x] Fighter → GYGAR_FIGHTER.md ✅
   - [x] Thief → GYGAR_THIEF.md ✅
@@ -136,23 +136,23 @@ The implementation in `names-tables.js` already works correctly:
 - [ ] Add UI controls for class selection (when level > 0) (PENDING - for level 1+ implementation)
 
 ### Create Gygar Versions of Demihuman Classes ✅ COMPLETE (Documentation Phase)
-**Note:** Gygar Mode has different saving throw/attack progressions for demihumans
+**Note:** Smoothified Mode has different saving throw/attack progressions for demihumans
 
 - [x] Create Gygar Dwarf class documentation → GYGAR_DWARF.md ✅
   - [x] Use Gygar-specific saving throw progression ✅
   - [x] Use Gygar-specific attack bonus progression ✅
   - [x] Keep Dwarf racial abilities (including Resilience) ✅
 - [x] Create Gygar Elf class documentation → GYGAR_ELF.md ✅
-  - [x] **Use Spellblade saving throw progression** (Elf = Spellblade in Gygar Mode) ✅
+  - [x] **Use Spellblade saving throw progression** (Elf = Spellblade in Smoothified Mode) ✅
   - [x] Use Gygar-specific attack bonus progression ✅
   - [x] Keep Elf racial abilities ✅
-  - [x] Note: Elf in Gygar Mode uses Spellblade tables ✅
+  - [x] Note: Elf in Smoothified Mode uses Spellblade tables ✅
 - [x] Create Gygar Halfling class documentation → GYGAR_HALFLING.md ✅
   - [x] Use Gygar-specific saving throw progression ✅
   - [x] Use Gygar-specific attack bonus progression ✅
   - [x] Keep Halfling racial abilities ✅
 - [x] Create Gygar Gnome class documentation → GYGAR_GNOME.md ✅
-- [ ] Add mode detection: Basic Mode vs Gygar Mode for demihuman classes (PENDING - for level 1+ implementation)
+- [ ] Add mode detection: Basic Mode vs Smoothified Mode for demihuman classes (PENDING - for level 1+ implementation)
 - [x] Update documentation to explain Gygar demihuman differences → OSE_VS_GYGAR.md ✅
 
 ### Import Character Classes from OSE Website ✅ COMPLETE (Documentation Phase)
@@ -171,7 +171,7 @@ The implementation in `names-tables.js` already works correctly:
 - [ ] Create new file: `class-data-ose.js` (PENDING - for level 1+ implementation)
 - [ ] Add class-specific data to JavaScript (PENDING - for level 1+ implementation)
 - [ ] Update character generation to support OSE Standard Mode (PENDING - for level 1+ implementation)
-- [ ] Add UI toggle for OSE Standard vs Gygar Mode (PENDING - for level 1+ implementation)
+- [ ] Add UI toggle for OSE Standard vs Smoothified Mode (PENDING - for level 1+ implementation)
 
 ## Medium Priority
 
@@ -198,12 +198,12 @@ The implementation in `names-tables.js` already works correctly:
 - [ ] Update all renderers to handle Basic Mode
 - [ ] Update documentation
 
-### Gygar Mode Enhancements
-- [ ] Get complete Gygar Mode saving throw progressions from user
-- [ ] Get complete Gygar Mode attack bonus progressions from user
+### Smoothified Mode Enhancements
+- [ ] Get complete Smoothified Mode saving throw progressions from user
+- [ ] Get complete Smoothified Mode attack bonus progressions from user
 - [ ] Implement different progressions for Gygar vs Normal Mode
 - [ ] Add Spellblade class support (Gygar-specific)
-- [ ] Document Gygar Mode differences in README.md
+- [ ] Document Smoothified Mode differences in README.md
 
 ## Low Priority
 
@@ -260,8 +260,8 @@ The implementation in `names-tables.js` already works correctly:
 ### Data Sources
 - **OSE Advanced Fantasy Player's Tome:** For Advanced Mode racial bonuses and abilities
 - **OSE SRD Website:** For Basic Mode class data (https://oldschoolessentials.necroticgnome.com/)
-- **Gygar Project:** For Gygar Mode class data and Spellblade class
-- **The Ruins of Castle Gygar Module:** For Gygar Mode saving throw/attack bonus progressions
+- **Gygar Project:** For Smoothified Mode class data and Spellblade class
+- **The Ruins of Castle Gygar Module:** For Smoothified Mode saving throw/attack bonus progressions
 
 ### Mode Compatibility Matrix
 **See PLAN_0LEVEL_BASIC_ADVANCED.md for detailed explanation**
@@ -291,7 +291,7 @@ The implementation in `names-tables.js` already works correctly:
 - ✅ Dynamic saving throws for level 0
 - ✅ Dynamic attack bonus for level 0
 - ✅ Dwarf Resilience ability (Advanced Mode)
-- ✅ Gygar Mode toggle (UI and CLI)
+- ✅ Smoothified Mode toggle (UI and CLI)
 - ✅ Character object includes level, attackBonus, savingThrows
 - ✅ All renderers use dynamic values
 - ✅ Comprehensive README.md

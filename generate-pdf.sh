@@ -51,9 +51,10 @@ OPTIONS:
     -d, --demihuman          Force demihuman characters only
     -r, --race RACE          Force specific race (Human, Dwarf, Elf, Gnome, or Halfling)
     -s, --style STYLE        Sheet style: classic or underground (default: classic)
-    --not-advanced           Disable Advanced mode (humans get no racial abilities)
-    --gygar                  Enable Gygar Mode (0-level attack bonus: 0, default: ON)
-    --not-gygar              Disable Gygar Mode (0-level attack bonus: -1)
+    --not-advanced           Disable Advanced mode (no racial ability modifiers or minimums)
+    --not-human-abilities    Disable Human Racial Abilities (no +1 CON/CHA, Blessed HP, etc.)
+    --gygar                  Enable Smoothified Mode (0-level attack bonus: 0, default: ON)
+    --not-gygar              Disable Smoothified Mode (0-level attack bonus: -1)
     --stdout                 Output to stdout instead of file (json/md only)
     --print-markdown         Print character data as markdown to stderr (for PDF/PNG debugging)
     
@@ -163,6 +164,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --not-advanced)
             ADVANCED=false
+            shift
+            ;;
+        --not-human-abilities)
+            HUMAN_RACIAL_ABILITIES=false
             shift
             ;;
         --gygar)

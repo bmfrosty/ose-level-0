@@ -62,4 +62,4 @@ Upon reaching 9th level, a Spellblade may establish a stronghold. Followers, stu
 - **Spellblades in OSE Standard** use the OSE Elf progression table with irregular to-hit and saving throw jumps
 - Spellblades are a pure class option without racial abilities
 - Maximum level is 10 (not 14 like other classes)
-- For the smoothed Gygar Mode version, see GYGAR_SPELLBLADE.md
+- For the smoothed Smoothified Mode version, see GYGAR_SPELLBLADE.md

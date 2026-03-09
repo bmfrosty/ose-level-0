@@ -13,20 +13,20 @@ Add support for higher-level characters with dynamic attack bonuses and saving t
 1. Add level, attackBonus, and savingThrows to character object
 2. Support Advanced Mode (race-based bonuses)
 3. Support Basic Mode (class-based, no race)
-4. Support Gygar Mode (different saving throws and attack bonuses)
+4. Support Smoothified Mode (different saving throws and attack bonuses)
 5. Implement Dwarf Resilience ability (Advanced Mode only)
 
 ## Implementation Checklist
 
 ### Phase 1: Data Structures and Tables ✅ COMPLETE
 - [x] Create `UPPER_LEVEL_PLAN.md` (this file)
-- [x] Add Gygar Mode checkbox to UI (default: ON)
-- [x] Add Gygar Mode option to shell script (--gygar / --not-gygar)
+- [x] Add Smoothified Mode checkbox to UI (default: ON)
+- [x] Add Smoothified Mode option to shell script (--gygar / --not-gygar)
 - [x] Add saving throw tables to `names-tables.js`
   - [x] Level 0 base values (same for both Normal and Gygar modes)
   - [x] Tables for future level support (will differ between modes)
 - [x] Add attack bonus tables to `names-tables.js`
-  - [x] Level 0 base value: -1 (Normal Mode), 0 (Gygar Mode)
+  - [x] Level 0 base value: -1 (Normal Mode), 0 (Smoothified Mode)
   - [x] Tables for future level support
 
 ### Phase 2A: Dwarf Resilience Function ✅ COMPLETE
@@ -58,7 +58,7 @@ Add support for higher-level characters with dynamic attack bonuses and saving t
 - [x] Create `calculateAttackBonus()` function in `names-tables.js`
   - [x] Input: level, race, isAdvanced, isGygar
   - [x] Output: Number (attack bonus)
-  - [x] If level 0 and Gygar Mode: return 0
+  - [x] If level 0 and Smoothified Mode: return 0
   - [x] If level 0 and Normal Mode: return -1
   - [x] Return final attack bonus
 - [x] Export function for use in other modules
@@ -86,7 +86,7 @@ Add support for higher-level characters with dynamic attack bonuses and saving t
   - [x] Test Dwarf in Normal Mode: no bonuses (Advanced Mode only) ✅ PASS
   - [x] Test Elf in Advanced Mode: no bonuses (Dwarf only) ✅ PASS
 - [x] Test `calculateAttackBonus()` function
-  - [x] Test level 0 in Gygar Mode: should return 0 ✅ PASS
+  - [x] Test level 0 in Smoothified Mode: should return 0 ✅ PASS
   - [x] Test level 0 in Normal Mode: should return -1 ✅ PASS
   - [x] Test different races: should all return same value (race doesn't affect attack bonus at level 0) ✅ PASS
 - [x] Update UPPER_LEVEL_PLAN.md with completion
@@ -136,7 +136,7 @@ Add support for higher-level characters with dynamic attack bonuses and saving t
   - [x] Verified: level, attackBonus, savingThrows all present
 - [x] Test Markdown output shows correct values ✅ PASS
   - [x] Saving throws: Death=12, Wands=13, Spells=16 (with Resilience)
-  - [x] Attack bonus: +0 (Gygar Mode)
+  - [x] Attack bonus: +0 (Smoothified Mode)
   - [x] Racial abilities include Resilience description
 - [x] Test PDF/PNG rendering with dynamic values ✅ PASS
   - [x] User verified: OSE_0Level_Dwarf_Sailor_Bifur.pdf
@@ -165,14 +165,14 @@ Add support for higher-level characters with dynamic attack bonuses and saving t
 - Attack bonus determined by class + level
 - No racial abilities
 
-### Gygar Mode Details
+### Smoothified Mode Details
 - **Default: ON** (checkbox in UI)
 - Named after "The Ruins of Castle Gygar" module
 - Link: https://www.drivethrurpg.com/en/product/510225/the-ruins-of-castle-gygar
 - Different saving throw values than Normal Mode
 - Different attack bonus progression (future levels)
 - Applies to both Advanced and Basic modes
-- **TODO:** Get specific Gygar Mode values from user
+- **TODO:** Get specific Smoothified Mode values from user
 
 ### Level 0 Specifics
 
@@ -185,10 +185,10 @@ Add support for higher-level characters with dynamic attack bonuses and saving t
   - Breath: 17
   - Spells: 18
 
-**Gygar Mode:**
+**Smoothified Mode:**
 - Attack Bonus: **0** (no penalty at level 0)
 - Saving Throws: **Same as Normal Mode** (Death: 14, Wands: 15, Paralysis: 16, Breath: 17, Spells: 18)
-  - Gygar Mode only differs at higher levels
+  - Smoothified Mode only differs at higher levels
 
 ## Progress Tracking
 - **Started:** 2026-03-07
@@ -200,7 +200,7 @@ Add support for higher-level characters with dynamic attack bonuses and saving t
 
 ### Completed Phases
 - ✅ **Phase 1:** Data Structures and Tables (2026-03-07)
-  - Added Gygar Mode UI checkbox with link to Castle Gygar module
+  - Added Smoothified Mode UI checkbox with link to Castle Gygar module
   - Added --gygar / --not-gygar CLI options
   - Added savingThrowsLevel0 and attackBonusLevel0 tables to names-tables.js
 - ✅ **Phase 2A:** Dwarf Resilience Function (2026-03-07)
@@ -216,7 +216,7 @@ Add support for higher-level characters with dynamic attack bonuses and saving t
   - Created calculateAttackBonus() function in names-tables.js
   - Takes level, race, isAdvanced, isGygar as inputs
   - Returns attack bonus number
-  - Level 0 Gygar Mode: returns 0 (no penalty)
+  - Level 0 Smoothified Mode: returns 0 (no penalty)
   - Level 0 Normal Mode: returns -1 (penalty for untrained)
   - Exported function for use in other modules
 - ✅ **Phase 2D:** Update Dwarf Racial Abilities Text (2026-03-07)
@@ -234,7 +234,7 @@ Add support for higher-level characters with dynamic attack bonuses and saving t
   - Updated node-canvas-generator.js with same changes
   - Both generators now call calculateSavingThrows() and calculateAttackBonus()
   - Character objects now include dynamic saving throws and attack bonuses
-  - Gygar Mode checkbox state is read and passed to calculation functions
+  - Smoothified Mode checkbox state is read and passed to calculation functions
 - ✅ **Phase 5:** Renderer Updates (2026-03-07)
   - Updated canvas-sheet-renderer.js to use dynamic saving throws and attack bonus
   - Updated underground-sheet-renderer.js to use dynamic saving throws
@@ -245,7 +245,7 @@ Add support for higher-level characters with dynamic attack bonuses and saving t
   - Updated character-display.js to use dynamic saving throws and attack bonus
   - Web character display now shows correct values
   - Dwarf Resilience bonuses automatically displayed via dynamic values
-  - Gygar Mode attack bonus (0 vs -1) displays correctly
+  - Smoothified Mode attack bonus (0 vs -1) displays correctly
 - ✅ **Phase 7:** Testing (2026-03-07)
   - All automated tests passed (Markdown, JSON)
   - User verified PDF and PNG outputs
@@ -317,7 +317,7 @@ All 8 OSE classes documented in markdown format:
 - ✅ OSE_HALFLING.md - Demihuman class (race-as-class) with full progression tables
 - ✅ OSE_GNOME.md - Demihuman class from Advanced Fantasy with full progression tables
 
-### Gygar Mode Classes Created
+### Smoothified Mode Classes Created
 All 9 Gygar classes documented in markdown format:
 - ✅ GYGAR_CLERIC.md - Gygar variant with modified progressions
 - ✅ GYGAR_FIGHTER.md - Gygar variant with modified progressions

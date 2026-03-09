@@ -1,6 +1,6 @@
 # OSE 0-Level Character Generator
 
-A web-based and command-line tool for generating Old-School Essentials (OSE) 0-level characters with support for Advanced Mode, Gygar Mode, and dynamic saving throws/attack bonuses.
+A web-based and command-line tool for generating Old-School Essentials (OSE) 0-level characters with support for Advanced Mode, Smoothified Mode, and dynamic saving throws/attack bonuses.
 
 ## Features
 
@@ -10,7 +10,7 @@ A web-based and command-line tool for generating Old-School Essentials (OSE) 0-l
 - **Race Support:** Human, Dwarf, Elf, Gnome, Halfling
 - **Background System:** 100 unique 0-level professions with appropriate equipment
 - **Advanced Mode:** Race-based ability adjustments and racial abilities (OSE Advanced Fantasy)
-- **Gygar Mode:** Alternative attack bonus progression (from "The Ruins of Castle Gygar" module)
+- **Smoothified Mode:** Alternative attack bonus progression (from "The Ruins of Castle Gygar" module)
 
 ### Advanced Features (NEW!)
 - **Dynamic Saving Throws:** Saving throws calculated based on race and abilities
@@ -20,7 +20,7 @@ A web-based and command-line tool for generating Old-School Essentials (OSE) 0-l
   - CON 15-17: +4 bonus
   - CON 18: +5 bonus
 - **Dynamic Attack Bonus:** Attack bonus varies by mode
-  - Gygar Mode (default): +0 at level 0
+  - Smoothified Mode (default): +0 at level 0
   - Normal Mode: -1 at level 0
 - **Character Object Fields:** All characters now include `level`, `attackBonus`, and `savingThrows` fields
 
@@ -35,7 +35,7 @@ A web-based and command-line tool for generating Old-School Essentials (OSE) 0-l
 
 ### Web Interface
 1. Open `index.html` in a web browser
-2. Configure options (Advanced Mode, Gygar Mode, minimums, etc.)
+2. Configure options (Advanced Mode, Smoothified Mode, minimums, etc.)
 3. Click "Generate Character" or use race-specific buttons
 4. Export as PDF, PNG, Markdown, or JSON
 
@@ -71,7 +71,7 @@ A web-based and command-line tool for generating Old-School Essentials (OSE) 0-l
 - Humans can optionally get racial abilities (checkbox)
 - Dwarves get CON-based saving throw bonuses
 
-### Gygar Mode (Default: ON)
+### Smoothified Mode (Default: ON)
 - Named after "The Ruins of Castle Gygar" module
 - Changes attack bonus at level 0 from -1 to 0
 - Future: Will have different saving throw progressions at higher levels
@@ -79,7 +79,7 @@ A web-based and command-line tool for generating Old-School Essentials (OSE) 0-l
 
 ### Normal Mode
 - Disable Advanced Mode: No racial adjustments or abilities
-- Disable Gygar Mode: Attack bonus -1 at level 0
+- Disable Smoothified Mode: Attack bonus -1 at level 0
 
 ## Racial Abilities and Bonuses
 
@@ -211,8 +211,8 @@ OPTIONS:
     -r, --race RACE          Force specific race (Human, Dwarf, Elf, Gnome, Halfling)
     -s, --style STYLE        Sheet style: classic or underground (default: classic)
     --not-advanced           Disable Advanced mode
-    --gygar                  Enable Gygar Mode (default: ON)
-    --not-gygar              Disable Gygar Mode
+    --gygar                  Enable Smoothified Mode (default: ON)
+    --not-gygar              Disable Smoothified Mode
     --stdout                 Output to stdout (json/md only)
     --print-markdown         Print character data as markdown to stderr
     
@@ -290,12 +290,12 @@ See `CLINE.md` for more development environment details.
 - Support for generating characters above level 0
 - Level-based saving throw progressions
 - Level-based attack bonus progressions
-- Different progressions for Gygar Mode vs Normal Mode
+- Different progressions for Smoothified Mode vs Normal Mode
 
 ## Credits
 
 - **Old-School Essentials** by Necrotic Gnome
-- **The Ruins of Castle Gygar** module (Gygar Mode inspiration)
+- **The Ruins of Castle Gygar** module (Smoothified Mode inspiration)
 - Background tables and 0-level character concept from OSE 0-Level PDF
 
 ## License

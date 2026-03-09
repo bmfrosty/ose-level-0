@@ -1,4 +1,4 @@
-# Cleric (Gygar Mode)
+# Cleric (Smoothified Mode)
 
 Clerics are adventurers who have sworn to serve a deity. Both humans and dwarves can become clerics. They are trained for battle and channel the power of their deity.
 

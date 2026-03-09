@@ -95,7 +95,7 @@ Create `class-data-gygar.js` with all class data.
 - [ ] Export module for Node.js and browser
 
 ## Phase 4: Create Demihuman Class Data
-Gygar Mode has different progressions for demihuman classes.
+Smoothified Mode has different progressions for demihuman classes.
 
 - [ ] Create Gygar Dwarf class data
   - [ ] Saving throw progression (different from standard)
@@ -157,11 +157,11 @@ Add UI controls for class selection.
 Document the Gygar classes and differences.
 
 - [ ] Update README.md:
-  - [ ] Add Gygar Mode section
+  - [ ] Add Smoothified Mode section
   - [ ] List available classes
   - [ ] Note differences from standard OSE
 - [ ] Create GYGAR_CLASSES.md:
-  - [ ] Overview of Gygar Mode
+  - [ ] Overview of Smoothified Mode
   - [ ] Class-by-class comparison with standard OSE
   - [ ] Saving throw comparison tables
   - [ ] Attack bonus comparison tables
@@ -189,24 +189,24 @@ Test all classes at various levels.
 ## Key Differences: Gygar vs Standard OSE
 
 ### Saving Throws
-Gygar Mode uses different saving throw progressions for all classes. Need to extract exact values from HTML files.
+Smoothified Mode uses different saving throw progressions for all classes. Need to extract exact values from HTML files.
 
 ### Attack Bonuses
-Gygar Mode uses different attack bonus progressions. Need to extract exact values from HTML files.
+Smoothified Mode uses different attack bonus progressions. Need to extract exact values from HTML files.
 
 ### Spellblade Class
-Unique to Gygar Mode. Combines fighting and magic abilities. Elves in Gygar Mode use Spellblade progression.
+Unique to Smoothified Mode. Combines fighting and magic abilities. Elves in Smoothified Mode use Spellblade progression.
 
 ### Demihuman Classes
-Dwarves, Elves, and Halflings have different progressions in Gygar Mode compared to standard OSE.
+Dwarves, Elves, and Halflings have different progressions in Smoothified Mode compared to standard OSE.
 
 ## Notes
 
 - All Gygar classes are for levels 1-14
 - Level 0 characters use the same rules regardless of mode
-- Gygar Mode only affects level 1+ characters
-- Spellblade is exclusive to Gygar Mode
-- Elves in Gygar Mode = Spellblade class
+- Smoothified Mode only affects level 1+ characters
+- Spellblade is exclusive to Smoothified Mode
+- Elves in Smoothified Mode = Spellblade class
 - Need to preserve racial abilities when using demihuman classes
 
 ## Success Criteria
@@ -232,7 +232,7 @@ Dwarves, Elves, and Halflings have different progressions in Gygar Mode compared
   - [ ] UI updated for class selection
   - [ ] Documentation complete
   - [ ] All tests passing
-  - [ ] Can generate level 1-14 characters in Gygar Mode
+  - [ ] Can generate level 1-14 characters in Smoothified Mode
 
 ## Phase 1 Complete! ✅
 

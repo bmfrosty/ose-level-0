@@ -1,4 +1,4 @@
-# Fighter (Gygar Mode)
+# Fighter (Smoothified Mode)
 
 Fighters are adventurers trained in warfare and combat. In a group of adventurers, the role of fighters is to battle monsters and to defend other characters.
 
