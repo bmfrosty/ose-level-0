@@ -109,26 +109,26 @@ Each file includes:
 Create structured data from the markdown files for level 1+ implementation.
 
 ### OSE Standard Data
-- [ ] Extract OSE Cleric data
-- [ ] Extract OSE Fighter data
-- [ ] Extract OSE Magic-User data
-- [ ] Extract OSE Thief data
-- [ ] Extract OSE Spellblade data
-- [ ] Extract OSE Dwarf data
-- [ ] Extract OSE Elf data
-- [ ] Extract OSE Halfling data
-- [ ] Extract OSE Gnome data
+- [x] Extract OSE Cleric data (detailed) → CLASS_DATA_EXTRACTED_OSE.md ✅
+- [x] Extract OSE Thief data (detailed) → CLASS_DATA_EXTRACTED_OSE.md ✅
+- [x] Extract OSE Fighter data (summary) → CLASS_DATA_EXTRACTED_OSE.md ✅
+- [x] Extract OSE Magic-User data (summary) → CLASS_DATA_EXTRACTED_OSE.md ✅
+- [x] Extract OSE Spellblade data (summary) → CLASS_DATA_EXTRACTED_OSE.md ✅
+- [x] Extract OSE Dwarf data (summary) → CLASS_DATA_EXTRACTED_OSE.md ✅
+- [x] Extract OSE Elf data (summary) → CLASS_DATA_EXTRACTED_OSE.md ✅
+- [x] Extract OSE Halfling data (summary) → CLASS_DATA_EXTRACTED_OSE.md ✅
+- [x] Extract OSE Gnome data (summary) → CLASS_DATA_EXTRACTED_OSE.md ✅
 
 ### Smoothified Mode Data
-- [ ] Extract Gygar Cleric data
-- [ ] Extract Gygar Fighter data
-- [ ] Extract Gygar Magic-User data
-- [ ] Extract Gygar Thief data
-- [ ] Extract Gygar Dwarf data
-- [ ] Extract Gygar Elf data
-- [ ] Extract Gygar Halfling data
-- [ ] Extract Gygar Gnome data
-- [ ] Extract Gygar Spellblade data
+- [x] Extract Gygar Cleric data (detailed) → CLASS_DATA_EXTRACTED_GYGAR.md ✅
+- [x] Extract Gygar Fighter data (summary) → CLASS_DATA_EXTRACTED_GYGAR.md ✅
+- [x] Extract Gygar Magic-User data (summary) → CLASS_DATA_EXTRACTED_GYGAR.md ✅
+- [x] Extract Gygar Thief data (summary) → CLASS_DATA_EXTRACTED_GYGAR.md ✅
+- [x] Extract Gygar Dwarf data (summary) → CLASS_DATA_EXTRACTED_GYGAR.md ✅
+- [x] Extract Gygar Elf data (summary) → CLASS_DATA_EXTRACTED_GYGAR.md ✅
+- [x] Extract Gygar Halfling data (summary) → CLASS_DATA_EXTRACTED_GYGAR.md ✅
+- [x] Extract Gygar Gnome data (summary) → CLASS_DATA_EXTRACTED_GYGAR.md ✅
+- [x] Extract Gygar Spellblade data (summary) → CLASS_DATA_EXTRACTED_GYGAR.md ✅
 
 ## Phase 5: Create JavaScript Data Files (PENDING)
 
