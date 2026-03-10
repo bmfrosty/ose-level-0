@@ -142,6 +142,10 @@ if (typeof module !== 'undefined' && module.exports) {
         namesTables,
         rollRace,
         getRandomName,
-        isDemihuman
+        isDemihuman,
+        getRacialAbilities: global.getRacialAbilities,
+        getCommonDemihumanAbilities: global.getCommonDemihumanAbilities,
+        calculateSavingThrows: global.calculateSavingThrows,
+        calculateAttackBonus: global.calculateAttackBonus
     };
 }

@@ -364,33 +364,46 @@ const printMarkdown = process.env.PRINT_MARKDOWN === 'true';
             fs.writeFileSync(filename, JSON.stringify(characters, null, 2));
             console.log(`Success! Generated: ${filename}`);
         } else {
-            // Generate 4 characters
+            // Generate 4 characters - each as their own PDF file
             console.log('Generating 4 characters...');
             const { CanvasCharacterSheet } = require('./canvas-sheet-renderer.js');
-            const doc = new jsPDF('portrait', 'pt', 'letter');
+            const generatedFiles = [];
             
             for (let i = 0; i < 4; i++) {
                 console.log(`  Generating character ${i + 1}/4...`);
                 const character = generateSingleCharacterNode(options);
                 
-                // Create canvas and render
-                const canvas = createCanvas(2550, 3300);
-                const canvasGen = new CanvasCharacterSheet(canvas);
-                canvasGen.generateCharacterSheet(character);
+                // Choose renderer based on sheet style
+                let SheetClass, filename;
+                if (sheetStyle === 'underground') {
+                    const { UndergroundCharacterSheet } = require('./underground-sheet-renderer.js');
+                    SheetClass = UndergroundCharacterSheet;
+                    filename = UndergroundCharacterSheet.generateFilename(character, 'OSE_Underground');
+                } else {
+                    SheetClass = CanvasCharacterSheet;
+                    filename = CanvasCharacterSheet.generateSingleCharacterFilename(character);
+                }
                 
-                // Add to PDF
-                if (i > 0) doc.addPage();
-                const pngBuffer = canvasGen.toBuffer('image/png');
+                // Create canvas and render (size depends on sheet style)
+                const canvasWidth = sheetStyle === 'underground' ? 3828 : 2700;
+                const canvasHeight = sheetStyle === 'underground' ? 4953 : 3495;
+                const canvas = createCanvas(canvasWidth, canvasHeight);
+                const sheetGen = new SheetClass(canvas);
+                await sheetGen.generateCharacterSheet(character);
+                
+                // Create individual PDF
+                const doc = new jsPDF('portrait', 'pt', 'letter');
+                const pngBuffer = sheetGen.toBuffer('image/png');
                 const base64Image = 'data:image/png;base64,' + pngBuffer.toString('base64');
                 doc.addImage(base64Image, 'PNG', 0, 0, 612, 792, '', 'FAST');
+                
+                const pdfBuffer = Buffer.from(doc.output('arraybuffer'));
+                fs.writeFileSync(filename, pdfBuffer);
+                generatedFiles.push(filename);
             }
             
-            // Use shared filename generator
-            const forceRace = process.env.FORCE_RACE || '';
-            const filename = outputFile || CanvasCharacterSheet.generateMultiCharacterFilename(forceRace);
-            const pdfBuffer = Buffer.from(doc.output('arraybuffer'));
-            fs.writeFileSync(filename, pdfBuffer);
-            console.log(`Success! Generated: ${filename}`);
+            console.log(`Success! Generated ${generatedFiles.length} files:`);
+            generatedFiles.forEach(file => console.log(`  - ${file}`));
         }
         process.exit(0);
     } catch (error) {
