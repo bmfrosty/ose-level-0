@@ -184,7 +184,7 @@ class CanvasCharacterSheet {
         this.setFont('Arial', 8, 'bold');
         this.drawRect(72 + (combatBoxWidth * 2), 185, combatBoxWidth, 30, null, '#000000');
         this.drawCenteredText("INIT", 72 + (combatBoxWidth * 2), 185, combatBoxWidth, 12);
-        this.setFont('Arial', 12, 'normal');
+        this.setFont('Arial', 14, 'normal');
         const initText = dexMod >= 0 ? `+${dexMod}` : dexMod.toString();
         this.drawCenteredText(initText, 72 + (combatBoxWidth * 2), 197, combatBoxWidth, 18);
         
@@ -194,7 +194,7 @@ class CanvasCharacterSheet {
         this.drawCenteredText("AC", 72 + (combatBoxWidth * 3), 185, combatBoxWidth, 12);
         this.setFont('Arial', 16, 'normal');
         const acText = character.armorClass.toString();
-        this.drawCenteredText(acText, 72 + (combatBoxWidth * 3), 197, combatBoxWidth, 18);
+        // this.drawCenteredText(acText, 72 + (combatBoxWidth * 3), 197, combatBoxWidth, 18);
         
         // ABILITY SCORES section (moved down to avoid combat overlap)
         this.setFont('Arial', 10, 'bold');
