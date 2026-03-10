@@ -9,20 +9,18 @@ Both modes now support the same 9 classes, with different saving throw and attac
 
 ## Class List (Both Modes)
 
-### Human Classes (4)
+### Human Classes (5)
 1. **Cleric** - Divine spellcaster
 2. **Fighter** - Warrior
 3. **Magic-User** - Arcane spellcaster
 4. **Thief** - Skilled adventurer
+5. **Spellblade** - Fighter/magic-user (Human in Basic Mode, Human or Elf in Advanced Mode)
 
 ### Demihuman Classes (4)
-5. **Dwarf** - Demihuman fighter
-6. **Elf** - Demihuman fighter/magic-user
-7. **Halfling** - Demihuman fighter
-8. **Gnome** - Demihuman illusionist/thief
-
-### Smoothified-Only Class (1)
-9. **Spellblade** - Gygar-specific fighter/magic-user (replaces Elf in Smoothified Mode)
+6. **Dwarf** - Demihuman fighter
+7. **Elf** - Demihuman fighter/magic-user
+8. **Halfling** - Demihuman fighter
+9. **Gnome** - Demihuman illusionist/thief
 
 ## Source Files
 
@@ -115,6 +113,7 @@ Create structured data from the markdown files for level 1+ implementation.
 - [ ] Extract OSE Fighter data
 - [ ] Extract OSE Magic-User data
 - [ ] Extract OSE Thief data
+- [ ] Extract OSE Spellblade data
 - [ ] Extract OSE Dwarf data
 - [ ] Extract OSE Elf data
 - [ ] Extract OSE Halfling data
@@ -133,26 +132,51 @@ Create structured data from the markdown files for level 1+ implementation.
 
 ## Phase 5: Create JavaScript Data Files (PENDING)
 
+### Shared Data
+- [ ] Create `class-data-shared.js` for data common to both modes:
+  - [ ] Class descriptions and requirements
+  - [ ] Prime requisites
+  - [ ] Armor/weapon restrictions
+  - [ ] Languages
+  - [ ] Class abilities (non-level-dependent)
+  - [ ] Spell lists (which spells, not slots)
+  - [ ] Thief skill names and descriptions
+  - [ ] Base class structure
+
 ### OSE Standard
-- [ ] Create `class-data-ose.js`
-- [ ] Add all 8 OSE class data structures
-- [ ] Add helper functions
+- [ ] Create `class-data-ose.js` (imports from shared)
+- [ ] Add OSE-specific progressions:
+  - [ ] Saving throw tables
+  - [ ] Attack bonus tables
+  - [ ] Hit dice progressions
+  - [ ] Spell slot progressions
+  - [ ] Thief skill progressions
+  - [ ] XP requirements
+  - [ ] Level limits (demihumans)
 - [ ] Export module for Node.js and browser
 
 ### Smoothified Mode
-- [ ] Create `class-data-gygar.js`
-- [ ] Add all 9 Gygar class data structures
-- [ ] Add helper functions
+- [ ] Create `class-data-gygar.js` (imports from shared)
+- [ ] Add Gygar-specific progressions:
+  - [ ] Saving throw tables (smoothed)
+  - [ ] Attack bonus tables (smoothed)
+  - [ ] Hit dice progressions
+  - [ ] Spell slot progressions
+  - [ ] Thief skill progressions
+  - [ ] XP requirements
+  - [ ] No level limits
 - [ ] Export module for Node.js and browser
 
-### Helper Functions (Both Files)
-- [ ] `getClassData(className, level)`
-- [ ] `getSavingThrows(className, level)`
-- [ ] `getAttackBonus(className, level)`
-- [ ] `getHitDice(className, level)`
-- [ ] `getSpellSlots(className, level)` (for spellcasters)
-- [ ] `getThiefSkills(level)` (for thieves)
-- [ ] `getXPRequired(className, level)`
+### Helper Functions (All Files)
+- [ ] `getClassData(className, level, mode)` - in shared
+- [ ] `getSavingThrows(className, level)` - mode-specific
+- [ ] `getAttackBonus(className, level)` - mode-specific
+- [ ] `getHitDice(className, level)` - mode-specific
+- [ ] `getSpellSlots(className, level)` - mode-specific (for spellcasters)
+- [ ] `getThiefSkills(level)` - mode-specific (for thieves)
+- [ ] `getXPRequired(className, level)` - mode-specific
+- [ ] `getClassRequirements(className)` - in shared
+- [ ] `getClassAbilities(className)` - in shared
 
 ## Phase 6: Integration (PENDING)
 Integrate class data into the character generator.
@@ -248,7 +272,7 @@ Test all classes at various levels in both modes.
   - Halfling: Max level 8
   - Gnome: Max level 8
 - Elf is a fighter/magic-user hybrid
-- No Spellblade class
+- Spellblade available as alternative to Elf
 - Standard saving throw progressions
 - Standard attack bonus progressions
 
@@ -281,7 +305,13 @@ Test all classes at various levels in both modes.
 - Level 0 characters are always Advanced-style (races with abilities)
 - Level 1+ can use either Basic (classes) or Advanced (races + classes)
 - Smoothified Mode is a variant of Advanced rules
-- Both modes now support the same 9 classes (except Spellblade is Smoothified-only)
+- Both modes now support the same 9 classes
+
+### Spellblade Class Availability:
+- **Basic Mode:** Spellblade is a Human-only class (like Cleric, Fighter, Magic-User, Thief)
+- **Advanced Mode:** Spellblade can be taken by Humans or Elves
+- Spellblade represents a fighter/magic-user hybrid similar to the Elf class
+- In Advanced Mode, Elves can choose between the Elf class or the Spellblade class
 
 ## Success Criteria
 
