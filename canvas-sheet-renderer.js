@@ -357,8 +357,20 @@ class CanvasCharacterSheet {
         this.drawRect(320, 225, 220, 15, '#000000');
         this.drawText("EQUIPMENT", 325, 234, '#FFFFFF');
         
-        // Equipment text area (expanded to fill space before treasure boxes)
-        this.drawRect(320, 250, 220, 285, null, '#000000');
+        // Calculate bottom of racial abilities box: 555 + 151 = 706
+        // CP box should end at 706, with height 18, so CP starts at 706 - 18 = 688
+        // Original CP box was at y=545 + (4 * 22) = 633
+        // New CP box is at 688, so we moved down by 688 - 633 = 55pt
+        // Original equipment height was 285, so new height should be 285 + 55 = 340
+        const racialAbilitiesBottom = 706;
+        const treasureBoxHeight = 18;
+        const cpBoxStart = racialAbilitiesBottom - treasureBoxHeight;
+        
+        // Equipment text area - keep same height as before plus the shift amount
+        const ppBoxStart = cpBoxStart - (4 * 22); // 4 boxes * 22pt spacing
+        const equipmentHeight = 340; // Original 285 + 55pt shift
+        
+        this.drawRect(320, 250, 220, equipmentHeight, null, '#000000');
         this.setFont('Arial', 12, 'normal');
         this.drawText(`Armor: ${character.background.armor}`, 330, 266);
         
@@ -374,19 +386,19 @@ class CanvasCharacterSheet {
             itemY += 15;
         }
         
-        this.drawText(`Starting AC: ${character.armorClass}`, 330, 500);
+        // Position Starting AC and Starting Gold dynamically based on equipment box height
+        const equipmentTextY = ppBoxStart - 30;
+        this.drawText(`Starting AC: ${character.armorClass}`, 330, equipmentTextY);
+        this.drawText(`Starting Gold: ${character.startingGold || 0} gp`, 330, equipmentTextY + 15);
         
-        // Starting gold
-        this.drawText(`Starting Gold: ${character.startingGold || 0} gp`, 330, 515);
-        
-        // Treasure tracking boxes (aligned with bottom of left column)
+        // Treasure tracking boxes - aligned so CP box bottom matches racial abilities box bottom
         const treasures = ["PP", "GP", "EP", "SP", "CP"];
         for (let i = 0; i < 5; i++) {
-            const y = 545 + i * 22;
+            const y = ppBoxStart + (i * 22);
             this.setFont('Arial', 9, 'bold');
-            this.drawRect(320, y, 40, 18, '#000000');
+            this.drawRect(320, y, 40, treasureBoxHeight, '#000000');
             this.drawText(treasures[i], 325, y + 13, '#FFFFFF');
-            this.drawRect(365, y, 175, 18, null, '#000000');
+            this.drawRect(365, y, 175, treasureBoxHeight, null, '#000000');
         }
     }
     
