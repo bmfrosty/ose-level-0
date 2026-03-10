@@ -21,7 +21,7 @@ function getRacialAbilities(race) {
     
     const abilities = {
         "Human": (isAdvanced && humanRacialAbilities) ? [
-            "Blessed: Roll HP twice, take best (including at 1st level)",
+            "Blessed: Roll HP twice, take best (including at 0th and 1st level)",
             "Decisiveness: Act first on tied initiative (+1 to individual initiative)",
             "Leadership: Retainers/mercenaries +1 loyalty and morale"
         ] : [],
