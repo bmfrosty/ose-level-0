@@ -32,7 +32,7 @@ function getRacialAbilities(race) {
             "Detect room traps 2-in-6",
             "Infravision 60'",
             "Listen at doors 2-in-6",
-            "Resilience: Bonus to Death/Wands/Spells saves based on CON (7-10: +2, 11-14: +3, 15-17: +4, 18: +5)"
+            "Resilience: Bonus to Death/Wands/Spells saves based on CON"
         ],
         "Elf": [
             "Languages: Alignment, Common, Elvish, Gnoll, Hobgoblin, Orcish",
@@ -48,7 +48,7 @@ function getRacialAbilities(race) {
             "Infravision 90'",
             "Listen at doors 2-in-6",
             "+2 AC vs large opponents",
-            "Magic Resistance: Bonus to saves vs spells/wands/rods/staves based on CON (7-10: +2, 11-14: +3, 15-17: +4, 18: +5)"
+            "Magic Resistance: Bonus to saves vs spells/wands/rods/staves based on CON"
         ],
         "Halfling": [
             "Languages: Alignment, Common, Halfling",
@@ -56,7 +56,7 @@ function getRacialAbilities(race) {
             "Listen at doors 2-in-6",
             "+1 to missile attack rolls",
             "+2 AC vs large opponents",
-            "Resilience: Bonus to Death/Wands/Spells saves based on CON (7-10: +2, 11-14: +3, 15-17: +4, 18: +5)"
+            "Resilience: Bonus to Death/Wands/Spells saves based on CON"
         ]
     };
     return abilities[race] || [];

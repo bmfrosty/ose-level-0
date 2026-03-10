@@ -274,18 +274,51 @@ class CanvasCharacterSheet {
         this.drawRect(72, 530, 230, 15, '#000000');
         this.drawText("RACIAL ABILITIES", 77, 539, '#FFFFFF');
         
-        // Racial abilities text area - expanded to align with CP box (y=655)
-        this.drawRect(72, 555, 230, 100, null, '#000000');
-        this.setFont('Arial', 12, 'normal');
+        // Racial abilities text area - increased height to 151 (two more lines at ~13pt each)
+        this.drawRect(72, 555, 230, 151, null, '#000000');
+        this.setFont('Arial', 10, 'normal');
         
-        let racialY = 571;
+        let racialY = 567;
         const racialAbilities = getRacialAbilities(character.race);
         
         if (racialAbilities && racialAbilities.length > 0) {
-            // Display each ability on its own line
+            // Display each ability with text wrapping
+            const maxWidth = 210; // Available width for text (230 - 20 for margins)
+            
             for (let ability of racialAbilities) {
-                this.drawText(ability, 82, racialY);
-                racialY += 15;
+                // Wrap text to multiple lines
+                const words = ability.split(' ');
+                let lines = [];
+                let currentLine = '';
+                
+                for (const word of words) {
+                    const testLine = currentLine ? `${currentLine} ${word}` : word;
+                    const testWidth = this.getTextWidth(testLine);
+                    
+                    if (testWidth <= maxWidth) {
+                        currentLine = testLine;
+                    } else {
+                        if (currentLine) {
+                            lines.push(currentLine);
+                            currentLine = word;
+                        } else {
+                            lines.push(word);
+                        }
+                    }
+                }
+                
+                if (currentLine) {
+                    lines.push(currentLine);
+                }
+                
+                // Draw each line
+                for (let line of lines) {
+                    this.drawText(line, 82, racialY);
+                    racialY += 13;
+                }
+                
+                // Add small spacing between abilities
+                racialY += 2;
             }
         } else {
             this.drawText("None", 82, racialY);
