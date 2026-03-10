@@ -266,9 +266,34 @@ Funnel adventures were popularized by Dungeon Crawl Classics RPG. In a funnel, a
 
 ### Output Formats:
 - **Web Display:** HTML character sheet
-- **PDF:** Printable character sheet
+- **PDF:** Printable character sheet (individual files when generating 4 characters)
+- **PNG:** Image format character sheet
 - **Markdown:** Text-based character sheet
 - **JSON:** Data export
+
+### PDF Character Sheet Layout:
+The PDF character sheet has been optimized for Level 0 characters with the following sections:
+
+**Left Column:**
+- Character Name, Race, Level (0), Occupation, Hit Dice (1d4)
+- Combat section (MAX HP, CUR HP, INIT, AC)
+- Ability Scores (STR, INT, WIS, DEX, CON, CHA) with modifiers and effects
+- Weapons and Skills section (weapon, attack bonus)
+- Racial Abilities section (151pt height with text wrapping for longer descriptions)
+
+**Right Column:**
+- Saving Throws (Death, Wands, Petrify, Breath, Spells)
+- Equipment section (armor, items)
+- Class Abilities section (shows "None (0-level)" - ready for future level advancement)
+- Starting AC and Starting Gold
+- Treasure tracking (PP, GP, EP, SP, CP)
+
+**Layout Features:**
+- Racial abilities box expanded to accommodate all racial features
+- Text wrapping for long ability descriptions
+- Class Abilities section prepared for level advancement
+- Treasure boxes aligned with racial abilities box
+- 5pt gaps between sections for visual clarity
 
 ## Data Sources
 

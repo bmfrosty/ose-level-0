@@ -3,6 +3,7 @@
 ## Planning Documents
 - **PLAN_0LEVEL_BASIC_ADVANCED.md** - Plan for Level 0 characters with Basic/Advanced campaign compatibility
 - **PLAN_UPPER_LEVEL.md** - Plan for Level 1+ character generation
+- **PLAN_CLASSES_IMPORT.md** - Combined plan for importing OSE Standard and Smoothified Mode classes
 - **CHARACTER_CREATION_BASIC.md** - Specification for Level 1+ Basic Method character creation
 
 ## High Priority
@@ -322,3 +323,11 @@ The implementation in `names-tables.js` already works correctly:
   - ✅ Code refactoring: Created racial-abilities.js for better organization
   - ✅ Updated index.html to load racial-abilities.js
   - ✅ All tests passing
+- ✅ **PDF Generation Improvements**:
+  - ✅ Modified generate-pdf.sh to generate separate PDF files for each character when using `-n 4`
+  - ✅ Fixed calculateSavingThrows export bug in names-tables.js
+  - ✅ Expanded racial abilities box from 100pt to 151pt with text wrapping
+  - ✅ Aligned treasure boxes (CP box bottom) with racial abilities box bottom (both at y=706)
+  - ✅ Split equipment section into Equipment and Class Abilities sections with proper gaps
+  - ✅ Added 5pt gaps between equipment box, class abilities header, and class abilities box
+  - ✅ Repositioned Starting AC and Starting Gold to bottom of Class Abilities box
