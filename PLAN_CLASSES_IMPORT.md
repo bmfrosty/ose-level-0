@@ -130,20 +130,30 @@ Create structured data from the markdown files for level 1+ implementation.
 - [x] Extract Gygar Gnome data (summary) → CLASS_DATA_EXTRACTED_GYGAR.md ✅
 - [x] Extract Gygar Spellblade data (summary) → CLASS_DATA_EXTRACTED_GYGAR.md ✅
 
-## Phase 5: Create JavaScript Data Files (PENDING)
+## Phase 5: Create JavaScript Data Files ✅ IN PROGRESS
 
-### Shared Data
-- [ ] Create `class-data-shared.js` for data common to both modes:
-  - [ ] Class descriptions and requirements
-  - [ ] Prime requisites
-  - [ ] Armor/weapon restrictions
-  - [ ] Languages
-  - [ ] Class abilities (non-level-dependent)
-  - [ ] Spell lists (which spells, not slots)
-  - [ ] Thief skill names and descriptions
-  - [ ] Base class structure
+### Shared Data ✅ COMPLETE
+- [x] Create `class-data-shared.js` for data common to both modes ✅
+  - [x] Class descriptions and requirements ✅
+  - [x] Prime requisites ✅
+  - [x] Armor/weapon lists (explicit arrays) ✅
+  - [x] Languages ✅
+  - [x] Class abilities (non-level-dependent) ✅
+  - [x] Base class structure ✅
+  - [x] Helper functions ✅
 
-### OSE Standard
+### Weapons and Armor Data ✅ COMPLETE
+- [x] Create `weapons-and-armor.js` ✅
+  - [x] All 22 weapons with cost, weight, damage, qualities ✅
+  - [x] All 5 armor types with AC, cost, weight ✅
+  - [x] Ammunition data ✅
+  - [x] Helper functions for filtering weapons ✅
+
+### Documentation ✅ COMPLETE
+- [x] Create `OSE_WEAPONS_ARMOR.md` ✅
+- [x] Create `BASIC_VS_ADVANCED_CLASSES.md` ✅
+
+### OSE Standard (IN PROGRESS)
 - [ ] Create `class-data-ose.js` (imports from shared)
 - [ ] Add OSE-specific progressions:
   - [ ] Saving throw tables
@@ -155,7 +165,7 @@ Create structured data from the markdown files for level 1+ implementation.
   - [ ] Level limits (demihumans)
 - [ ] Export module for Node.js and browser
 
-### Smoothified Mode
+### Smoothified Mode (PENDING)
 - [ ] Create `class-data-gygar.js` (imports from shared)
 - [ ] Add Gygar-specific progressions:
   - [ ] Saving throw tables (smoothed)
@@ -167,16 +177,22 @@ Create structured data from the markdown files for level 1+ implementation.
   - [ ] No level limits
 - [ ] Export module for Node.js and browser
 
-### Helper Functions (All Files)
-- [ ] `getClassData(className, level, mode)` - in shared
+### Helper Functions
+**Shared (class-data-shared.js)** ✅ COMPLETE
+- [x] `getClassInfo(className)` ✅
+- [x] `getClassAbilities(className)` ✅
+- [x] `getAbilitiesAtLevel(className, level)` ✅
+- [x] `calculateXPBonus(score)` ✅
+- [x] `canRaceTakeClass(className, race, mode)` ✅
+- [x] `meetsRequirements(className, race, abilityScores)` ✅
+
+**Mode-Specific (Pending)**
 - [ ] `getSavingThrows(className, level)` - mode-specific
 - [ ] `getAttackBonus(className, level)` - mode-specific
 - [ ] `getHitDice(className, level)` - mode-specific
 - [ ] `getSpellSlots(className, level)` - mode-specific (for spellcasters)
 - [ ] `getThiefSkills(level)` - mode-specific (for thieves)
 - [ ] `getXPRequired(className, level)` - mode-specific
-- [ ] `getClassRequirements(className)` - in shared
-- [ ] `getClassAbilities(className)` - in shared
 
 ## Phase 6: Integration (PENDING)
 Integrate class data into the character generator.
