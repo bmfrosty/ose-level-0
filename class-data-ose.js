@@ -14,61 +14,47 @@
  * - Turn Undead table (for Cleric)
  */
 
-import { CLASS_INFO } from './class-data-shared.js';
+import { 
+  CLASS_INFO,
+  HIT_DICE_PROGRESSIONS,
+  ARCANE_SPELL_SLOTS,
+  DIVINE_SPELL_SLOTS,
+  THIEF_SKILLS,
+  TURN_UNDEAD
+} from './class-data-shared.js';
 
 // ============================================================================
 // XP REQUIREMENTS BY CLASS (Levels 1-14)
 // ============================================================================
 
 export const XP_REQUIREMENTS = {
-  Fighter: [0, 2000, 4000, 8000, 16000, 32000, 64000, 120000, 240000, 360000, 480000, 600000, 720000, 840000],
-  Thief: [0, 1200, 2400, 4800, 9600, 20000, 40000, 80000, 160000, 280000, 400000, 520000, 640000, 760000],
-  "Magic-User": [0, 2500, 5000, 10000, 20000, 40000, 80000, 150000, 300000, 450000, 600000, 750000, 900000, 1050000],
-  Cleric: [0, 1500, 3000, 6000, 12000, 25000, 50000, 100000, 200000, 300000, 400000, 500000, 600000, 700000],
-  Dwarf: [0, 2200, 4400, 8800, 17000, 35000, 70000, 140000, 270000, 400000, 530000, 660000],
-  Elf: [0, 4000, 8000, 16000, 32000, 64000, 120000, 250000, 400000, 600000],
-  Halfling: [0, 2000, 4000, 8000, 16000, 32000, 64000, 120000],
-  Gnome: [0, 3000, 6000, 12000, 30000, 60000, 120000, 240000],
-  Spellblade: [0, 4000, 8000, 16000, 32000, 64000, 120000, 250000, 400000, 600000]
+  "Fighter_CLASS": [0, 2000, 4000, 8000, 16000, 32000, 64000, 120000, 240000, 360000, 480000, 600000, 720000, 840000],
+  "Thief_CLASS": [0, 1200, 2400, 4800, 9600, 20000, 40000, 80000, 160000, 280000, 400000, 520000, 640000, 760000],
+  "Magic-User_CLASS": [0, 2500, 5000, 10000, 20000, 40000, 80000, 150000, 300000, 450000, 600000, 750000, 900000, 1050000],
+  "Cleric_CLASS": [0, 1500, 3000, 6000, 12000, 25000, 50000, 100000, 200000, 300000, 400000, 500000, 600000, 700000],
+  "Dwarf_CLASS": [0, 2200, 4400, 8800, 17000, 35000, 70000, 140000, 270000, 400000, 530000, 660000],
+  "Elf_CLASS": [0, 4000, 8000, 16000, 32000, 64000, 120000, 250000, 400000, 600000],
+  "Halfling_CLASS": [0, 2000, 4000, 8000, 16000, 32000, 64000, 120000],
+  "Gnome_CLASS": [0, 3000, 6000, 12000, 30000, 60000, 120000, 240000],
+  "Spellblade_CLASS": [0, 4000, 8000, 16000, 32000, 64000, 120000, 250000, 400000, 600000]
 };
 
 // ============================================================================
-// HIT DICE PROGRESSIONS (Levels 1-14)
+// HIT DICE SCALE MAPPING (Mode-Specific)
 // ============================================================================
-// There are 4 distinct hit dice progressions in OSE:
-// - D8_PROGRESSION: Fighter types (Fighter, Dwarf)
-// - D6_PROGRESSION: Cleric types (Cleric, Elf, Halfling, Spellblade)
-// - D4_PROGRESSION: Magic-User types (Magic-User, Thief, Gnome)
-//
-// After 9th level, CON modifiers no longer apply (marked with *)
-// Different classes have different post-9th level HP gains
-
-export const HIT_DICE_PROGRESSIONS = {
-  // d8 progression: +2 HP per level after 9th (Fighter)
-  D8_2: ["1d8", "2d8", "3d8", "4d8", "5d8", "6d8", "7d8", "8d8", "9d8", "9d8+2*", "9d8+4*", "9d8+6*", "9d8+8*", "9d8+10*"],
-  // d8 progression: +3 HP per level after 9th (Dwarf)
-  D8_3: ["1d8", "2d8", "3d8", "4d8", "5d8", "6d8", "7d8", "8d8", "9d8", "9d8+3*", "9d8+6*", "9d8+9*"],
-  // d6 progression: +1 HP per level after 9th (Cleric, Halfling)
-  D6_1: ["1d6", "2d6", "3d6", "4d6", "5d6", "6d6", "7d6", "8d6", "9d6", "9d6+1*", "9d6+2*", "9d6+3*", "9d6+4*", "9d6+5*"],
-  // d6 progression: +2 HP at 10th level only (Elf, Spellblade)
-  D6_2: ["1d6", "2d6", "3d6", "4d6", "5d6", "6d6", "7d6", "8d6", "9d6", "9d6+2*"],
-  // d4 progression: +1 HP per level after 9th (Magic-User, Gnome)
-  D4_1: ["1d4", "2d4", "3d4", "4d4", "5d4", "6d4", "7d4", "8d4", "9d4", "9d4+1*", "9d4+2*", "9d4+3*", "9d4+4*", "9d4+5*"],
-  // d4 progression: +2 HP per level after 9th (Thief)
-  D4_2: ["1d4", "2d4", "3d4", "4d4", "5d4", "6d4", "7d4", "8d4", "9d4", "9d4+2*", "9d4+4*", "9d4+6*", "9d4+8*", "9d4+10*"]
-};
+// Maps each class to its hit dice progression scale (imported from shared data)
 
 // Map each class to its hit dice progression
 export const HIT_DICE_SCALE = {
-  Fighter: "D8_2",
-  Thief: "D4_2",
-  "Magic-User": "D4_1",
-  Cleric: "D6_1",
-  Dwarf: "D8_3",
-  Elf: "D6_2",
-  Halfling: "D6_1",  // Uses D6_1 but stops at level 8
-  Gnome: "D4_1",     // Uses D4_1 but stops at level 8
-  Spellblade: "D6_2"
+  "Fighter_CLASS": "D8_2",
+  "Thief_CLASS": "D4_2",
+  "Magic-User_CLASS": "D4_1",
+  "Cleric_CLASS": "D6_1",
+  "Dwarf_CLASS": "D8_3",
+  "Elf_CLASS": "D6_2",
+  "Halfling_CLASS": "D6_1",  // Uses D6_1 but stops at level 8
+  "Gnome_CLASS": "D4_1",     // Uses D4_1 but stops at level 8
+  "Spellblade_CLASS": "D6_2"
 };
 
 // Legacy export for backward compatibility - dynamically generated from progressions
@@ -106,15 +92,15 @@ export const ATTACK_BONUS_PROGRESSIONS = {
 
 // Map each class to its attack bonus progression
 export const ATTACK_BONUS_SCALE = {
-  Fighter: "FIGHTER",
-  Thief: "CLERIC",
-  "Magic-User": "MAGIC_USER",
-  Cleric: "CLERIC",
-  Dwarf: "FIGHTER",
-  Elf: "FIGHTER",
-  Halfling: "FIGHTER",
-  Gnome: "MAGIC_USER",
-  Spellblade: "FIGHTER"
+  "Fighter_CLASS": "FIGHTER",
+  "Thief_CLASS": "CLERIC",
+  "Magic-User_CLASS": "MAGIC_USER",
+  "Cleric_CLASS": "CLERIC",
+  "Dwarf_CLASS": "FIGHTER",
+  "Elf_CLASS": "FIGHTER",
+  "Halfling_CLASS": "FIGHTER",
+  "Gnome_CLASS": "MAGIC_USER",
+  "Spellblade_CLASS": "FIGHTER"
 };
 
 // Legacy export for backward compatibility - dynamically generated from progressions
@@ -136,63 +122,63 @@ export const ATTACK_BONUS = {
 // Categories: Death/Poison, Wands, Paralysis/Petrify, Breath Attacks, Spells/Rods/Staves
 
 export const SAVING_THROWS = {
-  Fighter: {
+  "Fighter_CLASS": {
     death: [12, 12, 12, 10, 10, 10, 8, 8, 8, 6, 6, 6, 4, 4],
     wands: [13, 13, 13, 11, 11, 11, 9, 9, 9, 7, 7, 7, 5, 5],
     paralysis: [14, 14, 14, 12, 12, 12, 10, 10, 10, 8, 8, 8, 6, 6],
     breath: [15, 15, 15, 13, 13, 13, 10, 10, 10, 8, 8, 8, 5, 5],
     spells: [16, 16, 16, 14, 14, 14, 12, 12, 12, 10, 10, 10, 8, 8]
   },
-  Thief: {
+  "Thief_CLASS": {
     death: [13, 13, 13, 13, 12, 12, 12, 12, 10, 10, 10, 10, 8, 8],
     wands: [14, 14, 14, 14, 13, 13, 13, 13, 11, 11, 11, 11, 9, 9],
     paralysis: [13, 13, 13, 13, 11, 11, 11, 11, 9, 9, 9, 9, 7, 7],
     breath: [16, 16, 16, 16, 14, 14, 14, 14, 12, 12, 12, 12, 10, 10],
     spells: [15, 15, 15, 15, 13, 13, 13, 13, 10, 10, 10, 10, 8, 8]
   },
-  "Magic-User": {
+  "Magic-User_CLASS": {
     death: [13, 13, 13, 13, 13, 11, 11, 11, 11, 11, 8, 8, 8, 8],
     wands: [14, 14, 14, 14, 14, 12, 12, 12, 12, 12, 9, 9, 9, 9],
     paralysis: [13, 13, 13, 13, 13, 11, 11, 11, 11, 11, 8, 8, 8, 8],
     breath: [16, 16, 16, 16, 16, 14, 14, 14, 14, 14, 11, 11, 11, 11],
     spells: [15, 15, 15, 15, 15, 12, 12, 12, 12, 12, 8, 8, 8, 8]
   },
-  Cleric: {
+  "Cleric_CLASS": {
     death: [11, 11, 11, 11, 9, 9, 9, 9, 6, 6, 6, 6, 3, 3],
     wands: [12, 12, 12, 12, 10, 10, 10, 10, 7, 7, 7, 7, 5, 5],
     paralysis: [14, 14, 14, 14, 12, 12, 12, 12, 9, 9, 9, 9, 7, 7],
     breath: [16, 16, 16, 16, 14, 14, 14, 14, 11, 11, 11, 11, 8, 8],
     spells: [15, 15, 15, 15, 12, 12, 12, 12, 9, 9, 9, 9, 7, 7]
   },
-  Dwarf: {
+  "Dwarf_CLASS": {
     death: [8, 8, 8, 6, 6, 6, 4, 4, 4, 2, 2, 2],
     wands: [9, 9, 9, 7, 7, 7, 5, 5, 5, 3, 3, 3],
     paralysis: [10, 10, 10, 8, 8, 8, 6, 6, 6, 4, 4, 4],
     breath: [13, 13, 13, 10, 10, 10, 7, 7, 7, 4, 4, 4],
     spells: [12, 12, 12, 10, 10, 10, 8, 8, 8, 6, 6, 6]
   },
-  Elf: {
+  "Elf_CLASS": {
     death: [12, 12, 12, 10, 10, 10, 8, 8, 8, 6],
     wands: [13, 13, 13, 11, 11, 11, 9, 9, 9, 7],
     paralysis: [13, 13, 13, 11, 11, 11, 9, 9, 9, 8],
     breath: [15, 15, 15, 13, 13, 13, 10, 10, 10, 8],
     spells: [15, 15, 15, 12, 12, 12, 10, 10, 10, 8]
   },
-  Halfling: {
+  "Halfling_CLASS": {
     death: [8, 8, 8, 6, 6, 6, 4, 4],
     wands: [9, 9, 9, 7, 7, 7, 5, 5],
     paralysis: [10, 10, 10, 8, 8, 8, 6, 6],
     breath: [13, 13, 13, 10, 10, 10, 7, 7],
     spells: [12, 12, 12, 10, 10, 10, 8, 8]
   },
-  Gnome: {
+  "Gnome_CLASS": {
     death: [8, 8, 8, 8, 8, 6, 6, 6],
     wands: [9, 9, 9, 9, 9, 7, 7, 7],
     paralysis: [10, 10, 10, 10, 10, 8, 8, 8],
     breath: [14, 14, 14, 14, 14, 11, 11, 11],
     spells: [11, 11, 11, 11, 11, 9, 9, 9]
   },
-  Spellblade: {
+  "Spellblade_CLASS": {
     death: [12, 12, 12, 10, 10, 10, 8, 8, 8, 6],
     wands: [13, 13, 13, 11, 11, 11, 9, 9, 9, 7],
     paralysis: [13, 13, 13, 11, 11, 11, 9, 9, 9, 8],
@@ -202,97 +188,83 @@ export const SAVING_THROWS = {
 };
 
 // ============================================================================
-// SPELL SLOTS (Cleric and Magic-User)
+// SPELL SLOT SCALE MAPPING (Mode-Specific)
 // ============================================================================
-// Each spell level is an array of 14 values (one per character level)
-// 0 means no spells of that level available
+// Maps each spellcasting class to its spell slot progression (imported from shared data)
+// Cleric uses DIVINE_SPELL_SLOTS
+// Magic-User, Elf, Gnome, Spellblade use ARCANE_SPELL_SLOTS (truncated at their max level)
 
+export const SPELL_SLOT_SCALE = {
+  "Cleric_CLASS": "DIVINE",
+  "Magic-User_CLASS": "ARCANE",
+  "Elf_CLASS": "ARCANE",
+  "Gnome_CLASS": "ARCANE",
+  "Spellblade_CLASS": "ARCANE"
+};
+
+// Legacy export for backward compatibility - dynamically generated from shared progressions
 export const SPELL_SLOTS = {
-  Cleric: {
-    1: [0, 1, 2, 2, 2, 2, 2, 3, 3, 4, 4, 5, 5, 6],
-    2: [0, 0, 0, 1, 2, 2, 2, 3, 3, 4, 4, 5, 5, 5],
-    3: [0, 0, 0, 0, 0, 1, 2, 2, 3, 3, 4, 4, 5, 5],
-    4: [0, 0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5],
-    5: [0, 0, 0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4]
+  get Cleric() { return DIVINE_SPELL_SLOTS; },
+  get "Magic-User"() { return ARCANE_SPELL_SLOTS; },
+  get Elf() {
+    // Elf max level 10, truncate arcane slots
+    const slots = {};
+    for (const [level, progression] of Object.entries(ARCANE_SPELL_SLOTS)) {
+      slots[level] = progression.slice(0, 10);
+    }
+    return slots;
   },
-  "Magic-User": {
-    1: [1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4],
-    2: [0, 0, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4],
-    3: [0, 0, 0, 0, 1, 2, 2, 2, 3, 3, 3, 3, 4, 4],
-    4: [0, 0, 0, 0, 0, 0, 1, 2, 2, 3, 3, 3, 3, 4],
-    5: [0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 2, 3, 3, 3],
-    6: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 3]
+  get Gnome() {
+    // Gnome max level 8, truncate arcane slots to 4 spell levels
+    const slots = {};
+    for (let i = 1; i <= 4; i++) {
+      slots[i] = ARCANE_SPELL_SLOTS[i].slice(0, 8);
+    }
+    return slots;
   },
-  Elf: {
-    1: [1, 2, 2, 2, 2, 2, 3, 3, 3, 3],
-    2: [0, 0, 1, 2, 2, 2, 2, 3, 3, 3],
-    3: [0, 0, 0, 0, 1, 2, 2, 2, 3, 3],
-    4: [0, 0, 0, 0, 0, 0, 1, 2, 2, 3],
-    5: [0, 0, 0, 0, 0, 0, 0, 0, 1, 2]
-  },
-  Gnome: {
-    1: [1, 2, 2, 2, 2, 2, 3, 3],
-    2: [0, 0, 1, 2, 2, 2, 2, 3],
-    3: [0, 0, 0, 0, 1, 2, 2, 2],
-    4: [0, 0, 0, 0, 0, 0, 1, 2]
-  },
-  Spellblade: {
-    1: [1, 2, 2, 2, 2, 2, 3, 3, 3, 3],
-    2: [0, 0, 1, 2, 2, 2, 2, 3, 3, 3],
-    3: [0, 0, 0, 0, 1, 2, 2, 2, 3, 3],
-    4: [0, 0, 0, 0, 0, 0, 1, 2, 2, 3],
-    5: [0, 0, 0, 0, 0, 0, 0, 0, 1, 2]
+  get Spellblade() {
+    // Spellblade max level 10, truncate arcane slots to 5 spell levels
+    const slots = {};
+    for (let i = 1; i <= 5; i++) {
+      slots[i] = ARCANE_SPELL_SLOTS[i].slice(0, 10);
+    }
+    return slots;
   }
 };
 
-// ============================================================================
-// THIEF SKILLS (7 Skills, Levels 1-14)
-// ============================================================================
-// Skills: Climb Sheer Surfaces, Find/Remove Traps, Hear Noise, Hide in Shadows,
-//         Move Silently, Open Locks, Pick Pockets
-// Note: Hear Noise is a 1d6 roll (1-2, 1-3, etc.), others are percentile
+// THIEF_SKILLS and TURN_UNDEAD are imported from shared data (no local copies needed)
 
-export const THIEF_SKILLS = {
-  climbSheerSurfaces: [87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 99],
-  findRemoveTraps: [10, 15, 20, 25, 30, 40, 50, 60, 70, 80, 90, 95, 97, 99],
-  hearNoise: [2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5], // 1-2, 1-3, 1-4, 1-5 on 1d6
-  hideInShadows: [10, 15, 20, 25, 30, 36, 45, 55, 65, 75, 85, 90, 95, 99],
-  moveSilently: [20, 25, 30, 35, 40, 45, 55, 65, 75, 85, 95, 96, 98, 99],
-  openLocks: [15, 20, 25, 30, 35, 45, 55, 65, 75, 85, 95, 96, 97, 99],
-  pickPockets: [20, 25, 30, 35, 40, 45, 55, 65, 75, 85, 95, 105, 115, 125]
+// ============================================================================
+// BACKWARD COMPATIBILITY
+// ============================================================================
+// Legacy class name mapping for backward compatibility
+// Maps old names (without _CLASS suffix) to new names (with _CLASS suffix)
+
+export const LEGACY_CLASS_NAMES = {
+  Fighter: "Fighter_CLASS",
+  Thief: "Thief_CLASS",
+  "Magic-User": "Magic-User_CLASS",
+  Cleric: "Cleric_CLASS",
+  Spellblade: "Spellblade_CLASS",
+  Dwarf: "Dwarf_CLASS",
+  Elf: "Elf_CLASS",
+  Halfling: "Halfling_CLASS",
+  Gnome: "Gnome_CLASS"
 };
 
-// ============================================================================
-// TURN UNDEAD TABLE (Cleric)
-// ============================================================================
-// Rows: Cleric levels 1-11+ (11 rows)
-// Columns: Undead types by HD (1 HD, 2 HD, 2* HD, 3 HD, 4 HD, 5 HD, 6 HD, 7-9 HD)
-// Values: Number needed on 2d6, "T" = automatic turn, "D" = automatic destroy, null = cannot turn
-
-export const TURN_UNDEAD = {
-  // Level 1
-  1: { "1HD": 7, "2HD": 9, "2*HD": 11, "3HD": null, "4HD": null, "5HD": null, "6HD": null, "7-9HD": null },
-  // Level 2
-  2: { "1HD": "T", "2HD": 7, "2*HD": 9, "3HD": 11, "4HD": null, "5HD": null, "6HD": null, "7-9HD": null },
-  // Level 3
-  3: { "1HD": "T", "2HD": "T", "2*HD": 7, "3HD": 9, "4HD": 11, "5HD": null, "6HD": null, "7-9HD": null },
-  // Level 4
-  4: { "1HD": "D", "2HD": "T", "2*HD": "T", "3HD": 7, "4HD": 9, "5HD": 11, "6HD": null, "7-9HD": null },
-  // Level 5
-  5: { "1HD": "D", "2HD": "D", "2*HD": "T", "3HD": "T", "4HD": 7, "5HD": 9, "6HD": 11, "7-9HD": null },
-  // Level 6
-  6: { "1HD": "D", "2HD": "D", "2*HD": "D", "3HD": "T", "4HD": "T", "5HD": 7, "6HD": 9, "7-9HD": 11 },
-  // Level 7
-  7: { "1HD": "D", "2HD": "D", "2*HD": "D", "3HD": "D", "4HD": "T", "5HD": "T", "6HD": 7, "7-9HD": 9 },
-  // Level 8
-  8: { "1HD": "D", "2HD": "D", "2*HD": "D", "3HD": "D", "4HD": "D", "5HD": "T", "6HD": "T", "7-9HD": 7 },
-  // Level 9
-  9: { "1HD": "D", "2HD": "D", "2*HD": "D", "3HD": "D", "4HD": "D", "5HD": "D", "6HD": "T", "7-9HD": "T" },
-  // Level 10
-  10: { "1HD": "D", "2HD": "D", "2*HD": "D", "3HD": "D", "4HD": "D", "5HD": "D", "6HD": "D", "7-9HD": "T" },
-  // Level 11+
-  11: { "1HD": "D", "2HD": "D", "2*HD": "D", "3HD": "D", "4HD": "D", "5HD": "D", "6HD": "D", "7-9HD": "D" }
-};
+/**
+ * Normalize class name to use _CLASS suffix
+ * @param {string} className - The class name (with or without _CLASS suffix)
+ * @returns {string} The normalized class name with _CLASS suffix
+ */
+function normalizeClassName(className) {
+  // If already has _CLASS suffix, return as-is
+  if (className.endsWith("_CLASS")) {
+    return className;
+  }
+  // Otherwise, look up in legacy names
+  return LEGACY_CLASS_NAMES[className] || className;
+}
 
 // ============================================================================
 // HELPER FUNCTIONS
@@ -305,7 +277,8 @@ export const TURN_UNDEAD = {
  * @returns {number|null} XP required, or null if invalid
  */
 export function getXPRequired(className, level) {
-  const xpArray = XP_REQUIREMENTS[className];
+  const normalizedName = normalizeClassName(className);
+  const xpArray = XP_REQUIREMENTS[normalizedName];
   if (!xpArray) return null;
   if (level < 1 || level > xpArray.length) return null;
   return xpArray[level - 1];
@@ -318,7 +291,8 @@ export function getXPRequired(className, level) {
  * @returns {string|null} Hit dice string (e.g., "3d8", "9d8+2*"), or null if invalid
  */
 export function getHitDice(className, level) {
-  const scale = HIT_DICE_SCALE[className];
+  const normalizedName = normalizeClassName(className);
+  const scale = HIT_DICE_SCALE[normalizedName];
   if (!scale) return null;
   
   const progression = HIT_DICE_PROGRESSIONS[scale];
@@ -335,14 +309,15 @@ export function getHitDice(className, level) {
  * @returns {number|null} Attack bonus (ascending), or null if invalid
  */
 export function getAttackBonus(className, level) {
-  const scale = ATTACK_BONUS_SCALE[className];
+  const normalizedName = normalizeClassName(className);
+  const scale = ATTACK_BONUS_SCALE[normalizedName];
   if (!scale) return null;
   
   const progression = ATTACK_BONUS_PROGRESSIONS[scale];
   if (!progression) return null;
   
   // Get max level for this class
-  const xpArray = XP_REQUIREMENTS[className];
+  const xpArray = XP_REQUIREMENTS[normalizedName];
   const maxLevel = xpArray ? xpArray.length : 14;
   
   if (level < 1 || level > maxLevel) return null;
@@ -356,7 +331,8 @@ export function getAttackBonus(className, level) {
  * @returns {object|null} Object with death, wands, paralysis, breath, spells properties, or null if invalid
  */
 export function getSavingThrows(className, level) {
-  const savesObj = SAVING_THROWS[className];
+  const normalizedName = normalizeClassName(className);
+  const savesObj = SAVING_THROWS[normalizedName];
   if (!savesObj) return null;
   if (level < 1 || level > savesObj.death.length) return null;
   
@@ -433,7 +409,8 @@ export function getTurnUndead(level, undeadType) {
  * @returns {number} The current level (varies by class max level)
  */
 export function getLevelFromXP(className, xp) {
-  const xpArray = XP_REQUIREMENTS[className];
+  const normalizedName = normalizeClassName(className);
+  const xpArray = XP_REQUIREMENTS[normalizedName];
   if (!xpArray) return 1;
   
   for (let i = xpArray.length - 1; i >= 0; i--) {
@@ -451,15 +428,16 @@ export function getLevelFromXP(className, xp) {
  * @returns {number|null} XP needed for next level, or null if at max level
  */
 export function getXPToNextLevel(className, currentXP) {
-  const xpArray = XP_REQUIREMENTS[className];
+  const normalizedName = normalizeClassName(className);
+  const xpArray = XP_REQUIREMENTS[normalizedName];
   if (!xpArray) return null;
   
-  const currentLevel = getLevelFromXP(className, currentXP);
+  const currentLevel = getLevelFromXP(normalizedName, currentXP);
   const maxLevel = xpArray.length;
   
   if (currentLevel >= maxLevel) return null; // Max level
   
-  const nextLevelXP = getXPRequired(className, currentLevel + 1);
+  const nextLevelXP = getXPRequired(normalizedName, currentLevel + 1);
   return nextLevelXP - currentXP;
 }
 

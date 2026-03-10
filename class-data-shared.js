@@ -17,6 +17,10 @@ export const CLASS_INFO = {
     weapons: ["Club", "Mace", "Sling", "Staff", "War hammer"],
     weaponDescription: "Any blunt weapons",
     languages: ["Alignment", "Common"],
+    availableIn: {
+      basic: true,   // Available in Basic Mode (Human only)
+      advanced: true // Available in Advanced Mode (Human, Dwarf, Gnome)
+    },
     availableRaces: {
       basic: ["Human"],
       advanced: ["Human", "Dwarf", "Gnome"]
@@ -38,6 +42,10 @@ export const CLASS_INFO = {
     weapons: ["Battle axe", "Club", "Crossbow", "Dagger", "Hand axe", "Javelin", "Lance", "Long bow", "Mace", "Pole arm", "Short bow", "Short sword", "Silver dagger", "Sling", "Spear", "Staff", "Sword", "Torch", "Two-handed sword", "War hammer"],
     weaponDescription: "Any",
     languages: ["Alignment", "Common"],
+    availableIn: {
+      basic: true,   // Available in Basic Mode (Human only)
+      advanced: true // Available in Advanced Mode (all races)
+    },
     availableRaces: {
       basic: ["Human"],
       advanced: ["Human", "Dwarf", "Elf", "Halfling", "Gnome"]
@@ -61,6 +69,10 @@ export const CLASS_INFO = {
     weapons: ["Dagger", "Staff"],
     weaponDescription: "Dagger only",
     languages: ["Alignment", "Common"],
+    availableIn: {
+      basic: true,   // Available in Basic Mode (Human only)
+      advanced: true // Available in Advanced Mode (Human, Elf)
+    },
     availableRaces: {
       basic: ["Human"],
       advanced: ["Human", "Elf"]
@@ -81,6 +93,10 @@ export const CLASS_INFO = {
     weapons: ["Battle axe", "Club", "Crossbow", "Dagger", "Hand axe", "Javelin", "Lance", "Long bow", "Mace", "Pole arm", "Short bow", "Short sword", "Silver dagger", "Sling", "Spear", "Staff", "Sword", "Torch", "Two-handed sword", "War hammer"],
     weaponDescription: "Any",
     languages: ["Alignment", "Common"],
+    availableIn: {
+      basic: true,   // Available in Basic Mode (Human only)
+      advanced: true // Available in Advanced Mode (Human, Halfling, Gnome)
+    },
     availableRaces: {
       basic: ["Human"],
       advanced: ["Human", "Halfling", "Gnome"]
@@ -105,6 +121,10 @@ export const CLASS_INFO = {
     weapons: ["Battle axe", "Club", "Crossbow", "Dagger", "Hand axe", "Javelin", "Lance", "Long bow", "Mace", "Pole arm", "Short bow", "Short sword", "Silver dagger", "Sling", "Spear", "Staff", "Sword", "Torch", "Two-handed sword", "War hammer"],
     weaponDescription: "Any",
     languages: ["Alignment", "Common"],
+    availableIn: {
+      basic: true,   // Available in Basic Mode (Human only)
+      advanced: true // Available in Advanced Mode (Human, Elf)
+    },
     availableRaces: {
       basic: ["Human"],
       advanced: ["Human", "Elf"]
@@ -126,6 +146,10 @@ export const CLASS_INFO = {
     weaponDescription: "Any, but not longbows or two-handed swords",
     weaponRestrictions: "Cannot use Long bow or Two-handed sword (too large)",
     languages: ["Alignment", "Common", "Dwarvish", "Gnomish", "Goblin", "Kobold"],
+    availableIn: {
+      basic: true,    // Available in Basic Mode (race-as-class)
+      advanced: false // NOT available in Advanced Mode (use Dwarf race + other classes)
+    },
     availableRaces: {
       basic: ["Dwarf"],
       advanced: ["Dwarf"]
@@ -145,6 +169,10 @@ export const CLASS_INFO = {
     weapons: ["Battle axe", "Club", "Crossbow", "Dagger", "Hand axe", "Javelin", "Lance", "Long bow", "Mace", "Pole arm", "Short bow", "Short sword", "Silver dagger", "Sling", "Spear", "Staff", "Sword", "Torch", "Two-handed sword", "War hammer"],
     weaponDescription: "Any",
     languages: ["Alignment", "Common", "Elvish", "Gnoll", "Hobgoblin", "Orcish"],
+    availableIn: {
+      basic: true,    // Available in Basic Mode (race-as-class)
+      advanced: false // NOT available in Advanced Mode (use Elf race + other classes)
+    },
     availableRaces: {
       basic: ["Elf"],
       advanced: ["Elf"]
@@ -166,6 +194,10 @@ export const CLASS_INFO = {
     weaponRestrictions: "Weapons must be appropriate to size",
     armorRestrictions: "Armor must be appropriate to size",
     languages: ["Alignment", "Common", "Halfling"],
+    availableIn: {
+      basic: true,    // Available in Basic Mode (race-as-class)
+      advanced: false // NOT available in Advanced Mode (use Halfling race + other classes)
+    },
     availableRaces: {
       basic: ["Halfling"],
       advanced: ["Halfling"]
@@ -187,6 +219,10 @@ export const CLASS_INFO = {
     weaponRestrictions: "Cannot use Long bow or Two-handed sword (too large)",
     armorRestrictions: "Armor must be appropriate to size",
     languages: ["Alignment", "Common", "Dwarvish", "Gnomish", "Kobold", "Burrowing mammals"],
+    availableIn: {
+      basic: true,    // Available in Basic Mode (race-as-class)
+      advanced: false // NOT available in Advanced Mode (use Gnome race + other classes)
+    },
     availableRaces: {
       basic: ["Gnome"],
       advanced: ["Gnome"]
@@ -518,11 +554,99 @@ export function meetsRequirements(className, race, abilityScores) {
   return true;
 }
 
+// ============================================================================
+// HIT DICE PROGRESSIONS (Shared across all modes)
+// ============================================================================
+// After 9th level, CON modifiers no longer apply (marked with *)
+// The number after the underscore indicates HP gain per level after 9th
+
+export const HIT_DICE_PROGRESSIONS = {
+  // d8 progression: +2 HP per level after 9th (Fighter)
+  D8_2: ["1d8", "2d8", "3d8", "4d8", "5d8", "6d8", "7d8", "8d8", "9d8", "9d8+2*", "9d8+4*", "9d8+6*", "9d8+8*", "9d8+10*"],
+  // d8 progression: +3 HP per level after 9th (Dwarf)
+  D8_3: ["1d8", "2d8", "3d8", "4d8", "5d8", "6d8", "7d8", "8d8", "9d8", "9d8+3*", "9d8+6*", "9d8+9*"],
+  // d6 progression: +1 HP per level after 9th (Cleric, Halfling)
+  D6_1: ["1d6", "2d6", "3d6", "4d6", "5d6", "6d6", "7d6", "8d6", "9d6", "9d6+1*", "9d6+2*", "9d6+3*", "9d6+4*", "9d6+5*"],
+  // d6 progression: +2 HP at 10th level only (Elf, Spellblade)
+  D6_2: ["1d6", "2d6", "3d6", "4d6", "5d6", "6d6", "7d6", "8d6", "9d6", "9d6+2*"],
+  // d4 progression: +1 HP per level after 9th (Magic-User, Gnome)
+  D4_1: ["1d4", "2d4", "3d4", "4d4", "5d4", "6d4", "7d4", "8d4", "9d4", "9d4+1*", "9d4+2*", "9d4+3*", "9d4+4*", "9d4+5*"],
+  // d4 progression: +2 HP per level after 9th (Thief)
+  D4_2: ["1d4", "2d4", "3d4", "4d4", "5d4", "6d4", "7d4", "8d4", "9d4", "9d4+2*", "9d4+4*", "9d4+6*", "9d4+8*", "9d4+10*"]
+};
+
+// ============================================================================
+// SPELL SLOTS (Shared across all modes)
+// ============================================================================
+// Arcane spell progression (used by Magic-User, Elf, Spellblade, Gnome)
+// Each class uses this progression but stops at different levels
+
+export const ARCANE_SPELL_SLOTS = {
+  1: [1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4],
+  2: [0, 0, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4],
+  3: [0, 0, 0, 0, 1, 2, 2, 2, 3, 3, 3, 3, 4, 4],
+  4: [0, 0, 0, 0, 0, 0, 1, 2, 2, 3, 3, 3, 3, 4],
+  5: [0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 2, 3, 3, 3],
+  6: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 3]
+};
+
+// Divine spell progression (used by Cleric)
+export const DIVINE_SPELL_SLOTS = {
+  1: [0, 1, 2, 2, 2, 2, 2, 3, 3, 4, 4, 5, 5, 6],
+  2: [0, 0, 0, 1, 2, 2, 2, 3, 3, 4, 4, 5, 5, 5],
+  3: [0, 0, 0, 0, 0, 1, 2, 2, 3, 3, 4, 4, 5, 5],
+  4: [0, 0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5],
+  5: [0, 0, 0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4]
+};
+
+// ============================================================================
+// THIEF SKILLS (Shared across all modes)
+// ============================================================================
+// Skills: Climb Sheer Surfaces, Find/Remove Traps, Hear Noise, Hide in Shadows,
+//         Move Silently, Open Locks, Pick Pockets
+// Note: Hear Noise is a 1d6 roll (1-2, 1-3, etc.), others are percentile
+
+export const THIEF_SKILLS = {
+  climbSheerSurfaces: [87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 99],
+  findRemoveTraps: [10, 15, 20, 25, 30, 40, 50, 60, 70, 80, 90, 95, 97, 99],
+  hearNoise: [2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5], // 1-2, 1-3, 1-4, 1-5 on 1d6
+  hideInShadows: [10, 15, 20, 25, 30, 36, 45, 55, 65, 75, 85, 90, 95, 99],
+  moveSilently: [20, 25, 30, 35, 40, 45, 55, 65, 75, 85, 95, 96, 98, 99],
+  openLocks: [15, 20, 25, 30, 35, 45, 55, 65, 75, 85, 95, 96, 97, 99],
+  pickPockets: [20, 25, 30, 35, 40, 45, 55, 65, 75, 85, 95, 105, 115, 125]
+};
+
+// ============================================================================
+// TURN UNDEAD TABLE (Shared across all modes)
+// ============================================================================
+// Rows: Cleric levels 1-11+ (11 rows)
+// Columns: Undead types by HD (1 HD, 2 HD, 2* HD, 3 HD, 4 HD, 5 HD, 6 HD, 7-9 HD)
+// Values: Number needed on 2d6, "T" = automatic turn, "D" = automatic destroy, null = cannot turn
+
+export const TURN_UNDEAD = {
+  1: { "1HD": 7, "2HD": 9, "2*HD": 11, "3HD": null, "4HD": null, "5HD": null, "6HD": null, "7-9HD": null },
+  2: { "1HD": "T", "2HD": 7, "2*HD": 9, "3HD": 11, "4HD": null, "5HD": null, "6HD": null, "7-9HD": null },
+  3: { "1HD": "T", "2HD": "T", "2*HD": 7, "3HD": 9, "4HD": 11, "5HD": null, "6HD": null, "7-9HD": null },
+  4: { "1HD": "D", "2HD": "T", "2*HD": "T", "3HD": 7, "4HD": 9, "5HD": 11, "6HD": null, "7-9HD": null },
+  5: { "1HD": "D", "2HD": "D", "2*HD": "T", "3HD": "T", "4HD": 7, "5HD": 9, "6HD": 11, "7-9HD": null },
+  6: { "1HD": "D", "2HD": "D", "2*HD": "D", "3HD": "T", "4HD": "T", "5HD": 7, "6HD": 9, "7-9HD": 11 },
+  7: { "1HD": "D", "2HD": "D", "2*HD": "D", "3HD": "D", "4HD": "T", "5HD": "T", "6HD": 7, "7-9HD": 9 },
+  8: { "1HD": "D", "2HD": "D", "2*HD": "D", "3HD": "D", "4HD": "D", "5HD": "T", "6HD": "T", "7-9HD": 7 },
+  9: { "1HD": "D", "2HD": "D", "2*HD": "D", "3HD": "D", "4HD": "D", "5HD": "D", "6HD": "T", "7-9HD": "T" },
+  10: { "1HD": "D", "2HD": "D", "2*HD": "D", "3HD": "D", "4HD": "D", "5HD": "D", "6HD": "D", "7-9HD": "T" },
+  11: { "1HD": "D", "2HD": "D", "2*HD": "D", "3HD": "D", "4HD": "D", "5HD": "D", "6HD": "D", "7-9HD": "D" }
+};
+
 // Export all for use in other modules
 export default {
   CLASS_INFO,
   XP_BONUS,
   CLASS_ABILITIES,
+  HIT_DICE_PROGRESSIONS,
+  ARCANE_SPELL_SLOTS,
+  DIVINE_SPELL_SLOTS,
+  THIEF_SKILLS,
+  TURN_UNDEAD,
   getClassInfo,
   getClassAbilities,
   getAbilitiesAtLevel,

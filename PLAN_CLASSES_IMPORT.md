@@ -130,6 +130,21 @@ Create structured data from the markdown files for level 1+ implementation.
 - [x] Extract Gygar Gnome data (summary) → CLASS_DATA_EXTRACTED_GYGAR.md ✅
 - [x] Extract Gygar Spellblade data (summary) → CLASS_DATA_EXTRACTED_GYGAR.md ✅
 
+## Naming Convention
+
+To maintain clarity in the codebase, we use the following naming convention:
+
+- **`_CLASS`** suffix: Indicates a class (used in both Basic and Advanced modes)
+  - Examples: `Fighter_CLASS`, `Cleric_CLASS`, `Dwarf_CLASS`, `Elf_CLASS`
+  - Used for: XP requirements, hit dice, attack bonuses, saving throws, spell slots
+- **`_RACE`** suffix: Indicates a race (used only in Advanced mode - future implementation)
+  - Examples: `Human_RACE`, `Dwarf_RACE`, `Elf_RACE`, `Halfling_RACE`, `Gnome_RACE`
+  - Used for: Racial abilities only (no XP/HD/saves/etc.)
+
+**Backward Compatibility:** Legacy names without suffixes (e.g., `"Fighter"`, `"Dwarf"`) are automatically converted to `_CLASS` names internally via the `normalizeClassName()` function.
+
+See `BASIC_VS_ADVANCED_CLASSES.md` for detailed examples and `PLAN_NAMING_AND_SHARED_CLASS_DATA.md` for the complete refactoring plan.
+
 ## Phase 5: Create JavaScript Data Files ✅ IN PROGRESS
 
 ### Shared Data ✅ COMPLETE
@@ -141,6 +156,11 @@ Create structured data from the markdown files for level 1+ implementation.
   - [x] Class abilities (non-level-dependent) ✅
   - [x] Base class structure ✅
   - [x] Helper functions ✅
+  - [x] HIT_DICE_PROGRESSIONS (6 scales: D8_2, D8_3, D6_1, D6_2, D4_1, D4_2) ✅
+  - [x] ARCANE_SPELL_SLOTS (Magic-User progression) ✅
+  - [x] DIVINE_SPELL_SLOTS (Cleric progression) ✅
+  - [x] THIEF_SKILLS (7 skills × 14 levels) ✅
+  - [x] TURN_UNDEAD (Cleric ability table) ✅
 
 ### Weapons and Armor Data ✅ COMPLETE
 - [x] Create `weapons-and-armor.js` ✅
@@ -153,17 +173,21 @@ Create structured data from the markdown files for level 1+ implementation.
 - [x] Create `OSE_WEAPONS_ARMOR.md` ✅
 - [x] Create `BASIC_VS_ADVANCED_CLASSES.md` ✅
 
-### OSE Standard (IN PROGRESS)
-- [ ] Create `class-data-ose.js` (imports from shared)
-- [ ] Add OSE-specific progressions:
-  - [ ] Saving throw tables
-  - [ ] Attack bonus tables
-  - [ ] Hit dice progressions
-  - [ ] Spell slot progressions
-  - [ ] Thief skill progressions
-  - [ ] XP requirements
-  - [ ] Level limits (demihumans)
-- [ ] Export module for Node.js and browser
+### OSE Standard ✅ COMPLETE
+- [x] Create `class-data-ose.js` (imports from shared) ✅
+- [x] Add OSE-specific progressions: ✅
+  - [x] XP_REQUIREMENTS (with `_CLASS` suffix) ✅
+  - [x] HIT_DICE_SCALE (maps classes to shared progressions) ✅
+  - [x] ATTACK_BONUS_PROGRESSIONS (3 scales: FIGHTER, CLERIC, MAGIC_USER) ✅
+  - [x] ATTACK_BONUS_SCALE (maps classes to attack progressions) ✅
+  - [x] SAVING_THROWS (5 categories × 14 levels, with `_CLASS` suffix) ✅
+  - [x] SPELL_SLOT_SCALE (maps classes to shared spell progressions) ✅
+  - [x] Level limits (via XP_REQUIREMENTS array length) ✅
+- [x] Add backward compatibility layer: ✅
+  - [x] LEGACY_CLASS_NAMES mapping ✅
+  - [x] normalizeClassName() function ✅
+  - [x] Legacy exports (HIT_DICE, ATTACK_BONUS, SPELL_SLOTS) ✅
+- [x] Export module for Node.js and browser ✅
 
 ### Smoothified Mode (PENDING)
 - [ ] Create `class-data-gygar.js` (imports from shared)
@@ -186,13 +210,18 @@ Create structured data from the markdown files for level 1+ implementation.
 - [x] `canRaceTakeClass(className, race, mode)` ✅
 - [x] `meetsRequirements(className, race, abilityScores)` ✅
 
-**Mode-Specific (Pending)**
-- [ ] `getSavingThrows(className, level)` - mode-specific
-- [ ] `getAttackBonus(className, level)` - mode-specific
-- [ ] `getHitDice(className, level)` - mode-specific
-- [ ] `getSpellSlots(className, level)` - mode-specific (for spellcasters)
-- [ ] `getThiefSkills(level)` - mode-specific (for thieves)
-- [ ] `getXPRequired(className, level)` - mode-specific
+**Mode-Specific (class-data-ose.js)** ✅ COMPLETE
+- [x] `getXPRequired(className, level)` ✅
+- [x] `getHitDice(className, level)` ✅
+- [x] `getAttackBonus(className, level)` ✅
+- [x] `getSavingThrows(className, level)` ✅
+- [x] `getSpellSlots(className, level)` - for spellcasters ✅
+- [x] `getThiefSkills(level)` - for thieves ✅
+- [x] `getTurnUndead(level, undeadType)` - for clerics ✅
+- [x] `getLevelFromXP(className, xp)` ✅
+- [x] `getXPToNextLevel(className, currentXP)` ✅
+
+All helper functions support both new (`_CLASS` suffix) and legacy (no suffix) class names.
 
 ## Phase 6: Integration (PENDING)
 Integrate class data into the character generator.

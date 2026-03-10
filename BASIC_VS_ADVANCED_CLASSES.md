@@ -2,6 +2,40 @@
 
 This document explains the fundamental difference between Basic and Advanced modes regarding classes and races.
 
+## Naming Convention in Code
+
+To avoid ambiguity in the codebase, we use the following naming convention:
+
+- **`_CLASS`** suffix: Indicates a class (used in both Basic and Advanced modes)
+  - Examples: `Fighter_CLASS`, `Cleric_CLASS`, `Dwarf_CLASS`, `Elf_CLASS`
+- **`_RACE`** suffix: Indicates a race (used only in Advanced mode)
+  - Examples: `Human_RACE`, `Dwarf_RACE`, `Elf_RACE`, `Halfling_RACE`, `Gnome_RACE`
+
+This distinction is important because "Dwarf", "Elf", "Halfling", and "Gnome" can refer to either:
+1. A **class** in Basic Mode (race-as-class)
+2. A **race** in Advanced Mode (race + separate class)
+
+### Code Examples
+
+**Basic Mode:**
+```javascript
+// "Dwarf" refers to the Dwarf_CLASS (a complete class with XP table, HD, saves, etc.)
+const xp = getXPRequired("Dwarf_CLASS", 5);
+const hd = getHitDice("Dwarf_CLASS", 5);
+```
+
+**Advanced Mode:**
+```javascript
+// "Dwarf" refers to Dwarf_RACE (racial abilities only)
+// Combined with Fighter_CLASS (XP table, HD, saves, etc.)
+const racialAbilities = getRacialAbilities("Dwarf_RACE");
+const xp = getXPRequired("Fighter_CLASS", 5);
+const hd = getHitDice("Fighter_CLASS", 5);
+```
+
+**Backward Compatibility:**
+The code maintains backward compatibility - you can still use legacy names like `"Dwarf"` or `"Fighter"` without the suffix, and they will be automatically converted to the appropriate `_CLASS` name internally.
+
 ## Basic Mode (OSE Basic)
 
 In Basic Mode, **race and class are combined**. Demihumans ARE their class:
