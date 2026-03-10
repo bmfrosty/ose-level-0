@@ -366,9 +366,11 @@ class CanvasCharacterSheet {
         const treasureBoxHeight = 18;
         const cpBoxStart = racialAbilitiesBottom - treasureBoxHeight;
         
-        // Equipment text area - keep same height as before plus the shift amount
+        // Equipment text area - make it a bit less than half to leave room for gaps and header
         const ppBoxStart = cpBoxStart - (4 * 22); // 4 boxes * 22pt spacing
-        const equipmentHeight = 340; // Original 285 + 55pt shift
+        const totalAvailableHeight = 340; // Original 285 + 55pt shift
+        const gapSize = 5; // Gap between sections
+        const equipmentHeight = (totalAvailableHeight / 2) - 15; // Less than half to account for gaps
         
         this.drawRect(320, 250, 220, equipmentHeight, null, '#000000');
         this.setFont('Arial', 12, 'normal');
@@ -386,8 +388,21 @@ class CanvasCharacterSheet {
             itemY += 15;
         }
         
-        // Position Starting AC and Starting Gold dynamically based on equipment box height
-        const equipmentTextY = ppBoxStart - 30;
+        // CLASS ABILITIES section header - with gap before it
+        const classAbilitiesHeaderY = 250 + equipmentHeight + gapSize;
+        this.setFont('Arial', 10, 'bold');
+        this.drawRect(320, classAbilitiesHeaderY, 220, 15, '#000000');
+        this.drawText("CLASS ABILITIES", 325, classAbilitiesHeaderY + 9, '#FFFFFF');
+        
+        // Class abilities text area - with gap after header, remaining space
+        const classAbilitiesBoxY = classAbilitiesHeaderY + 15 + gapSize;
+        const classAbilitiesHeight = totalAvailableHeight - equipmentHeight - 15 - (gapSize * 2); // Account for both gaps
+        this.drawRect(320, classAbilitiesBoxY, 220, classAbilitiesHeight, null, '#000000');
+        this.setFont('Arial', 12, 'normal');
+        this.drawText(`None (0-level)`, 330, classAbilitiesBoxY + 16);
+        
+        // Position Starting AC and Starting Gold at bottom of class abilities box
+        const equipmentTextY = classAbilitiesBoxY + classAbilitiesHeight - 30;
         this.drawText(`Starting AC: ${character.armorClass}`, 330, equipmentTextY);
         this.drawText(`Starting Gold: ${character.startingGold || 0} gp`, 330, equipmentTextY + 15);
         
