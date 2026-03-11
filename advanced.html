@@ -36,59 +36,188 @@
             color: #4CAF50;
             text-decoration: underline;
         }
-        .coming-soon {
-            background-color: #fff3cd;
-            border: 2px solid #ffc107;
+        
+        .generator-container {
+            background-color: #f8f9fa;
+            border: 2px solid #9C27B0;
             border-radius: 5px;
             padding: 30px;
             margin: 20px 0;
         }
-        .coming-soon h2 {
-            color: #856404;
+        
+        .control-section {
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .control-section:last-child {
+            border-bottom: none;
+        }
+        
+        .control-section h3 {
             margin-top: 0;
+            color: #333;
         }
-        .feature-list {
-            background-color: #f8f9fa;
-            border-left: 4px solid #4CAF50;
-            padding: 20px;
-            margin: 20px 0;
+        
+        /* Level Selection - Radio Buttons */
+        .level-selection {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
         }
-        .feature-list h3 {
-            margin-top: 0;
+        
+        .level-radio {
+            display: inline-flex;
+            align-items: center;
         }
-        .feature-list ul {
-            line-height: 1.8;
+        
+        .level-radio input[type="radio"] {
+            margin-right: 5px;
         }
-        .doc-links {
-            background-color: #e7f3ff;
-            border-left: 4px solid #2196F3;
-            padding: 20px;
-            margin: 20px 0;
-        }
-        .doc-links h3 {
-            margin-top: 0;
-        }
-        .doc-links a {
-            display: inline-block;
-            margin: 5px 10px 5px 0;
-            padding: 8px 15px;
-            background-color: #2196F3;
-            color: white;
-            text-decoration: none;
+        
+        .level-radio label {
+            cursor: pointer;
+            padding: 5px 10px;
+            border: 1px solid #ccc;
             border-radius: 3px;
+            background-color: white;
         }
-        .doc-links a:hover {
-            background-color: #0b7dda;
+        
+        .level-radio input[type="radio"]:checked + label {
+            background-color: #9C27B0;
+            color: white;
+            border-color: #9C27B0;
         }
-        .gygar-section {
+        
+        /* Race/Class Grid */
+        .race-class-grid {
+            margin-top: 15px;
+            overflow-x: auto;
+        }
+        
+        .race-class-grid table {
+            border-collapse: collapse;
+            width: 100%;
+            background-color: white;
+        }
+        
+        .race-class-grid th {
+            background-color: #9C27B0;
+            color: white;
+            padding: 12px;
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        .race-class-grid td {
+            padding: 8px;
+            text-align: center;
+            border: 1px solid #ddd;
+        }
+        
+        .race-class-grid td.race-label {
+            background-color: #f3e5f5;
+            font-weight: bold;
+            text-align: left;
+            padding-left: 15px;
+        }
+        
+        .grid-button {
+            padding: 10px 15px;
+            font-size: 14px;
+            font-weight: bold;
+            border: 2px solid #9C27B0;
+            border-radius: 5px;
+            background-color: white;
+            color: #9C27B0;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+        }
+        
+        .grid-button:hover:not(:disabled) {
+            background-color: #f3e5f5;
+        }
+        
+        .grid-button.selected {
+            background-color: #9C27B0;
+            color: white;
+        }
+        
+        .grid-button:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            border-color: #ccc;
+            color: #ccc;
+        }
+        
+        /* Checkboxes */
+        .checkbox-option {
+            margin: 15px 0;
+        }
+        
+        .checkbox-option label {
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .checkbox-option input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+        
+        /* Generate Button */
+        .generate-button {
+            padding: 15px 30px;
+            font-size: 18px;
+            font-weight: bold;
+            background-color: #9C27B0;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .generate-button:hover {
+            background-color: #7B1FA2;
+        }
+        
+        .generate-button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        
+        /* Character Display */
+        .character-display {
+            background-color: white;
+            border: 2px solid #9C27B0;
+            border-radius: 5px;
+            padding: 20px;
+            margin-top: 20px;
+            display: none;
+        }
+        
+        .character-display.visible {
+            display: block;
+        }
+        
+        .character-display h2 {
+            margin-top: 0;
+            color: #9C27B0;
+        }
+        
+        .info-note {
             background-color: #f3e5f5;
             border-left: 4px solid #9C27B0;
-            padding: 20px;
-            margin: 20px 0;
-        }
-        .gygar-section h3 {
-            margin-top: 0;
-            color: #6a1b9a;
+            padding: 15px;
+            margin: 15px 0;
+            font-size: 14px;
         }
     </style>
 </head>
@@ -105,63 +234,327 @@
 
     <h1>OSE Advanced Character Generator (Levels 1+)</h1>
     
-    <div class="coming-soon">
-        <h2>🚧 Coming Soon!</h2>
-        <p>This page will allow you to generate Advanced OSE characters for levels 1-14.</p>
-        <p><strong>Advanced Mode</strong> separates race from class, allowing combinations like Dwarf Fighter, Elf Magic-User, etc.</p>
+    <div class="info-note">
+        <strong>Advanced Mode</strong> separates race from class, allowing combinations like Dwarf Fighter, Elf Magic-User, etc.
     </div>
 
-    <div class="feature-list">
-        <h3>Planned Features:</h3>
-        <ul>
-            <li><strong>Level Selection:</strong> Choose character level (1-14)</li>
-            <li><strong>Race Selection:</strong> Human, Dwarf, Elf, Gnome, Halfling</li>
-            <li><strong>Class Selection:</strong> Cleric, Fighter, Magic-User, Thief (+ Spellblade in Smoothified Mode)</li>
-            <li><strong>Racial Abilities:</strong> Infravision, detect doors, saving throw bonuses, etc.</li>
-            <li><strong>Ability Score Adjustments:</strong> Racial modifiers (e.g., Dwarf +1 CON, -1 CHA)</li>
-            <li><strong>Ability Score Generation:</strong> Roll 3d6 for each ability, apply racial adjustments</li>
-            <li><strong>Class Requirements:</strong> Enforce minimum ability scores</li>
-            <li><strong>Hit Points:</strong> Roll appropriate hit dice for class and level</li>
-            <li><strong>Saving Throws:</strong> Use class-based progression tables + racial bonuses</li>
-            <li><strong>Attack Bonus:</strong> Use class-based progression tables</li>
-            <li><strong>Spell Slots:</strong> For Clerics, Magic-Users, and Spellblades</li>
-            <li><strong>Thief Skills:</strong> For Thieves</li>
-            <li><strong>Class Abilities:</strong> Display abilities gained at each level</li>
-            <li><strong>XP Tracking:</strong> Show XP required for current and next level</li>
-            <li><strong>Equipment:</strong> Starting equipment based on class</li>
-            <li><strong>Export Options:</strong> PDF, PNG, Markdown, JSON</li>
-        </ul>
+    <div class="generator-container">
+        <!-- Level Selection -->
+        <div class="control-section">
+            <h3>1. Select Level</h3>
+            <div class="level-selection" id="levelSelection">
+                <!-- Radio buttons 1-14 will be generated here -->
+            </div>
+        </div>
+
+        <!-- Mode Toggle -->
+        <div class="control-section">
+            <h3>2. Select Mode & Options</h3>
+            <div class="checkbox-option">
+                <label>
+                    <input type="checkbox" id="smoothifiedMode" checked>
+                    <span>
+                        <strong>Smoothified Mode</strong> 
+                        (<a href="https://www.drivethrurpg.com/en/product/510225/the-ruins-of-castle-gygar" target="_blank">Castle Gygar</a>)
+                        - Smoother progressions, Spellblade class available
+                    </span>
+                </label>
+            </div>
+            <div class="checkbox-option">
+                <label>
+                    <input type="checkbox" id="toughGuys">
+                    <span>
+                        <strong>Tough Guys</strong> - Require STR/DEX/INT/WIS ≥ 13 and HP ≥ 2
+                    </span>
+                </label>
+            </div>
+            <div class="checkbox-option">
+                <label>
+                    <input type="checkbox" id="includeLevel0HP">
+                    <span>
+                        <strong>Include Level 0 HP</strong> - Add 1d4+CON modifier to total HP (represents 0-level experience)
+                    </span>
+                </label>
+            </div>
+            <div class="checkbox-option">
+                <label>
+                    <input type="checkbox" id="allowNonTraditional">
+                    <span>
+                        <strong>Allow non-traditional race/class combinations</strong> - Enable all race/class combinations
+                    </span>
+                </label>
+            </div>
+            <div class="checkbox-option">
+                <label>
+                    <input type="checkbox" id="allowElfSpellbladePast10">
+                    <span>
+                        <strong>Allow Elf and Spellblade past level 10</strong> - Extends to level 14
+                    </span>
+                </label>
+            </div>
+        </div>
+
+        <!-- Race/Class Selection Grid -->
+        <div class="control-section">
+            <h3>3. Select Race & Class</h3>
+            <div class="race-class-grid">
+                <table id="raceClassGrid">
+                    <thead>
+                        <tr>
+                            <th>Race \ Class</th>
+                            <th>Cleric</th>
+                            <th>Fighter</th>
+                            <th>Magic-User</th>
+                            <th>Thief</th>
+                            <th id="spellbladeHeader">Spellblade</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="race-label">Human</td>
+                            <td><button class="grid-button" data-race="Human" data-class="Cleric">Cleric</button></td>
+                            <td><button class="grid-button" data-race="Human" data-class="Fighter">Fighter</button></td>
+                            <td><button class="grid-button" data-race="Human" data-class="Magic-User">Magic-User</button></td>
+                            <td><button class="grid-button" data-race="Human" data-class="Thief">Thief</button></td>
+                            <td><button class="grid-button" data-race="Human" data-class="Spellblade" id="humanSpellblade">Spellblade</button></td>
+                        </tr>
+                        <tr>
+                            <td class="race-label">Dwarf</td>
+                            <td><button class="grid-button" data-race="Dwarf" data-class="Cleric">Cleric</button></td>
+                            <td><button class="grid-button" data-race="Dwarf" data-class="Fighter">Fighter</button></td>
+                            <td><button class="grid-button" data-race="Dwarf" data-class="Magic-User">Magic-User</button></td>
+                            <td><button class="grid-button" data-race="Dwarf" data-class="Thief">Thief</button></td>
+                            <td><button class="grid-button" data-race="Dwarf" data-class="Spellblade">Spellblade</button></td>
+                        </tr>
+                        <tr>
+                            <td class="race-label">Elf</td>
+                            <td><button class="grid-button" data-race="Elf" data-class="Cleric">Cleric</button></td>
+                            <td><button class="grid-button" data-race="Elf" data-class="Fighter">Fighter</button></td>
+                            <td><button class="grid-button" data-race="Elf" data-class="Magic-User">Magic-User</button></td>
+                            <td><button class="grid-button" data-race="Elf" data-class="Thief">Thief</button></td>
+                            <td><button class="grid-button" data-race="Elf" data-class="Spellblade" id="elfSpellblade">Spellblade</button></td>
+                        </tr>
+                        <tr>
+                            <td class="race-label">Gnome</td>
+                            <td><button class="grid-button" data-race="Gnome" data-class="Cleric">Cleric</button></td>
+                            <td><button class="grid-button" data-race="Gnome" data-class="Fighter">Fighter</button></td>
+                            <td><button class="grid-button" data-race="Gnome" data-class="Magic-User">Magic-User</button></td>
+                            <td><button class="grid-button" data-race="Gnome" data-class="Thief">Thief</button></td>
+                            <td><button class="grid-button" data-race="Gnome" data-class="Spellblade">Spellblade</button></td>
+                        </tr>
+                        <tr>
+                            <td class="race-label">Halfling</td>
+                            <td><button class="grid-button" data-race="Halfling" data-class="Cleric">Cleric</button></td>
+                            <td><button class="grid-button" data-race="Halfling" data-class="Fighter">Fighter</button></td>
+                            <td><button class="grid-button" data-race="Halfling" data-class="Magic-User">Magic-User</button></td>
+                            <td><button class="grid-button" data-race="Halfling" data-class="Thief">Thief</button></td>
+                            <td><button class="grid-button" data-race="Halfling" data-class="Spellblade">Spellblade</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Generate Button -->
+        <div class="control-section">
+            <button class="generate-button" id="generateButton" disabled>Generate Character</button>
+        </div>
     </div>
 
-    <div class="gygar-section">
-        <h3>🏰 Smoothified Mode Support:</h3>
-        <p>Advanced mode includes support for <a href="https://www.drivethrurpg.com/en/product/510225/the-ruins-of-castle-gygar" target="_blank">The Ruins of Castle Gygar</a> campaign setting:</p>
-        <ul>
-            <li><strong>Modified Progressions:</strong> Different saving throw and attack bonus tables</li>
-            <li><strong>Spellblade Class:</strong> Unique fighter/magic-user hybrid class</li>
-            <li><strong>Elves as Spellblades:</strong> Elves use Spellblade progression in Smoothified Mode</li>
-            <li><strong>Smoothed Progressions:</strong> More gradual advancement curves</li>
-        </ul>
+    <!-- Character Display -->
+    <div class="character-display" id="characterDisplay">
+        <h2>Generated Character</h2>
+        <div id="characterInfo">
+            <!-- Character details will be displayed here -->
+        </div>
     </div>
 
-    <div class="doc-links">
-        <h3>📚 Class Documentation:</h3>
-        <p>View complete class progressions and abilities for both OSE Standard and Smoothified Mode:</p>
-        <a href="classes.html">View All Classes</a>
-    </div>
+    <script>
+        // State
+        let selectedLevel = null;
+        let selectedRace = null;
+        let selectedClass = null;
+        let smoothifiedMode = true;
+        let allowNonTraditional = false;
+        let allowElfSpellbladePast10 = false;
+        let toughGuys = false;
+        let includeLevel0HP = false;
 
-    <div class="feature-list">
-        <h3>Implementation Status:</h3>
-        <ul>
-            <li>✅ <strong>Phase 1-4 Complete:</strong> All OSE and Gygar class documentation created</li>
-            <li>⏳ <strong>Phase 5:</strong> Extract data from markdown files (pending)</li>
-            <li>⏳ <strong>Phase 6:</strong> Create class-data-ose.js and class-data-gygar.js (pending)</li>
-            <li>⏳ <strong>Phase 7:</strong> Build character generator UI (pending)</li>
-            <li>⏳ <strong>Phase 8:</strong> Add export functionality (pending)</li>
-            <li>⏳ <strong>Phase 9:</strong> Testing and refinement (pending)</li>
-        </ul>
-        <p><em>See PLAN_OSE_IMPORT.md and PLAN_GYGAR_IMPORT.md for detailed implementation plans.</em></p>
-    </div>
+        // Traditional race/class combinations
+        const TRADITIONAL_COMBINATIONS = {
+            'Human': ['Cleric', 'Fighter', 'Magic-User', 'Thief', 'Spellblade'],
+            'Dwarf': ['Cleric', 'Fighter'],
+            'Elf': ['Fighter', 'Magic-User', 'Spellblade'],
+            'Gnome': ['Cleric', 'Fighter', 'Thief'],
+            'Halfling': ['Fighter', 'Thief']
+        };
+
+        // Initialize level selection (radio buttons 1-14)
+        function initializeLevelSelection() {
+            const container = document.getElementById('levelSelection');
+            for (let i = 1; i <= 14; i++) {
+                const radioDiv = document.createElement('div');
+                radioDiv.className = 'level-radio';
+                
+                const radio = document.createElement('input');
+                radio.type = 'radio';
+                radio.name = 'level';
+                radio.id = `level${i}`;
+                radio.value = i;
+                
+                const label = document.createElement('label');
+                label.htmlFor = `level${i}`;
+                label.textContent = i;
+                
+                radio.addEventListener('change', () => {
+                    selectedLevel = parseInt(radio.value);
+                    updateUI();
+                });
+                
+                radioDiv.appendChild(radio);
+                radioDiv.appendChild(label);
+                container.appendChild(radioDiv);
+            }
+        }
+
+        // Initialize race/class grid
+        function initializeRaceClassGrid() {
+            const buttons = document.querySelectorAll('.grid-button');
+            buttons.forEach(button => {
+                button.addEventListener('click', () => {
+                    if (button.disabled) return;
+                    
+                    // Deselect all buttons
+                    buttons.forEach(b => b.classList.remove('selected'));
+                    // Select clicked button
+                    button.classList.add('selected');
+                    selectedRace = button.dataset.race;
+                    selectedClass = button.dataset.class;
+                    updateUI();
+                });
+            });
+        }
+
+        // Update UI based on selections
+        function updateUI() {
+            // Show/hide Spellblade column based on mode
+            const spellbladeHeader = document.getElementById('spellbladeHeader');
+            const spellbladeButtons = document.querySelectorAll('[data-class="Spellblade"]');
+            
+            if (smoothifiedMode) {
+                spellbladeHeader.style.display = '';
+                spellbladeButtons.forEach(btn => {
+                    btn.parentElement.style.display = '';
+                });
+            } else {
+                spellbladeHeader.style.display = 'none';
+                spellbladeButtons.forEach(btn => {
+                    btn.parentElement.style.display = 'none';
+                    // Deselect if Spellblade was selected
+                    if (selectedClass === 'Spellblade') {
+                        selectedClass = null;
+                        selectedRace = null;
+                        btn.classList.remove('selected');
+                    }
+                });
+            }
+
+            // Enable/disable buttons based on traditional combinations
+            const buttons = document.querySelectorAll('.grid-button');
+            buttons.forEach(button => {
+                const race = button.dataset.race;
+                const className = button.dataset.class;
+                
+                // Check if combination is traditional
+                const isTraditional = TRADITIONAL_COMBINATIONS[race]?.includes(className);
+                
+                if (allowNonTraditional || isTraditional) {
+                    button.disabled = false;
+                } else {
+                    button.disabled = true;
+                    // Deselect if this was selected
+                    if (selectedRace === race && selectedClass === className) {
+                        selectedRace = null;
+                        selectedClass = null;
+                        button.classList.remove('selected');
+                    }
+                }
+            });
+
+            // Enable generate button if level, race, and class are selected
+            const generateButton = document.getElementById('generateButton');
+            generateButton.disabled = !(selectedLevel && selectedRace && selectedClass);
+        }
+
+        // Generate character (placeholder)
+        function generateCharacter() {
+            const characterInfo = document.getElementById('characterInfo');
+            const characterDisplay = document.getElementById('characterDisplay');
+
+            // Placeholder generation
+            const mode = smoothifiedMode ? 'Smoothified' : 'Normal';
+            const html = `
+                <p><strong>Level:</strong> ${selectedLevel}</p>
+                <p><strong>Race:</strong> ${selectedRace}</p>
+                <p><strong>Class:</strong> ${selectedClass}</p>
+                <p><strong>Mode:</strong> ${mode}</p>
+                <p><strong>Non-Traditional Combinations:</strong> ${allowNonTraditional ? 'Allowed' : 'Not Allowed'}</p>
+                <p><strong>Elf/Spellblade Past Level 10:</strong> ${allowElfSpellbladePast10 ? 'Yes' : 'No'}</p>
+                <p><strong>Tough Guys:</strong> ${toughGuys ? 'Yes' : 'No'}</p>
+                <p><strong>Include Level 0 HP:</strong> ${includeLevel0HP ? 'Yes' : 'No'}</p>
+                <hr>
+                <p><em>Full character generation coming soon!</em></p>
+                <p>This will include:</p>
+                <ul>
+                    <li>Ability scores (3d6 each, with racial adjustments)</li>
+                    <li>Hit points (rolled for level)</li>
+                    <li>Saving throws (from class data + racial bonuses)</li>
+                    <li>Attack bonus (from class data)</li>
+                    <li>Racial abilities (infravision, detect doors, etc.)</li>
+                    <li>Spell slots (if spellcaster)</li>
+                    <li>Thief skills (if thief)</li>
+                    <li>Turn undead (if cleric)</li>
+                    <li>Class abilities</li>
+                    <li>Equipment</li>
+                    <li>XP tracking</li>
+                </ul>
+            `;
+
+            characterInfo.innerHTML = html;
+            characterDisplay.classList.add('visible');
+            characterDisplay.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Event listeners
+        document.getElementById('smoothifiedMode').addEventListener('change', (e) => {
+            smoothifiedMode = e.target.checked;
+            updateUI();
+        });
+
+        document.getElementById('allowNonTraditional').addEventListener('change', (e) => {
+            allowNonTraditional = e.target.checked;
+            updateUI();
+        });
+
+        document.getElementById('allowElfSpellbladePast10').addEventListener('change', (e) => {
+            allowElfSpellbladePast10 = e.target.checked;
+        });
+
+        document.getElementById('toughGuys').addEventListener('change', (e) => {
+            toughGuys = e.target.checked;
+        });
+
+        document.getElementById('includeLevel0HP').addEventListener('change', (e) => {
+            includeLevel0HP = e.target.checked;
+        });
+
+        document.getElementById('generateButton').addEventListener('click', generateCharacter);
+
+        // Initialize
+        initializeLevelSelection();
+        initializeRaceClassGrid();
+        updateUI();
+    </script>
 
 </body>
 </html>

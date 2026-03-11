@@ -105,10 +105,10 @@ Each file includes:
 - [x] Updated index.html to load racial-abilities.js ✅
 - [x] All tests passing ✅
 
-## Phase 4: Extract Data Tables (PENDING)
+## Phase 4: Extract Data Tables ✅ COMPLETE
 Create structured data from the markdown files for level 1+ implementation.
 
-### OSE Standard Data
+### OSE Standard Data ✅ COMPLETE
 - [x] Extract OSE Cleric data (detailed) → CLASS_DATA_EXTRACTED_OSE.md ✅
 - [x] Extract OSE Thief data (detailed) → CLASS_DATA_EXTRACTED_OSE.md ✅
 - [x] Extract OSE Fighter data (summary) → CLASS_DATA_EXTRACTED_OSE.md ✅
@@ -119,7 +119,7 @@ Create structured data from the markdown files for level 1+ implementation.
 - [x] Extract OSE Halfling data (summary) → CLASS_DATA_EXTRACTED_OSE.md ✅
 - [x] Extract OSE Gnome data (summary) → CLASS_DATA_EXTRACTED_OSE.md ✅
 
-### Smoothified Mode Data
+### Smoothified Mode Data ✅ COMPLETE
 - [x] Extract Gygar Cleric data (detailed) → CLASS_DATA_EXTRACTED_GYGAR.md ✅
 - [x] Extract Gygar Fighter data (summary) → CLASS_DATA_EXTRACTED_GYGAR.md ✅
 - [x] Extract Gygar Magic-User data (summary) → CLASS_DATA_EXTRACTED_GYGAR.md ✅
@@ -276,21 +276,86 @@ Integrate class data into the character generator.
 ## Phase 7: UI Updates (PENDING)
 Add UI controls for class selection.
 
-- [ ] Add level selection dropdown (0-14)
+### UI Architecture
+**Separate HTML pages for Basic and Advanced modes:**
+- **basic.html** - Basic Mode character generator (levels 1-14)
+  - Race-as-class system (Dwarf, Elf, Halfling are classes)
+  - Classes: Cleric, Fighter, Magic-User, Thief, Dwarf, Elf, Halfling, Gnome
+  - No racial ability adjustments
+  - No race selection (race is determined by class)
+  
+- **advanced.html** - Advanced Mode character generator (levels 1-14)
+  - Separate race and class
+  - Races: Human, Dwarf, Elf, Gnome, Halfling
+  - Classes: Cleric, Fighter, Magic-User, Thief (+ Spellblade in Smoothified Mode)
+  - Racial ability adjustments applied
+  - Racial abilities displayed
+  - Mode toggle for Normal vs Smoothified
+
+- **index.html** - Level 0 character generator (current implementation)
+  - Supports both Basic-compatible and Advanced-compatible Level 0 characters
+  - "Advanced" checkbox determines ability adjustments
+
+### Basic Mode UI (basic.html)
+- [ ] Add level selection (radio buttons 1-14)
+- [ ] Add class selection (row of buttons):
+  - [ ] Cleric, Fighter, Magic-User, Thief (human classes)
+  - [ ] Dwarf, Elf, Halfling, Gnome (demihuman classes)
+  - [ ] Show class requirements (ability minimums)
+  - [ ] Enforce class requirements
+- [ ] Add checkbox: "Allow demihuman levels above maximum" (for Dwarf 13-14, Elf 11-14, Halfling/Gnome 9-14)
 - [ ] Add mode toggle (Normal vs Smoothified)
-- [ ] Add class selection (when level > 0):
-  - [ ] Show available classes based on race and mode
-  - [ ] Enforce class requirements (ability minimums)
-  - [ ] Handle Spellblade (Smoothified only)
+  - [ ] In Smoothified Mode: Add Spellblade button to class selection
 - [ ] Update character display:
   - [ ] Show class and level
   - [ ] Show spell slots (spellcasters)
-  - [ ] Show thief skills (thieves)
+  - [ ] Show thief skills (current level only - single row)
+  - [ ] Show turn undead (current level only - single row)
   - [ ] Show class abilities
+  - [ ] Show racial abilities (for demihuman classes)
 - [ ] Update PDF/PNG renderers:
   - [ ] Add class/level to sheet
   - [ ] Add spell slots section
-  - [ ] Add thief skills section
+  - [ ] Add thief skills section (current level only)
+  - [ ] Add turn undead section (current level only)
+
+### Advanced Mode UI (advanced.html)
+- [ ] Add level selection (radio buttons 1-14)
+- [ ] Add mode toggle (Normal vs Smoothified)
+- [ ] Add race/class selection grid (buttons):
+  - [ ] Rows: Human, Dwarf, Elf, Gnome, Halfling
+  - [ ] Columns: Cleric, Fighter, Magic-User, Thief (+ Spellblade in Smoothified Mode)
+  - [ ] Gray out invalid combinations by default
+  - [ ] Show class requirements (ability minimums) on hover/click
+- [ ] Add checkbox: "Allow non-traditional race/class combinations"
+  - [ ] When checked: Enable all race/class combinations
+  - [ ] When unchecked: Only allow traditional combinations (e.g., Dwarf Fighter, Elf Magic-User)
+- [ ] Update character display:
+  - [ ] Show race, class, and level
+  - [ ] Show racial abilities
+  - [ ] Show spell slots (spellcasters)
+  - [ ] Show thief skills (current level only - single row)
+  - [ ] Show turn undead (current level only - single row)
+  - [ ] Show class abilities
+- [ ] Update PDF/PNG renderers:
+  - [ ] Add race/class/level to sheet
+  - [ ] Add racial abilities section
+  - [ ] Add spell slots section
+  - [ ] Add thief skills section (current level only)
+  - [ ] Add turn undead section (current level only)
+
+### CLI Updates (generate-pdf.sh)
+- [ ] Add `--basic` flag for Basic Mode generation
+- [ ] Add `--advanced` flag for Advanced Mode generation (default for level 0)
+- [ ] Add `--level NUM` option (0-14, default: 0)
+- [ ] When `--level > 0` and `--basic`:
+  - [ ] Generate Basic Mode character (race-as-class)
+  - [ ] Use class-data-ose.js or class-data-gygar.js based on --gygar flag
+- [ ] When `--level > 0` and `--advanced`:
+  - [ ] Generate Advanced Mode character (race + class)
+  - [ ] Apply racial adjustments
+  - [ ] Use class-data-ose.js or class-data-gygar.js based on --gygar flag
+- [ ] Maintain backward compatibility (level 0 defaults to current behavior)
 
 ## Phase 8: Documentation (PENDING)
 Document the classes and mode differences.
@@ -374,6 +439,23 @@ Test all classes at various levels in both modes.
 
 ## Notes
 
+### UI Architecture
+- **index.html** - Level 0 generator (current implementation)
+  - Supports both Basic-compatible and Advanced-compatible Level 0 characters
+  - "Advanced" checkbox determines ability adjustments
+  
+- **basic.html** - Basic Mode generator (levels 1-14)
+  - Race-as-class system (Dwarf, Elf, Halfling are classes)
+  - No racial ability adjustments
+  - Classes: Cleric, Fighter, Magic-User, Thief, Dwarf, Elf, Halfling, Gnome
+  
+- **advanced.html** - Advanced Mode generator (levels 1-14)
+  - Separate race and class
+  - Racial ability adjustments applied
+  - Races: Human, Dwarf, Elf, Gnome, Halfling
+  - Classes: Cleric, Fighter, Magic-User, Thief (+ Spellblade in Smoothified)
+
+### Mode Differences
 - OSE Basic uses classes, not races (Dwarf is a class, not a race)
 - OSE Advanced uses races with racial abilities (Dwarf is a race)
 - This generator supports both approaches
@@ -382,11 +464,18 @@ Test all classes at various levels in both modes.
 - Smoothified Mode is a variant of Advanced rules
 - Both modes now support the same 9 classes
 
+### CLI Architecture
+- `generate-pdf.sh --level 0` - Current behavior (Level 0 characters)
+- `generate-pdf.sh --level 1 --basic` - Basic Mode level 1 character
+- `generate-pdf.sh --level 1 --advanced` - Advanced Mode level 1 character
+- `--gygar` / `--not-gygar` - Toggle Smoothified Mode (works with both Basic and Advanced)
+
 ### Spellblade Class Availability:
-- **Basic Mode:** Spellblade is a Human-only class (like Cleric, Fighter, Magic-User, Thief)
-- **Advanced Mode:** Spellblade can be taken by Humans or Elves
+- **Basic Mode (Smoothified only):** Spellblade is a Human-only class (like Cleric, Fighter, Magic-User, Thief)
+- **Advanced Mode (Smoothified only):** Spellblade can be taken by Humans or Elves
+- **Normal Mode:** Spellblade is not available (use Elf class instead)
 - Spellblade represents a fighter/magic-user hybrid similar to the Elf class
-- In Advanced Mode, Elves can choose between the Elf class or the Spellblade class
+- In Advanced Mode (Smoothified), Elves can choose between the Elf class or the Spellblade class
 
 ## Success Criteria
 
@@ -395,6 +484,7 @@ Test all classes at various levels in both modes.
 - [x] Phase 3: Code refactoring complete ✅
 - [x] Phase 4: All data extracted ✅
 - [x] Phase 5: JavaScript data files created and tested ✅
+- [x] Phase 5A: Shared code refactored ✅
 - [ ] Phase 6: Integration complete (PENDING - for level 1+ implementation)
 - [ ] Phase 7: UI updated for class selection (PENDING - for level 1+ implementation)
 - [ ] Phase 8: Documentation complete (PENDING - for level 1+ implementation)
@@ -411,8 +501,9 @@ Test all classes at various levels in both modes.
 - **Comparisons:** OSE_VS_GYGAR.md, ELF_VS_SPELLBLADE.md, RACIAL_FEATURES_AUDIT.md
 - **Code:** racial-abilities.js created and integrated
 - **Data Extraction:** CLASS_DATA_EXTRACTED_OSE.md, CLASS_DATA_EXTRACTED_GYGAR.md
-- **JavaScript Data Files:** class-data-shared.js, class-data-ose.js, weapons-and-armor.js
+- **JavaScript Data Files:** class-data-shared.js, class-data-ose.js, class-data-gygar.js, weapons-and-armor.js
 - **Documentation:** OSE_WEAPONS_ARMOR.md, BASIC_VS_ADVANCED_CLASSES.md
+- **Tests:** test-gygar-data.js (88/88 tests passing)
 
 **Architecture Implemented:**
 - ✅ Shared data in class-data-shared.js (used by both modes)
@@ -421,7 +512,7 @@ Test all classes at various levels in both modes.
 - ✅ `_CLASS` naming convention with backward compatibility
 - ✅ All helper functions for both OSE Standard and Smoothified modes
 - ✅ Weapons and armor data
-- ✅ Comprehensive test coverage (88/88 tests passed for Gygar)
+- ✅ Comprehensive test coverage (88/88 tests passed)
 
 **Key Smoothified Mode Features:**
 - Smoother attack bonus progression (every 1-2 levels)

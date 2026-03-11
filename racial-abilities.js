@@ -30,6 +30,149 @@ function normalizeRaceName(raceName) {
 }
 
 // ============================================================================
+// RACIAL CLASS LEVEL LIMITS (NORMAL MODE)
+// ============================================================================
+// Maximum level by race and class for Normal Mode (OSE Advanced Fantasy)
+// In Smoothified Mode (Gygar), these limits are ignored
+
+const RACIAL_CLASS_LEVEL_LIMITS = {
+    "Drow_RACE": {
+        "Acrobat": 10,
+        "Assassin": 10,
+        "Cleric": 11,  // May be NPC-only at referee's option
+        "Fighter": 7,
+        "Knight": 9,
+        "Magic-User": 9,
+        "Ranger": 9,
+        "Thief": 11
+    },
+    "Duergar_RACE": {
+        "Assassin": 9,
+        "Cleric": 8,  // May be NPC-only at referee's option
+        "Fighter": 9,
+        "Thief": 9
+    },
+    "Dwarf_RACE": {
+        "Assassin": 9,
+        "Cleric": 8,  // May be NPC-only at referee's option
+        "Fighter": 10,
+        "Thief": 9
+    },
+    "Elf_RACE": {
+        "Acrobat": 10,
+        "Assassin": 10,
+        "Cleric": 7,  // May be NPC-only at referee's option
+        "Druid": 8,   // May be NPC-only at referee's option
+        "Fighter": 7,
+        "Knight": 11,
+        "Magic-User": 11,
+        "Ranger": 11,
+        "Thief": 10
+    },
+    "Gnome_RACE": {
+        "Assassin": 6,
+        "Cleric": 7,  // May be NPC-only at referee's option
+        "Fighter": 6,
+        "Illusionist": 7,
+        "Thief": 8
+    },
+    "Half-Elf_RACE": {
+        "Acrobat": 12,
+        "Assassin": 11,
+        "Bard": 12,
+        "Cleric": 5,
+        "Druid": 12,
+        "Fighter": 8,
+        "Knight": 12,
+        "Magic-User": 8,
+        "Paladin": 12,
+        "Ranger": 8,
+        "Thief": 12
+    },
+    "Halfling_RACE": {
+        "Druid": 6,  // May be NPC-only at referee's option
+        "Fighter": 6,
+        "Thief": 8
+    },
+    "Half-Orc_RACE": {
+        "Acrobat": 8,
+        "Assassin": 8,
+        "Cleric": 4,
+        "Fighter": 10,
+        "Thief": 8
+    },
+    "Svirfneblin_RACE": {
+        "Assassin": 8,
+        "Cleric": 7,  // May be NPC-only at referee's option
+        "Fighter": 6,
+        "Illusionist": 7,
+        "Thief": 8
+    },
+    "Human_RACE": {
+        // Humans have no level limits
+    }
+};
+
+/**
+ * Get maximum level for a race/class combination
+ * @param {string} race - The race name (with or without _RACE suffix)
+ * @param {string} className - The class name
+ * @param {boolean} isSmootified - Whether Smoothified Mode is enabled (ignores limits)
+ * @returns {number|null} Maximum level, or null if unlimited or combination not allowed
+ */
+function getMaxLevel(race, className, isSmootified = false) {
+    // Smoothified Mode: no level limits
+    if (isSmootified) {
+        return null;  // null = unlimited
+    }
+    
+    const normalizedRace = normalizeRaceName(race);
+    
+    // Humans have no level limits
+    if (normalizedRace === "Human_RACE") {
+        return null;  // null = unlimited
+    }
+    
+    // Look up race/class combination
+    const raceLimits = RACIAL_CLASS_LEVEL_LIMITS[normalizedRace];
+    if (!raceLimits) {
+        return null;  // Unknown race, assume unlimited
+    }
+    
+    const maxLevel = raceLimits[className];
+    return maxLevel !== undefined ? maxLevel : null;  // null = combination not allowed
+}
+
+/**
+ * Check if a race can take a specific class
+ * @param {string} race - The race name (with or without _RACE suffix)
+ * @param {string} className - The class name
+ * @param {boolean} allowNonTraditional - Whether to allow non-traditional combinations
+ * @returns {boolean} True if the combination is allowed
+ */
+function canRaceTakeClass(race, className, allowNonTraditional = false) {
+    // If non-traditional combinations are allowed, any race can take any class
+    if (allowNonTraditional) {
+        return true;
+    }
+    
+    const normalizedRace = normalizeRaceName(race);
+    
+    // Humans can take any class
+    if (normalizedRace === "Human_RACE") {
+        return true;
+    }
+    
+    // Check if race has this class in their level limits
+    const raceLimits = RACIAL_CLASS_LEVEL_LIMITS[normalizedRace];
+    if (!raceLimits) {
+        return false;  // Unknown race
+    }
+    
+    return raceLimits[className] !== undefined;
+}
+
+// ============================================================================
 // RACIAL ABILITIES DATA
 // ============================================================================
 
@@ -223,6 +366,9 @@ if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
         LEGACY_RACE_NAMES,
         normalizeRaceName,
+        RACIAL_CLASS_LEVEL_LIMITS,
+        getMaxLevel,
+        canRaceTakeClass,
         getRacialAbilities,
         getCommonDemihumanAbilities,
         savingThrowsLevel0,
