@@ -145,7 +145,7 @@ To maintain clarity in the codebase, we use the following naming convention:
 
 See `BASIC_VS_ADVANCED_CLASSES.md` for detailed examples and `PLAN_NAMING_AND_SHARED_CLASS_DATA.md` for the complete refactoring plan.
 
-## Phase 5: Create JavaScript Data Files ✅ IN PROGRESS
+## Phase 5: Create JavaScript Data Files ✅ COMPLETE
 
 ### Shared Data ✅ COMPLETE
 - [x] Create `class-data-shared.js` for data common to both modes ✅
@@ -189,17 +189,20 @@ See `BASIC_VS_ADVANCED_CLASSES.md` for detailed examples and `PLAN_NAMING_AND_SH
   - [x] Legacy exports (HIT_DICE, ATTACK_BONUS, SPELL_SLOTS) ✅
 - [x] Export module for Node.js and browser ✅
 
-### Smoothified Mode (PENDING)
-- [ ] Create `class-data-gygar.js` (imports from shared)
-- [ ] Add Gygar-specific progressions:
-  - [ ] Saving throw tables (smoothed)
-  - [ ] Attack bonus tables (smoothed)
-  - [ ] Hit dice progressions
-  - [ ] Spell slot progressions
-  - [ ] Thief skill progressions
-  - [ ] XP requirements
-  - [ ] No level limits
-- [ ] Export module for Node.js and browser
+### Smoothified Mode ✅ COMPLETE
+- [x] Create `class-data-gygar.js` (imports from shared) ✅
+- [x] Add Gygar-specific progressions: ✅
+  - [x] XP_REQUIREMENTS (with `_CLASS` suffix) ✅
+  - [x] HIT_DICE_SCALE (maps to shared progressions) ✅
+  - [x] ATTACK_BONUS_PROGRESSIONS (smoothed progressions) ✅
+  - [x] ATTACK_BONUS_SCALE (maps classes to attack progressions) ✅
+  - [x] SAVING_THROWS (smoothed progressions, with `_CLASS` suffix) ✅
+  - [x] SPELL_SLOT_SCALE (maps to shared spell progressions) ✅
+  - [x] No level limits (all classes to 14, except Spellblade to 10) ✅
+- [x] Add backward compatibility layer (same as OSE) ✅
+- [x] Add all helper functions (same as OSE) ✅
+- [x] Export module for Node.js and browser ✅
+- [x] Test all 9 classes (88/88 tests passed) ✅
 
 ### Helper Functions
 **Shared (class-data-shared.js)** ✅ COMPLETE
@@ -222,6 +225,33 @@ See `BASIC_VS_ADVANCED_CLASSES.md` for detailed examples and `PLAN_NAMING_AND_SH
 - [x] `getXPToNextLevel(className, currentXP)` ✅
 
 All helper functions support both new (`_CLASS` suffix) and legacy (no suffix) class names.
+
+**Mode-Specific (class-data-gygar.js)** ✅ COMPLETE
+- [x] Same helper functions as class-data-ose.js ✅
+- [x] Uses smoothed progressions from Gygar data ✅
+- [x] All tests passing (88/88) ✅
+
+## Phase 5A: Refactor Shared Code ✅ COMPLETE
+After comparing class-data-ose.js and class-data-gygar.js, duplicate code was identified and moved to class-data-shared.js:
+
+### Shared Code Moved:
+- [x] `LEGACY_CLASS_NAMES` mapping (identical in both files) ✅
+- [x] `normalizeClassName()` function (identical in both files) ✅
+- [x] `SPELL_SLOT_SCALE` mapping (identical in both files) ✅
+
+### Helper Functions:
+- [x] Helper functions remain in mode-specific files (they use different data sources) ✅
+- [x] Both files now import shared constants from class-data-shared.js ✅
+- [x] All tests still passing (88/88) ✅
+
+### Results:
+- Eliminated ~50 lines of duplicate code
+- Single source of truth for class name normalization
+- Single source of truth for spell slot scale mapping
+- Easier to maintain and update
+- Full backward compatibility maintained
+
+**Note:** Helper functions (`getXPRequired`, `getHitDice`, etc.) remain in mode-specific files because they access mode-specific data (XP_REQUIREMENTS, ATTACK_BONUS_PROGRESSIONS, SAVING_THROWS). Creating mode-aware versions would add complexity without significant benefit at this stage.
 
 ## Phase 6: Integration (PENDING)
 Integrate class data into the character generator.
@@ -363,22 +393,40 @@ Test all classes at various levels in both modes.
 - [x] Phase 1: All classes converted to markdown (OSE and Gygar) ✅
 - [x] Phase 2: Comparison documents created ✅
 - [x] Phase 3: Code refactoring complete ✅
-- [ ] Phase 4: All data extracted (PENDING - for level 1+ implementation)
-- [ ] Phase 5: JavaScript data files created and tested (PENDING - for level 1+ implementation)
+- [x] Phase 4: All data extracted ✅
+- [x] Phase 5: JavaScript data files created and tested ✅
 - [ ] Phase 6: Integration complete (PENDING - for level 1+ implementation)
 - [ ] Phase 7: UI updated for class selection (PENDING - for level 1+ implementation)
 - [ ] Phase 8: Documentation complete (PENDING - for level 1+ implementation)
 - [ ] Phase 9: All tests passing (PENDING - for level 1+ implementation)
-- [ ] Can generate level 1-14 characters in Normal Mode (PENDING - for level 1+ implementation)
+- [ ] Can generate level 1-14 characters in OSE Standard Mode (PENDING - for level 1+ implementation)
 - [ ] Can generate level 1-14 characters in Smoothified Mode (PENDING - for level 1+ implementation)
 - [ ] Can switch between modes seamlessly (PENDING - for level 1+ implementation)
 
-## Phases 1-3 Complete! ✅
+## Phases 1-5 Complete! ✅
 
 **Completed Files:**
-- **OSE Standard:** OSE_CLERIC.md, OSE_FIGHTER.md, OSE_MAGIC_USER.md, OSE_THIEF.md, OSE_DWARF.md, OSE_ELF.md, OSE_HALFLING.md, OSE_GNOME.md
-- **Smoothified Mode:** GYGAR_CLERIC.md, GYGAR_FIGHTER.md, GYGAR_MAGIC_USER.md, GYGAR_THIEF.md, GYGAR_DWARF.md, GYGAR_ELF.md, GYGAR_HALFLING.md, GYGAR_GNOME.md, GYGAR_SPELLBLADE.md
+- **OSE Standard Markdown:** OSE_CLERIC.md, OSE_FIGHTER.md, OSE_MAGIC_USER.md, OSE_THIEF.md, OSE_DWARF.md, OSE_ELF.md, OSE_HALFLING.md, OSE_GNOME.md, OSE_SPELLBLADE.md
+- **Smoothified Mode Markdown:** GYGAR_CLERIC.md, GYGAR_FIGHTER.md, GYGAR_MAGIC_USER.md, GYGAR_THIEF.md, GYGAR_DWARF.md, GYGAR_ELF.md, GYGAR_HALFLING.md, GYGAR_GNOME.md, GYGAR_SPELLBLADE.md
 - **Comparisons:** OSE_VS_GYGAR.md, ELF_VS_SPELLBLADE.md, RACIAL_FEATURES_AUDIT.md
 - **Code:** racial-abilities.js created and integrated
+- **Data Extraction:** CLASS_DATA_EXTRACTED_OSE.md, CLASS_DATA_EXTRACTED_GYGAR.md
+- **JavaScript Data Files:** class-data-shared.js, class-data-ose.js, weapons-and-armor.js
+- **Documentation:** OSE_WEAPONS_ARMOR.md, BASIC_VS_ADVANCED_CLASSES.md
 
-**Next Steps:** Phases 4-9 will be completed when implementing level 1+ character generation.
+**Architecture Implemented:**
+- ✅ Shared data in class-data-shared.js (used by both modes)
+- ✅ OSE-specific data in class-data-ose.js
+- ✅ Gygar-specific data in class-data-gygar.js
+- ✅ `_CLASS` naming convention with backward compatibility
+- ✅ All helper functions for both OSE Standard and Smoothified modes
+- ✅ Weapons and armor data
+- ✅ Comprehensive test coverage (88/88 tests passed for Gygar)
+
+**Key Smoothified Mode Features:**
+- Smoother attack bonus progression (every 1-2 levels)
+- Gradual saving throw improvements (not big jumps at 5/9/13)
+- No demihuman level limits (all reach 14, except Spellblade at 10)
+- Same spell slots, thief skills, and turn undead as OSE
+
+**Next Steps:** Phases 6-9 will be completed when implementing level 1+ character generation.

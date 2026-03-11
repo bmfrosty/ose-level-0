@@ -34,7 +34,32 @@ const hd = getHitDice("Fighter_CLASS", 5);
 ```
 
 **Backward Compatibility:**
-The code maintains backward compatibility - you can still use legacy names like `"Dwarf"` or `"Fighter"` without the suffix, and they will be automatically converted to the appropriate `_CLASS` name internally.
+The code maintains backward compatibility - you can still use legacy names like `"Dwarf"` or `"Fighter"` without the suffix, and they will be automatically converted to the appropriate `_CLASS` or `_RACE` name internally.
+
+### Race Naming (`_RACE` suffix)
+
+In addition to the `_CLASS` suffix, we also use `_RACE` suffix for race data:
+
+- **`_RACE`** suffix: Indicates a race (used in Advanced mode)
+  - Examples: `Human_RACE`, `Dwarf_RACE`, `Elf_RACE`, `Halfling_RACE`, `Gnome_RACE`
+
+**Advanced Mode Example:**
+```javascript
+// Get race data (racial abilities, ability adjustments, minimums)
+const dwarfAbilities = getRacialAbilities("Dwarf_RACE");
+const dwarfAdjustments = getRaceAdjustments("Dwarf_RACE");
+const dwarfMinimums = getRaceMinimums("Dwarf_RACE");
+
+// Get class data (XP, HD, saves, attack bonus)
+const fighterXP = getXPRequired("Fighter_CLASS", 5);
+const fighterHD = getHitDice("Fighter_CLASS", 5);
+```
+
+**Why This Matters:**
+- In **Basic Mode**: "Dwarf" refers to `Dwarf_CLASS` (a complete class)
+- In **Advanced Mode**: "Dwarf" refers to `Dwarf_RACE` (racial abilities only) + a separate class like `Fighter_CLASS`
+
+This naming convention eliminates ambiguity and makes the code self-documenting.
 
 ## Basic Mode (OSE Basic)
 

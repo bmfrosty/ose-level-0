@@ -1,8 +1,41 @@
 // Racial abilities and bonuses for OSE characters
 // Extracted from names-tables.js for better code organization
 
+// ============================================================================
+// BACKWARD COMPATIBILITY
+// ============================================================================
+// Legacy race name mapping for backward compatibility
+// Maps old names (without _RACE suffix) to new names (with _RACE suffix)
+
+const LEGACY_RACE_NAMES = {
+    "Human": "Human_RACE",
+    "Dwarf": "Dwarf_RACE",
+    "Elf": "Elf_RACE",
+    "Gnome": "Gnome_RACE",
+    "Halfling": "Halfling_RACE"
+};
+
+/**
+ * Normalize race name to use _RACE suffix
+ * @param {string} raceName - The race name (with or without _RACE suffix)
+ * @returns {string} The normalized race name with _RACE suffix
+ */
+function normalizeRaceName(raceName) {
+    // If already has _RACE suffix, return as-is
+    if (raceName.endsWith("_RACE")) {
+        return raceName;
+    }
+    // Otherwise, look up in legacy names
+    return LEGACY_RACE_NAMES[raceName] || raceName;
+}
+
+// ============================================================================
+// RACIAL ABILITIES DATA
+// ============================================================================
+
 // Function to get racial abilities text (returns array of lines)
 function getRacialAbilities(race) {
+    const normalizedRace = normalizeRaceName(race);
     // Check if Advanced mode is enabled
     let isAdvanced = false;
     let humanRacialAbilities = false;
@@ -19,13 +52,13 @@ function getRacialAbilities(race) {
         humanRacialAbilities = process.env.HUMAN_RACIAL_ABILITIES === 'true';
     }
     
-    const abilities = {
-        "Human": (isAdvanced && humanRacialAbilities) ? [
+    const RACIAL_ABILITIES = {
+        "Human_RACE": (isAdvanced && humanRacialAbilities) ? [
             "Blessed: Roll HP twice, take best (including at 0th and 1st level)",
             "Decisiveness: Act first on tied initiative (+1 to individual initiative)",
             "Leadership: Retainers/mercenaries +1 loyalty and morale"
         ] : [],
-        "Dwarf": [
+        "Dwarf_RACE": [
             "Languages: Alignment, Common, Dwarvish, Gnomish, Goblin, Kobold",
             "Small/normal weapons only (no longbows or two-handed swords)",
             "Detect construction tricks 2-in-6",
@@ -34,14 +67,14 @@ function getRacialAbilities(race) {
             "Listen at doors 2-in-6",
             "Resilience: Bonus to Death/Wands/Spells saves based on CON"
         ],
-        "Elf": [
+        "Elf_RACE": [
             "Languages: Alignment, Common, Elvish, Gnoll, Hobgoblin, Orcish",
             "Detect secret doors 2-in-6 when actively searching",
             "Infravision 60'",
             "Listen at doors 2-in-6",
             "Immunity to ghoul paralysis"
         ],
-        "Gnome": [
+        "Gnome_RACE": [
             "Languages: Alignment, Common, Dwarvish, Gnomish, Kobold, burrowing mammals",
             "Small/normal weapons only (no longbows or two-handed swords)",
             "Detect construction tricks 2-in-6",
@@ -50,7 +83,7 @@ function getRacialAbilities(race) {
             "+2 AC vs large opponents",
             "Magic Resistance: Bonus to saves vs spells/wands/rods/staves based on CON"
         ],
-        "Halfling": [
+        "Halfling_RACE": [
             "Languages: Alignment, Common, Halfling",
             "Small/normal weapons only (no longbows or two-handed swords)",
             "Listen at doors 2-in-6",
@@ -59,7 +92,7 @@ function getRacialAbilities(race) {
             "Resilience: Bonus to Death/Wands/Spells saves based on CON"
         ]
     };
-    return abilities[race] || [];
+    return RACIAL_ABILITIES[normalizedRace] || [];
 }
 
 // Legacy function for backward compatibility
@@ -118,10 +151,15 @@ function getHalflingResilienceBonus(conScore) {
     return 0; // Fallback
 }
 
+// ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
+
 // Calculate saving throws for a character
 // Inputs: level, race, CON score, isAdvanced, isGygar
 // Output: Object with Death, Wands, Paralysis, Breath, Spells
 function calculateSavingThrows(level, race, conScore, isAdvanced, isGygar) {
+    const normalizedRace = normalizeRaceName(race);
     // Start with base values for level 0
     // (Future: will use different tables for higher levels)
     const saves = {
@@ -133,7 +171,7 @@ function calculateSavingThrows(level, race, conScore, isAdvanced, isGygar) {
     };
     
     // Apply Dwarf Resilience bonus if race is Dwarf (both Basic and Advanced modes)
-    if (race === "Dwarf") {
+    if (normalizedRace === "Dwarf_RACE") {
         const resilienceBonus = getDwarfResilienceBonus(conScore);
         // Resilience applies to Death, Wands, and Spells (not Paralysis or Breath)
         saves.Death -= resilienceBonus;
@@ -142,7 +180,7 @@ function calculateSavingThrows(level, race, conScore, isAdvanced, isGygar) {
     }
     
     // Apply Gnome Magic Resistance bonus if race is Gnome (both Basic and Advanced modes)
-    if (race === "Gnome") {
+    if (normalizedRace === "Gnome_RACE") {
         const magicResistanceBonus = getGnomeMagicResistanceBonus(conScore);
         // Magic Resistance applies to Wands and Spells only
         saves.Wands -= magicResistanceBonus;
@@ -150,7 +188,7 @@ function calculateSavingThrows(level, race, conScore, isAdvanced, isGygar) {
     }
     
     // Apply Halfling Resilience bonus if race is Halfling (both Basic and Advanced modes)
-    if (race === "Halfling") {
+    if (normalizedRace === "Halfling_RACE") {
         const resilienceBonus = getHalflingResilienceBonus(conScore);
         // Halfling Resilience applies to Death (poison), Wands, and Spells
         saves.Death -= resilienceBonus;
@@ -183,6 +221,8 @@ function calculateAttackBonus(level, race, isAdvanced, isGygar) {
 // Export for Node.js
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
+        LEGACY_RACE_NAMES,
+        normalizeRaceName,
         getRacialAbilities,
         getCommonDemihumanAbilities,
         savingThrowsLevel0,

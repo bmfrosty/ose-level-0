@@ -89,13 +89,24 @@ This creates confusion in the code and makes it unclear which data applies where
 - [x] Document backward compatibility
 - [x] Update PLAN_NAMING_AND_SHARED_CLASS_DATA.md
 
-### Phase 6: Testing
-- [ ] Test all helper functions with new naming
-- [ ] Test backward compatibility
-- [ ] Verify shared data imports correctly
-- [ ] Test spell slot lookups for all spellcasting classes
-- [ ] Test turn undead lookups
-- [ ] Update PLAN_NAMING_AND_SHARED_CLASS_DATA.md
+### Phase 6: Testing ✅
+- [x] Test all helper functions with new naming
+- [x] Test backward compatibility
+- [x] Verify shared data imports correctly
+- [x] Test spell slot lookups for all spellcasting classes
+- [x] Test turn undead lookups
+- [x] Test thief skills
+- [x] Test all 9 classes
+- [x] Update PLAN_NAMING_AND_SHARED_CLASS_DATA.md
+
+**Test Results: 24/24 PASSED ✓**
+- ✓ Helper functions with `_CLASS` suffix work correctly
+- ✓ Backward compatibility maintained (legacy names work)
+- ✓ Shared data imports (HIT_DICE_PROGRESSIONS, THIEF_SKILLS, TURN_UNDEAD)
+- ✓ Spell slots for all 5 spellcasting classes
+- ✓ Turn undead lookups for all levels
+- ✓ Thief skills progression
+- ✓ All 9 classes (Fighter, Cleric, Magic-User, Thief, Spellblade, Dwarf, Elf, Halfling, Gnome)
 
 ## Data Organization After Refactoring
 
@@ -265,9 +276,29 @@ The refactored architecture is now ready for:
 - Level 1+ character generation
 - Mode switching functionality
 
+## Race Naming Convention
+
+This document focuses on `_CLASS` naming. For the complementary `_RACE` naming convention, see **PLAN_RACE_NAMING.md**.
+
+The `_RACE` suffix is used for race data in Advanced Mode:
+- `Human_RACE`, `Dwarf_RACE`, `Elf_RACE`, `Halfling_RACE`, `Gnome_RACE`
+
+Together, `_CLASS` and `_RACE` suffixes provide complete clarity:
+- **Basic Mode:** Use `Dwarf_CLASS` (race-as-class)
+- **Advanced Mode:** Use `Dwarf_RACE` (racial abilities) + `Fighter_CLASS` (class progression)
+
+See **PLAN_RACE_NAMING.md** for full implementation details of the `_RACE` naming convention.
+
+## Related Documents
+
+- **PLAN_RACE_NAMING.md** - Race naming convention (companion to this document)
+- **BASIC_VS_ADVANCED_CLASSES.md** - Mode differences and naming examples
+- **PLAN_CLASSES_IMPORT.md** - Class import plan
+
 ## Notes
 
 - This refactoring does NOT change the user-facing API
 - Helper functions will handle name normalization internally
 - The `_CLASS` suffix is for internal code clarity
+- The `_RACE` suffix (see PLAN_RACE_NAMING.md) provides clarity for race data
 - When we add Smoothified Mode, we'll create `class-data-gygar.js` that imports the same shared progressions

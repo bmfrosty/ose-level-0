@@ -637,16 +637,69 @@ export const TURN_UNDEAD = {
   11: { "1HD": "D", "2HD": "D", "2*HD": "D", "3HD": "D", "4HD": "D", "5HD": "D", "6HD": "D", "7-9HD": "D" }
 };
 
+
+// ============================================================================
+// XP REQUIREMENTS BY CLASS (Shared across all modes)
+// ============================================================================
+// All classes can reach level 14 (except Spellblade at 10)
+// Traditional "soft limits" for demihumans are preserved in saving throw plateaus
+
+export const XP_REQUIREMENTS = {
+  "Fighter_CLASS": [0, 2000, 4000, 8000, 16000, 32000, 64000, 120000, 240000, 360000, 480000, 600000, 720000, 840000],
+  "Thief_CLASS": [0, 1200, 2400, 4800, 9600, 20000, 40000, 80000, 160000, 280000, 400000, 520000, 640000, 760000],
+  "Magic-User_CLASS": [0, 2500, 5000, 10000, 20000, 40000, 80000, 150000, 300000, 450000, 600000, 750000, 900000, 1050000],
+  "Cleric_CLASS": [0, 1500, 3000, 6000, 12000, 25000, 50000, 100000, 200000, 300000, 400000, 500000, 600000, 700000],
+  "Dwarf_CLASS": [0, 2200, 4400, 8800, 17000, 35000, 70000, 140000, 270000, 400000, 530000, 660000, 790000, 920000],
+  "Elf_CLASS": [0, 4000, 8000, 16000, 32000, 64000, 120000, 250000, 400000, 600000, 800000, 1000000, 1200000, 1400000],
+  "Halfling_CLASS": [0, 2000, 4000, 8000, 16000, 32000, 64000, 120000, 240000, 360000, 480000, 600000, 720000, 840000],
+  "Gnome_CLASS": [0, 3000, 6000, 12000, 30000, 60000, 120000, 240000, 360000, 480000, 600000, 720000, 840000, 960000],
+  "Spellblade_CLASS": [0, 4000, 8000, 16000, 32000, 64000, 120000, 250000, 400000, 600000]
+};
+
+// ============================================================================
+// HIT DICE SCALE MAPPING (Shared across all modes)
+// ============================================================================
+// Maps each class to its hit dice progression scale (from HIT_DICE_PROGRESSIONS)
+
+export const HIT_DICE_SCALE = {
+  "Fighter_CLASS": "D8_2",
+  "Thief_CLASS": "D4_2",
+  "Magic-User_CLASS": "D4_1",
+  "Cleric_CLASS": "D6_1",
+  "Dwarf_CLASS": "D8_2",
+  "Elf_CLASS": "D6_1",
+  "Halfling_CLASS": "D6_1",
+  "Gnome_CLASS": "D4_1",
+  "Spellblade_CLASS": "D6_2"
+};
+
+// ============================================================================
+// SPELL SLOT SCALE MAPPING (Shared across all modes)
+// ============================================================================
+// Maps each spellcasting class to its spell slot progression
+// Same for both OSE Standard and Smoothified Mode
+
+export const SPELL_SLOT_SCALE = {
+  "Cleric_CLASS": "DIVINE",
+  "Magic-User_CLASS": "ARCANE",
+  "Elf_CLASS": "ARCANE",
+  "Gnome_CLASS": "ARCANE",
+  "Spellblade_CLASS": "ARCANE"
+};
+
 // Export all for use in other modules
 export default {
   CLASS_INFO,
   XP_BONUS,
   CLASS_ABILITIES,
+  XP_REQUIREMENTS,
   HIT_DICE_PROGRESSIONS,
+  HIT_DICE_SCALE,
   ARCANE_SPELL_SLOTS,
   DIVINE_SPELL_SLOTS,
   THIEF_SKILLS,
   TURN_UNDEAD,
+  SPELL_SLOT_SCALE,
   getClassInfo,
   getClassAbilities,
   getAbilitiesAtLevel,

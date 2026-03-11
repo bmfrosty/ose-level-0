@@ -1,17 +1,20 @@
 /**
- * OSE Standard Class Progression Data
+ * Smoothified Mode (Gygar) Class Progression Data
  * 
- * This module contains all level-dependent progression data for the 4 core OSE Standard classes:
- * Fighter, Thief, Magic-User, and Cleric.
+ * This module contains all level-dependent progression data for the 9 Smoothified Mode classes.
+ * 
+ * Key differences from OSE Standard:
+ * - Smoother attack bonus progression (every 1-2 levels instead of big jumps)
+ * - Gradual saving throw improvements (not just at levels 5/9/13)
+ * - No demihuman level limits (all reach 14, except Spellblade at 10)
+ * - Level 0 attack bonus: 0 (vs -1 in OSE)
  * 
  * Data includes:
  * - XP requirements (levels 1-14)
- * - Hit Dice progressions (levels 1-14)
  * - Attack bonuses (ascending, levels 1-14)
  * - Saving throws (5 categories, levels 1-14)
- * - Spell slots (for Cleric and Magic-User)
- * - Thief skills (7 skills, levels 1-14)
- * - Turn Undead table (for Cleric)
+ * 
+ * Shared data (HD, spell slots, thief skills, turn undead) imported from class-data-shared.js
  */
 
 import { 
@@ -31,104 +34,103 @@ import {
 // ============================================================================
 // ATTACK BONUS PROGRESSIONS (Ascending)
 // ============================================================================
-// OSE uses THAC0 (descending), but we convert to ascending attack bonus:
-// THAC0 19 = +0, THAC0 17 = +2, THAC0 14 = +5, THAC0 12 = +7, THAC0 10 = +9
-//
-// There are 3 distinct progression scales in OSE:
-// - FIGHTER_PROGRESSION: Fast progression (Fighter, Dwarf, Elf, Halfling, Spellblade)
-// - CLERIC_PROGRESSION: Medium progression (Cleric, Thief)
-// - MAGIC_USER_PROGRESSION: Slow progression (Magic-User, Gnome)
+// Smoothified Mode uses gradual progressions instead of big jumps
+// There are 3 distinct progression scales:
+// - FIGHTER_SMOOTH: Fast progression (Fighter, Dwarf, Elf, Halfling, Spellblade)
+// - CLERIC_SMOOTH: Medium progression (Cleric, Thief)
+// - MAGIC_USER_SMOOTH: Slow progression (Magic-User, Gnome)
 
 export const ATTACK_BONUS_PROGRESSIONS = {
-  // Fighter progression: +2 at 4th, +5 at 7th, +7 at 10th, +9 at 13th
-  FIGHTER: [0, 0, 0, 2, 2, 2, 5, 5, 5, 7, 7, 7, 9, 9],
-  // Cleric/Thief progression: +2 at 5th, +5 at 9th, +7 at 13th
-  CLERIC: [0, 0, 0, 0, 2, 2, 2, 2, 5, 5, 5, 5, 7, 7],
-  // Magic-User progression: +2 at 6th, +5 at 11th
-  MAGIC_USER: [0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 5, 5, 5, 5]
+  // Fighter progression: +1, +2, +3, +4, +5, +5, +6, +6, +7, +7, +7, +8, +9, +9
+  FIGHTER_SMOOTH: [1, 2, 3, 4, 5, 5, 6, 6, 7, 7, 7, 8, 9, 9],
+  // Cleric/Thief progression: +0, +1, +1, +2, +2, +3, +3, +4, +5, +5, +6, +6, +7, +7
+  CLERIC_SMOOTH: [0, 1, 1, 2, 2, 3, 3, 4, 5, 5, 6, 6, 7, 7],
+  // Magic-User progression: +0, +0, +1, +1, +2, +2, +2, +3, +3, +4, +4, +5, +5, +5
+  MAGIC_USER_SMOOTH: [0, 0, 1, 1, 2, 2, 2, 3, 3, 4, 4, 5, 5, 5]
 };
 
 // Map each class to its attack bonus progression
 export const ATTACK_BONUS_SCALE = {
-  "Fighter_CLASS": "FIGHTER",
-  "Thief_CLASS": "CLERIC",
-  "Magic-User_CLASS": "MAGIC_USER",
-  "Cleric_CLASS": "CLERIC",
-  "Dwarf_CLASS": "FIGHTER",
-  "Elf_CLASS": "FIGHTER",
-  "Halfling_CLASS": "FIGHTER",
-  "Gnome_CLASS": "MAGIC_USER",
-  "Spellblade_CLASS": "FIGHTER"
+  "Fighter_CLASS": "FIGHTER_SMOOTH",
+  "Thief_CLASS": "CLERIC_SMOOTH",
+  "Magic-User_CLASS": "MAGIC_USER_SMOOTH",
+  "Cleric_CLASS": "CLERIC_SMOOTH",
+  "Dwarf_CLASS": "FIGHTER_SMOOTH",
+  "Elf_CLASS": "FIGHTER_SMOOTH",
+  "Halfling_CLASS": "FIGHTER_SMOOTH",
+  "Gnome_CLASS": "MAGIC_USER_SMOOTH",
+  "Spellblade_CLASS": "FIGHTER_SMOOTH"
 };
 
 // ============================================================================
 // SAVING THROWS (5 Categories, Levels 1-14)
 // ============================================================================
 // Categories: Death/Poison, Wands, Paralysis/Petrify, Breath Attacks, Spells/Rods/Staves
+// Smoothified Mode: Gradual improvements every 1-2 levels (not big jumps)
 
 export const SAVING_THROWS = {
   "Fighter_CLASS": {
-    death: [12, 12, 12, 10, 10, 10, 8, 8, 8, 6, 6, 6, 4, 4],
-    wands: [13, 13, 13, 11, 11, 11, 9, 9, 9, 7, 7, 7, 5, 5],
-    paralysis: [14, 14, 14, 12, 12, 12, 10, 10, 10, 8, 8, 8, 6, 6],
-    breath: [15, 15, 15, 13, 13, 13, 10, 10, 10, 8, 8, 8, 5, 5],
-    spells: [16, 16, 16, 14, 14, 14, 12, 12, 12, 10, 10, 10, 8, 8]
+    death: [12, 12, 11, 10, 10, 9, 8, 8, 7, 6, 6, 5, 4, 4],
+    wands: [13, 13, 12, 11, 11, 10, 9, 9, 8, 7, 7, 6, 5, 5],
+    paralysis: [14, 14, 13, 12, 12, 11, 10, 10, 9, 8, 8, 7, 6, 6],
+    breath: [15, 15, 14, 13, 12, 11, 10, 10, 9, 8, 7, 6, 5, 5],
+    spells: [16, 16, 15, 14, 14, 13, 12, 12, 11, 10, 10, 9, 8, 8]
   },
   "Thief_CLASS": {
-    death: [13, 13, 13, 13, 12, 12, 12, 12, 10, 10, 10, 10, 8, 8],
-    wands: [14, 14, 14, 14, 13, 13, 13, 13, 11, 11, 11, 11, 9, 9],
-    paralysis: [13, 13, 13, 13, 11, 11, 11, 11, 9, 9, 9, 9, 7, 7],
-    breath: [16, 16, 16, 16, 14, 14, 14, 14, 12, 12, 12, 12, 10, 10],
-    spells: [15, 15, 15, 15, 13, 13, 13, 13, 10, 10, 10, 10, 8, 8]
+    death: [13, 13, 13, 13, 12, 12, 12, 11, 10, 10, 10, 9, 8, 8],
+    wands: [14, 14, 14, 14, 13, 13, 13, 12, 11, 11, 11, 10, 9, 9],
+    paralysis: [13, 13, 13, 12, 11, 11, 11, 10, 9, 9, 9, 8, 7, 7],
+    breath: [16, 16, 16, 15, 14, 14, 14, 13, 12, 12, 12, 11, 10, 10],
+    spells: [15, 15, 15, 14, 13, 13, 12, 11, 10, 10, 10, 9, 8, 8]
   },
   "Magic-User_CLASS": {
-    death: [13, 13, 13, 13, 13, 11, 11, 11, 11, 11, 8, 8, 8, 8],
-    wands: [14, 14, 14, 14, 14, 12, 12, 12, 12, 12, 9, 9, 9, 9],
-    paralysis: [13, 13, 13, 13, 13, 11, 11, 11, 11, 11, 8, 8, 8, 8],
-    breath: [16, 16, 16, 16, 16, 14, 14, 14, 14, 14, 11, 11, 11, 11],
-    spells: [15, 15, 15, 15, 15, 12, 12, 12, 12, 12, 8, 8, 8, 8]
+    death: [13, 13, 13, 13, 12, 11, 11, 11, 10, 9, 8, 8, 8, 8],
+    wands: [14, 14, 14, 14, 13, 12, 12, 12, 11, 10, 9, 9, 9, 9],
+    paralysis: [13, 13, 13, 13, 12, 11, 11, 11, 10, 9, 8, 8, 8, 8],
+    breath: [16, 16, 16, 16, 15, 14, 14, 14, 13, 12, 11, 11, 11, 11],
+    spells: [15, 15, 15, 14, 13, 12, 12, 11, 10, 9, 8, 8, 8, 8]
   },
   "Cleric_CLASS": {
-    death: [11, 11, 11, 11, 9, 9, 9, 9, 6, 6, 6, 6, 3, 3],
-    wands: [12, 12, 12, 12, 10, 10, 10, 10, 7, 7, 7, 7, 5, 5],
-    paralysis: [14, 14, 14, 14, 12, 12, 12, 12, 9, 9, 9, 9, 7, 7],
-    breath: [16, 16, 16, 16, 14, 14, 14, 14, 11, 11, 11, 11, 8, 8],
-    spells: [15, 15, 15, 15, 12, 12, 12, 12, 9, 9, 9, 9, 7, 7]
+    death: [11, 11, 11, 10, 9, 9, 8, 7, 6, 6, 5, 4, 3, 3],
+    wands: [12, 12, 12, 11, 10, 10, 9, 8, 7, 7, 7, 6, 5, 5],
+    paralysis: [14, 14, 14, 13, 12, 12, 11, 10, 9, 9, 9, 8, 7, 7],
+    breath: [16, 16, 16, 15, 14, 14, 13, 12, 11, 11, 10, 9, 8, 8],
+    spells: [15, 15, 14, 13, 12, 12, 11, 10, 9, 9, 9, 8, 7, 7]
   },
   "Dwarf_CLASS": {
-    death: [8, 8, 8, 6, 6, 6, 4, 4, 4, 2, 2, 2, 2, 2],
-    wands: [9, 9, 9, 7, 7, 7, 5, 5, 5, 3, 3, 3, 3, 3],
-    paralysis: [10, 10, 10, 8, 8, 8, 6, 6, 6, 4, 4, 4, 4, 4],
-    breath: [13, 13, 13, 10, 10, 10, 7, 7, 7, 4, 4, 4, 4, 4],
-    spells: [12, 12, 12, 10, 10, 10, 8, 8, 8, 6, 6, 6, 6, 6]
+    death: [12, 12, 11, 10, 10, 9, 8, 8, 7, 6, 6, 5, 4, 4],
+    wands: [13, 13, 12, 11, 11, 10, 9, 9, 8, 7, 7, 6, 5, 5],
+    paralysis: [14, 14, 13, 12, 12, 11, 10, 10, 9, 8, 8, 7, 6, 6],
+    breath: [15, 15, 14, 13, 12, 11, 10, 10, 9, 8, 7, 6, 5, 5],
+    spells: [16, 16, 15, 14, 14, 13, 12, 12, 11, 10, 10, 9, 8, 8]
   },
   "Elf_CLASS": {
-    death: [12, 12, 12, 10, 10, 10, 8, 8, 8, 6, 6, 6, 6, 6],
-    wands: [13, 13, 13, 11, 11, 11, 9, 9, 9, 7, 7, 7, 7, 7],
-    paralysis: [13, 13, 13, 11, 11, 11, 9, 9, 9, 8, 8, 8, 8, 8],
-    breath: [15, 15, 15, 13, 13, 13, 10, 10, 10, 8, 8, 8, 8, 8],
-    spells: [15, 15, 15, 12, 12, 12, 10, 10, 10, 8, 8, 8, 8, 8]
+    death: [12, 12, 11, 10, 10, 9, 8, 8, 7, 6, 6, 5, 4, 4],
+    wands: [13, 13, 12, 11, 11, 10, 9, 9, 8, 7, 7, 6, 5, 5],
+    paralysis: [13, 13, 12, 11, 11, 10, 9, 9, 9, 8, 8, 7, 6, 6],
+    breath: [15, 15, 14, 13, 12, 11, 10, 10, 9, 8, 7, 6, 5, 5],
+    spells: [15, 15, 14, 12, 12, 11, 10, 10, 9, 8, 8, 7, 6, 6]
   },
   "Halfling_CLASS": {
-    death: [8, 8, 8, 6, 6, 6, 4, 4, 4, 4, 4, 4, 4, 4],
-    wands: [9, 9, 9, 7, 7, 7, 5, 5, 5, 5, 5, 5, 5, 5],
-    paralysis: [10, 10, 10, 8, 8, 8, 6, 6, 6, 6, 6, 6, 6, 6],
-    breath: [13, 13, 13, 10, 10, 10, 7, 7, 7, 7, 7, 7, 7, 7],
-    spells: [12, 12, 12, 10, 10, 10, 8, 8, 8, 8, 8, 8, 8, 8]
+    death: [12, 12, 11, 10, 10, 9, 8, 8, 7, 6, 6, 5, 4, 4],
+    wands: [13, 13, 12, 11, 11, 10, 9, 9, 8, 7, 7, 6, 5, 5],
+    paralysis: [14, 14, 13, 12, 12, 11, 10, 10, 9, 8, 8, 7, 6, 6],
+    breath: [15, 15, 14, 13, 12, 11, 10, 10, 9, 8, 7, 6, 5, 5],
+    spells: [16, 16, 15, 14, 14, 13, 12, 12, 11, 10, 10, 9, 8, 8]
   },
   "Gnome_CLASS": {
-    death: [8, 8, 8, 8, 8, 6, 6, 6, 6, 6, 6, 6, 6, 6],
-    wands: [9, 9, 9, 9, 9, 7, 7, 7, 7, 7, 7, 7, 7, 7],
-    paralysis: [10, 10, 10, 10, 10, 8, 8, 8, 8, 8, 8, 8, 8, 8],
-    breath: [14, 14, 14, 14, 14, 11, 11, 11, 11, 11, 11, 11, 11, 11],
-    spells: [11, 11, 11, 11, 11, 9, 9, 9, 9, 9, 9, 9, 9, 9]
+    death: [13, 13, 13, 13, 12, 11, 11, 11, 10, 9, 8, 8, 8, 8],
+    wands: [14, 14, 14, 14, 13, 12, 12, 12, 11, 10, 9, 9, 9, 9],
+    paralysis: [13, 13, 13, 13, 12, 11, 11, 11, 10, 9, 8, 8, 8, 8],
+    breath: [16, 16, 16, 16, 15, 14, 14, 14, 13, 12, 11, 11, 11, 11],
+    spells: [15, 15, 15, 14, 13, 12, 12, 11, 10, 9, 8, 8, 8, 8]
   },
   "Spellblade_CLASS": {
-    death: [12, 12, 12, 10, 10, 10, 8, 8, 8, 6],
-    wands: [13, 13, 13, 11, 11, 11, 9, 9, 9, 7],
-    paralysis: [13, 13, 13, 11, 11, 11, 9, 9, 9, 8],
-    breath: [15, 15, 15, 13, 13, 13, 10, 10, 10, 8],
-    spells: [15, 15, 15, 12, 12, 12, 10, 10, 10, 8]
+    death: [12, 12, 11, 10, 10, 9, 8, 8, 7, 6],
+    wands: [13, 13, 12, 11, 11, 10, 9, 9, 8, 7],
+    paralysis: [13, 13, 12, 11, 11, 10, 9, 9, 9, 8],
+    breath: [15, 15, 14, 13, 12, 11, 10, 10, 9, 8],
+    spells: [15, 14, 13, 12, 12, 11, 10, 10, 9, 8]
   }
 };
 
@@ -141,7 +143,7 @@ export const SAVING_THROWS = {
 /**
  * Get XP required for a specific class and level
  * @param {string} className - The class name
- * @param {number} level - The character level (1-14 for humans, varies for demihumans)
+ * @param {number} level - The character level (1-14 for most, 1-10 for Spellblade)
  * @returns {number|null} XP required, or null if invalid
  */
 export function getXPRequired(className, level) {
