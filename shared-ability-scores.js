@@ -48,15 +48,15 @@ export function calculateXPBonus(score) {
  */
 export function getPrimeRequisites(className) {
     const primeReqs = {
-        'Cleric': ['WIS'],
-        'Fighter': ['STR'],
-        'Magic-User': ['INT'],
-        'Thief': ['DEX'],
-        'Dwarf': ['STR'],
-        'Elf': ['STR', 'INT'],
-        'Halfling': ['STR', 'DEX'],
-        'Gnome': ['INT'],
-        'Spellblade': ['STR', 'INT']
+        'Cleric_CLASS': ['WIS'],
+        'Fighter_CLASS': ['STR'],
+        'Magic-User_CLASS': ['INT'],
+        'Thief_CLASS': ['DEX'],
+        'Dwarf_CLASS': ['STR'],
+        'Elf_CLASS': ['STR', 'INT'],
+        'Halfling_CLASS': ['STR', 'DEX'],
+        'Gnome_CLASS': ['INT'],
+        'Spellblade_CLASS': ['STR', 'INT']
     };
     return primeReqs[className] || [];
 }

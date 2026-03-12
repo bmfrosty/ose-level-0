@@ -22,10 +22,10 @@ export function getClassProgressionData(options) {
     console.log('\n=== Getting Class Progression Data ===');
     console.log(`Class: ${className}, Level: ${level}`);
     
-    const classNameWithSuffix = className + '_CLASS';
+    // className should already have _CLASS suffix
     
     // Get saving throws
-    const savingThrows = classData.getSavingThrows(classNameWithSuffix, level);
+    const savingThrows = classData.getSavingThrows(className, level);
     console.log('\nSaving Throws:');
     console.log(`  Death/Poison: ${savingThrows.death}`);
     console.log(`  Wands: ${savingThrows.wands}`);
@@ -34,13 +34,13 @@ export function getClassProgressionData(options) {
     console.log(`  Spells/Rods/Staves: ${savingThrows.spells}`);
     
     // Get attack bonus
-    const attackBonus = classData.getAttackBonus(classNameWithSuffix, level);
+    const attackBonus = classData.getAttackBonus(className, level);
     console.log(`\nAttack Bonus: ${attackBonus >= 0 ? '+' : ''}${attackBonus}`);
     
     // Get XP tracking
     const currentXP = 0;
-    const xpForCurrentLevel = classData.getXPRequired(classNameWithSuffix, level);
-    const xpForNextLevel = classData.getXPRequired(classNameWithSuffix, level + 1);
+    const xpForCurrentLevel = classData.getXPRequired(className, level);
+    const xpForNextLevel = classData.getXPRequired(className, level + 1);
     const xpToNextLevel = xpForNextLevel ? xpForNextLevel - currentXP : null;
     
     console.log(`\nXP Tracking:`);
@@ -94,7 +94,7 @@ export function getClassFeatures(options) {
     console.log('\n=== Getting Class-Specific Features ===');
     console.log(`Class: ${className}, Level: ${level}`);
     
-    const classNameWithSuffix = className + '_CLASS';
+    // className should already have _CLASS suffix
     
     const features = {
         spellSlots: null,
@@ -103,10 +103,13 @@ export function getClassFeatures(options) {
         classAbilities: []
     };
     
+    // Extract base class name without _CLASS suffix for comparisons
+    const baseClassName = className.replace('_CLASS', '');
+    
     // Spell slots for spellcasters
     const spellcasters = ['Cleric', 'Magic-User', 'Elf', 'Gnome', 'Spellblade'];
-    if (spellcasters.includes(className)) {
-        features.spellSlots = classData.getSpellSlots(classNameWithSuffix, level);
+    if (spellcasters.includes(baseClassName)) {
+        features.spellSlots = classData.getSpellSlots(className, level);
         console.log('\nSpell Slots:');
         if (features.spellSlots) {
             Object.entries(features.spellSlots).forEach(([spellLevel, slots]) => {
@@ -120,7 +123,7 @@ export function getClassFeatures(options) {
     }
     
     // Thief skills
-    if (className === 'Thief') {
+    if (baseClassName === 'Thief') {
         features.thiefSkills = classData.getThiefSkills(level);
         console.log('\nThief Skills:');
         if (features.thiefSkills) {
@@ -131,7 +134,7 @@ export function getClassFeatures(options) {
     }
     
     // Turn undead for clerics
-    if (className === 'Cleric') {
+    if (baseClassName === 'Cleric') {
         // Use HD categories instead of monster names
         const undeadHDTypes = ['1HD', '2HD', '2*HD', '3HD', '4HD', '5HD', '6HD', '7-9HD'];
         features.turnUndead = {};
@@ -152,7 +155,7 @@ export function getClassFeatures(options) {
     }
     
     // Class abilities
-    const allAbilities = ClassDataShared.getAbilitiesAtLevel(classNameWithSuffix, level);
+    const allAbilities = ClassDataShared.getAbilitiesAtLevel(className, level);
     if (allAbilities && allAbilities.length > 0) {
         features.classAbilities = allAbilities;
         console.log('\nClass Abilities:');

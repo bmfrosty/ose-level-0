@@ -11,7 +11,14 @@ import {
     formatModifier,
     getRaceDisplayName,
     getClassDisplayName,
-    getAvailableClasses
+    getAvailableClasses,
+    readAbilityScores as readScoresFromInputs,
+    getMinimumScores,
+    getClassRequirements,
+    getHitDiceSize,
+    calculateXPBonus,
+    getPrimeRequisites,
+    applyRacialAdjustments
 } from './advanced-utils.js';
 import {
     rollAbilitiesAdvanced,
@@ -30,10 +37,77 @@ let selectedLevel = null;
 let selectedRace = null;
 let selectedClass = null;
 let smoothifiedMode = true;
-let allowNonTraditional = false;
-let allowElfSpellbladePast10 = false;
-let toughCharacters = false;
+let raceClassMode = 'strict'; // 'strict', 'traditional-extended', 'allow-all'
+let primeRequisite13 = false;
+let healthyCharacters = false;
+let useFixedScores = false;
+let showUndeadNames = false;
 let includeLevel0HP = false;
+let abilityScores = {
+    STR: 3,
+    INT: 3,
+    WIS: 3,
+    DEX: 3,
+    CON: 3,
+    CHA: 3
+};
+
+/**
+ * Read ability scores from inputs and update state
+ */
+function readAbilityScores() {
+    abilityScores = readScoresFromInputs();
+    updateModifiers();
+}
+
+/**
+ * Update ability modifiers display
+ */
+export function updateModifiers() {
+    ['STR', 'INT', 'WIS', 'DEX', 'CON', 'CHA'].forEach(ability => {
+        const score = parseInt(document.getElementById(`score${ability}`).value) || 3;
+        const modifier = calculateModifier(score);
+        document.getElementById(`mod${ability}`).textContent = formatModifier(modifier);
+    });
+    
+    updateXPBonus();
+    updateTestHPButton();
+}
+
+/**
+ * Update XP bonus display
+ */
+export function updateXPBonus() {
+    if (!selectedClass) {
+        document.getElementById('xpBonusDisplay').style.display = 'none';
+        return;
+    }
+    
+    const primeReqs = getPrimeRequisites(selectedClass);
+    if (primeReqs.length === 0) {
+        document.getElementById('xpBonusDisplay').style.display = 'none';
+        return;
+    }
+    
+    let totalBonus = 0;
+    primeReqs.forEach(ability => {
+        const score = parseInt(document.getElementById(`score${ability}`).value) || 3;
+        totalBonus += calculateXPBonus(score);
+    });
+    const avgBonus = Math.floor(totalBonus / primeReqs.length);
+    
+    const bonusText = avgBonus >= 0 ? `+${avgBonus}%` : `${avgBonus}%`;
+    document.getElementById('xpBonusText').textContent = bonusText;
+    document.getElementById('xpBonusDisplay').style.display = 'block';
+}
+
+/**
+ * Update Roll Abilities button state
+ */
+function updateRollButtonState() {
+    const rollButton = document.getElementById('rollAbilitiesButton');
+    rollButton.disabled = useFixedScores;
+}
 
 /**
  * Initialize level selection (radio buttons 1-14)
@@ -102,6 +176,98 @@ export function initializeRaceClassGrid() {
 }
 
 /**
+ * Check if HP rolling is possible
+ * @returns {Object} Object with canRoll boolean and reasons array
+ */
+function canRollHP() {
+    const reasons = [];
+    
+    if (!selectedLevel) {
+        reasons.push('No level selected');
+    }
+    
+    if (!selectedRace) {
+        reasons.push('No race selected');
+    }
+    
+    if (!selectedClass) {
+        reasons.push('No class selected');
+    }
+    
+    if (selectedLevel && selectedRace && selectedClass) {
+        const currentScores = readScoresFromInputs();
+        
+        const classReqs = getClassRequirements(selectedClass);
+        Object.entries(classReqs).forEach(([ability, minScore]) => {
+            if (currentScores[ability] < minScore) {
+                reasons.push(`${ability} must be ≥ ${minScore} for ${getClassDisplayName(selectedClass)}`);
+            }
+        });
+        
+        if (healthyCharacters && !includeLevel0HP) {
+            const conModifier = calculateModifier(currentScores.CON);
+            const hitDiceSize = getHitDiceSize(selectedClass);
+            const maxHP = hitDiceSize + conModifier;
+            
+            if (maxHP < 2) {
+                reasons.push(`Healthy Characters impossible: max HP = ${maxHP} (1d${hitDiceSize} + ${formatModifier(conModifier)})`);
+            }
+        }
+    }
+    
+    return {
+        canRoll: reasons.length === 0,
+        reasons: reasons
+    };
+}
+
+/**
+ * Update test HP button state
+ */
+export function updateTestHPButton() {
+    const testHPButton = document.getElementById('testHPButton');
+    const testHPWarning = document.getElementById('testHPWarning');
+    const testHPWarningText = document.getElementById('testHPWarningText');
+    
+    const result = canRollHP();
+    
+    if (result.canRoll) {
+        testHPButton.disabled = false;
+        testHPWarning.style.display = 'none';
+    } else {
+        testHPButton.disabled = true;
+        testHPWarning.style.display = 'block';
+        testHPWarningText.textContent = result.reasons.join('; ');
+    }
+}
+
+/**
+ * Handle Test HP button click
+ */
+function handleTestHP() {
+    if (!selectedLevel || !selectedRace || !selectedClass) {
+        alert('Please select a level, race, and class first!');
+        return;
+    }
+    
+    readAbilityScores();
+    
+    const conModifier = calculateModifier(abilityScores.CON);
+    const classData = smoothifiedMode ? ClassDataGygar : ClassDataOSE;
+    
+    const totalHP = rollHitPoints(
+        selectedClass, 
+        selectedLevel, 
+        conModifier, 
+        classData, 
+        includeLevel0HP, 
+        healthyCharacters
+    );
+    
+    console.log('Test HP Roll:', totalHP);
+}
+
+/**
  * Update UI based on selections
  */
 export function updateUI() {
@@ -127,17 +293,34 @@ export function updateUI() {
         });
     }
 
-    // Enable/disable buttons based on traditional combinations
+    // Enable/disable buttons based on race/class mode
     const buttons = document.querySelectorAll('.grid-button');
     buttons.forEach(button => {
         const race = button.dataset.race;
         const className = button.dataset.class;
         
+        // Determine allowNonTraditional based on raceClassMode
+        let allowNonTraditional = false;
+        if (raceClassMode === 'traditional-extended') {
+            // Traditional + Spellblade for all races
+            allowNonTraditional = false;
+        } else if (raceClassMode === 'allow-all') {
+            // All combinations allowed
+            allowNonTraditional = true;
+        }
+        // else raceClassMode === 'strict' - use traditional combinations
+        
         // Get available classes for this race
         const availableClasses = getAvailableClasses(race, allowNonTraditional);
         
-        // Check if this combination is available
-        const isAvailable = availableClasses.includes(className);
+        // Check if class is available for this race
+        let isAvailable = availableClasses.includes(className);
+        
+        // For traditional-extended mode, Spellblade is only available for Human and Elf
+        // (not all races like in allow-all mode)
+        if (raceClassMode === 'traditional-extended' && className === 'Spellblade' && smoothifiedMode) {
+            isAvailable = (race === 'Human' || race === 'Elf');
+        }
         
         if (isAvailable) {
             button.disabled = false;
@@ -152,9 +335,69 @@ export function updateUI() {
         }
     });
 
+    // Update XP bonus and Test HP button
+    updateXPBonus();
+    updateTestHPButton();
+
     // Enable generate button if level, race, and class are selected
     const generateButton = document.getElementById('generateButton');
     generateButton.disabled = !(selectedLevel && selectedRace && selectedClass);
+}
+
+/**
+ * Handle Roll Abilities button click
+ */
+function handleRollAbilities() {
+    // Get minimum scores (always 3 for Advanced Mode)
+    const minimumScores = getMinimumScores();
+    
+    // Get class requirements if a class is selected
+    let classRequirements = {};
+    if (selectedClass) {
+        classRequirements = getClassRequirements(selectedClass);
+    }
+    
+    // Merge minimums: use the higher of user minimum or class requirement
+    const effectiveMinimums = { ...minimumScores };
+    Object.keys(classRequirements).forEach(ability => {
+        effectiveMinimums[ability] = Math.max(
+            effectiveMinimums[ability] || 3,
+            classRequirements[ability]
+        );
+    });
+    
+    // Roll abilities with racial adjustments
+    const { baseScores, adjustedScores } = rollAbilitiesAdvanced(
+        effectiveMinimums,
+        selectedRace,
+        selectedClass,
+        false, // toughCharacters - removed from Advanced Mode
+        primeRequisite13
+    );
+    
+    // Update state with adjusted scores
+    abilityScores = adjustedScores;
+    
+    // Update UI with base scores (before racial adjustments)
+    document.getElementById('scoreSTR').value = baseScores.STR;
+    document.getElementById('scoreINT').value = baseScores.INT;
+    document.getElementById('scoreWIS').value = baseScores.WIS;
+    document.getElementById('scoreDEX').value = baseScores.DEX;
+    document.getElementById('scoreCON').value = baseScores.CON;
+    document.getElementById('scoreCHA').value = baseScores.CHA;
+    
+    updateModifiers();
+}
+
+/**
+ * Handle Roll Abilities & Generate Character button click
+ */
+function handleRollAndGenerate() {
+    // First, roll abilities
+    handleRollAbilities();
+    
+    // Then generate character
+    generateCharacter();
 }
 
 /**
@@ -167,25 +410,49 @@ export function initializeEventListeners() {
         updateUI();
     });
 
-    document.getElementById('allowNonTraditional').addEventListener('change', (e) => {
-        allowNonTraditional = e.target.checked;
-        updateUI();
+    document.getElementById('primeRequisite13').addEventListener('change', (e) => {
+        primeRequisite13 = e.target.checked;
     });
 
-    document.getElementById('allowElfSpellbladePast10').addEventListener('change', (e) => {
-        allowElfSpellbladePast10 = e.target.checked;
+    document.getElementById('healthyCharacters').addEventListener('change', (e) => {
+        healthyCharacters = e.target.checked;
+        updateTestHPButton();
     });
 
-    document.getElementById('toughGuys').addEventListener('change', (e) => {
-        toughCharacters = e.target.checked;
+    document.getElementById('useFixedScores').addEventListener('change', (e) => {
+        useFixedScores = e.target.checked;
+        updateRollButtonState();
+    });
+
+    document.getElementById('showUndeadNames').addEventListener('change', (e) => {
+        showUndeadNames = e.target.checked;
     });
 
     document.getElementById('includeLevel0HP').addEventListener('change', (e) => {
         includeLevel0HP = e.target.checked;
+        updateTestHPButton();
+    });
+
+    // Race/Class Mode radio button listeners
+    document.querySelectorAll('input[name="raceClassMode"]').forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            raceClassMode = e.target.value;
+            updateUI();
+        });
+    });
+
+    // Ability score input listeners
+    ['STR', 'INT', 'WIS', 'DEX', 'CON', 'CHA'].forEach(ability => {
+        const input = document.getElementById(`score${ability}`);
+        input.addEventListener('change', readAbilityScores);
+        input.addEventListener('input', updateModifiers);
     });
 
     // Button event listeners
+    document.getElementById('rollAbilitiesButton').addEventListener('click', handleRollAbilities);
+    document.getElementById('testHPButton').addEventListener('click', handleTestHP);
     document.getElementById('generateButton').addEventListener('click', generateCharacter);
+    document.getElementById('rollAndGenerateButton').addEventListener('click', handleRollAndGenerate);
 }
 
 /**
@@ -205,38 +472,49 @@ export function generateCharacter() {
     console.log('Race:', selectedRace, '(Display:', getRaceDisplayName(selectedRace) + ')');
     console.log('Class:', selectedClass, '(Display:', getClassDisplayName(selectedClass) + ')');
     console.log('Mode:', smoothifiedMode ? 'Smoothified' : 'Normal');
-    console.log('Tough Characters:', toughCharacters);
+    console.log('Prime Requisite 13+:', primeRequisite13);
+    console.log('Healthy Characters:', healthyCharacters);
     console.log('Include Level 0 HP:', includeLevel0HP);
+    console.log('Use Fixed Scores:', useFixedScores);
     
     // Determine class data module
     const classData = smoothifiedMode ? ClassDataGygar : ClassDataOSE;
     console.log('Using class data:', smoothifiedMode ? 'Gygar (Smoothified)' : 'OSE (Normal)');
     
-    // Get minimum scores (always 3 for Advanced Mode)
-    const minimumScores = {
-        STR: 3,
-        INT: 3,
-        WIS: 3,
-        DEX: 3,
-        CON: 3,
-        CHA: 3
-    };
+    let baseScores, adjustedScores;
     
-    console.log('\n--- Rolling Ability Scores ---');
-    console.log('Minimum scores:', minimumScores);
-    console.log('Tough Characters:', toughCharacters);
-    
-    // Roll ability scores with racial adjustments
-    const { baseScores, adjustedScores } = rollAbilitiesAdvanced(
-        minimumScores,
-        selectedRace,
-        selectedClass,
-        toughCharacters,
-        false // primeRequisite13 - not used in Advanced Mode
-    );
-    
-    console.log('Base scores (before racial adjustments):', baseScores);
-    console.log('Adjusted scores (after racial adjustments):', adjustedScores);
+    if (useFixedScores) {
+        // Use scores from input fields
+        console.log('\n--- Using Fixed Ability Scores ---');
+        baseScores = readScoresFromInputs();
+        console.log('Base scores (from inputs):', baseScores);
+        
+        // Apply racial adjustments
+        adjustedScores = applyRacialAdjustments(baseScores, selectedRace);
+        console.log('Adjusted scores (after racial adjustments):', adjustedScores);
+    } else {
+        // Roll ability scores
+        const minimumScores = getMinimumScores();
+        
+        console.log('\n--- Rolling Ability Scores ---');
+        console.log('Minimum scores:', minimumScores);
+        console.log('Prime Requisite 13+:', primeRequisite13);
+        
+        // Roll ability scores with racial adjustments
+        const result = rollAbilitiesAdvanced(
+            minimumScores,
+            selectedRace,
+            selectedClass,
+            false, // toughCharacters - removed from Advanced Mode
+            primeRequisite13
+        );
+        
+        baseScores = result.baseScores;
+        adjustedScores = result.adjustedScores;
+        
+        console.log('Base scores (before racial adjustments):', baseScores);
+        console.log('Adjusted scores (after racial adjustments):', adjustedScores);
+    }
     
     // Calculate modifiers from adjusted scores
     const abilityModifiers = {};
@@ -245,11 +523,21 @@ export function generateCharacter() {
     }
     console.log('Ability modifiers (from adjusted scores):', abilityModifiers);
     
+    // Get racial abilities BEFORE rolling HP (needed for Blessed ability)
+    console.log('\n--- Getting Racial Abilities ---');
+    console.log('Race:', selectedRace);
+    console.log('Race/Class Mode:', raceClassMode);
+    const racialAbilitiesForBlessed = getRacialAbilities(selectedRace, raceClassMode);
+    console.log('Racial abilities:', racialAbilitiesForBlessed);
+    const hasBlessed = racialAbilitiesForBlessed.some(ability => ability.includes('Blessed'));
+    console.log('Has Blessed ability:', hasBlessed);
+    
     // Roll hit points
     console.log('\n--- Rolling Hit Points ---');
     const conModifier = abilityModifiers.CON;
     console.log('CON modifier:', conModifier);
     console.log('Include Level 0 HP:', includeLevel0HP);
+    console.log('Blessed:', hasBlessed);
     
     const hp = rollHitPoints(
         selectedClass,
@@ -257,15 +545,11 @@ export function generateCharacter() {
         conModifier,
         classData,
         includeLevel0HP,
-        false // healthyCharacters - not used in Advanced Mode
+        false, // healthyCharacters - not used in Advanced Mode
+        hasBlessed // blessed - roll HP twice, take best
     );
     
     console.log('Total HP:', hp);
-    
-    // Get racial abilities
-    console.log('\n--- Getting Racial Abilities ---');
-    const racialAbilities = getRacialAbilities(selectedRace);
-    console.log('Racial abilities:', racialAbilities);
     
     // Create character object
     console.log('\n--- Creating Character Object ---');
@@ -278,7 +562,8 @@ export function generateCharacter() {
         hp: hp,
         classData: classData,
         ClassDataShared: ClassDataShared,
-        smoothifiedMode: smoothifiedMode
+        smoothifiedMode: smoothifiedMode,
+        raceClassMode: raceClassMode
     });
     
     console.log('Character object created:', character);
@@ -383,9 +668,24 @@ export function displayCharacter(character) {
         ${character.turnUndead ? `
             <h4>Turn Undead</h4>
             <p>${Object.entries(character.turnUndead).map(([type, target]) => {
+                // HD to monster name mapping
+                const monsterNames = {
+                    '1HD': 'Skeleton',
+                    '2HD': 'Zombie',
+                    '2*HD': 'Ghoul',
+                    '3HD': 'Wight',
+                    '4HD': 'Wraith',
+                    '5HD': 'Mummy',
+                    '6HD': 'Spectre',
+                    '7-9HD': 'Vampire'
+                };
+                
+                // Use monster name if checkbox is checked, otherwise use HD
+                const displayType = showUndeadNames ? monsterNames[type] || type : type;
+                
                 // Display target value, handling null/undefined
                 const displayTarget = target !== null && target !== undefined ? target : '-';
-                return `<strong>${type}:</strong> ${displayTarget}`;
+                return `<strong>${displayType}:</strong> ${displayTarget}`;
             }).join(' &nbsp; ')}</p>
         ` : ''}
         
@@ -423,6 +723,8 @@ export function initialize() {
     initializeLevelSelection();
     initializeRaceClassGrid();
     initializeEventListeners();
+    updateRollButtonState();
+    updateModifiers();
     updateUI();
 }
 

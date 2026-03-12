@@ -37,7 +37,6 @@ let selectedClass = null;
 let smoothifiedMode = true;
 let allowDemihumanOverride = false;
 let allowElfSpellbladePast10 = false;
-let toughCharacters = false;
 let primeRequisite13 = false;
 let healthyCharacters = false;
 let includeLevel0HP = false;
@@ -98,6 +97,10 @@ export function initializeClassSelection() {
     radios.forEach(radio => {
         radio.addEventListener('change', () => {
             selectedClass = radio.value;
+            // Add _CLASS suffix for consistency with class data files
+            if (selectedClass && !selectedClass.endsWith('_CLASS')) {
+                selectedClass = `${selectedClass}_CLASS`;
+            }
             updateUI();
         });
     });
@@ -106,6 +109,10 @@ export function initializeClassSelection() {
     const checkedRadio = document.querySelector('input[name="class"]:checked');
     if (checkedRadio) {
         selectedClass = checkedRadio.value;
+        // Add _CLASS suffix for consistency with class data files
+        if (selectedClass && !selectedClass.endsWith('_CLASS')) {
+            selectedClass = `${selectedClass}_CLASS`;
+        }
     }
 }
 
@@ -185,9 +192,9 @@ export function updateUI() {
         spellbladeRadio.style.display = 'inline-flex';
     } else {
         spellbladeRadio.style.display = 'none';
-        if (selectedClass === 'Spellblade') {
+        if (selectedClass === 'Spellblade_CLASS') {
             // Switch to Fighter if Spellblade was selected
-            selectedClass = 'Fighter';
+            selectedClass = 'Fighter_CLASS';
             document.getElementById('classFighter').checked = true;
             spellbladeInput.checked = false;
         }
@@ -202,9 +209,9 @@ export function updateUI() {
             const limit = demihumanLimits[className];
             if (limit && selectedLevel > limit) {
                 radio.disabled = true;
-                if (selectedClass === className) {
+                if (selectedClass === `${className}_CLASS`) {
                     // Switch to Fighter if current selection is disabled
-                    selectedClass = 'Fighter';
+                    selectedClass = 'Fighter_CLASS';
                     document.getElementById('classFighter').checked = true;
                     radio.checked = false;
                 }
@@ -302,7 +309,7 @@ function handleRollAbilities() {
         );
     });
     
-    const scores = rollAbilities(effectiveMinimums, toughCharacters, selectedClass, primeRequisite13);
+    const scores = rollAbilities(effectiveMinimums, false, selectedClass, primeRequisite13);
     
     // Update state
     abilityScores = scores;
@@ -560,10 +567,6 @@ export function initializeEventListeners() {
     document.getElementById('allowElfSpellbladePast10').addEventListener('change', (e) => {
         allowElfSpellbladePast10 = e.target.checked;
         updateUI();
-    });
-
-    document.getElementById('toughCharacters').addEventListener('change', (e) => {
-        toughCharacters = e.target.checked;
     });
 
     document.getElementById('primeRequisite13').addEventListener('change', (e) => {

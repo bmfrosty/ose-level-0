@@ -85,14 +85,71 @@ export function rollAbilitiesAdvanced(minimumScores, race, className, toughChara
 /**
  * Get racial abilities for a race (not class-dependent in Advanced Mode)
  * @param {string} race - Race name (with _RACE suffix)
+ * @param {string} raceClassMode - Race/class mode ('strict', 'traditional-extended', 'allow-all')
  * @returns {Array} Array of racial ability strings
  */
-export function getRacialAbilities(race) {
+export function getRacialAbilities(race, raceClassMode = 'strict') {
+    console.log('[getRacialAbilities] Called with race:', race, 'raceClassMode:', raceClassMode);
+    
+    // For humans, only return abilities if level caps are lifted
+    const humanAbilitiesEnabled = (raceClassMode === 'traditional-extended' || raceClassMode === 'allow-all');
+    console.log('[getRacialAbilities] humanAbilitiesEnabled:', humanAbilitiesEnabled);
+    
     // Import from global scope (loaded via script tag in browser)
     if (typeof window !== 'undefined' && typeof window.getRacialAbilities !== 'undefined') {
-        return window.getRacialAbilities(race);
+        console.log('[getRacialAbilities] window.getRacialAbilities exists');
+        
+        // racial-abilities.js checks for BOTH 'advanced' and 'humanRacialAbilities' checkboxes
+        // We need to create/set both
+        
+        const originalAdvancedCheckbox = document.getElementById('advanced');
+        const originalHumanCheckbox = document.getElementById('humanRacialAbilities');
+        console.log('[getRacialAbilities] originalAdvancedCheckbox:', originalAdvancedCheckbox);
+        console.log('[getRacialAbilities] originalHumanCheckbox:', originalHumanCheckbox);
+        
+        // Create temp checkboxes
+        const tempAdvancedCheckbox = document.createElement('input');
+        tempAdvancedCheckbox.type = 'checkbox';
+        tempAdvancedCheckbox.id = 'advanced';
+        tempAdvancedCheckbox.checked = true; // Always true for Advanced Mode
+        
+        const tempHumanCheckbox = document.createElement('input');
+        tempHumanCheckbox.type = 'checkbox';
+        tempHumanCheckbox.id = 'humanRacialAbilities';
+        tempHumanCheckbox.checked = humanAbilitiesEnabled;
+        
+        // Add temp checkboxes if they don't exist
+        if (!originalAdvancedCheckbox) {
+            console.log('[getRacialAbilities] Adding temp advanced checkbox, checked: true');
+            document.body.appendChild(tempAdvancedCheckbox);
+        }
+        
+        if (!originalHumanCheckbox) {
+            console.log('[getRacialAbilities] Adding temp human checkbox, checked:', humanAbilitiesEnabled);
+            document.body.appendChild(tempHumanCheckbox);
+        } else {
+            console.log('[getRacialAbilities] Original human checkbox exists, setting checked to:', humanAbilitiesEnabled);
+            originalHumanCheckbox.checked = humanAbilitiesEnabled;
+        }
+        console.log('[getRacialAbilities] Calling window.getRacialAbilities with:', race);
+        const abilities = window.getRacialAbilities(race);
+        console.log('[getRacialAbilities] Returned abilities:', abilities);
+        
+        // Clean up temp checkboxes
+        if (!originalAdvancedCheckbox && tempAdvancedCheckbox.parentNode) {
+            console.log('[getRacialAbilities] Removing temp advanced checkbox');
+            tempAdvancedCheckbox.parentNode.removeChild(tempAdvancedCheckbox);
+        }
+        
+        if (!originalHumanCheckbox && tempHumanCheckbox.parentNode) {
+            console.log('[getRacialAbilities] Removing temp human checkbox');
+            tempHumanCheckbox.parentNode.removeChild(tempHumanCheckbox);
+        }
+        
+        return abilities;
     }
     
+    console.log('[getRacialAbilities] window.getRacialAbilities not found, returning empty array');
     // Fallback: empty array
     return [];
 }
@@ -105,16 +162,18 @@ export function getRacialAbilities(race) {
  * @param {Object} classData - Class data module (OSE or Gygar)
  * @param {boolean} includeLevel0HP - Whether to include level 0 HP
  * @param {boolean} healthyCharacters - Whether Healthy Characters is enabled
+ * @param {boolean} blessed - Whether character has Blessed ability (roll twice, take best)
  * @returns {number} Total HP
  */
-export function rollHitPoints(className, level, conModifier, classData, includeLevel0HP, healthyCharacters) {
+export function rollHitPoints(className, level, conModifier, classData, includeLevel0HP, healthyCharacters, blessed = false) {
     return sharedRollHitPoints({
         className,
         level,
         conModifier,
         classData,
         includeLevel0HP,
-        healthyCharacters
+        healthyCharacters,
+        blessed
     });
 }
 
@@ -164,6 +223,7 @@ export function getClassFeatures(className, level, classData, ClassDataShared) {
  * @param {Object} options.classData - Class data module
  * @param {Object} options.ClassDataShared - Shared class data module
  * @param {boolean} options.smoothifiedMode - Whether Smoothified Mode is enabled
+ * @param {string} options.raceClassMode - Race/class mode ('strict', 'traditional-extended', 'allow-all')
  * @returns {Object} Complete character object
  */
 export function createCharacterAdvanced(options) {
@@ -176,7 +236,8 @@ export function createCharacterAdvanced(options) {
         hp,
         classData,
         ClassDataShared,
-        smoothifiedMode
+        smoothifiedMode,
+        raceClassMode = 'strict'
     } = options;
     
     // Get racial adjustments for display
@@ -188,18 +249,19 @@ export function createCharacterAdvanced(options) {
     // Get class features
     const features = getClassFeatures(className, level, classData, ClassDataShared);
     
-    // Get racial abilities
-    const racialAbilities = getRacialAbilities(race);
+    // Get racial abilities (pass raceClassMode for human abilities)
+    const racialAbilities = getRacialAbilities(race, raceClassMode);
     
     // Create character object using shared function
     const character = sharedCreateCharacter({
         level,
         className,
+        mode: smoothifiedMode ? 'Smoothified' : 'Normal',
         abilityScores: adjustedScores,
         hp,
-        classData,
-        ClassDataShared,
-        smoothifiedMode
+        progressionData: progression,
+        features: features,
+        racialAbilities: racialAbilities
     });
     
     // Add Advanced Mode specific properties

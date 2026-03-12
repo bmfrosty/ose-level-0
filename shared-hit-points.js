@@ -60,6 +60,7 @@ export function parseHitDice(hitDiceString) {
  * @param {Object} options.classData - Class data module (OSE or Gygar)
  * @param {boolean} [options.includeLevel0HP=false] - Whether to include level 0 HP
  * @param {boolean} [options.healthyCharacters=false] - Whether Healthy Characters is enabled
+ * @param {boolean} [options.blessed=false] - Whether character has Blessed ability (roll twice, take best)
  * @returns {number} Total HP
  */
 export function rollHitPoints(options) {
@@ -69,11 +70,15 @@ export function rollHitPoints(options) {
         conModifier,
         classData,
         includeLevel0HP = false,
-        healthyCharacters = false
+        healthyCharacters = false,
+        blessed = false
     } = options;
     
     console.log('\n=== Rolling Hit Points ===');
     console.log(`Class: ${className}, Level: ${level}, CON Modifier: ${formatModifier(conModifier)}`);
+    if (blessed) {
+        console.log('✨ Blessed: Rolling each die twice, taking best result');
+    }
     
     let totalHP = 0;
     let level0HP = 0;
@@ -86,7 +91,17 @@ export function rollHitPoints(options) {
         
         do {
             l0Attempts++;
-            l0Roll = rollSingleDie(4);
+            
+            if (blessed) {
+                // Blessed: Roll twice, take best
+                const roll1 = rollSingleDie(4);
+                const roll2 = rollSingleDie(4);
+                l0Roll = Math.max(roll1, roll2);
+                console.log(`  Blessed rolls: ${roll1}, ${roll2} → taking ${l0Roll}`);
+            } else {
+                l0Roll = rollSingleDie(4);
+            }
+            
             l0HP = l0Roll + conModifier;
             
             // Minimum 1 HP
@@ -110,8 +125,8 @@ export function rollHitPoints(options) {
     console.log(`\n--- Rolling HP for Levels 1-${level} ---`);
     
     for (let lvl = 1; lvl <= level; lvl++) {
-        const classNameWithSuffix = className + '_CLASS';
-        const hitDiceString = classData.getHitDice(classNameWithSuffix, lvl);
+        // className should already have _CLASS suffix
+        const hitDiceString = classData.getHitDice(className, lvl);
         const hitDice = parseHitDice(hitDiceString);
         
         let levelHP, rolls;
@@ -123,9 +138,18 @@ export function rollHitPoints(options) {
             levelHP = hitDice.bonus;
             
             // Roll the die
-            const die = rollSingleDie(hitDice.sides);
-            rolls.push(die);
-            levelHP += die;
+            if (blessed) {
+                // Blessed: Roll twice, take best
+                const roll1 = rollSingleDie(hitDice.sides);
+                const roll2 = rollSingleDie(hitDice.sides);
+                const die = Math.max(roll1, roll2);
+                rolls.push(`${roll1},${roll2}→${die}`);
+                levelHP += die;
+            } else {
+                const die = rollSingleDie(hitDice.sides);
+                rolls.push(die);
+                levelHP += die;
+            }
             
             // Add CON modifier unless asterisk is present
             if (!hitDice.noConModifier) {

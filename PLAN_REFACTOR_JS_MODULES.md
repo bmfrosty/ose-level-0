@@ -522,8 +522,21 @@ These modules are already well-organized:
   - [ ] Add "Healthy Characters" checkbox
   - [ ] Keep "Include Level 0 HP" checkbox
   - [ ] Add "Show Undead Names" checkbox
-  - [ ] Keep "Allow non-traditional" checkbox
-  - [ ] Keep "Allow Elf/Spellblade past 10" checkbox
+- [ ] **NEW:** Add "Race/Class Restrictions" radio button section
+  - [ ] **Option 1: "Strict OSE Rules"** (default)
+    - [ ] Only traditional race/class combinations allowed
+    - [ ] Uses OSE Advanced Fantasy level limits from RACIAL_CLASS_LEVEL_LIMITS
+    - [ ] Example: Dwarf Fighter max 10, Elf Magic-User max 11, Halfling Thief max 8
+  - [ ] **Option 2: "Traditional Combinations, Extended Levels"**
+    - [ ] Only traditional race/class combinations allowed
+    - [ ] All combinations extended to level 14
+    - [ ] Example: Dwarf Fighter max 14, Elf Magic-User max 14, Halfling Thief max 14
+  - [ ] **Option 3: "Allow All Combinations (House Rules)"**
+    - [ ] Any race can take any class
+    - [ ] All combinations extended to level 14
+    - [ ] Example: Dwarf Magic-User max 14, Halfling Cleric max 14
+- [ ] **REMOVE:** "Allow non-traditional race/class combinations" checkbox (replaced by radio buttons)
+- [ ] **REMOVE:** "Allow Elf/Spellblade past 10" checkbox (replaced by radio buttons)
 - [ ] Add ability score controls
   - [ ] Add "Use fixed ability scores" checkbox
   - [ ] Add "Roll Abilities" button
@@ -532,54 +545,76 @@ These modules are already well-organized:
 - [ ] Add "Roll & Generate" button
   - [ ] Place next to "Generate Character" button
 
-#### Phase 4E2: Update advanced-ui.js - **PENDING**
-- [ ] Add new state variables
-  - [ ] Remove `toughCharacters`
-  - [ ] Add `primeRequisite13`
-  - [ ] Add `healthyCharacters`
-  - [ ] Add `useFixedScores`
-  - [ ] Add `showUndeadNames`
-  - [ ] Add `abilityScores` object
-- [ ] Add ability score functions
-  - [ ] `readAbilityScores()` - Read from input fields
-  - [ ] `updateModifiers()` - Update modifier displays
-  - [ ] `updateXPBonus()` - Update XP bonus display
-  - [ ] `updateRollButtonState()` - Enable/disable Roll button
-- [ ] Add Test HP functions
-  - [ ] `canRollHP()` - Check if HP rolling is possible
-  - [ ] `updateTestHPButton()` - Update button state and warning
-  - [ ] `handleTestHP()` - Test HP rolling handler
-- [ ] Add button handlers
-  - [ ] `handleRollAbilities()` - Roll ability scores
-  - [ ] `handleRollAndGenerate()` - Roll + generate
-- [ ] Update `generateCharacter()`
-  - [ ] Use `readAbilityScores()` if `useFixedScores` is true
-  - [ ] Use `rollAbilitiesAdvanced()` if `useFixedScores` is false
-  - [ ] Remove `toughCharacters` parameter
-  - [ ] Add `primeRequisite13` parameter
-  - [ ] Add `healthyCharacters` parameter
-- [ ] Update `displayCharacter()`
-  - [ ] Use `showUndeadNames` for Turn Undead display
-- [ ] Update event listeners
-  - [ ] Remove `toughCharacters` listener
-  - [ ] Add `primeRequisite13` listener
-  - [ ] Add `healthyCharacters` listener
-  - [ ] Add `useFixedScores` listener
-  - [ ] Add `showUndeadNames` listener
-  - [ ] Add ability score input listeners
-  - [ ] Add button listeners
+#### Phase 4E2: Update advanced-ui.js - ✅ COMPLETE
+**Breaking this into smaller steps for safety:**
 
-#### Phase 4E3: Update basic.html - **PENDING**
-- [ ] Remove "Tough Characters" checkbox
-- [ ] Keep "Strong Prime Requisites" checkbox
-- [ ] Keep "Healthy Characters" checkbox
+##### Phase 4E2a: Update state variables - ✅ COMPLETE
+- [x] Remove `toughCharacters` ✅
+- [x] Remove `allowNonTraditional` ✅
+- [x] Remove `allowElfSpellbladePast10` ✅
+- [x] Add `primeRequisite13` ✅
+- [x] Add `healthyCharacters` ✅
+- [x] Add `useFixedScores` ✅
+- [x] Add `showUndeadNames` ✅
+- [x] Add `raceClassMode` (default: 'strict') ✅
+- [x] Add `abilityScores` object ✅
 
-#### Phase 4E4: Update basic-ui.js - **PENDING**
-- [ ] Remove `toughCharacters` state variable
-- [ ] Remove `toughCharacters` event listener
-- [ ] Remove `toughCharacters` from `rollAbilities()` calls
-- [ ] Update `handleRollAbilities()` to not pass `toughCharacters`
-- [ ] Update `generateCharacter()` to not pass `toughCharacters`
+##### Phase 4E2b: Add ability score functions - ✅ COMPLETE
+- [x] Add `readAbilityScores()` - Read from input fields ✅
+- [x] Add `updateModifiers()` - Update modifier displays ✅
+- [x] Add `updateXPBonus()` - Update XP bonus display ✅
+- [x] Add `updateRollButtonState()` - Enable/disable Roll button ✅
+
+##### Phase 4E2c: Add Test HP functions - ✅ COMPLETE
+- [x] Add `canRollHP()` - Check if HP rolling is possible ✅
+- [x] Add `updateTestHPButton()` - Update button state and warning ✅
+- [x] Add `handleTestHP()` - Test HP rolling handler ✅
+
+##### Phase 4E2d: Add button handlers - ✅ COMPLETE
+- [x] Add `handleRollAbilities()` - Roll ability scores ✅
+- [x] Add `handleRollAndGenerate()` - Roll + generate ✅
+
+##### Phase 4E2e: Update updateUI() function - ✅ COMPLETE
+- [x] Replace `allowNonTraditional` with `raceClassMode` ✅
+- [x] Update button enable/disable logic based on raceClassMode ✅
+- [x] Handle 'strict', 'traditional-extended', 'allow-all' modes ✅
+
+##### Phase 4E2f: Update generateCharacter() function - ✅ COMPLETE
+- [x] Use `readAbilityScores()` if `useFixedScores` is true ✅
+- [x] Use `rollAbilitiesAdvanced()` if `useFixedScores` is false ✅
+- [x] Remove `toughCharacters` parameter ✅
+- [x] Add `primeRequisite13` parameter ✅
+- [x] Add `healthyCharacters` parameter ✅
+- [x] Use `raceClassMode` to determine level limits ✅
+
+##### Phase 4E2g: Update displayCharacter() function - ✅ COMPLETE
+- [x] Use `showUndeadNames` for Turn Undead display ✅
+
+##### Phase 4E2h: Update initializeEventListeners() - ✅ COMPLETE
+- [x] Remove `toughCharacters` listener ✅
+- [x] Remove `allowNonTraditional` listener ✅
+- [x] Remove `allowElfSpellbladePast10` listener ✅
+- [x] Add `primeRequisite13` listener ✅
+- [x] Add `healthyCharacters` listener ✅
+- [x] Add `useFixedScores` listener ✅
+- [x] Add `showUndeadNames` listener ✅
+- [x] Add `raceClassMode` radio button listeners (3 radios) ✅
+- [x] Add ability score input listeners (6 inputs) ✅
+- [x] Add `rollAbilitiesButton` listener ✅
+- [x] Add `testHPButton` listener ✅
+- [x] Add `rollAndGenerateButton` listener ✅
+
+#### Phase 4E3: Update basic.html - ✅ COMPLETE
+- [x] Remove "Tough Characters" checkbox ✅
+- [x] Keep "Strong Prime Requisites" checkbox ✅
+- [x] Keep "Healthy Characters" checkbox ✅
+
+#### Phase 4E4: Update basic-ui.js - ✅ COMPLETE
+- [x] Remove `toughCharacters` state variable ✅
+- [x] Remove `toughCharacters` event listener ✅
+- [x] Remove `toughCharacters` from `rollAbilities()` calls ✅
+- [x] Update `handleRollAbilities()` to not pass `toughCharacters` ✅
+- [x] Update `generateCharacter()` to not pass `toughCharacters` ✅
 
 #### Phase 4E5: Testing - **PENDING**
 - [ ] Test Advanced Mode with all new features

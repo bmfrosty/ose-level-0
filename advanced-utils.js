@@ -53,6 +53,11 @@ export function getClassDisplayName(className) {
  * @returns {Object} Adjustments object (e.g., {CON: 1, CHA: -1})
  */
 export function getRacialAdjustments(race) {
+    // Handle null/undefined race
+    if (!race) {
+        return { STR: 0, DEX: 0, CON: 0, INT: 0, WIS: 0, CHA: 0 };
+    }
+    
     // Normalize race name
     const raceName = race.endsWith('_RACE') ? race : `${race}_RACE`;
     
@@ -73,6 +78,11 @@ export function getRacialAdjustments(race) {
  * @returns {Object} Requirements object (e.g., {CON: 9})
  */
 export function getRacialMinimums(race) {
+    // Handle null/undefined race
+    if (!race) {
+        return {};
+    }
+    
     // Normalize race name
     const raceName = race.endsWith('_RACE') ? race : `${race}_RACE`;
     

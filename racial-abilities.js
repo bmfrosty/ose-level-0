@@ -15,79 +15,93 @@
 
 const RACIAL_CLASS_LEVEL_LIMITS = {
     "Drow_RACE": {
-        "Acrobat": 10,
-        "Assassin": 10,
-        "Cleric": 11,  // May be NPC-only at referee's option
-        "Fighter": 7,
-        "Knight": 9,
-        "Magic-User": 9,
-        "Ranger": 9,
-        "Thief": 11
+        "Acrobat_CLASS": 10,
+        "Assassin_CLASS": 10,
+        "Cleric_CLASS": 11,  // May be NPC-only at referee's option
+        "Fighter_CLASS": 7,
+        "Knight_CLASS": 9,
+        "Magic-User_CLASS": 9,
+        "Ranger_CLASS": 9,
+        "Thief_CLASS": 11
     },
     "Duergar_RACE": {
-        "Assassin": 9,
-        "Cleric": 8,  // May be NPC-only at referee's option
-        "Fighter": 9,
-        "Thief": 9
+        "Assassin_CLASS": 9,
+        "Cleric_CLASS": 8,  // May be NPC-only at referee's option
+        "Fighter_CLASS": 9,
+        "Thief_CLASS": 9
     },
     "Dwarf_RACE": {
-        "Assassin": 9,
-        "Cleric": 8,  // May be NPC-only at referee's option
-        "Fighter": 10,
-        "Thief": 9
+        "Assassin_CLASS": 9,
+        "Cleric_CLASS": 8,  // May be NPC-only at referee's option
+        "Fighter_CLASS": 10,
+        "Thief_CLASS": 9
     },
     "Elf_RACE": {
-        "Acrobat": 10,
-        "Assassin": 10,
-        "Cleric": 7,  // May be NPC-only at referee's option
-        "Druid": 8,   // May be NPC-only at referee's option
-        "Fighter": 7,
-        "Knight": 11,
-        "Magic-User": 11,
-        "Ranger": 11,
-        "Thief": 10
+        "Acrobat_CLASS": 10,
+        "Assassin_CLASS": 10,
+        "Cleric_CLASS": 7,  // May be NPC-only at referee's option
+        "Druid_CLASS": 8,   // May be NPC-only at referee's option
+        "Fighter_CLASS": 7,
+        "Knight_CLASS": 11,
+        "Magic-User_CLASS": 11,
+        "Ranger_CLASS": 11,
+        "Spellblade_CLASS": 10,
+        "Thief_CLASS": 10
     },
     "Gnome_RACE": {
-        "Assassin": 6,
-        "Cleric": 7,  // May be NPC-only at referee's option
-        "Fighter": 6,
-        "Illusionist": 7,
-        "Thief": 8
+        "Assassin_CLASS": 6,
+        "Cleric_CLASS": 7,  // May be NPC-only at referee's option
+        "Fighter_CLASS": 6,
+        "Illusionist_CLASS": 7,
+        "Thief_CLASS": 8
     },
     "Half-Elf_RACE": {
-        "Acrobat": 12,
-        "Assassin": 11,
-        "Bard": 12,
-        "Cleric": 5,
-        "Druid": 12,
-        "Fighter": 8,
-        "Knight": 12,
-        "Magic-User": 8,
-        "Paladin": 12,
-        "Ranger": 8,
-        "Thief": 12
+        "Acrobat_CLASS": 12,
+        "Assassin_CLASS": 11,
+        "Bard_CLASS": 12,
+        "Cleric_CLASS": 5,
+        "Druid_CLASS": 12,
+        "Fighter_CLASS": 8,
+        "Knight_CLASS": 12,
+        "Magic-User_CLASS": 8,
+        "Paladin_CLASS": 12,
+        "Ranger_CLASS": 8,
+        "Thief_CLASS": 12
     },
     "Halfling_RACE": {
-        "Druid": 6,  // May be NPC-only at referee's option
-        "Fighter": 6,
-        "Thief": 8
+        "Druid_CLASS": 6,  // May be NPC-only at referee's option
+        "Fighter_CLASS": 6,
+        "Thief_CLASS": 8
     },
     "Half-Orc_RACE": {
-        "Acrobat": 8,
-        "Assassin": 8,
-        "Cleric": 4,
-        "Fighter": 10,
-        "Thief": 8
+        "Acrobat_CLASS": 8,
+        "Assassin_CLASS": 8,
+        "Cleric_CLASS": 4,
+        "Fighter_CLASS": 10,
+        "Thief_CLASS": 8
     },
     "Svirfneblin_RACE": {
-        "Assassin": 8,
-        "Cleric": 7,  // May be NPC-only at referee's option
-        "Fighter": 6,
-        "Illusionist": 7,
-        "Thief": 8
+        "Assassin_CLASS": 8,
+        "Cleric_CLASS": 7,  // May be NPC-only at referee's option
+        "Fighter_CLASS": 6,
+        "Illusionist_CLASS": 7,
+        "Thief_CLASS": 8
     },
     "Human_RACE": {
-        // Humans have no level limits
+        // Humans have a maximum level of 14 in all classes
+        "Acrobat_CLASS": 14,
+        "Assassin_CLASS": 14,
+        "Bard_CLASS": 14,
+        "Cleric_CLASS": 14,
+        "Druid_CLASS": 14,
+        "Fighter_CLASS": 14,
+        "Illusionist_CLASS": 14,
+        "Knight_CLASS": 14,
+        "Magic-User_CLASS": 14,
+        "Paladin_CLASS": 14,
+        "Ranger_CLASS": 14,
+        "Thief_CLASS": 14,
+        "Spellblade_CLASS": 14
     }
 };
 
@@ -105,11 +119,6 @@ function getMaxLevel(race, className, isSmootified = false) {
     }
     
     const normalizedRace = normalizeRaceName(race);
-    
-    // Humans have no level limits
-    if (normalizedRace === "Human_RACE") {
-        return null;  // null = unlimited
-    }
     
     // Look up race/class combination
     const raceLimits = RACIAL_CLASS_LEVEL_LIMITS[normalizedRace];
