@@ -109,8 +109,11 @@
             <label for="chaMin">CHA:</label>
             <input type="number" id="chaMin" value="3" min="3" max="18"><br><br>
         </div>
-        <label for="toughGuys">
-            <input type="checkbox" id="toughGuys"> Tough Guys (Requires STR/DEX/INT/WIS ≥ 13 and HP ≥ 2)
+        <label for="bornAdventurers">
+            <input type="checkbox" id="bornAdventurers"> Born Adventurers (Require at least one of STR/DEX/INT/WIS ≥ 13)
+        </label>
+        <label for="healthyCharacters">
+            <input type="checkbox" id="healthyCharacters"> Healthy Characters (Require HP ≥ 2 at level 0)
         </label>
         <label for="advanced">
             <input type="checkbox" id="advanced" checked> Advanced Mode (Racial ability modifiers & minimums for all races)
@@ -275,18 +278,26 @@
 
     <div id="result"></div>
 
+    <!-- External libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    
+    <!-- Shared race names (must load FIRST to avoid conflicts) -->
+    <script src="shared-race-names.js"></script>
+    
+    <!-- Legacy non-module scripts (loaded globally) -->
     <script src="background-tables.js"></script>
     <script src="racial-abilities.js"></script>
     <script src="names-tables.js"></script>
-    <script src="dice-utils.js"></script>
     <script src="ose-modifiers.js"></script>
     <script src="race-adjustments.js"></script>
     <script src="markdown-generator.js"></script>
-    <script src="character-utils.js"></script>
-    <script src="character-display.js"></script>
-    <script src="main-generator.js"></script>
     <script src="canvas-sheet-renderer.js"></script>
     <script src="canvas-generator.js"></script>
+    
+    <!-- ES6 Module - Main UI -->
+    <script type="module">
+        import { initialize } from './0level-ui.js';
+        // initialize() is called automatically by the module
+    </script>
 </body>
 </html>

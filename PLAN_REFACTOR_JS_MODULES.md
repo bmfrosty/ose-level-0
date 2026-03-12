@@ -410,32 +410,70 @@ These modules are already well-organized:
   - [ ] Add "Healthy Characters" checkbox
   - [ ] Update descriptions to match Basic Mode terminology
 
-#### Phase 3C: Create 0level Modules
-- [ ] Create `0level-utils.js` (similar to basic-utils.js):
-  - [ ] Import shared-ability-scores.js
-  - [ ] Add 0level-specific functions
-  - [ ] Keep only 0level-unique logic
-- [ ] Create `0level-character-gen.js` (similar to basic-character-gen.js):
-  - [ ] Import shared-hit-points.js
-  - [ ] Import shared-character.js
-  - [ ] Add 0level-specific generation logic
-  - [ ] Use shared rollHitPoints() function
-  - [ ] Support "Born Adventurers" option
-  - [ ] Support "Healthy Characters" option
-- [ ] Create `0level-ui.js` (similar to basic-ui.js):
-  - [ ] Extract UI logic from main-generator.js
-  - [ ] Import 0level-utils.js and 0level-character-gen.js
-  - [ ] Add ES6 exports
-  - [ ] Handle "Born Adventurers" checkbox
-  - [ ] Handle "Healthy Characters" checkbox
+#### Phase 3C1: Create 0level-utils.js - ✅ COMPLETE
+- [x] Read dice-utils.js to understand existing utility functions
+- [x] Read character-utils.js to understand character-specific utilities
+- [x] Create `0level-utils.js` (similar to basic-utils.js):
+  - [x] Import shared-ability-scores.js
+  - [x] Extract utility functions from dice-utils.js and character-utils.js
+  - [x] Add 0level-specific helper functions (Born Adventurers, Healthy Characters)
+  - [x] Keep only 0level-unique logic
+  - [x] Add JSDoc comments
+  - [x] Export all functions
+- [x] Test module loads correctly
 
-#### Phase 3D: Update 0level HTML
-- [ ] Update `0level.html`:
-  - [ ] Import 0level-ui.js module
-  - [ ] Remove old script tags (main-generator.js, etc.)
-  - [ ] Keep only initialization code
-  - [ ] Test thoroughly
-- [ ] **Verify 0level generator works correctly before proceeding**
+#### Phase 3C2: Create 0level-character-gen.js - ✅ COMPLETE
+- [x] Read main-generator.js to understand generation logic
+- [x] Read race-adjustments.js to understand racial adjustments
+- [x] Read background-tables.js, names-tables.js, ose-modifiers.js, racial-abilities.js
+- [x] Create `0level-character-gen.js` (similar to basic-character-gen.js):
+  - [x] Import shared-ability-scores.js
+  - [x] Import 0level-utils.js
+  - [x] Extract character generation logic from main-generator.js
+  - [x] Support "Born Adventurers" option
+  - [x] Support "Healthy Characters" option
+  - [x] Integrate with legacy global scripts (background-tables, names-tables, etc.)
+  - [x] Add JSDoc comments
+  - [x] Export all functions
+- [x] Test module structure
+
+#### Phase 3C3: Create 0level-ui.js - ✅ COMPLETE
+- [x] Read main-generator.js to understand UI logic
+- [x] Read character-display.js to understand display logic
+- [x] Create `0level-ui.js` (similar to basic-ui.js):
+  - [x] Import 0level-utils.js
+  - [x] Import 0level-character-gen.js
+  - [x] Extract UI logic from main-generator.js
+  - [x] Extract display logic from character-display.js
+  - [x] Handle "Born Adventurers" checkbox
+  - [x] Handle "Healthy Characters" checkbox
+  - [x] Add event handlers for all button functions
+  - [x] Add JSDoc comments
+  - [x] Export initialize() function
+  - [x] Auto-initialize on DOM ready
+- [x] Test module structure
+
+#### Phase 3D: Update 0level HTML - ✅ COMPLETE
+- [x] Update `0level.html`:
+  - [x] Import 0level-ui.js module
+  - [x] Keep legacy scripts loaded globally (background-tables, racial-abilities, names-tables, etc.)
+  - [x] Remove inline script handlers (moved to module)
+  - [x] Keep initialization code minimal
+- [x] **Fixed LEGACY_RACE_NAMES conflicts**
+  - [x] Created shared-race-names.js with single LEGACY_RACE_NAMES definition
+  - [x] Updated racial-abilities.js to use shared file
+  - [x] Updated names-tables.js to use shared file
+  - [x] Updated race-adjustments.js to use shared file
+  - [x] Updated 0level.html to load shared-race-names.js first
+- [x] **Fixed timing issues with ES6 modules and legacy scripts**
+  - [x] Added 100ms delay in initialize() function
+  - [x] Removed error throws in getRandomName() and getBackgroundByHitPoints()
+  - [x] Added graceful fallbacks for when legacy scripts aren't loaded yet
+- [x] Test 0level generator works correctly
+  - [x] Page loads without errors
+  - [x] Character generates successfully
+  - [x] All stats display correctly
+  - [x] All buttons functional
 
 **Benefits of this change:**
 - ✅ More granular control over character generation
@@ -444,29 +482,120 @@ These modules are already well-organized:
 - ✅ Matches the split options already in Basic Mode
 - ✅ Consistent terminology across 0-level, Basic, and Advanced generators
 
-### Phase 4: Implement Advanced Mode with Shared Modules - **NORMAL PRIORITY**
+### Phase 4: Implement Advanced Mode with Shared Modules - ✅ COMPLETE
 **Do this AFTER Phases 2-3 are complete!**
-- [ ] Create `advanced-utils.js` (similar to basic-utils.js)
-  - [ ] Extract ability score functions
-  - [ ] Add racial adjustment functions
-  - [ ] Import shared modules
-  - [ ] Add ES6 exports
-- [ ] Create `advanced-character-gen.js` (similar to basic-character-gen.js)
-  - [ ] Extract HP rolling functions
-  - [ ] Extract ability rolling with racial adjustments
-  - [ ] Extract class progression functions
-  - [ ] Import shared modules
-  - [ ] Add ES6 exports
-- [ ] Create `advanced-ui.js` (similar to basic-ui.js)
-  - [ ] Implement Advanced Mode UI logic
-  - [ ] Implement race selection
-  - [ ] Implement racial adjustments display
-  - [ ] Add ES6 exports
-- [ ] Update `advanced.html`
-  - [ ] Import advanced-ui.js module
-  - [ ] Remove inline JavaScript
-  - [ ] Keep only initialization code
-  - [ ] Test thoroughly
+- [x] Create `advanced-utils.js` (similar to basic-utils.js) ✅
+  - [x] Extract ability score functions ✅
+  - [x] Add racial adjustment functions ✅
+  - [x] Import shared modules ✅
+  - [x] Add ES6 exports ✅
+- [x] Create `advanced-character-gen.js` (similar to basic-character-gen.js) ✅
+  - [x] Extract HP rolling functions ✅
+  - [x] Extract ability rolling with racial adjustments ✅
+  - [x] Extract class progression functions ✅
+  - [x] Import shared modules ✅
+  - [x] Add ES6 exports ✅
+- [x] Create `advanced-ui.js` (similar to basic-ui.js) ✅
+  - [x] Implement Advanced Mode UI logic ✅
+  - [x] Implement race selection ✅
+  - [x] Implement racial adjustments display ✅
+  - [x] Add ES6 exports ✅
+- [x] Update `advanced.html` ✅
+  - [x] Import advanced-ui.js module ✅
+  - [x] Remove inline JavaScript ✅
+  - [x] Keep only initialization code ✅
+  - [x] Test thoroughly ✅
+
+### Phase 4E: Add Missing Features & Remove Tough Characters - **IN PROGRESS**
+**Complete Advanced Mode feature parity with Basic Mode**
+
+#### Phase 4E1: Update advanced.html - **PENDING**
+- [ ] Add ability score input section (before race/class grid)
+  - [ ] Add 2x3 grid layout (STR/INT/WIS, DEX/CON/CHA)
+  - [ ] Add number inputs (min=3, max=18, default=3)
+  - [ ] Add modifier display spans below each input
+  - [ ] Add XP bonus display section
+  - [ ] Add CSS for ability grid (copy from basic.html)
+- [ ] Update checkboxes in Mode & Options section
+  - [ ] Remove "Tough Guys" checkbox
+  - [ ] Add "Strong Prime Requisites" checkbox
+  - [ ] Add "Healthy Characters" checkbox
+  - [ ] Keep "Include Level 0 HP" checkbox
+  - [ ] Add "Show Undead Names" checkbox
+  - [ ] Keep "Allow non-traditional" checkbox
+  - [ ] Keep "Allow Elf/Spellblade past 10" checkbox
+- [ ] Add ability score controls
+  - [ ] Add "Use fixed ability scores" checkbox
+  - [ ] Add "Roll Abilities" button
+  - [ ] Add "Test HP Rolling" button
+  - [ ] Add warning div for Test HP (hidden by default)
+- [ ] Add "Roll & Generate" button
+  - [ ] Place next to "Generate Character" button
+
+#### Phase 4E2: Update advanced-ui.js - **PENDING**
+- [ ] Add new state variables
+  - [ ] Remove `toughCharacters`
+  - [ ] Add `primeRequisite13`
+  - [ ] Add `healthyCharacters`
+  - [ ] Add `useFixedScores`
+  - [ ] Add `showUndeadNames`
+  - [ ] Add `abilityScores` object
+- [ ] Add ability score functions
+  - [ ] `readAbilityScores()` - Read from input fields
+  - [ ] `updateModifiers()` - Update modifier displays
+  - [ ] `updateXPBonus()` - Update XP bonus display
+  - [ ] `updateRollButtonState()` - Enable/disable Roll button
+- [ ] Add Test HP functions
+  - [ ] `canRollHP()` - Check if HP rolling is possible
+  - [ ] `updateTestHPButton()` - Update button state and warning
+  - [ ] `handleTestHP()` - Test HP rolling handler
+- [ ] Add button handlers
+  - [ ] `handleRollAbilities()` - Roll ability scores
+  - [ ] `handleRollAndGenerate()` - Roll + generate
+- [ ] Update `generateCharacter()`
+  - [ ] Use `readAbilityScores()` if `useFixedScores` is true
+  - [ ] Use `rollAbilitiesAdvanced()` if `useFixedScores` is false
+  - [ ] Remove `toughCharacters` parameter
+  - [ ] Add `primeRequisite13` parameter
+  - [ ] Add `healthyCharacters` parameter
+- [ ] Update `displayCharacter()`
+  - [ ] Use `showUndeadNames` for Turn Undead display
+- [ ] Update event listeners
+  - [ ] Remove `toughCharacters` listener
+  - [ ] Add `primeRequisite13` listener
+  - [ ] Add `healthyCharacters` listener
+  - [ ] Add `useFixedScores` listener
+  - [ ] Add `showUndeadNames` listener
+  - [ ] Add ability score input listeners
+  - [ ] Add button listeners
+
+#### Phase 4E3: Update basic.html - **PENDING**
+- [ ] Remove "Tough Characters" checkbox
+- [ ] Keep "Strong Prime Requisites" checkbox
+- [ ] Keep "Healthy Characters" checkbox
+
+#### Phase 4E4: Update basic-ui.js - **PENDING**
+- [ ] Remove `toughCharacters` state variable
+- [ ] Remove `toughCharacters` event listener
+- [ ] Remove `toughCharacters` from `rollAbilities()` calls
+- [ ] Update `handleRollAbilities()` to not pass `toughCharacters`
+- [ ] Update `generateCharacter()` to not pass `toughCharacters`
+
+#### Phase 4E5: Testing - **PENDING**
+- [ ] Test Advanced Mode with all new features
+  - [ ] Test ability score inputs and modifiers
+  - [ ] Test XP bonus display
+  - [ ] Test Roll Abilities button
+  - [ ] Test Test HP button
+  - [ ] Test Roll & Generate button
+  - [ ] Test fixed vs rolled scores
+  - [ ] Test Strong Prime Requisites
+  - [ ] Test Healthy Characters
+  - [ ] Test Show Undead Names
+- [ ] Test Basic Mode without Tough Characters
+  - [ ] Verify Tough Characters checkbox removed
+  - [ ] Verify character generation still works
+  - [ ] Verify all other features work
 
 ### Phase 5: Update Navigation and Landing Page - **NORMAL PRIORITY**
 

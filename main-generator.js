@@ -80,19 +80,32 @@ function generate0LevelCharacter() {
         return;
     }
     
-    // Check "Tough Guys" mode requirements if enabled
-    const toughGuysEnabled = document.getElementById('toughGuys').checked;
-    if (toughGuysEnabled) {
+    // Check "Born Adventurers" mode requirements if enabled
+    const bornAdventurersCheckbox = document.getElementById('bornAdventurers');
+    const bornAdventurersEnabled = bornAdventurersCheckbox ? bornAdventurersCheckbox.checked : false;
+    
+    if (bornAdventurersEnabled) {
         // Must have at least one of STR, DEX, INT, WIS at 13 or above
         const hasToughAbility = results.some(r => 
             (r.ability === "STR" || r.ability === "DEX" || r.ability === "INT" || r.ability === "WIS") && 
             r.roll >= 13
         );
         
+        if (!hasToughAbility) {
+            generate0LevelCharacter();
+            return;
+        }
+    }
+    
+    // Check "Healthy Characters" mode requirements if enabled
+    const healthyCharactersCheckbox = document.getElementById('healthyCharacters');
+    const healthyCharactersEnabled = healthyCharactersCheckbox ? healthyCharactersCheckbox.checked : false;
+    
+    if (healthyCharactersEnabled) {
         // Must have at least 2 HP
         const hasEnoughHP = hitPoints.total >= 2;
         
-        if (!hasToughAbility || !hasEnoughHP) {
+        if (!hasEnoughHP) {
             generate0LevelCharacter();
             return;
         }
