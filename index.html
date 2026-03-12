@@ -3,13 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OSE 0-Level Character Generator</title>
+    <title>About - OSE Character Generators</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
             max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
+            line-height: 1.6;
         }
         nav {
             background-color: #f0f0f0;
@@ -36,257 +38,212 @@
             color: #4CAF50;
             text-decoration: underline;
         }
-        table {
-            width: 80%;
-            margin: 20px auto;
-            border-collapse: collapse;
+        .content-section {
+            background-color: #f8f9fa;
+            border-left: 4px solid #4CAF50;
+            padding: 20px;
+            margin: 20px 0;
         }
-        th, td {
+        .content-section h2 {
+            margin-top: 0;
+            color: #333;
+        }
+        .links-section {
+            background-color: #e7f3ff;
+            border-left: 4px solid #2196F3;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .links-section h2 {
+            margin-top: 0;
+            color: #333;
+        }
+        .links-section a {
+            display: inline-block;
+            margin: 5px 10px 5px 0;
+            padding: 10px 20px;
+            background-color: #2196F3;
+            color: white;
+            text-decoration: none;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+        .links-section a:hover {
+            background-color: #0b7dda;
+        }
+        .gygar-section {
+            background-color: #f3e5f5;
+            border-left: 4px solid #9C27B0;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .gygar-section h2 {
+            margin-top: 0;
+            color: #6a1b9a;
+        }
+        #markdown-content {
+            background-color: white;
+            padding: 30px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            line-height: 1.6;
+            margin: 20px 0;
+            display: none;
+        }
+        #markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 20px 0;
+        }
+        #markdown-content th, #markdown-content td {
             border: 1px solid #ddd;
             padding: 8px;
-            text-align: center;
+            text-align: left;
         }
-        th {
+        #markdown-content th {
             background-color: #f2f2f2;
+            font-weight: bold;
         }
-        button {
-            padding: 10px 20px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            cursor: pointer;
-            margin: 5px;
+        #markdown-content h1 {
+            color: #333;
+            border-bottom: 2px solid #4CAF50;
+            padding-bottom: 10px;
         }
-        button:hover {
-            background-color: #45a049;
+        #markdown-content h2 {
+            color: #555;
+            margin-top: 30px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
         }
-        .button-grid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 5px;
-            max-width: 1200px;
-            margin: 20px auto;
+        #markdown-content h3 {
+            color: #666;
+            margin-top: 20px;
         }
-        #config {
-            margin-bottom: 20px;
+        .error {
+            background-color: #ffebee;
+            border: 2px solid #f44336;
+            padding: 20px;
+            border-radius: 5px;
+            color: #c62828;
         }
-        #config > label {
-            display: block;
-            margin: 5px 0;
-        }
-        input[type="number"] {
-            width: 50px;
-            padding: 5px;
-            margin-left: 10px;
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
         }
     </style>
 </head>
 <body>
     <nav>
         <div class="nav-left">
-            <a href="index.html" class="active">Level 0 Generator</a>
+            <a href="0level.html">Level 0 Generator</a>
             <a href="basic.html">Basic (Levels 1+)</a>
             <a href="advanced.html">Advanced (Levels 1+)</a>
             <a href="classes.html">Class Reference</a>
         </div>
-        <a href="about.html">About</a>
+        <a href="index.html" class="active">About</a>
     </nav>
 
-    <h1 style="text-align: center;">OSE 0-Level Character Generator</h1>
-    <div id="config">
-        <div style="text-align: center;">
-            Minimums:<br>
-            <label for="strMin">STR:</label>
-            <input type="number" id="strMin" value="3" min="3" max="18">
-            <label for="dexMin">DEX:</label>
-            <input type="number" id="dexMin" value="3" min="3" max="18">
-            <label for="conMin">CON:</label>
-            <input type="number" id="conMin" value="3" min="3" max="18"><br>
-            <label for="intMin">INT:</label>
-            <input type="number" id="intMin" value="3" min="3" max="18">
-            <label for="wisMin">WIS:</label>
-            <input type="number" id="wisMin" value="3" min="3" max="18">
-            <label for="chaMin">CHA:</label>
-            <input type="number" id="chaMin" value="3" min="3" max="18"><br><br>
-        </div>
-        <label for="toughGuys">
-            <input type="checkbox" id="toughGuys"> Tough Guys (Requires STR/DEX/INT/WIS ≥ 13 and HP ≥ 2)
-        </label>
-        <label for="advanced">
-            <input type="checkbox" id="advanced" checked> Advanced Mode (Racial ability modifiers & minimums for all races)
-        </label>
-        <label for="humanRacialAbilities" style="margin-left: 20px;">
-            <input type="checkbox" id="humanRacialAbilities" checked> Human Racial Abilities (+1 CON/CHA, Blessed HP, initiative, loyalty)
-        </label>
-        <label for="gygar">
-            <input type="checkbox" id="gygar" checked> Smoothified Mode (Attack bonus 0 instead of -1)
-        </label>
-        <label for="openInNewTab">
-            <input type="checkbox" id="openInNewTab"> Open character display in new tab
-        </label>
-        <label for="openFileInsteadOfSave">
-            <input type="checkbox" id="openFileInsteadOfSave"> Open file instead of saving (PNG/PDF/MD/JSON - best effort)
-        </label><br><br>
+    <h1>About These Tools</h1>
+
+    <div class="content-section">
+        <h2>📖 Project Background</h2>
+        <p>These character generators and class references were created by the author to support running a <strong>Ruins of Castle Gygar</strong> campaign using the Old-School Essentials (OSE) ruleset.</p>
         
-        <!-- Hidden select for backward compatibility -->
-        <select id="forceRace" style="display:none;">
-            <option value="">Random</option>
-            <option value="Human">Human</option>
-            <option value="Dwarf">Dwarf</option>
-            <option value="Elf">Elf</option>
-            <option value="Gnome">Gnome</option>
-            <option value="Halfling">Halfling</option>
-        </select>
-        <input type="checkbox" id="forceDemihuman" style="display:none;">
-        
-        <div class="button-grid">
-            <!-- Row 1: Generate Character -->
-            <button onclick="setRaceAndGenerate('')">Random</button>
-            <button onclick="setRaceAndGenerate('Demihuman')">Demihuman</button>
-            <button onclick="setRaceAndGenerate('Human')">Human</button>
-            <button onclick="setRaceAndGenerate('Dwarf')">Dwarf</button>
-            <button onclick="setRaceAndGenerate('Elf')">Elf</button>
-            <button onclick="setRaceAndGenerate('Gnome')">Gnome</button>
-            <button onclick="setRaceAndGenerate('Halfling')">Halfling</button>
-            
-            <!-- Row 2: Generate PNG -->
-            <button onclick="setRaceAndGeneratePNG('')" style="background-color: #FF9800;">Random PNG</button>
-            <button onclick="setRaceAndGeneratePNG('Demihuman')" style="background-color: #FF9800;">Demihuman PNG</button>
-            <button onclick="setRaceAndGeneratePNG('Human')" style="background-color: #FF9800;">Human PNG</button>
-            <button onclick="setRaceAndGeneratePNG('Dwarf')" style="background-color: #FF9800;">Dwarf PNG</button>
-            <button onclick="setRaceAndGeneratePNG('Elf')" style="background-color: #FF9800;">Elf PNG</button>
-            <button onclick="setRaceAndGeneratePNG('Gnome')" style="background-color: #FF9800;">Gnome PNG</button>
-            <button onclick="setRaceAndGeneratePNG('Halfling')" style="background-color: #FF9800;">Halfling PNG</button>
-            
-            <!-- Row 3: Generate PDF -->
-            <button onclick="setRaceAndGeneratePDF('')" style="background-color: #9C27B0;">Random PDF</button>
-            <button onclick="setRaceAndGeneratePDF('Demihuman')" style="background-color: #9C27B0;">Demihuman PDF</button>
-            <button onclick="setRaceAndGeneratePDF('Human')" style="background-color: #9C27B0;">Human PDF</button>
-            <button onclick="setRaceAndGeneratePDF('Dwarf')" style="background-color: #9C27B0;">Dwarf PDF</button>
-            <button onclick="setRaceAndGeneratePDF('Elf')" style="background-color: #9C27B0;">Elf PDF</button>
-            <button onclick="setRaceAndGeneratePDF('Gnome')" style="background-color: #9C27B0;">Gnome PDF</button>
-            <button onclick="setRaceAndGeneratePDF('Halfling')" style="background-color: #9C27B0;">Halfling PDF</button>
-            
-            <!-- Row 4: Generate 4 Character PDF -->
-            <button onclick="setRaceAndGenerateBulkPDF('')" style="background-color: #E91E63;">Random 4-PDF</button>
-            <button onclick="setRaceAndGenerateBulkPDF('Demihuman')" style="background-color: #E91E63;">Demihuman 4-PDF</button>
-            <button onclick="setRaceAndGenerateBulkPDF('Human')" style="background-color: #E91E63;">Human 4-PDF</button>
-            <button onclick="setRaceAndGenerateBulkPDF('Dwarf')" style="background-color: #E91E63;">Dwarf 4-PDF</button>
-            <button onclick="setRaceAndGenerateBulkPDF('Elf')" style="background-color: #E91E63;">Elf 4-PDF</button>
-            <button onclick="setRaceAndGenerateBulkPDF('Gnome')" style="background-color: #E91E63;">Gnome 4-PDF</button>
-            <button onclick="setRaceAndGenerateBulkPDF('Halfling')" style="background-color: #E91E63;">Halfling 4-PDF</button>
-            
-            <!-- Row 5: Generate Markdown -->
-            <button onclick="setRaceAndGenerateMarkdown('')" style="background-color: #607D8B;">Random MD</button>
-            <button onclick="setRaceAndGenerateMarkdown('Demihuman')" style="background-color: #607D8B;">Demihuman MD</button>
-            <button onclick="setRaceAndGenerateMarkdown('Human')" style="background-color: #607D8B;">Human MD</button>
-            <button onclick="setRaceAndGenerateMarkdown('Dwarf')" style="background-color: #607D8B;">Dwarf MD</button>
-            <button onclick="setRaceAndGenerateMarkdown('Elf')" style="background-color: #607D8B;">Elf MD</button>
-            <button onclick="setRaceAndGenerateMarkdown('Gnome')" style="background-color: #607D8B;">Gnome MD</button>
-            <button onclick="setRaceAndGenerateMarkdown('Halfling')" style="background-color: #607D8B;">Halfling MD</button>
-            
-            <!-- Row 6: Generate JSON -->
-            <button onclick="setRaceAndGenerateJSON('')" style="background-color: #00BCD4;">Random JSON</button>
-            <button onclick="setRaceAndGenerateJSON('Demihuman')" style="background-color: #00BCD4;">Demihuman JSON</button>
-            <button onclick="setRaceAndGenerateJSON('Human')" style="background-color: #00BCD4;">Human JSON</button>
-            <button onclick="setRaceAndGenerateJSON('Dwarf')" style="background-color: #00BCD4;">Dwarf JSON</button>
-            <button onclick="setRaceAndGenerateJSON('Elf')" style="background-color: #00BCD4;">Elf JSON</button>
-            <button onclick="setRaceAndGenerateJSON('Gnome')" style="background-color: #00BCD4;">Gnome JSON</button>
-            <button onclick="setRaceAndGenerateJSON('Halfling')" style="background-color: #00BCD4;">Halfling JSON</button>
-            
-            <!-- Row 6: Generate 4 Character JSON -->
-            <button onclick="setRaceAndGenerateCountJSON('', 4)" style="background-color: #009688;">Random 4-JSON</button>
-            <button onclick="setRaceAndGenerateCountJSON('Demihuman', 4)" style="background-color: #009688;">Demihuman 4-JSON</button>
-            <button onclick="setRaceAndGenerateCountJSON('Human', 4)" style="background-color: #009688;">Human 4-JSON</button>
-            <button onclick="setRaceAndGenerateCountJSON('Dwarf', 4)" style="background-color: #009688;">Dwarf 4-JSON</button>
-            <button onclick="setRaceAndGenerateCountJSON('Elf', 4)" style="background-color: #009688;">Elf 4-JSON</button>
-            <button onclick="setRaceAndGenerateCountJSON('Gnome', 4)" style="background-color: #009688;">Gnome 4-JSON</button>
-            <button onclick="setRaceAndGenerateCountJSON('Halfling', 4)" style="background-color: #009688;">Halfling 4-JSON</button>
-            
-            <!-- Row 7: Generate 16 Character JSON -->
-            <button onclick="setRaceAndGenerateCountJSON('', 16)" style="background-color: #00796B;">Random 16-JSON</button>
-            <button onclick="setRaceAndGenerateCountJSON('Demihuman', 16)" style="background-color: #00796B;">Demihuman 16-JSON</button>
-            <button onclick="setRaceAndGenerateCountJSON('Human', 16)" style="background-color: #00796B;">Human 16-JSON</button>
-            <button onclick="setRaceAndGenerateCountJSON('Dwarf', 16)" style="background-color: #00796B;">Dwarf 16-JSON</button>
-            <button onclick="setRaceAndGenerateCountJSON('Elf', 16)" style="background-color: #00796B;">Elf 16-JSON</button>
-            <button onclick="setRaceAndGenerateCountJSON('Gnome', 16)" style="background-color: #00796B;">Gnome 16-JSON</button>
-            <button onclick="setRaceAndGenerateCountJSON('Halfling', 16)" style="background-color: #00796B;">Halfling 16-JSON</button>
-            
-            <!-- Row 8: Generate 100 Character JSON -->
-            <button onclick="setRaceAndGenerateCountJSON('', 100)" style="background-color: #004D40;">Random 100-JSON</button>
-            <button onclick="setRaceAndGenerateCountJSON('Demihuman', 100)" style="background-color: #004D40;">Demihuman 100-JSON</button>
-            <button onclick="setRaceAndGenerateCountJSON('Human', 100)" style="background-color: #004D40;">Human 100-JSON</button>
-            <button onclick="setRaceAndGenerateCountJSON('Dwarf', 100)" style="background-color: #004D40;">Dwarf 100-JSON</button>
-            <button onclick="setRaceAndGenerateCountJSON('Elf', 100)" style="background-color: #004D40;">Elf 100-JSON</button>
-            <button onclick="setRaceAndGenerateCountJSON('Gnome', 100)" style="background-color: #004D40;">Gnome 100-JSON</button>
-            <button onclick="setRaceAndGenerateCountJSON('Halfling', 100)" style="background-color: #004D40;">Halfling 100-JSON</button>
-        </div>
-        
-        <script>
-        function setRaceAndGenerate(race) {
-            document.getElementById('forceRace').value = race === 'Demihuman' ? '' : race;
-            document.getElementById('forceDemihuman').checked = race === 'Demihuman';
-            generate0LevelCharacter();
-        }
-        
-        function setRaceAndGeneratePNG(race) {
-            document.getElementById('forceRace').value = race === 'Demihuman' ? '' : race;
-            document.getElementById('forceDemihuman').checked = race === 'Demihuman';
-            generateCanvasPNG();
-        }
-        
-        function setRaceAndGeneratePDF(race) {
-            document.getElementById('forceRace').value = race === 'Demihuman' ? '' : race;
-            document.getElementById('forceDemihuman').checked = race === 'Demihuman';
-            generateCanvasPDF();
-        }
-        
-        function setRaceAndGenerateBulkPDF(race) {
-            document.getElementById('forceRace').value = race === 'Demihuman' ? '' : race;
-            document.getElementById('forceDemihuman').checked = race === 'Demihuman';
-            generateCanvasBulkPDF();
-        }
-        
-        function setRaceAndGenerateJSON(race) {
-            document.getElementById('forceRace').value = race === 'Demihuman' ? '' : race;
-            document.getElementById('forceDemihuman').checked = race === 'Demihuman';
-            generateJSON();
-        }
-        
-        function setRaceAndGenerateBulkJSON(race) {
-            document.getElementById('forceRace').value = race === 'Demihuman' ? '' : race;
-            document.getElementById('forceDemihuman').checked = race === 'Demihuman';
-            generateBulkJSON();
-        }
-        
-        function setRaceAndGenerateCountJSON(race, count) {
-            document.getElementById('forceRace').value = race === 'Demihuman' ? '' : race;
-            document.getElementById('forceDemihuman').checked = race === 'Demihuman';
-            generateCountJSON(count);
-        }
-        
-        function setRaceAndGenerateMarkdown(race) {
-            document.getElementById('forceRace').value = race === 'Demihuman' ? '' : race;
-            document.getElementById('forceDemihuman').checked = race === 'Demihuman';
-            generateMarkdown();
-        }
-        </script>
+        <p>The tools include both the standard OSE classes and "smoothified" versions with more gradual progression curves, as well as the Spellblade class—a fighter/magic-user hybrid designed specifically for the Gygar campaign setting.</p>
     </div>
 
-    <div id="result"></div>
+    <div class="gygar-section">
+        <h2>🏰 Campaign Evolution</h2>
+        <p>The author initially started the campaign using <strong>Basic OSE</strong> (race-as-class system), where Dwarf, Elf, and Halfling are classes rather than races. After a few sessions, the campaign transitioned to <strong>Advanced OSE</strong>, which separates race from class and allows for more flexible character combinations.</p>
+        
+        <p>Because of this mid-campaign transition, these tools support both approaches:</p>
+        <ul>
+            <li><strong>Basic Mode:</strong> Traditional race-as-class system</li>
+            <li><strong>Advanced Mode:</strong> Separate race and class selection</li>
+            <li><strong>OSE Standard:</strong> Original progression tables with irregular jumps</li>
+            <li><strong>Smoothified Mode:</strong> Smoothed progressions with more frequent, incremental improvements</li>
+        </ul>
+    </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="background-tables.js"></script>
-    <script src="racial-abilities.js"></script>
-    <script src="names-tables.js"></script>
-    <script src="dice-utils.js"></script>
-    <script src="ose-modifiers.js"></script>
-    <script src="race-adjustments.js"></script>
-    <script src="markdown-generator.js"></script>
-    <script src="character-utils.js"></script>
-    <script src="character-display.js"></script>
-    <script src="main-generator.js"></script>
-    <script src="canvas-sheet-renderer.js"></script>
-    <script src="canvas-generator.js"></script>
+    <div class="content-section">
+        <h2>✨ Key Features</h2>
+        <ul>
+            <li><strong>Level 0 Character Generator:</strong> Create 0-level characters for funnel-style adventures</li>
+            <li><strong>Complete Class Documentation:</strong> All OSE classes with full progression tables</li>
+            <li><strong>Smoothified Progressions:</strong> Smoothified Mode variants with gradual advancement</li>
+            <li><strong>Spellblade Class:</strong> Unique warrior-mage hybrid for Gygar campaigns</li>
+            <li><strong>Comparison Tools:</strong> Side-by-side analysis of OSE vs Gygar progressions</li>
+            <li><strong>Both Basic and Advanced:</strong> Support for race-as-class and race+class systems</li>
+        </ul>
+    </div>
+
+    <div class="links-section">
+        <h2>🔗 External Resources</h2>
+        <p>These tools are built upon the excellent work of others in the OSR community:</p>
+        
+        <a href="https://www.drivethrurpg.com/en/product/510225/the-ruins-of-castle-gygar" target="_blank">The Ruins of Castle Gygar</a>
+        <a href="https://oldschoolessentials.necroticgnome.com/srd/index.php/Main_Page" target="_blank">OSE SRD</a>
+        <a href="https://necroticgnome.com/" target="_blank">Necrotic Gnome</a>
+    </div>
+
+    <div class="content-section">
+        <h2>📝 License & Attribution</h2>
+        <p>Old-School Essentials is a trademark of Necrotic Gnome. The OSE rules are used under the Open Game License.</p>
+        
+        <p>The Ruins of Castle Gygar is a campaign setting by Ben Laurence, available on DriveThruRPG.</p>
+        
+        <p>These tools are fan-made resources created to support play and are not official products.</p>
+    </div>
+
+    <div class="links-section">
+        <h2>🎲 Get Started</h2>
+        <p><strong>Character Generators:</strong></p>
+        <a href="0level.html">Generate Level 0 Character</a>
+        <a href="basic.html">Basic Mode (Levels 1-14)</a>
+        <a href="advanced.html">Advanced Mode (Coming Soon)</a>
+        
+        <p style="margin-top: 20px;"><strong>Class Documentation:</strong></p>
+        <a href="classes.html">Browse All Classes</a>
+        
+        <p style="margin-top: 20px;"><strong>Comparisons & Analysis:</strong></p>
+        <a href="#" onclick="loadComparison('OSE_VS_GYGAR'); return false;">OSE vs Gygar Comparison</a>
+        <a href="#" onclick="loadComparison('ELF_VS_SPELLBLADE'); return false;">Elf vs Spellblade Comparison</a>
+        <a href="#" onclick="loadComparison('RACIAL_FEATURES_AUDIT'); return false;">Racial Features Audit</a>
+    </div>
+
+    <div id="markdown-content"></div>
+
+    <script>
+        async function loadComparison(docName) {
+            const contentDiv = document.getElementById('markdown-content');
+            contentDiv.style.display = 'block';
+            contentDiv.innerHTML = '<div class="loading">Loading...</div>';
+            
+            // Scroll to the content
+            contentDiv.scrollIntoView({ behavior: 'smooth' });
+
+            try {
+                const response = await fetch(`${docName}.md`);
+                if (!response.ok) {
+                    throw new Error(`Failed to load ${docName}.md (${response.status})`);
+                }
+                
+                const markdown = await response.text();
+                const html = marked.parse(markdown);
+                contentDiv.innerHTML = html;
+
+            } catch (error) {
+                contentDiv.innerHTML = `
+                    <div class="error">
+                        <h2>Error Loading Document</h2>
+                        <p><strong>File:</strong> ${docName}.md</p>
+                        <p><strong>Error:</strong> ${error.message}</p>
+                        <p>Make sure the markdown file exists in the same directory as this HTML file.</p>
+                    </div>
+                `;
+            }
+        }
+    </script>
 </body>
 </html>

@@ -91,7 +91,7 @@
             border-color: #4CAF50;
         }
         
-        /* Class Selection - Row of Buttons */
+        /* Class Selection - Radio Buttons */
         .class-selection {
             display: flex;
             flex-wrap: wrap;
@@ -99,28 +99,37 @@
             margin-top: 10px;
         }
         
-        .class-button {
+        .class-radio {
+            display: inline-flex;
+            align-items: center;
+        }
+        
+        .class-radio input[type="radio"] {
+            margin-right: 5px;
+        }
+        
+        .class-radio label {
+            cursor: pointer;
             padding: 12px 20px;
-            font-size: 16px;
-            font-weight: bold;
             border: 2px solid #4CAF50;
             border-radius: 5px;
             background-color: white;
             color: #4CAF50;
-            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
             transition: all 0.3s;
         }
         
-        .class-button:hover {
+        .class-radio label:hover {
             background-color: #e8f5e9;
         }
         
-        .class-button.selected {
+        .class-radio input[type="radio"]:checked + label {
             background-color: #4CAF50;
             color: white;
         }
         
-        .class-button:disabled {
+        .class-radio input[type="radio"]:disabled + label {
             opacity: 0.5;
             cursor: not-allowed;
             border-color: #ccc;
@@ -167,6 +176,84 @@
             cursor: not-allowed;
         }
         
+        /* Ability Score Grid - 2 rows of 3 */
+        .ability-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 15px;
+            max-width: 600px;
+        }
+        
+        .ability-box {
+            text-align: center;
+        }
+        
+        .ability-label {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+        }
+        
+        .ability-input {
+            width: 80px;
+            padding: 10px;
+            text-align: center;
+            border: 2px solid #ccc;
+            border-radius: 3px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        
+        .ability-input:focus {
+            outline: none;
+            border-color: #4CAF50;
+        }
+        
+        .ability-modifier {
+            display: block;
+            margin-top: 5px;
+            font-size: 14px;
+            color: #666;
+            font-weight: normal;
+        }
+        
+        .xp-bonus-display {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e8f5e9;
+            border-left: 4px solid #4CAF50;
+            border-radius: 3px;
+        }
+        
+        .xp-bonus-display strong {
+            color: #2e7d32;
+        }
+        
+        /* Roll Button */
+        .roll-button {
+            padding: 10px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-top: 15px;
+        }
+        
+        .roll-button:hover {
+            background-color: #1976D2;
+        }
+        
+        .roll-button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        
         /* Character Display */
         .character-display {
             background-color: white;
@@ -198,12 +285,12 @@
 <body>
     <nav>
         <div class="nav-left">
-            <a href="index.html">Level 0 Generator</a>
+            <a href="0level.html">Level 0 Generator</a>
             <a href="basic.html" class="active">Basic (Levels 1+)</a>
             <a href="advanced.html">Advanced (Levels 1+)</a>
             <a href="classes.html">Class Reference</a>
         </div>
-        <a href="about.html">About</a>
+        <a href="index.html">About</a>
     </nav>
 
     <h1>OSE Basic Character Generator (Levels 1+)</h1>
@@ -236,9 +323,25 @@
             </div>
             <div class="checkbox-option">
                 <label>
-                    <input type="checkbox" id="toughGuys">
+                    <input type="checkbox" id="toughCharacters">
                     <span>
-                        <strong>Tough Guys</strong> - Require STR/DEX/INT/WIS ≥ 13 and HP ≥ 2
+                        <strong>Tough Characters</strong> - Require at least one of STR/DEX/INT/WIS ≥ 13
+                    </span>
+                </label>
+            </div>
+            <div class="checkbox-option">
+                <label>
+                    <input type="checkbox" id="primeRequisite13">
+                    <span>
+                        <strong>Strong Prime Requisites</strong> - Require prime requisite(s) for selected class ≥ 13
+                    </span>
+                </label>
+            </div>
+            <div class="checkbox-option">
+                <label>
+                    <input type="checkbox" id="healthyCharacters">
+                    <span>
+                        <strong>Healthy Characters</strong> - Require HP ≥ 2 at initial level (level 0 or level 1)
                     </span>
                 </label>
             </div>
@@ -250,21 +353,122 @@
                     </span>
                 </label>
             </div>
+            <div class="checkbox-option">
+                <label>
+                    <input type="checkbox" id="showUndeadNames">
+                    <span>
+                        <strong>Show Undead Monster Names</strong> - Display example monster names for Turn Undead (instead of HD categories)
+                    </span>
+                </label>
+            </div>
+        </div>
+
+        <!-- Ability Scores -->
+        <div class="control-section">
+            <h3>3. Ability Scores</h3>
+            
+            <div class="ability-grid">
+                <!-- Row 1: STR, INT, WIS -->
+                <div class="ability-box">
+                    <label class="ability-label" for="scoreSTR">STR</label>
+                    <input type="number" class="ability-input" id="scoreSTR" value="3" min="3" max="18">
+                    <span class="ability-modifier" id="modSTR">+0</span>
+                </div>
+                <div class="ability-box">
+                    <label class="ability-label" for="scoreINT">INT</label>
+                    <input type="number" class="ability-input" id="scoreINT" value="3" min="3" max="18">
+                    <span class="ability-modifier" id="modINT">+0</span>
+                </div>
+                <div class="ability-box">
+                    <label class="ability-label" for="scoreWIS">WIS</label>
+                    <input type="number" class="ability-input" id="scoreWIS" value="3" min="3" max="18">
+                    <span class="ability-modifier" id="modWIS">+0</span>
+                </div>
+                
+                <!-- Row 2: DEX, CON, CHA -->
+                <div class="ability-box">
+                    <label class="ability-label" for="scoreDEX">DEX</label>
+                    <input type="number" class="ability-input" id="scoreDEX" value="3" min="3" max="18">
+                    <span class="ability-modifier" id="modDEX">+0</span>
+                </div>
+                <div class="ability-box">
+                    <label class="ability-label" for="scoreCON">CON</label>
+                    <input type="number" class="ability-input" id="scoreCON" value="3" min="3" max="18">
+                    <span class="ability-modifier" id="modCON">+0</span>
+                </div>
+                <div class="ability-box">
+                    <label class="ability-label" for="scoreCHA">CHA</label>
+                    <input type="number" class="ability-input" id="scoreCHA" value="3" min="3" max="18">
+                    <span class="ability-modifier" id="modCHA">+0</span>
+                </div>
+            </div>
+            
+            <div class="xp-bonus-display" id="xpBonusDisplay" style="display: none;">
+                <strong>Prime Requisite XP Bonus:</strong> <span id="xpBonusText">+0%</span>
+            </div>
+            
+            <div class="checkbox-option">
+                <label>
+                    <input type="checkbox" id="useFixedScores">
+                    <span><strong>Use fixed ability scores</strong> - Use the values above as-is (unchecked = roll randomly with minimums)</span>
+                </label>
+            </div>
+            
+            <button class="roll-button" id="rollAbilitiesButton">Roll Abilities</button>
+            <button class="roll-button" id="testHPButton" style="margin-left: 10px; background-color: #FF9800;">Test HP Rolling</button>
+            <div id="testHPWarning" style="margin-top: 10px; padding: 10px; background-color: #fff3cd; border-left: 4px solid #ffc107; display: none;">
+                <strong>Cannot test HP rolling:</strong> <span id="testHPWarningText"></span>
+            </div>
         </div>
 
         <!-- Class Selection -->
         <div class="control-section">
-            <h3>3. Select Class</h3>
+            <h3>4. Select Class</h3>
+            <div style="margin-bottom: 10px;">
+                <strong>Human Classes:</strong>
+            </div>
             <div class="class-selection" id="classSelection">
-                <button class="class-button" data-class="Cleric">Cleric</button>
-                <button class="class-button" data-class="Fighter">Fighter</button>
-                <button class="class-button" data-class="Magic-User">Magic-User</button>
-                <button class="class-button" data-class="Thief">Thief</button>
-                <button class="class-button" data-class="Dwarf">Dwarf</button>
-                <button class="class-button" data-class="Elf">Elf</button>
-                <button class="class-button" data-class="Halfling">Halfling</button>
-                <button class="class-button" data-class="Gnome">Gnome</button>
-                <button class="class-button" data-class="Spellblade" id="spellbladeButton" style="display: none;">Spellblade</button>
+                <div class="class-radio">
+                    <input type="radio" name="class" id="classCleric" value="Cleric">
+                    <label for="classCleric">Cleric</label>
+                </div>
+                <div class="class-radio">
+                    <input type="radio" name="class" id="classFighter" value="Fighter" checked>
+                    <label for="classFighter">Fighter</label>
+                </div>
+                <div class="class-radio">
+                    <input type="radio" name="class" id="classMagicUser" value="Magic-User">
+                    <label for="classMagicUser">Magic-User</label>
+                </div>
+                <div class="class-radio">
+                    <input type="radio" name="class" id="classThief" value="Thief">
+                    <label for="classThief">Thief</label>
+                </div>
+                <div class="class-radio" id="spellbladeRadio" style="display: none;">
+                    <input type="radio" name="class" id="classSpellblade" value="Spellblade">
+                    <label for="classSpellblade">Spellblade</label>
+                </div>
+            </div>
+            <div style="margin-top: 15px; margin-bottom: 10px;">
+                <strong>Demihuman Classes:</strong>
+            </div>
+            <div class="class-selection">
+                <div class="class-radio">
+                    <input type="radio" name="class" id="classDwarf" value="Dwarf">
+                    <label for="classDwarf">Dwarf</label>
+                </div>
+                <div class="class-radio">
+                    <input type="radio" name="class" id="classElf" value="Elf">
+                    <label for="classElf">Elf</label>
+                </div>
+                <div class="class-radio">
+                    <input type="radio" name="class" id="classHalfling" value="Halfling">
+                    <label for="classHalfling">Halfling</label>
+                </div>
+                <div class="class-radio">
+                    <input type="radio" name="class" id="classGnome" value="Gnome">
+                    <label for="classGnome">Gnome</label>
+                </div>
             </div>
             
             <div class="checkbox-option">
@@ -284,7 +488,9 @@
 
         <!-- Generate Button -->
         <div class="control-section">
+            <h3>5. Generate</h3>
             <button class="generate-button" id="generateButton" disabled>Generate Character</button>
+            <button class="roll-button" id="rollAndGenerateButton" style="margin-left: 15px;">Roll Abilities & Generate Character</button>
         </div>
     </div>
 
@@ -296,176 +502,12 @@
         </div>
     </div>
 
-    <script>
-        // State
-        let selectedLevel = null;
-        let selectedClass = null;
-        let smoothifiedMode = true;
-        let allowDemihumanOverride = false;
-        let allowElfSpellbladePast10 = false;
-        let toughGuys = false;
-        let includeLevel0HP = false;
-
-        // Initialize level selection (radio buttons 1-14)
-        function initializeLevelSelection() {
-            const container = document.getElementById('levelSelection');
-            for (let i = 1; i <= 14; i++) {
-                const radioDiv = document.createElement('div');
-                radioDiv.className = 'level-radio';
-                
-                const radio = document.createElement('input');
-                radio.type = 'radio';
-                radio.name = 'level';
-                radio.id = `level${i}`;
-                radio.value = i;
-                
-                const label = document.createElement('label');
-                label.htmlFor = `level${i}`;
-                label.textContent = i;
-                
-                radio.addEventListener('change', () => {
-                    selectedLevel = parseInt(radio.value);
-                    updateUI();
-                });
-                
-                radioDiv.appendChild(radio);
-                radioDiv.appendChild(label);
-                container.appendChild(radioDiv);
-            }
-        }
-
-        // Initialize class selection
-        function initializeClassSelection() {
-            const buttons = document.querySelectorAll('.class-button');
-            buttons.forEach(button => {
-                button.addEventListener('click', () => {
-                    // Deselect all buttons
-                    buttons.forEach(b => b.classList.remove('selected'));
-                    // Select clicked button
-                    button.classList.add('selected');
-                    selectedClass = button.dataset.class;
-                    updateUI();
-                });
-            });
-        }
-
-        // Update UI based on selections
-        function updateUI() {
-            // Show/hide Spellblade button based on mode
-            const spellbladeButton = document.getElementById('spellbladeButton');
-            if (smoothifiedMode) {
-                spellbladeButton.style.display = 'inline-block';
-            } else {
-                spellbladeButton.style.display = 'none';
-                // Deselect Spellblade if it was selected
-                if (selectedClass === 'Spellblade') {
-                    selectedClass = null;
-                    spellbladeButton.classList.remove('selected');
-                }
-            }
-
-            // Check if demihuman class exceeds level limit (Normal Mode only)
-            const demihumanLimits = {
-                'Dwarf': 12,
-                'Elf': 10,
-                'Halfling': 8,
-                'Gnome': 8
-            };
-
-            // Disable class buttons if level exceeds limit (Normal Mode only)
-            if (!smoothifiedMode && !allowDemihumanOverride && selectedLevel) {
-                document.querySelectorAll('.class-button').forEach(button => {
-                    const className = button.dataset.class;
-                    const limit = demihumanLimits[className];
-                    if (limit && selectedLevel > limit) {
-                        button.disabled = true;
-                        if (selectedClass === className) {
-                            selectedClass = null;
-                            button.classList.remove('selected');
-                        }
-                    } else {
-                        button.disabled = false;
-                    }
-                });
-            } else {
-                // Enable all buttons
-                document.querySelectorAll('.class-button').forEach(button => {
-                    button.disabled = false;
-                });
-            }
-
-            // Enable generate button if level and class are selected
-            const generateButton = document.getElementById('generateButton');
-            generateButton.disabled = !(selectedLevel && selectedClass);
-        }
-
-        // Generate character (placeholder)
-        function generateCharacter() {
-            const characterInfo = document.getElementById('characterInfo');
-            const characterDisplay = document.getElementById('characterDisplay');
-
-            // Placeholder generation
-            const mode = smoothifiedMode ? 'Smoothified' : 'Normal';
-            const html = `
-                <p><strong>Level:</strong> ${selectedLevel}</p>
-                <p><strong>Class:</strong> ${selectedClass}</p>
-                <p><strong>Mode:</strong> ${mode}</p>
-                <p><strong>Demihuman Override:</strong> ${allowDemihumanOverride ? 'Yes' : 'No'}</p>
-                <p><strong>Elf/Spellblade Past Level 10:</strong> ${allowElfSpellbladePast10 ? 'Yes' : 'No'}</p>
-                <p><strong>Tough Guys:</strong> ${toughGuys ? 'Yes' : 'No'}</p>
-                <p><strong>Include Level 0 HP:</strong> ${includeLevel0HP ? 'Yes' : 'No'}</p>
-                <hr>
-                <p><em>Full character generation coming soon!</em></p>
-                <p>This will include:</p>
-                <ul>
-                    <li>Ability scores (3d6 each)</li>
-                    <li>Hit points (rolled for level)</li>
-                    <li>Saving throws (from class data)</li>
-                    <li>Attack bonus (from class data)</li>
-                    <li>Spell slots (if spellcaster)</li>
-                    <li>Thief skills (if thief)</li>
-                    <li>Turn undead (if cleric)</li>
-                    <li>Class abilities</li>
-                    <li>Equipment</li>
-                    <li>XP tracking</li>
-                </ul>
-            `;
-
-            characterInfo.innerHTML = html;
-            characterDisplay.classList.add('visible');
-            characterDisplay.scrollIntoView({ behavior: 'smooth' });
-        }
-
-        // Event listeners
-        document.getElementById('smoothifiedMode').addEventListener('change', (e) => {
-            smoothifiedMode = e.target.checked;
-            updateUI();
-        });
-
-        document.getElementById('allowDemihumanOverride').addEventListener('change', (e) => {
-            allowDemihumanOverride = e.target.checked;
-            updateUI();
-        });
-
-        document.getElementById('allowElfSpellbladePast10').addEventListener('change', (e) => {
-            allowElfSpellbladePast10 = e.target.checked;
-            updateUI();
-        });
-
-        document.getElementById('toughGuys').addEventListener('change', (e) => {
-            toughGuys = e.target.checked;
-        });
-
-        document.getElementById('includeLevel0HP').addEventListener('change', (e) => {
-            includeLevel0HP = e.target.checked;
-        });
-
-        document.getElementById('generateButton').addEventListener('click', generateCharacter);
-
-        // Initialize
-        initializeLevelSelection();
-        initializeClassSelection();
-        updateUI();
+    <script type="module">
+        // Import UI module
+        import { initialize } from './basic-ui.js';
+        
+        // Initialize the application
+        initialize();
     </script>
 
 </body>

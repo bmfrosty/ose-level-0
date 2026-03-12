@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OSE 0-Level Character Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        nav {
+            background-color: #f0f0f0;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        nav .nav-left {
+            display: flex;
+            gap: 20px;
+        }
+        nav a {
+            text-decoration: none;
+            color: #333;
+            font-weight: bold;
+        }
+        nav a:hover {
+            color: #4CAF50;
+        }
+        nav a.active {
+            color: #4CAF50;
+            text-decoration: underline;
+        }
+        table {
+            width: 80%;
+            margin: 20px auto;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .button-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            max-width: 1200px;
+            margin: 20px auto;
+        }
+        #config {
+            margin-bottom: 20px;
+        }
+        #config > label {
+            display: block;
+            margin: 5px 0;
+        }
+        input[type="number"] {
+            width: 50px;
+            padding: 5px;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="nav-left">
+            <a href="0level.html" class="active">Level 0 Generator</a>
+            <a href="basic.html">Basic (Levels 1+)</a>
+            <a href="advanced.html">Advanced (Levels 1+)</a>
+            <a href="classes.html">Class Reference</a>
+        </div>
+        <a href="index.html">About</a>
+    </nav>
+
+    <h1 style="text-align: center;">OSE 0-Level Character Generator</h1>
+    <div id="config">
+        <div style="text-align: center;">
+            Minimums:<br>
+            <label for="strMin">STR:</label>
+            <input type="number" id="strMin" value="3" min="3" max="18">
+            <label for="dexMin">DEX:</label>
+            <input type="number" id="dexMin" value="3" min="3" max="18">
+            <label for="conMin">CON:</label>
+            <input type="number" id="conMin" value="3" min="3" max="18"><br>
+            <label for="intMin">INT:</label>
+            <input type="number" id="intMin" value="3" min="3" max="18">
+            <label for="wisMin">WIS:</label>
+            <input type="number" id="wisMin" value="3" min="3" max="18">
+            <label for="chaMin">CHA:</label>
+            <input type="number" id="chaMin" value="3" min="3" max="18"><br><br>
+        </div>
+        <label for="toughGuys">
+            <input type="checkbox" id="toughGuys"> Tough Guys (Requires STR/DEX/INT/WIS ≥ 13 and HP ≥ 2)
+        </label>
+        <label for="advanced">
+            <input type="checkbox" id="advanced" checked> Advanced Mode (Racial ability modifiers & minimums for all races)
+        </label>
+        <label for="humanRacialAbilities" style="margin-left: 20px;">
+            <input type="checkbox" id="humanRacialAbilities" checked> Human Racial Abilities (+1 CON/CHA, Blessed HP, initiative, loyalty)
+        </label>
+        <label for="gygar">
+            <input type="checkbox" id="gygar" checked> Smoothified Mode (Attack bonus 0 instead of -1)
+        </label>
+        <label for="openInNewTab">
+            <input type="checkbox" id="openInNewTab"> Open character display in new tab
+        </label>
+        <label for="openFileInsteadOfSave">
+            <input type="checkbox" id="openFileInsteadOfSave"> Open file instead of saving (PNG/PDF/MD/JSON - best effort)
+        </label><br><br>
+        
+        <!-- Hidden select for backward compatibility -->
+        <select id="forceRace" style="display:none;">
+            <option value="">Random</option>
+            <option value="Human">Human</option>
+            <option value="Dwarf">Dwarf</option>
+            <option value="Elf">Elf</option>
+            <option value="Gnome">Gnome</option>
+            <option value="Halfling">Halfling</option>
+        </select>
+        <input type="checkbox" id="forceDemihuman" style="display:none;">
+        
+        <div class="button-grid">
+            <!-- Row 1: Generate Character -->
+            <button onclick="setRaceAndGenerate('')">Random</button>
+            <button onclick="setRaceAndGenerate('Demihuman')">Demihuman</button>
+            <button onclick="setRaceAndGenerate('Human')">Human</button>
+            <button onclick="setRaceAndGenerate('Dwarf')">Dwarf</button>
+            <button onclick="setRaceAndGenerate('Elf')">Elf</button>
+            <button onclick="setRaceAndGenerate('Gnome')">Gnome</button>
+            <button onclick="setRaceAndGenerate('Halfling')">Halfling</button>
+            
+            <!-- Row 2: Generate PNG -->
+            <button onclick="setRaceAndGeneratePNG('')" style="background-color: #FF9800;">Random PNG</button>
+            <button onclick="setRaceAndGeneratePNG('Demihuman')" style="background-color: #FF9800;">Demihuman PNG</button>
+            <button onclick="setRaceAndGeneratePNG('Human')" style="background-color: #FF9800;">Human PNG</button>
+            <button onclick="setRaceAndGeneratePNG('Dwarf')" style="background-color: #FF9800;">Dwarf PNG</button>
+            <button onclick="setRaceAndGeneratePNG('Elf')" style="background-color: #FF9800;">Elf PNG</button>
+            <button onclick="setRaceAndGeneratePNG('Gnome')" style="background-color: #FF9800;">Gnome PNG</button>
+            <button onclick="setRaceAndGeneratePNG('Halfling')" style="background-color: #FF9800;">Halfling PNG</button>
+            
+            <!-- Row 3: Generate PDF -->
+            <button onclick="setRaceAndGeneratePDF('')" style="background-color: #9C27B0;">Random PDF</button>
+            <button onclick="setRaceAndGeneratePDF('Demihuman')" style="background-color: #9C27B0;">Demihuman PDF</button>
+            <button onclick="setRaceAndGeneratePDF('Human')" style="background-color: #9C27B0;">Human PDF</button>
+            <button onclick="setRaceAndGeneratePDF('Dwarf')" style="background-color: #9C27B0;">Dwarf PDF</button>
+            <button onclick="setRaceAndGeneratePDF('Elf')" style="background-color: #9C27B0;">Elf PDF</button>
+            <button onclick="setRaceAndGeneratePDF('Gnome')" style="background-color: #9C27B0;">Gnome PDF</button>
+            <button onclick="setRaceAndGeneratePDF('Halfling')" style="background-color: #9C27B0;">Halfling PDF</button>
+            
+            <!-- Row 4: Generate 4 Character PDF -->
+            <button onclick="setRaceAndGenerateBulkPDF('')" style="background-color: #E91E63;">Random 4-PDF</button>
+            <button onclick="setRaceAndGenerateBulkPDF('Demihuman')" style="background-color: #E91E63;">Demihuman 4-PDF</button>
+            <button onclick="setRaceAndGenerateBulkPDF('Human')" style="background-color: #E91E63;">Human 4-PDF</button>
+            <button onclick="setRaceAndGenerateBulkPDF('Dwarf')" style="background-color: #E91E63;">Dwarf 4-PDF</button>
+            <button onclick="setRaceAndGenerateBulkPDF('Elf')" style="background-color: #E91E63;">Elf 4-PDF</button>
+            <button onclick="setRaceAndGenerateBulkPDF('Gnome')" style="background-color: #E91E63;">Gnome 4-PDF</button>
+            <button onclick="setRaceAndGenerateBulkPDF('Halfling')" style="background-color: #E91E63;">Halfling 4-PDF</button>
+            
+            <!-- Row 5: Generate Markdown -->
+            <button onclick="setRaceAndGenerateMarkdown('')" style="background-color: #607D8B;">Random MD</button>
+            <button onclick="setRaceAndGenerateMarkdown('Demihuman')" style="background-color: #607D8B;">Demihuman MD</button>
+            <button onclick="setRaceAndGenerateMarkdown('Human')" style="background-color: #607D8B;">Human MD</button>
+            <button onclick="setRaceAndGenerateMarkdown('Dwarf')" style="background-color: #607D8B;">Dwarf MD</button>
+            <button onclick="setRaceAndGenerateMarkdown('Elf')" style="background-color: #607D8B;">Elf MD</button>
+            <button onclick="setRaceAndGenerateMarkdown('Gnome')" style="background-color: #607D8B;">Gnome MD</button>
+            <button onclick="setRaceAndGenerateMarkdown('Halfling')" style="background-color: #607D8B;">Halfling MD</button>
+            
+            <!-- Row 6: Generate JSON -->
+            <button onclick="setRaceAndGenerateJSON('')" style="background-color: #00BCD4;">Random JSON</button>
+            <button onclick="setRaceAndGenerateJSON('Demihuman')" style="background-color: #00BCD4;">Demihuman JSON</button>
+            <button onclick="setRaceAndGenerateJSON('Human')" style="background-color: #00BCD4;">Human JSON</button>
+            <button onclick="setRaceAndGenerateJSON('Dwarf')" style="background-color: #00BCD4;">Dwarf JSON</button>
+            <button onclick="setRaceAndGenerateJSON('Elf')" style="background-color: #00BCD4;">Elf JSON</button>
+            <button onclick="setRaceAndGenerateJSON('Gnome')" style="background-color: #00BCD4;">Gnome JSON</button>
+            <button onclick="setRaceAndGenerateJSON('Halfling')" style="background-color: #00BCD4;">Halfling JSON</button>
+            
+            <!-- Row 6: Generate 4 Character JSON -->
+            <button onclick="setRaceAndGenerateCountJSON('', 4)" style="background-color: #009688;">Random 4-JSON</button>
+            <button onclick="setRaceAndGenerateCountJSON('Demihuman', 4)" style="background-color: #009688;">Demihuman 4-JSON</button>
+            <button onclick="setRaceAndGenerateCountJSON('Human', 4)" style="background-color: #009688;">Human 4-JSON</button>
+            <button onclick="setRaceAndGenerateCountJSON('Dwarf', 4)" style="background-color: #009688;">Dwarf 4-JSON</button>
+            <button onclick="setRaceAndGenerateCountJSON('Elf', 4)" style="background-color: #009688;">Elf 4-JSON</button>
+            <button onclick="setRaceAndGenerateCountJSON('Gnome', 4)" style="background-color: #009688;">Gnome 4-JSON</button>
+            <button onclick="setRaceAndGenerateCountJSON('Halfling', 4)" style="background-color: #009688;">Halfling 4-JSON</button>
+            
+            <!-- Row 7: Generate 16 Character JSON -->
+            <button onclick="setRaceAndGenerateCountJSON('', 16)" style="background-color: #00796B;">Random 16-JSON</button>
+            <button onclick="setRaceAndGenerateCountJSON('Demihuman', 16)" style="background-color: #00796B;">Demihuman 16-JSON</button>
+            <button onclick="setRaceAndGenerateCountJSON('Human', 16)" style="background-color: #00796B;">Human 16-JSON</button>
+            <button onclick="setRaceAndGenerateCountJSON('Dwarf', 16)" style="background-color: #00796B;">Dwarf 16-JSON</button>
+            <button onclick="setRaceAndGenerateCountJSON('Elf', 16)" style="background-color: #00796B;">Elf 16-JSON</button>
+            <button onclick="setRaceAndGenerateCountJSON('Gnome', 16)" style="background-color: #00796B;">Gnome 16-JSON</button>
+            <button onclick="setRaceAndGenerateCountJSON('Halfling', 16)" style="background-color: #00796B;">Halfling 16-JSON</button>
+            
+            <!-- Row 8: Generate 100 Character JSON -->
+            <button onclick="setRaceAndGenerateCountJSON('', 100)" style="background-color: #004D40;">Random 100-JSON</button>
+            <button onclick="setRaceAndGenerateCountJSON('Demihuman', 100)" style="background-color: #004D40;">Demihuman 100-JSON</button>
+            <button onclick="setRaceAndGenerateCountJSON('Human', 100)" style="background-color: #004D40;">Human 100-JSON</button>
+            <button onclick="setRaceAndGenerateCountJSON('Dwarf', 100)" style="background-color: #004D40;">Dwarf 100-JSON</button>
+            <button onclick="setRaceAndGenerateCountJSON('Elf', 100)" style="background-color: #004D40;">Elf 100-JSON</button>
+            <button onclick="setRaceAndGenerateCountJSON('Gnome', 100)" style="background-color: #004D40;">Gnome 100-JSON</button>
+            <button onclick="setRaceAndGenerateCountJSON('Halfling', 100)" style="background-color: #004D40;">Halfling 100-JSON</button>
+        </div>
+        
+        <script>
+        function setRaceAndGenerate(race) {
+            document.getElementById('forceRace').value = race === 'Demihuman' ? '' : race;
+            document.getElementById('forceDemihuman').checked = race === 'Demihuman';
+            generate0LevelCharacter();
+        }
+        
+        function setRaceAndGeneratePNG(race) {
+            document.getElementById('forceRace').value = race === 'Demihuman' ? '' : race;
+            document.getElementById('forceDemihuman').checked = race === 'Demihuman';
+            generateCanvasPNG();
+        }
+        
+        function setRaceAndGeneratePDF(race) {
+            document.getElementById('forceRace').value = race === 'Demihuman' ? '' : race;
+            document.getElementById('forceDemihuman').checked = race === 'Demihuman';
+            generateCanvasPDF();
+        }
+        
+        function setRaceAndGenerateBulkPDF(race) {
+            document.getElementById('forceRace').value = race === 'Demihuman' ? '' : race;
+            document.getElementById('forceDemihuman').checked = race === 'Demihuman';
+            generateCanvasBulkPDF();
+        }
+        
+        function setRaceAndGenerateJSON(race) {
+            document.getElementById('forceRace').value = race === 'Demihuman' ? '' : race;
+            document.getElementById('forceDemihuman').checked = race === 'Demihuman';
+            generateJSON();
+        }
+        
+        function setRaceAndGenerateBulkJSON(race) {
+            document.getElementById('forceRace').value = race === 'Demihuman' ? '' : race;
+            document.getElementById('forceDemihuman').checked = race === 'Demihuman';
+            generateBulkJSON();
+        }
+        
+        function setRaceAndGenerateCountJSON(race, count) {
+            document.getElementById('forceRace').value = race === 'Demihuman' ? '' : race;
+            document.getElementById('forceDemihuman').checked = race === 'Demihuman';
+            generateCountJSON(count);
+        }
+        
+        function setRaceAndGenerateMarkdown(race) {
+            document.getElementById('forceRace').value = race === 'Demihuman' ? '' : race;
+            document.getElementById('forceDemihuman').checked = race === 'Demihuman';
+            generateMarkdown();
+        }
+        </script>
+    </div>
+
+    <div id="result"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="background-tables.js"></script>
+    <script src="racial-abilities.js"></script>
+    <script src="names-tables.js"></script>
+    <script src="dice-utils.js"></script>
+    <script src="ose-modifiers.js"></script>
+    <script src="race-adjustments.js"></script>
+    <script src="markdown-generator.js"></script>
+    <script src="character-utils.js"></script>
+    <script src="character-display.js"></script>
+    <script src="main-generator.js"></script>
+    <script src="canvas-sheet-renderer.js"></script>
+    <script src="canvas-generator.js"></script>
+</body>
+</html>
