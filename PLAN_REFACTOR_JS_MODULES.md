@@ -254,92 +254,147 @@ These modules are already well-organized:
 ### Phase 2: Extract Shared Utilities - **HIGH PRIORITY** 🔥
 **Do this BEFORE implementing Advanced Mode!**
 
-#### Phase 2A: Create shared-ability-scores.js - **IN PROGRESS**
-- [ ] Create `shared-ability-scores.js`
-- [ ] Extract from basic-utils.js:
-  - [ ] calculateModifier(score)
-  - [ ] formatModifier(mod)
-  - [ ] calculateXPBonus(score)
-  - [ ] getPrimeRequisites(className)
-  - [ ] meetsToughCharactersRequirements(scores)
-- [ ] Extract from basic-character-gen.js:
-  - [ ] rollSingleDie(sides)
-  - [ ] rollDice(numDice, sides)
-  - [ ] rollAbilityScore(minimum, abilityName)
-  - [ ] rollAbilities(minimumScores, toughCharacters)
-- [ ] Add JSDoc comments
-- [ ] Export all functions
-- [ ] Test module loads correctly
+#### Phase 2A: Create shared-ability-scores.js - ✅ COMPLETE
+- [x] Create `shared-ability-scores.js` ✅
+- [x] Extract from basic-utils.js: ✅
+  - [x] calculateModifier(score) ✅
+  - [x] formatModifier(mod) ✅
+  - [x] calculateXPBonus(score) ✅
+  - [x] getPrimeRequisites(className) ✅
+  - [x] meetsToughCharactersRequirements(scores) ✅
+  - [x] meetsPrimeRequisiteRequirements(scores, className) ✅
+- [x] Extract from basic-character-gen.js: ✅
+  - [x] rollSingleDie(sides) ✅
+  - [x] rollDice(numDice, sides) ✅
+  - [x] rollAbilityScore(minimum, abilityName) ✅
+  - [x] rollAbilities(minimumScores, toughCharacters, className, primeRequisite13) ✅
+- [x] Add JSDoc comments ✅
+- [x] Export all functions ✅
+- [x] Test module loads correctly ✅
+- [x] Verify basic-utils.js imports from shared module ✅
+- [x] Verify basic-character-gen.js imports from shared module ✅
+- [x] Test basic.html works correctly ✅
 
-#### Phase 2B: Update basic-utils.js to use shared module
-- [ ] Import shared-ability-scores.js
-- [ ] Remove functions now in shared module
-- [ ] Keep only basic-specific utility functions
-- [ ] Update any function calls
-- [ ] Test with basic.html
+#### Phase 2B: Update basic-utils.js to use shared module - ✅ COMPLETE
+- [x] Import shared-ability-scores.js ✅
+- [x] Remove functions now in shared module ✅
+- [x] Keep only basic-specific utility functions ✅
+- [x] Re-export shared functions for backward compatibility ✅
+- [x] Test with basic.html ✅
 
-#### Phase 2C: Update basic-character-gen.js to use shared module
-- [ ] Import shared-ability-scores.js
-- [ ] Remove functions now in shared module
-- [ ] Update any function calls
-- [ ] Test with basic.html
+#### Phase 2C: Update basic-character-gen.js to use shared module - ✅ COMPLETE
+- [x] Import shared-ability-scores.js ✅
+- [x] Remove functions now in shared module ✅
+- [x] Re-export shared functions for backward compatibility ✅
+- [x] Update any function calls ✅
+- [x] Test with basic.html ✅
 
-#### Phase 2D: Create shared-hit-points.js
-- [ ] Create `shared-hit-points.js`
-- [ ] Extract from basic-character-gen.js:
-  - [ ] parseHitDice(hitDiceString)
-  - [ ] rollHitPoints(options) - generalized for all generators
-- [ ] Add JSDoc comments
-- [ ] Export all functions
-- [ ] Test module loads correctly
+#### Phase 2D: Create shared-hit-points.js - ✅ COMPLETE
+- [x] Create `shared-hit-points.js` ✅
+- [x] Extract from basic-character-gen.js: ✅
+  - [x] rollSingleDie(sides) ✅
+  - [x] parseHitDice(hitDiceString) ✅
+  - [x] rollHitPoints(options) - generalized for all generators ✅
+- [x] Add JSDoc comments ✅
+- [x] Export all functions ✅
+- [x] Test module loads correctly ✅
 
-#### Phase 2E: Update basic-character-gen.js to use shared HP module
-- [ ] Import shared-hit-points.js
-- [ ] Remove functions now in shared module
-- [ ] Update any function calls
-- [ ] Test with basic.html
+#### Phase 2E: Update basic-character-gen.js to use shared HP module - ✅ COMPLETE
+- [x] Import shared-hit-points.js ✅
+- [x] Remove parseHitDice() function (now in shared module) ✅
+- [x] Remove rollHitPoints() implementation (now in shared module) ✅
+- [x] Create wrapper function for rollHitPoints() ✅
+- [x] Re-export shared functions for backward compatibility ✅
+- [x] Test with basic.html ✅
 
-#### Phase 2F: Create shared-class-progression.js
-- [ ] Create `shared-class-progression.js`
-- [ ] Extract from basic-character-gen.js:
-  - [ ] getClassProgressionData(options)
-  - [ ] getClassFeatures(options)
-  - [ ] getRacialAbilities(className, race, mode)
-- [ ] Add JSDoc comments
-- [ ] Export all functions
-- [ ] Test module loads correctly
+#### Phase 2F: Create shared-class-progression.js - ✅ COMPLETE
+- [x] Create `shared-class-progression.js` ✅
+- [x] Extract from basic-character-gen.js: ✅
+  - [x] getClassProgressionData(options) ✅
+  - [x] getClassFeatures(options) ✅
+  - [x] getRacialAbilities(className) ✅
+- [x] Add JSDoc comments ✅
+- [x] Export all functions ✅
+- [x] Test module loads correctly ✅
 
-#### Phase 2G: Update basic-character-gen.js to use shared progression module
-- [ ] Import shared-class-progression.js
-- [ ] Remove functions now in shared module
-- [ ] Update any function calls
-- [ ] Test with basic.html
+#### Phase 2G: Update basic-character-gen.js to use shared progression module - ✅ COMPLETE
+- [x] Import shared-class-progression.js ✅
+- [x] Remove getClassProgressionData() implementation ✅
+- [x] Remove getClassFeatures() implementation ✅
+- [x] Remove getRacialAbilities() implementation ✅
+- [x] Create wrapper functions for all three ✅
+- [x] Test with basic.html ✅
 
-#### Phase 2H: Create shared-character.js
-- [ ] Create `shared-character.js`
-- [ ] Extract from basic-character-gen.js:
-  - [ ] createCharacter(options)
-- [ ] Add JSDoc comments
-- [ ] Export all functions
-- [ ] Test module loads correctly
+#### Phase 2H: Create shared-character.js - ✅ COMPLETE
+- [x] Create `shared-character.js` ✅
+- [x] Extract from basic-character-gen.js: ✅
+  - [x] createCharacter(options) ✅
+- [x] Add JSDoc comments ✅
+- [x] Export all functions ✅
+- [x] Test module loads correctly ✅
 
-#### Phase 2I: Update basic-character-gen.js to use shared character module
-- [ ] Import shared-character.js
-- [ ] Remove functions now in shared module
-- [ ] Update any function calls
-- [ ] Test with basic.html
+#### Phase 2I: Update basic-character-gen.js to use shared character module - ✅ COMPLETE
+- [x] Import shared-character.js ✅
+- [x] Remove createCharacter() implementation ✅
+- [x] Create wrapper function ✅
+- [x] Test with basic.html ✅
 
-#### Phase 2J: Final Testing
-- [ ] Test basic.html thoroughly
-- [ ] Verify all functionality works
-- [ ] Check console for errors
-- [ ] Test all character generation options
-- [ ] **Verify everything works before proceeding to Phase 3**
+#### Phase 2J: Final Testing - ✅ COMPLETE
+- [x] Test basic.html thoroughly ✅
+- [x] Verify all functionality works ✅
+- [x] Check console for errors ✅
+- [x] Test all character generation options ✅
+  - [x] Level 1 Fighter - works ✅
+  - [x] Level 2 Cleric with spell slots and turn undead - works ✅
+  - [x] Level 2 Thief with thief skills - works ✅
+  - [x] Level 2 Elf with spell slots and racial abilities - works ✅
+- [x] **Verified everything works before proceeding to Phase 3** ✅
 
 ### Phase 3: Refactor 0level Generator - **HIGH PRIORITY**
 **Do this AFTER Phase 2, BEFORE implementing Advanced Mode!**
 
-#### Phase 3A: Update 0level Options
+#### Phase 3A: Document Ability Score Modifiers
+**Important:** The 0-level generator shows how ability score modifiers affect combat stats. These modifiers apply to **ALL character levels** (0-level, Basic Mode levels 1-14, and Advanced Mode levels 1-14).
+
+**Ability Score Modifiers (OSE Standard):**
+- **STR (Strength):**
+  - Melee attack bonus: STR modifier
+  - Melee damage bonus: STR modifier
+  - Open doors: Modified by STR
+  
+- **DEX (Dexterity):**
+  - Missile attack bonus: DEX modifier
+  - Armor Class: Base AC 10 + DEX modifier (Ascending AC)
+  - Initiative: Modified by DEX
+  
+- **CON (Constitution):**
+  - Hit Points: Added to each HD rolled (minimum 1 HP per level)
+  
+- **INT (Intelligence):**
+  - Spoken languages: Modified by INT
+  - Literacy: Requires INT 8+
+  
+- **WIS (Wisdom):**
+  - Magic-based saving throws: Modified by WIS
+  
+- **CHA (Charisma):**
+  - Reaction rolls: Modified by CHA
+  - Max retainers: Modified by CHA
+  - Retainer morale: Modified by CHA
+
+**Combat Stats Display (for ALL generators):**
+- **Attack Bonus:** Class attack bonus + STR (melee) or DEX (missile)
+- **Armor Class:** 10 (base) + DEX modifier + armor bonus
+- **Saving Throws:** Base saves + ability modifiers (varies by save type)
+
+**TODO for Future Phases:**
+- [ ] Update basic-ui.js to display STR/DEX attack bonuses separately
+- [ ] Update basic-ui.js to apply DEX modifier to AC display
+- [ ] Update advanced-ui.js to display STR/DEX attack bonuses separately
+- [ ] Update advanced-ui.js to apply DEX modifier to AC display
+- [ ] Consider creating shared-combat-stats.js module for consistent combat stat calculations
+
+#### Phase 3B: Update 0level Options
 - [ ] Split "Tough Guys" checkbox into two separate options:
   - [ ] **"Born Adventurers"** (formerly "Tough Characters")
     - [ ] Require at least one of STR/DEX/INT/WIS ≥ 13
@@ -355,7 +410,7 @@ These modules are already well-organized:
   - [ ] Add "Healthy Characters" checkbox
   - [ ] Update descriptions to match Basic Mode terminology
 
-#### Phase 3B: Create 0level Modules
+#### Phase 3C: Create 0level Modules
 - [ ] Create `0level-utils.js` (similar to basic-utils.js):
   - [ ] Import shared-ability-scores.js
   - [ ] Add 0level-specific functions
@@ -374,7 +429,7 @@ These modules are already well-organized:
   - [ ] Handle "Born Adventurers" checkbox
   - [ ] Handle "Healthy Characters" checkbox
 
-#### Phase 3C: Update 0level HTML
+#### Phase 3D: Update 0level HTML
 - [ ] Update `0level.html`:
   - [ ] Import 0level-ui.js module
   - [ ] Remove old script tags (main-generator.js, etc.)
