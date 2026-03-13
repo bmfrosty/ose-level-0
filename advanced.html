@@ -10,6 +10,7 @@
             max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
+            font-size: 11px;
         }
         nav {
             background-color: #f0f0f0;
@@ -46,8 +47,8 @@
         }
         
         .control-section {
-            margin-bottom: 30px;
-            padding-bottom: 20px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
             border-bottom: 1px solid #ddd;
         }
         
@@ -125,11 +126,11 @@
         }
         
         .grid-button {
-            padding: 10px 15px;
-            font-size: 14px;
+            padding: 5px 7px;
+            font-size: 11px;
             font-weight: bold;
             border: 2px solid #9C27B0;
-            border-radius: 5px;
+            border-radius: 3px;
             background-color: white;
             color: #9C27B0;
             cursor: pointer;
@@ -155,67 +156,68 @@
         
         /* Checkboxes */
         .checkbox-option {
-            margin: 15px 0;
+            margin: 8px 0;
         }
         
         .checkbox-option label {
             cursor: pointer;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 6px;
         }
         
         .checkbox-option input[type="checkbox"] {
-            width: 20px;
-            height: 20px;
+            width: 14px;
+            height: 14px;
             cursor: pointer;
         }
         
         /* Radio Buttons */
         .radio-option {
-            margin: 15px 0;
+            margin: 8px 0;
         }
         
         .radio-option label {
             cursor: pointer;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 6px;
         }
         
         .radio-option input[type="radio"] {
-            width: 20px;
-            height: 20px;
+            width: 14px;
+            height: 14px;
             cursor: pointer;
         }
         
-        /* Ability Score Grid - 2 rows of 3 */
+        /* Ability Score Grid - 2 rows of 3, horizontal layout */
         .ability-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
+            gap: 8px;
             margin-top: 15px;
-            max-width: 600px;
+            max-width: 800px;
         }
         
         .ability-box {
-            text-align: center;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
         
         .ability-label {
             font-weight: bold;
-            display: block;
-            margin-bottom: 5px;
             color: #333;
+            min-width: 35px;
         }
         
         .ability-input {
-            width: 80px;
-            padding: 10px;
+            width: 40px;
+            padding: 3px;
             text-align: center;
             border: 2px solid #ccc;
             border-radius: 3px;
-            font-size: 18px;
+            font-size: 12px;
             font-weight: bold;
         }
         
@@ -225,11 +227,10 @@
         }
         
         .ability-modifier {
-            display: block;
-            margin-top: 5px;
-            font-size: 14px;
+            font-size: 12px;
             color: #666;
             font-weight: normal;
+            min-width: 30px;
         }
         
         .xp-bonus-display {
@@ -246,13 +247,13 @@
         
         /* Roll Button */
         .roll-button {
-            padding: 10px 20px;
-            font-size: 16px;
+            padding: 5px 10px;
+            font-size: 11px;
             font-weight: bold;
             background-color: #2196F3;
             color: white;
             border: none;
-            border-radius: 5px;
+            border-radius: 3px;
             cursor: pointer;
             transition: background-color 0.3s;
             margin-top: 15px;
@@ -269,13 +270,13 @@
         
         /* Generate Button */
         .generate-button {
-            padding: 15px 30px;
-            font-size: 18px;
+            padding: 7px 15px;
+            font-size: 13px;
             font-weight: bold;
             background-color: #9C27B0;
             color: white;
             border: none;
-            border-radius: 5px;
+            border-radius: 3px;
             cursor: pointer;
             transition: background-color 0.3s;
         }
@@ -356,11 +357,27 @@
                     </span>
                 </label>
             </div>
-            <div class="checkbox-option">
+            <div class="radio-option">
                 <label>
-                    <input type="checkbox" id="primeRequisite13">
+                    <input type="radio" name="primeRequisiteMode" id="primeReqUser" value="user" checked>
                     <span>
-                        <strong>Strong Prime Requisites</strong> - Require prime requisite(s) for selected class ≥ 13
+                        <strong>User Minimums Only</strong> - Use ability score minimums from Step 3 only
+                    </span>
+                </label>
+            </div>
+            <div class="radio-option">
+                <label>
+                    <input type="radio" name="primeRequisiteMode" id="primeReq9" value="9">
+                    <span>
+                        <strong>Prime Requisite ≥ 9</strong> - Require prime requisite(s) for selected class ≥ 9
+                    </span>
+                </label>
+            </div>
+            <div class="radio-option">
+                <label>
+                    <input type="radio" name="primeRequisiteMode" id="primeReq13" value="13">
+                    <span>
+                        <strong>Prime Requisite ≥ 13</strong> - Require prime requisite(s) for selected class ≥ 13
                     </span>
                 </label>
             </div>
@@ -392,7 +409,7 @@
 
         <!-- Ability Scores -->
         <div class="control-section">
-            <h3>3. Ability Scores</h3>
+            <h3>3. Minimum Ability Scores</h3>
             
             <div class="ability-grid">
                 <!-- Row 1: STR, INT, WIS -->
@@ -434,18 +451,8 @@
                 <strong>Prime Requisite XP Bonus:</strong> <span id="xpBonusText">+0%</span>
             </div>
             
-            <div class="checkbox-option">
-                <label>
-                    <input type="checkbox" id="useFixedScores">
-                    <span><strong>Use fixed ability scores</strong> - Use the values above as-is (unchecked = roll randomly with minimums)</span>
-                </label>
-            </div>
-            
-            <button class="roll-button" id="rollAbilitiesButton">Roll Abilities</button>
-            <button class="roll-button" id="testHPButton" style="margin-left: 10px; background-color: #FF9800;">Test HP Rolling</button>
-            <div id="testHPWarning" style="margin-top: 10px; padding: 10px; background-color: #fff3cd; border-left: 4px solid #ffc107; display: none;">
-                <strong>Cannot test HP rolling:</strong> <span id="testHPWarningText"></span>
-            </div>
+            <button class="roll-button" id="setMinimumsButton" style="background-color: #FF9800;">Set to Minimums (3)</button>
+            <button class="roll-button" id="rollAbilitiesButton" style="margin-left: 10px;">Roll Abilities</button>
         </div>
 
         <!-- Race/Class Restrictions -->
@@ -546,8 +553,13 @@
         <!-- Generate Button -->
         <div class="control-section">
             <h3>6. Generate</h3>
+            <div class="checkbox-option">
+                <label>
+                    <input type="checkbox" id="useFixedScores">
+                    <span><strong>Use the ability scores specified in Step 3</strong> (unchecked = roll randomly with minimums)</span>
+                </label>
+            </div>
             <button class="generate-button" id="generateButton" disabled>Generate Character</button>
-            <button class="roll-button" id="rollAndGenerateButton" style="margin-left: 15px;">Roll Abilities & Generate Character</button>
         </div>
     </div>
 

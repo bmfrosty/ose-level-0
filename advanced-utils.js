@@ -171,6 +171,11 @@ export function getMinimumScores() {
  * @returns {Object} Requirements object (e.g., {STR: 9})
  */
 export function getClassRequirements(className) {
+    // Handle null/undefined className
+    if (!className) {
+        return {};
+    }
+    
     // Normalize class name
     const normalizedClass = className.endsWith('_CLASS') ? className : `${className}_CLASS`;
     
