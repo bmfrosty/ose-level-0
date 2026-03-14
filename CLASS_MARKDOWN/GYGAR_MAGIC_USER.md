@@ -1,5 +1,8 @@
 # Magic-User (Smoothified Mode)
 
+*This class description is derived from Old-School Essentials content, used under the Open Game License.*
+
+
 Magic-users are adventurers whose study of secret arcane lore has taught them how to cast spells and to wield powerful magic items. Magic-users begin play with knowledge of just a single spell, but gain access to extremely potent magic as they advance.
 
 ## Requirements

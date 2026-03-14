@@ -206,9 +206,9 @@
             event?.target?.classList.add('active');
 
             try {
-                const response = await fetch(`${className}.md`);
+                const response = await fetch(`CLASS_MARKDOWN/${className}.md`);
                 if (!response.ok) {
-                    throw new Error(`Failed to load ${className}.md (${response.status})`);
+                    throw new Error(`Failed to load CLASS_MARKDOWN/${className}.md (${response.status})`);
                 }
                 
                 const markdown = await response.text();

@@ -1,5 +1,8 @@
 # Elf (Smoothified Mode)
 
+*This class description is derived from Old-School Essentials content, used under the Open Game License.*
+
+
 Elves are slender, fey demihumans with pointed ears, about 5 to 5½ feet tall and weighing about 120 pounds. Elves are seldom met in human settlements, preferring to feast and make merry in the woods. Elves are fascinated by spells and beautifully constructed magic items and love to collect both. If crossed, they are dangerous enemies, as they are masters of both sword and spell.
 
 ## Requirements

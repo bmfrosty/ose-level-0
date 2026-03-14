@@ -1,5 +1,7 @@
 # Cleric (Smoothified Mode)
 
+*This class description is derived from Old-School Essentials content, used under the Open Game License.*
+
 Clerics are adventurers who have sworn to serve a deity. Both humans and dwarves can become clerics. They are trained for battle and channel the power of their deity.
 
 ## Requirements

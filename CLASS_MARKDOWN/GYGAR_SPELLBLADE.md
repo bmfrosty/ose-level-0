@@ -1,5 +1,8 @@
 # Spellblade (Smoothified Mode)
 
+*This class description is derived from Old-School Essentials content, used under the Open Game License.*
+
+
 The spellblade is a warrior-scholar who combines martial training with arcane study. Both elves and humans can become spellblades. Unlike wizards, spellblades train with blades and armor while retaining the ability to prepare and cast spells. Their abilities come from discipline and training.
 
 ## Requirements

@@ -1,18 +1,34 @@
-# Dwarf (OSE Standard)
+# Dwarf (Smoothified Mode)
+
+*This class description is derived from Old-School Essentials content, used under the Open Game License.*
+
 
 **Demihuman Class**
 
-**Requirements:** Minimum CON 9  
-**Prime requisite:** STR  
-**Hit Dice:** 1d8  
-**Maximum level:** 12  
-**Armour:** Any, including shields  
-**Weapons:** Small or normal sized  
-**Languages:** Alignment, Common, Dwarvish, Gnomish, Goblin, Kobold
-
 Dwarves are stout demihumans, about 4' tall and weighing about 150 pounds. They live in clans, each with its own underground stronghold. Clans are usually on good terms and will cooperate in times of need. Dwarves are known for their stubbornness, practicality, and their love of fine craftsmanship, gold, hearty food, and strong drink. Their hair and long beards are black, grey, or brown, and their skin is earthy brown. They are strongly resilient to magic, as indicated in their saving throw values.
 
+## Requirements
+Dwarf. Minimum CON 9.
+
+## Prime Requisite
+STR.
+
 **XP bonus for STR:** 13–15: +5%, 16–18: +10%.
+
+## Hit Dice
+1d8 per level until 9th level. After 9th level, +2 hit points per level, and Constitution modifiers no longer apply.
+
+## Maximum Level
+12.
+
+## Armour
+Any, including shields.
+
+## Weapons
+Small or normal sized.
+
+## Languages
+Alignment, Common, Dwarvish, Gnomish, Goblin, Kobold.
 
 ## Combat
 
@@ -42,20 +58,20 @@ A dwarf ruler may only hire dwarven mercenaries. Specialists and retainers of an
 
 ## Dwarf Level Progression
 
-| Level | XP      | HD      | THAC0    | D | W | P  | B  | S  |
-|-------|---------|---------|----------|---|---|----|----|----|
-| 1     | 0       | 1d8     | 19 [0]   | 8 | 9 | 10 | 13 | 12 |
-| 2     | 2,200   | 2d8     | 19 [0]   | 8 | 9 | 10 | 13 | 12 |
-| 3     | 4,400   | 3d8     | 19 [0]   | 8 | 9 | 10 | 13 | 12 |
-| 4     | 8,800   | 4d8     | 17 [+2]  | 6 | 7 | 8  | 10 | 10 |
-| 5     | 17,000  | 5d8     | 17 [+2]  | 6 | 7 | 8  | 10 | 10 |
-| 6     | 35,000  | 6d8     | 17 [+2]  | 6 | 7 | 8  | 10 | 10 |
-| 7     | 70,000  | 7d8     | 14 [+5]  | 4 | 5 | 6  | 7  | 8  |
-| 8     | 140,000 | 8d8     | 14 [+5]  | 4 | 5 | 6  | 7  | 8  |
-| 9     | 270,000 | 9d8     | 14 [+5]  | 4 | 5 | 6  | 7  | 8  |
-| 10    | 400,000 | 9d8+3*  | 12 [+7]  | 2 | 3 | 4  | 4  | 6  |
-| 11    | 530,000 | 9d8+6*  | 12 [+7]  | 2 | 3 | 4  | 4  | 6  |
-| 12    | 660,000 | 9d8+9*  | 12 [+7]  | 2 | 3 | 4  | 4  | 6  |
+| Level | XP      | HD      | To-Hit | D | W | P  | B  | S  |
+|-------|---------|---------|--------|---|---|----|----|----|
+| 1     | 0       | 1d8     | +1     | 8 | 9 | 10 | 13 | 12 |
+| 2     | 2,200   | 2d8     | +2     | 8 | 9 | 10 | 12 | 12 |
+| 3     | 4,400   | 3d8     | +3     | 7 | 8 | 9  | 11 | 11 |
+| 4     | 8,800   | 4d8     | +4     | 6 | 7 | 8  | 10 | 10 |
+| 5     | 17,000  | 5d8     | +5     | 6 | 7 | 8  | 9  | 10 |
+| 6     | 35,000  | 6d8     | +5     | 5 | 6 | 7  | 8  | 9  |
+| 7     | 70,000  | 7d8     | +6     | 4 | 5 | 6  | 7  | 8  |
+| 8     | 140,000 | 8d8     | +6     | 4 | 5 | 6  | 6  | 8  |
+| 9     | 270,000 | 9d8     | +7     | 3 | 4 | 5  | 5  | 7  |
+| 10    | 400,000 | 9d8+2*  | +7     | 2 | 3 | 4  | 4  | 6  |
+| 11    | 530,000 | 9d8+4*  | +7     | 2 | 3 | 4  | 4  | 6  |
+| 12    | 660,000 | 9d8+6*  | +8     | 2 | 3 | 4  | 4  | 6  |
 
 **\* Modifiers from CON no longer apply.**
 
@@ -65,3 +81,8 @@ A dwarf ruler may only hire dwarven mercenaries. Specialists and retainers of an
 - **P:** Paralysis / petrify
 - **B:** Breath attacks
 - **S:** Spells / rods / staves
+
+## Notes
+- **Dwarves in Smoothified Mode** use this progression with smoothed to-hit bonuses
+- Dwarves are available in Smoothified Mode
+- Maximum level is 12

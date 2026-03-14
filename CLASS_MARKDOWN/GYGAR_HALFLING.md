@@ -1,5 +1,8 @@
 # Halfling (Smoothified Mode)
 
+*This class description is derived from Old-School Essentials content, used under the Open Game License.*
+
+
 **Demihuman Class**
 
 Halflings are small, rotund demihumans with curly hair upon their heads and feet. They weigh about 60 pounds and are around 3' tall. Halflings are a friendly and welcoming folk. Above all, they love the comforts of home and are not known for their bravery. Halflings who gain treasure through adventuring will often use their wealth in pursuit of a quiet, comfortable life.

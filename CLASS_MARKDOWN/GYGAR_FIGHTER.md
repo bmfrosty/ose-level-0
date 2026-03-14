@@ -1,5 +1,7 @@
 # Fighter (Smoothified Mode)
 
+*This class description is derived from Old-School Essentials content, used under the Open Game License.*
+
 Fighters are adventurers trained in warfare and combat. In a group of adventurers, the role of fighters is to battle monsters and to defend other characters.
 
 ## Requirements
