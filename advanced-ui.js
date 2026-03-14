@@ -5,6 +5,7 @@
 
 import * as ClassDataOSE from './class-data-ose.js';
 import * as ClassDataGygar from './class-data-gygar.js';
+import * as ClassDataLL from './class-data-ll.js';
 import * as ClassDataShared from './class-data-shared.js';
 import { 
     calculateModifier, 
@@ -33,13 +34,14 @@ import { getModifierEffects } from './shared-modifier-effects.js';
 // Make modules available globally for debugging
 window.ClassDataOSE = ClassDataOSE;
 window.ClassDataGygar = ClassDataGygar;
+window.ClassDataLL = ClassDataLL;
 window.ClassDataShared = ClassDataShared;
 
 // State variables
 let selectedLevel = null;
 let selectedRace = null;
 let selectedClass = null;
-let smoothifiedMode = true;
+let progressionMode = 'smooth'; // 'ose', 'smooth', or 'll'
 let raceClassMode = 'strict'; // 'strict', 'traditional-extended', 'allow-all'
 let primeRequisiteMode = 'user'; // 'user', '9', '13'
 let healthyCharacters = false;
@@ -178,6 +180,14 @@ export function initializeRaceClassGrid() {
             updateUI();
         });
     });
+    
+    // Set Human Fighter as default selection
+    const humanFighterButton = document.querySelector('[data-race="Human"][data-class="Fighter"]');
+    if (humanFighterButton) {
+        humanFighterButton.classList.add('selected');
+        selectedRace = 'Human_RACE';
+        selectedClass = 'Fighter_CLASS';
+    }
 }
 
 
@@ -220,7 +230,7 @@ export function updateUI() {
         
         // For traditional-extended mode, Spellblade is only available for Human and Elf
         // (not all races like in allow-all mode)
-        if (raceClassMode === 'traditional-extended' && className === 'Spellblade' && smoothifiedMode) {
+        if (raceClassMode === 'traditional-extended' && className === 'Spellblade') {
             isAvailable = (race === 'Human' || race === 'Elf');
         }
         
@@ -349,9 +359,12 @@ function handleRollAbilities() {
  */
 export function initializeEventListeners() {
     // Checkbox event listeners
-    document.getElementById('smoothifiedMode').addEventListener('change', (e) => {
-        smoothifiedMode = e.target.checked;
-        updateUI();
+    // Progression mode radio buttons
+    document.querySelectorAll('input[name="progressionMode"]').forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            progressionMode = e.target.value;
+            updateUI();
+        });
     });
 
     // Prime Requisite Mode radio button listeners
@@ -416,15 +429,15 @@ export function generateCharacter() {
     console.log('Level:', selectedLevel);
     console.log('Race:', selectedRace, '(Display:', getRaceDisplayName(selectedRace) + ')');
     console.log('Class:', selectedClass, '(Display:', getClassDisplayName(selectedClass) + ')');
-    console.log('Mode:', smoothifiedMode ? 'Smoothified' : 'Normal');
+    console.log('Progression Mode:', progressionMode);
     console.log('Prime Requisite Mode:', primeRequisiteMode);
     console.log('Healthy Characters:', healthyCharacters);
     console.log('Include Level 0 HP:', includeLevel0HP);
     console.log('Use Fixed Scores:', useFixedScores);
     
     // Determine class data module
-    const classData = smoothifiedMode ? ClassDataGygar : ClassDataOSE;
-    console.log('Using class data:', smoothifiedMode ? 'Gygar (Smoothified)' : 'OSE (Normal)');
+    const classData = getClassDataForMode(progressionMode);
+    console.log('Using class data:', progressionMode === 'smooth' ? 'Gygar (Smoothified)' : progressionMode === 'll' ? 'LL (Labyrinth Lord)' : 'OSE (Standard)');
     
     // Read character name AFTER determining if we're rolling or using fixed scores
     // (but before actually rolling, so it doesn't get cleared)
@@ -552,7 +565,7 @@ export function generateCharacter() {
         hp: hp,
         classData: classData,
         ClassDataShared: ClassDataShared,
-        smoothifiedMode: smoothifiedMode,
+        progressionMode: progressionMode,
         raceClassMode: raceClassMode,
         name: characterName,
         background: background
@@ -579,7 +592,7 @@ export function displayCharacter(character) {
     // Get display names
     const raceDisplay = getRaceDisplayName(character.race);
     const classDisplay = getClassDisplayName(character.class);
-    const mode = smoothifiedMode ? 'Smoothified' : 'Normal';
+    const mode = progressionMode === 'smooth' ? 'Smoothified' : progressionMode === 'll' ? 'Labyrinth Lord' : 'OSE Standard';
     
     // Build racial adjustments display
     let racialAdjustmentsHTML = '';
@@ -707,9 +720,51 @@ export function displayCharacter(character) {
         <p style="margin-top: 20px;"><em>Check the browser console for detailed generation log.</em></p>
     `;
     
-    characterInfo.innerHTML = html;
-    characterDisplay.classList.add('visible');
-    characterDisplay.scrollIntoView({ behavior: 'smooth' });
+    // Check if we should open in new tab
+    const openInNewTabCheckbox = document.getElementById('openInNewTab');
+    const openInNewTab = openInNewTabCheckbox ? openInNewTabCheckbox.checked : false;
+    
+    if (openInNewTab) {
+        // Open in new tab
+        const newWindow = window.open('', '_blank');
+        newWindow.document.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <title>${character.name} - OSE Character</title>
+            </head>
+            <body>
+                ${html}
+            </body>
+            </html>
+        `);
+        newWindow.document.close();
+        
+        // Clear the result div on main page
+        characterInfo.innerHTML = '<p style="text-align: center;">Character opened in new tab.</p>';
+        characterDisplay.classList.add('visible');
+    } else {
+        // Display in current page
+        characterInfo.innerHTML = html;
+        characterDisplay.classList.add('visible');
+        characterDisplay.scrollIntoView({ behavior: 'smooth' });
+    }
+}
+
+/**
+ * Get class data module based on progression mode
+ */
+function getClassDataForMode(mode) {
+    switch (mode) {
+        case 'smooth':
+            return ClassDataGygar;
+        case 'll':
+            return ClassDataLL;
+        case 'ose':
+        default:
+            return ClassDataOSE;
+    }
 }
 
 /**

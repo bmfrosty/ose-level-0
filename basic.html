@@ -92,7 +92,7 @@
             border-color: #4CAF50;
         }
         
-        /* Class Selection - Radio Buttons */
+        /* Class Selection - Buttons */
         .class-selection {
             display: flex;
             flex-wrap: wrap;
@@ -100,38 +100,29 @@
             margin-top: 10px;
         }
         
-        .class-radio {
-            display: inline-flex;
-            align-items: center;
-        }
-        
-        .class-radio input[type="radio"] {
-            margin-right: 5px;
-        }
-        
-        .class-radio label {
-            cursor: pointer;
-            padding: 12px 20px;
+        .class-button {
+            padding: 5px 7px;
+            font-size: 11px;
+            font-weight: bold;
             border: 2px solid #4CAF50;
-            border-radius: 5px;
+            border-radius: 3px;
             background-color: white;
             color: #4CAF50;
-            font-size: 16px;
-            font-weight: bold;
+            cursor: pointer;
             transition: all 0.3s;
         }
         
-        .class-radio label:hover {
+        .class-button:hover:not(:disabled) {
             background-color: #e8f5e9;
         }
         
-        .class-radio input[type="radio"]:checked + label {
+        .class-button.selected {
             background-color: #4CAF50;
             color: white;
         }
         
-        .class-radio input[type="radio"]:disabled + label {
-            opacity: 0.5;
+        .class-button:disabled {
+            opacity: 0.3;
             cursor: not-allowed;
             border-color: #ccc;
             color: #ccc;
@@ -299,6 +290,13 @@
             margin: 15px 0;
             font-size: 14px;
         }
+        
+        /* Character Sheet Display */
+        .character-display {
+            max-width: 800px;
+            margin: 12px auto;
+            font-size: 0.95em;
+        }
     </style>
 </head>
 <body>
@@ -327,19 +325,38 @@
             </div>
         </div>
 
-        <!-- Mode Toggle -->
+        <!-- Progression Mode -->
         <div class="control-section">
-            <h3>2. Select Mode & Options</h3>
-            <div class="checkbox-option">
+            <h3>2. Attack & Saving Throw Progressions</h3>
+            <div class="radio-option">
                 <label>
-                    <input type="checkbox" id="smoothifiedMode" checked>
+                    <input type="radio" name="progressionMode" id="progressionOSE" value="ose">
                     <span>
-                        <strong>Smoothified Mode</strong> 
-                        (<a href="https://www.drivethrurpg.com/en/product/510225/the-ruins-of-castle-gygar" target="_blank">Castle Gygar</a>)
-                        - Smoother progressions, no demihuman level limits
+                        <strong>OSE Standard</strong> - Original to-hit and saving throw progressions
                     </span>
                 </label>
             </div>
+            <div class="radio-option">
+                <label>
+                    <input type="radio" name="progressionMode" id="progressionSmooth" value="smooth" checked>
+                    <span>
+                        <strong>Smoothified</strong> - Gradual to-hit and saving throw improvements
+                    </span>
+                </label>
+            </div>
+            <div class="radio-option">
+                <label>
+                    <input type="radio" name="progressionMode" id="progressionLL" value="ll">
+                    <span>
+                        <strong>Labyrinth Lord</strong> - Labyrinth Lord to-hit and saving throw progressions
+                    </span>
+                </label>
+            </div>
+        </div>
+
+        <!-- Options -->
+        <div class="control-section">
+            <h3>3. Options</h3>
             <div class="radio-option">
                 <label>
                     <input type="radio" name="primeRequisiteMode" id="primeReqUser" value="user" checked>
@@ -392,7 +409,7 @@
 
         <!-- Character Name -->
         <div class="control-section">
-            <h3>3. Character Name</h3>
+            <h3>4. Character Name</h3>
             <div style="display: flex; gap: 10px; align-items: center;">
                 <input type="text" id="characterName" placeholder="Enter character name..." style="flex: 1; padding: 10px; font-size: 16px; border: 2px solid #ccc; border-radius: 3px;">
                 <button class="roll-button" id="randomNameButton" style="margin-top: 0;">Random Name</button>
@@ -401,7 +418,7 @@
 
         <!-- Ability Scores -->
         <div class="control-section">
-            <h3>4. Ability Scores</h3>
+            <h3>5. Minimum Ability Scores</h3>
             
             <div class="ability-grid">
                 <!-- Row 1: STR, INT, WIS -->
@@ -443,90 +460,69 @@
                 <strong>Prime Requisite XP Bonus:</strong> <span id="xpBonusText">+0%</span>
             </div>
             
-            <div class="checkbox-option">
+            <button class="roll-button" id="setMinimumsButton" style="background-color: #FF9800;">Set to Minimums (3)</button>
+            <button class="roll-button" id="rollAbilitiesButton" style="margin-left: 10px;">Roll Abilities</button>
+        </div>
+
+        <!-- Demihuman Level Limits -->
+        <div class="control-section">
+            <h3>6. Demihuman Level Limits</h3>
+            <div class="radio-option">
                 <label>
-                    <input type="checkbox" id="useFixedScores">
-                    <span><strong>Use fixed ability scores</strong> - Use the values above as-is (unchecked = roll randomly with minimums)</span>
+                    <input type="radio" name="demihumanLimits" id="demihumanStandard" value="standard" checked>
+                    <span>
+                        <strong>Standard Limits</strong> - Dwarf max 12, Elf max 10, Halfling max 8
+                    </span>
                 </label>
             </div>
-            
-            <button class="roll-button" id="rollAbilitiesButton">Roll Abilities</button>
-            <button class="roll-button" id="testHPButton" style="margin-left: 10px; background-color: #FF9800;">Test HP Rolling</button>
-            <div id="testHPWarning" style="margin-top: 10px; padding: 10px; background-color: #fff3cd; border-left: 4px solid #ffc107; display: none;">
-                <strong>Cannot test HP rolling:</strong> <span id="testHPWarningText"></span>
+            <div class="radio-option">
+                <label>
+                    <input type="radio" name="demihumanLimits" id="demihumanExtended" value="extended">
+                    <span>
+                        <strong>Extended to Level 14</strong> - All demihumans can reach level 14
+                    </span>
+                </label>
             </div>
         </div>
 
         <!-- Class Selection -->
         <div class="control-section">
-            <h3>5. Select Class</h3>
+            <h3>7. Select Class</h3>
             <div style="margin-bottom: 10px;">
                 <strong>Human Classes:</strong>
             </div>
-            <div class="class-selection" id="classSelection">
-                <div class="class-radio">
-                    <input type="radio" name="class" id="classCleric" value="Cleric">
-                    <label for="classCleric">Cleric</label>
-                </div>
-                <div class="class-radio">
-                    <input type="radio" name="class" id="classFighter" value="Fighter" checked>
-                    <label for="classFighter">Fighter</label>
-                </div>
-                <div class="class-radio">
-                    <input type="radio" name="class" id="classMagicUser" value="Magic-User">
-                    <label for="classMagicUser">Magic-User</label>
-                </div>
-                <div class="class-radio">
-                    <input type="radio" name="class" id="classThief" value="Thief">
-                    <label for="classThief">Thief</label>
-                </div>
-                <div class="class-radio" id="spellbladeRadio" style="display: none;">
-                    <input type="radio" name="class" id="classSpellblade" value="Spellblade">
-                    <label for="classSpellblade">Spellblade</label>
-                </div>
+            <div class="class-selection">
+                <button class="class-button" data-class="Cleric">Cleric</button>
+                <button class="class-button" data-class="Fighter">Fighter</button>
+                <button class="class-button" data-class="Magic-User">Magic-User</button>
+                <button class="class-button" data-class="Thief">Thief</button>
             </div>
             <div style="margin-top: 15px; margin-bottom: 10px;">
                 <strong>Demihuman Classes:</strong>
             </div>
             <div class="class-selection">
-                <div class="class-radio">
-                    <input type="radio" name="class" id="classDwarf" value="Dwarf">
-                    <label for="classDwarf">Dwarf</label>
-                </div>
-                <div class="class-radio">
-                    <input type="radio" name="class" id="classElf" value="Elf">
-                    <label for="classElf">Elf</label>
-                </div>
-                <div class="class-radio">
-                    <input type="radio" name="class" id="classHalfling" value="Halfling">
-                    <label for="classHalfling">Halfling</label>
-                </div>
-                <div class="class-radio">
-                    <input type="radio" name="class" id="classGnome" value="Gnome">
-                    <label for="classGnome">Gnome</label>
-                </div>
-            </div>
-            
-            <div class="checkbox-option">
-                <label>
-                    <input type="checkbox" id="allowDemihumanOverride">
-                    <span>Allow demihuman levels above maximum (Dwarf 13-14, Elf 11-14, Halfling/Gnome 9-14)</span>
-                </label>
-            </div>
-            
-            <div class="checkbox-option">
-                <label>
-                    <input type="checkbox" id="allowElfSpellbladePast10">
-                    <span>Allow Elf and Spellblade past level 10 (extends to level 14)</span>
-                </label>
+                <button class="class-button" data-class="Dwarf">Dwarf</button>
+                <button class="class-button" data-class="Elf">Elf</button>
+                <button class="class-button" data-class="Halfling">Halfling</button>
             </div>
         </div>
 
         <!-- Generate Button -->
         <div class="control-section">
-            <h3>6. Generate</h3>
+            <h3>8. Generate</h3>
+            <div class="checkbox-option">
+                <label>
+                    <input type="checkbox" id="useFixedScores">
+                    <span><strong>Use the name and ability scores specified in Steps 4 and 5</strong> (unchecked = generate random name and roll abilities with minimums)</span>
+                </label>
+            </div>
+            <div class="checkbox-option">
+                <label>
+                    <input type="checkbox" id="openInNewTab">
+                    <span><strong>Open character in new tab</strong> (unchecked = display on this page)</span>
+                </label>
+            </div>
             <button class="generate-button" id="generateButton" disabled>Generate Character</button>
-            <button class="roll-button" id="rollAndGenerateButton" style="margin-left: 15px;">Roll Abilities & Generate Character</button>
         </div>
     </div>
 

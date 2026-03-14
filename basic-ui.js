@@ -5,6 +5,7 @@
 
 import * as ClassDataOSE from './class-data-ose.js';
 import * as ClassDataGygar from './class-data-gygar.js';
+import * as ClassDataLL from './class-data-ll.js';
 import * as ClassDataShared from './class-data-shared.js';
 import { 
     calculateModifier, 
@@ -33,15 +34,14 @@ import { getModifierEffects } from './shared-modifier-effects.js';
 // Make modules available globally for debugging
 window.ClassDataOSE = ClassDataOSE;
 window.ClassDataGygar = ClassDataGygar;
+window.ClassDataLL = ClassDataLL;
 window.ClassDataShared = ClassDataShared;
 
 // State variables
 let selectedLevel = null;
 let selectedClass = null;
-let smoothifiedMode = true;
-let allowDemihumanOverride = false;
-let allowElfSpellbladePast10 = false;
-let primeRequisite13 = false;
+let progressionMode = 'smooth'; // 'ose', 'smooth', or 'll'
+let demihumanLimits = 'standard'; // 'standard' or 'extended'
 let healthyCharacters = false;
 let includeLevel0HP = false;
 let useFixedScores = false;
@@ -95,29 +95,35 @@ export function initializeLevelSelection() {
 }
 
 /**
- * Initialize class selection radio buttons
+ * Initialize class selection buttons
  */
 export function initializeClassSelection() {
-    const radios = document.querySelectorAll('input[name="class"]');
-    radios.forEach(radio => {
-        radio.addEventListener('change', () => {
-            selectedClass = radio.value;
+    const buttons = document.querySelectorAll('.class-button');
+    buttons.forEach(button => {
+        button.addEventListener('click', () => {
+            if (button.disabled) return;
+            
+            // Deselect all buttons
+            buttons.forEach(b => b.classList.remove('selected'));
+            
+            // Select clicked button
+            button.classList.add('selected');
+            selectedClass = button.dataset.class;
+            
             // Add _CLASS suffix for consistency with class data files
             if (selectedClass && !selectedClass.endsWith('_CLASS')) {
                 selectedClass = `${selectedClass}_CLASS`;
             }
+            
             updateUI();
         });
     });
     
-    // Set initial selected class (Fighter is checked by default in HTML)
-    const checkedRadio = document.querySelector('input[name="class"]:checked');
-    if (checkedRadio) {
-        selectedClass = checkedRadio.value;
-        // Add _CLASS suffix for consistency with class data files
-        if (selectedClass && !selectedClass.endsWith('_CLASS')) {
-            selectedClass = `${selectedClass}_CLASS`;
-        }
+    // Set Fighter as default selection
+    const fighterButton = document.querySelector('[data-class="Fighter"]');
+    if (fighterButton) {
+        fighterButton.classList.add('selected');
+        selectedClass = 'Fighter_CLASS';
     }
 }
 
@@ -167,20 +173,8 @@ function canRollHP() {
  * Update test HP button state
  */
 export function updateTestHPButton() {
-    const testHPButton = document.getElementById('testHPButton');
-    const testHPWarning = document.getElementById('testHPWarning');
-    const testHPWarningText = document.getElementById('testHPWarningText');
-    
-    const result = canRollHP();
-    
-    if (result.canRoll) {
-        testHPButton.disabled = false;
-        testHPWarning.style.display = 'none';
-    } else {
-        testHPButton.disabled = true;
-        testHPWarning.style.display = 'block';
-        testHPWarningText.textContent = result.reasons.join('; ');
-    }
+    // Test HP button no longer exists - this function is kept for compatibility
+    // but does nothing
 }
 
 /**
@@ -190,43 +184,31 @@ export function updateUI() {
     updateXPBonus();
     updateTestHPButton();
     
-    // Show/hide Spellblade radio button based on mode
-    const spellbladeRadio = document.getElementById('spellbladeRadio');
-    const spellbladeInput = document.getElementById('classSpellblade');
-    if (smoothifiedMode) {
-        spellbladeRadio.style.display = 'inline-flex';
-    } else {
-        spellbladeRadio.style.display = 'none';
-        if (selectedClass === 'Spellblade_CLASS') {
-            // Switch to Fighter if Spellblade was selected
-            selectedClass = 'Fighter_CLASS';
-            document.getElementById('classFighter').checked = true;
-            spellbladeInput.checked = false;
-        }
-    }
-
-    // Disable class radio buttons if level exceeds limit (Normal Mode only)
-    const demihumanLimits = getDemihumanLimits();
+    // Disable class radio buttons if level exceeds limit (standard limits only)
+    const limits = getDemihumanLimits();
     
-    if (!smoothifiedMode && !allowDemihumanOverride && selectedLevel) {
-        document.querySelectorAll('input[name="class"]').forEach(radio => {
-            const className = radio.value;
-            const limit = demihumanLimits[className];
+    if (demihumanLimits === 'standard' && selectedLevel) {
+        document.querySelectorAll('.class-button').forEach(button => {
+            const className = button.dataset.class;
+            const limit = limits[className];
             if (limit && selectedLevel > limit) {
-                radio.disabled = true;
+                button.disabled = true;
                 if (selectedClass === `${className}_CLASS`) {
                     // Switch to Fighter if current selection is disabled
                     selectedClass = 'Fighter_CLASS';
-                    document.getElementById('classFighter').checked = true;
-                    radio.checked = false;
+                    const fighterButton = document.querySelector('[data-class="Fighter"]');
+                    if (fighterButton) {
+                        button.classList.remove('selected');
+                        fighterButton.classList.add('selected');
+                    }
                 }
             } else {
-                radio.disabled = false;
+                button.disabled = false;
             }
         });
     } else {
-        document.querySelectorAll('input[name="class"]').forEach(radio => {
-            radio.disabled = false;
+        document.querySelectorAll('.class-button').forEach(button => {
+            button.disabled = false;
         });
     }
 
@@ -304,6 +286,21 @@ function getRaceForNameGeneration(className) {
     };
     
     return classToRace[className] || 'Human';
+}
+
+/**
+ * Handle Set to Minimums button click
+ */
+function handleSetMinimums() {
+    // Set all ability scores to 3
+    document.getElementById('scoreSTR').value = 3;
+    document.getElementById('scoreINT').value = 3;
+    document.getElementById('scoreWIS').value = 3;
+    document.getElementById('scoreDEX').value = 3;
+    document.getElementById('scoreCON').value = 3;
+    document.getElementById('scoreCHA').value = 3;
+    
+    updateModifiers();
 }
 
 /**
@@ -390,7 +387,7 @@ function handleTestHP() {
     readAbilityScores();
     
     const conModifier = calculateModifier(abilityScores.CON);
-    const classData = smoothifiedMode ? ClassDataGygar : ClassDataOSE;
+    const classData = getClassDataForMode(progressionMode);
     
     const totalHP = rollHitPoints(
         selectedClass, 
@@ -449,8 +446,8 @@ export function generateCharacter() {
     }
     
     // Determine mode
-    const mode = smoothifiedMode ? 'Smoothified' : 'Normal';
-    const classData = smoothifiedMode ? ClassDataGygar : ClassDataOSE;
+    const mode = progressionMode === 'smooth' ? 'Smoothified' : progressionMode === 'll' ? 'Labyrinth Lord' : 'OSE Standard';
+    const classData = getClassDataForMode(progressionMode);
     
     // Roll hit points
     const conModifier = calculateModifier(abilityScores.CON);
@@ -516,9 +513,12 @@ function displayCharacter(character) {
     const characterInfo = document.getElementById('characterInfo');
     const characterDisplay = document.getElementById('characterDisplay');
     
+    // Remove _CLASS suffix from class name for display
+    const displayClass = character.class.replace('_CLASS', '');
+    
     const html = `
         <h3>${character.name || 'Unnamed Character'}</h3>
-        <p><strong>Level ${character.level} ${character.class}</strong> (${character.mode} Mode)</p>
+        <p><strong>Level ${character.level} ${displayClass}</strong> (${character.mode} Mode)</p>
         
         ${character.background ? `
             <h4>Background</h4>
@@ -625,9 +625,36 @@ function displayCharacter(character) {
         <p style="margin-top: 20px;"><em>Check the browser console for detailed generation log.</em></p>
     `;
     
-    characterInfo.innerHTML = html;
-    characterDisplay.classList.add('visible');
-    characterDisplay.scrollIntoView({ behavior: 'smooth' });
+    // Check if we should open in new tab
+    const openInNewTabCheckbox = document.getElementById('openInNewTab');
+    const openInNewTab = openInNewTabCheckbox ? openInNewTabCheckbox.checked : false;
+    
+    if (openInNewTab) {
+        // Open in new tab
+        const newWindow = window.open('', '_blank');
+        newWindow.document.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <title>${character.name} - OSE Character</title>
+            </head>
+            <body>
+                ${html}
+            </body>
+            </html>
+        `);
+        newWindow.document.close();
+        
+        // Clear the result div on main page
+        characterInfo.innerHTML = '<p style="text-align: center;">Character opened in new tab.</p>';
+        characterDisplay.classList.add('visible');
+    } else {
+        // Display in current page
+        characterInfo.innerHTML = html;
+        characterDisplay.classList.add('visible');
+        characterDisplay.scrollIntoView({ behavior: 'smooth' });
+    }
 }
 
 /**
@@ -642,27 +669,41 @@ function handleRollAndGenerate() {
 }
 
 /**
+ * Get class data module based on progression mode
+ */
+function getClassDataForMode(mode) {
+    switch (mode) {
+        case 'smooth':
+            return ClassDataGygar;
+        case 'll':
+            return ClassDataLL;
+        case 'ose':
+        default:
+            return ClassDataOSE;
+    }
+}
+
+/**
  * Initialize all event listeners
  */
 export function initializeEventListeners() {
-    // Checkbox event listeners
-    document.getElementById('smoothifiedMode').addEventListener('change', (e) => {
-        smoothifiedMode = e.target.checked;
-        updateUI();
+    // Progression mode radio buttons
+    document.querySelectorAll('input[name="progressionMode"]').forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            progressionMode = e.target.value;
+            updateUI();
+        });
     });
 
-    document.getElementById('allowDemihumanOverride').addEventListener('change', (e) => {
-        allowDemihumanOverride = e.target.checked;
-        updateUI();
+    // Demihuman limits radio buttons
+    document.querySelectorAll('input[name="demihumanLimits"]').forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            demihumanLimits = e.target.value;
+            updateUI();
+        });
     });
 
-    document.getElementById('allowElfSpellbladePast10').addEventListener('change', (e) => {
-        allowElfSpellbladePast10 = e.target.checked;
-        updateUI();
-    });
-
-    // Prime Requisite mode radio buttons (no longer using primeRequisite13 checkbox)
-    // The radio buttons are read directly in handleRollAbilities()
+    // Prime Requisite mode radio buttons (read directly in handleRollAbilities())
 
     document.getElementById('healthyCharacters').addEventListener('change', (e) => {
         healthyCharacters = e.target.checked;
@@ -685,10 +726,9 @@ export function initializeEventListeners() {
 
     // Button event listeners
     document.getElementById('randomNameButton').addEventListener('click', handleRandomName);
+    document.getElementById('setMinimumsButton').addEventListener('click', handleSetMinimums);
     document.getElementById('rollAbilitiesButton').addEventListener('click', handleRollAbilities);
-    document.getElementById('testHPButton').addEventListener('click', handleTestHP);
     document.getElementById('generateButton').addEventListener('click', generateCharacter);
-    document.getElementById('rollAndGenerateButton').addEventListener('click', handleRollAndGenerate);
 
     // Ability score input event listeners
     ['STR', 'INT', 'WIS', 'DEX', 'CON', 'CHA'].forEach(ability => {

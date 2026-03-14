@@ -58,7 +58,6 @@ export function display0LevelCharacter(results, total, background, hitPoints, ar
     
     // Build HTML for successful adventurer character - PDF-like layout (balanced for printing)
     let resultHtml = `
-        <div style='max-width: 800px; margin: 12px auto; text-align: left; font-family: Arial, sans-serif; font-size: 0.95em;'>
             <h2 style='text-align: left; margin: 8px 0; font-size: 1.4em;'>${isAdvanced ? 'OLD-SCHOOL ESSENTIALS ADVANCED' : 'OLD-SCHOOL ESSENTIALS'}</h2>
             <p style='margin: 2px 0; font-size: 0.95em;'>RETRO ADVENTURE GAME</p>
             <hr style='margin: 8px 0;'>
@@ -162,7 +161,6 @@ export function display0LevelCharacter(results, total, background, hitPoints, ar
             
             <hr style='margin-top: 20px;'>
             <p style='font-size: 0.9em;'><strong>Generation Info:</strong> Total Modifiers: ${total} | Attempts: ${rerollCount} | Minimums: STR ${strMin}, DEX ${dexMin}, CON ${conMin}, INT ${intMin}, WIS ${wisMin}, CHA ${chaMin}</p>
-        </div>
     `;
 
     // Check if we should open in new tab

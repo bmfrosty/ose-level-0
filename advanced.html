@@ -316,6 +316,13 @@
             margin: 15px 0;
             font-size: 14px;
         }
+        
+        /* Character Sheet Display */
+        .character-display {
+            max-width: 800px;
+            margin: 12px auto;
+            font-size: 0.95em;
+        }
     </style>
 </head>
 <body>
@@ -344,19 +351,38 @@
             </div>
         </div>
 
-        <!-- Mode Toggle -->
+        <!-- Progression Mode -->
         <div class="control-section">
-            <h3>2. Select Mode & Options</h3>
-            <div class="checkbox-option">
+            <h3>2. Attack & Saving Throw Progressions</h3>
+            <div class="radio-option">
                 <label>
-                    <input type="checkbox" id="smoothifiedMode" checked>
+                    <input type="radio" name="progressionMode" id="progressionOSE" value="ose">
                     <span>
-                        <strong>Smoothified Mode</strong> 
-                        (<a href="https://www.drivethrurpg.com/en/product/510225/the-ruins-of-castle-gygar" target="_blank">Castle Gygar</a>)
-                        - Smoother progressions, Spellblade class available
+                        <strong>OSE Standard</strong> - Original to-hit and saving throw progressions
                     </span>
                 </label>
             </div>
+            <div class="radio-option">
+                <label>
+                    <input type="radio" name="progressionMode" id="progressionSmooth" value="smooth" checked>
+                    <span>
+                        <strong>Smoothified</strong> - Gradual to-hit and saving throw improvements
+                    </span>
+                </label>
+            </div>
+            <div class="radio-option">
+                <label>
+                    <input type="radio" name="progressionMode" id="progressionLL" value="ll">
+                    <span>
+                        <strong>Labyrinth Lord</strong> - Labyrinth Lord to-hit and saving throw progressions
+                    </span>
+                </label>
+            </div>
+        </div>
+
+        <!-- Options -->
+        <div class="control-section">
+            <h3>3. Options</h3>
             <div class="radio-option">
                 <label>
                     <input type="radio" name="primeRequisiteMode" id="primeReqUser" value="user" checked>
@@ -409,7 +435,7 @@
 
         <!-- Character Name -->
         <div class="control-section">
-            <h3>3. Character Name</h3>
+            <h3>4. Character Name</h3>
             <div style="display: flex; gap: 10px; align-items: center;">
                 <input type="text" id="characterName" placeholder="Enter character name..." style="flex: 1; padding: 8px; font-size: 14px; border: 2px solid #ccc; border-radius: 3px;">
                 <button class="roll-button" id="randomNameButton" style="margin-top: 0;">Random Name</button>
@@ -418,7 +444,7 @@
 
         <!-- Ability Scores -->
         <div class="control-section">
-            <h3>4. Minimum Ability Scores</h3>
+            <h3>5. Minimum Ability Scores</h3>
             
             <div class="ability-grid">
                 <!-- Row 1: STR, INT, WIS -->
@@ -466,7 +492,7 @@
 
         <!-- Race/Class Restrictions -->
         <div class="control-section">
-            <h3>5. Race/Class Restrictions</h3>
+            <h3>6. Race/Class Restrictions</h3>
             <div class="radio-option">
                 <label>
                     <input type="radio" name="raceClassMode" id="strictOSE" value="strict" checked>
@@ -500,7 +526,7 @@
 
         <!-- Race/Class Selection Grid -->
         <div class="control-section">
-            <h3>6. Select Race & Class</h3>
+            <h3>7. Select Race & Class</h3>
             <div class="race-class-grid">
                 <table id="raceClassGrid">
                     <thead>
@@ -561,11 +587,17 @@
 
         <!-- Generate Button -->
         <div class="control-section">
-            <h3>7. Generate</h3>
+            <h3>8. Generate</h3>
             <div class="checkbox-option">
                 <label>
                     <input type="checkbox" id="useFixedScores">
-                    <span><strong>Use the ability scores specified in Step 3</strong> (unchecked = roll randomly with minimums)</span>
+                    <span><strong>Use the name and ability scores specified in Steps 4 and 5</strong> (unchecked = generate random name and roll abilities with minimums)</span>
+                </label>
+            </div>
+            <div class="checkbox-option">
+                <label>
+                    <input type="checkbox" id="openInNewTab">
+                    <span><strong>Open character in new tab</strong> (unchecked = display on this page)</span>
                 </label>
             </div>
             <button class="generate-button" id="generateButton" disabled>Generate Character</button>
