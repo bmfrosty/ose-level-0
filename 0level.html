@@ -10,6 +10,7 @@
             max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
+            font-size: 11px;
         }
         nav {
             background-color: #f0f0f0;
@@ -50,12 +51,16 @@
             background-color: #f2f2f2;
         }
         button {
-            padding: 10px 20px;
+            padding: 5px 10px;
             background-color: #4CAF50;
             color: white;
             border: none;
             cursor: pointer;
             margin: 5px;
+            font-size: 11px;
+            font-weight: bold;
+            border-radius: 3px;
+            transition: background-color 0.3s;
         }
         button:hover {
             background-color: #45a049;
@@ -72,12 +77,49 @@
         }
         #config > label {
             display: block;
-            margin: 5px 0;
+            margin: 8px 0;
+        }
+        #config input[type="checkbox"] {
+            width: 14px;
+            height: 14px;
+            cursor: pointer;
+        }
+        #config input[type="radio"] {
+            width: 14px;
+            height: 14px;
+            cursor: pointer;
+        }
+        
+        /* Radio Buttons */
+        .radio-option {
+            margin: 8px 0;
+        }
+        
+        .radio-option label {
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .radio-option input[type="radio"] {
+            width: 14px;
+            height: 14px;
+            cursor: pointer;
         }
         input[type="number"] {
-            width: 50px;
-            padding: 5px;
+            width: 40px;
+            padding: 3px;
             margin-left: 10px;
+            text-align: center;
+            border: 2px solid #ccc;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #4CAF50;
         }
     </style>
 </head>
@@ -109,9 +151,24 @@
             <label for="chaMin">CHA:</label>
             <input type="number" id="chaMin" value="3" min="3" max="18"><br><br>
         </div>
-        <label for="bornAdventurers">
-            <input type="checkbox" id="bornAdventurers"> Born Adventurers (Require at least one of STR/DEX/INT/WIS ≥ 13)
-        </label>
+        <div style="margin: 8px 0;">
+            <label style="cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                <input type="radio" name="primeRequisiteMode" id="primeReqUser" value="user" checked style="width: 14px; height: 14px; cursor: pointer;">
+                <span><strong>User Minimums Only</strong> - Use ability score minimums from above only</span>
+            </label>
+        </div>
+        <div style="margin: 8px 0;">
+            <label style="cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                <input type="radio" name="primeRequisiteMode" id="primeReq9" value="9" style="width: 14px; height: 14px; cursor: pointer;">
+                <span><strong>Prime Requisite ≥ 9</strong> - Require at least one of STR/DEX/INT/WIS ≥ 9</span>
+            </label>
+        </div>
+        <div style="margin: 8px 0;">
+            <label style="cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                <input type="radio" name="primeRequisiteMode" id="primeReq13" value="13" style="width: 14px; height: 14px; cursor: pointer;">
+                <span><strong>Prime Requisite ≥ 13</strong> - Require at least one of STR/DEX/INT/WIS ≥ 13</span>
+            </label>
+        </div>
         <label for="healthyCharacters">
             <input type="checkbox" id="healthyCharacters"> Healthy Characters (Require HP ≥ 2 at level 0)
         </label>
@@ -285,10 +342,10 @@
     <script src="shared-race-names.js"></script>
     
     <!-- Legacy non-module scripts (loaded globally) -->
-    <script src="background-tables.js"></script>
+    <!-- REMOVED: deprecated-js/background-tables.js - now using shared-backgrounds.js ES6 module -->
     <script src="racial-abilities.js"></script>
-    <script src="names-tables.js"></script>
-    <script src="ose-modifiers.js"></script>
+    <!-- REMOVED: deprecated-js/names-tables.js - now using shared-names.js ES6 module -->
+    <!-- REMOVED: deprecated-js/ose-modifiers.js - now using shared-modifier-effects.js ES6 module -->
     <script src="race-adjustments.js"></script>
     <script src="markdown-generator.js"></script>
     <script src="canvas-sheet-renderer.js"></script>

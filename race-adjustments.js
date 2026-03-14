@@ -45,7 +45,7 @@ function getRaceMinimums(race) {
 }
 
 // Apply race adjustments to ability scores
-function applyRaceAdjustments(results, race, isAdvanced, humanRacialAbilities) {
+async function applyRaceAdjustments(results, race, isAdvanced, humanRacialAbilities) {
     if (!isAdvanced) {
         return results; // No adjustments in classic mode
     }
@@ -57,19 +57,14 @@ function applyRaceAdjustments(results, race, isAdvanced, humanRacialAbilities) {
         return results;
     }
     
-    // Get getModifier function from global scope or require it
-    let getModifierFunc;
-    if (typeof getModifier !== 'undefined') {
-        getModifierFunc = getModifier;
-    } else if (typeof require !== 'undefined') {
-        getModifierFunc = require('./ose-modifiers.js').getModifier;
-    }
+    // Import getModifier from shared module
+    const { getModifier } = await import('./shared-modifier-effects.js');
     
     const adjustments = getRaceAdjustments(normalizedRace);
     const adjustedResults = results.map(result => {
         const adjustment = adjustments[result.ability] || 0;
         const adjustedRoll = result.roll + adjustment;
-        const adjustedModifier = getModifierFunc(adjustedRoll);
+        const adjustedModifier = getModifier(adjustedRoll);
         
         return {
             ability: result.ability,

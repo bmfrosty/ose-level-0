@@ -649,11 +649,11 @@ export const XP_REQUIREMENTS = {
   "Thief_CLASS": [0, 1200, 2400, 4800, 9600, 20000, 40000, 80000, 160000, 280000, 400000, 520000, 640000, 760000],
   "Magic-User_CLASS": [0, 2500, 5000, 10000, 20000, 40000, 80000, 150000, 300000, 450000, 600000, 750000, 900000, 1050000],
   "Cleric_CLASS": [0, 1500, 3000, 6000, 12000, 25000, 50000, 100000, 200000, 300000, 400000, 500000, 600000, 700000],
+  "Spellblade_CLASS": [0, 4000, 8000, 16000, 32000, 64000, 120000, 250000, 400000, 600000, 800000, 1000000, 1200000, 1400000],  // Levels 11-14 added for optional extended progression (+200k per level)
   "Dwarf_CLASS": [0, 2200, 4400, 8800, 17000, 35000, 70000, 140000, 270000, 400000, 530000, 660000, 790000, 920000],
   "Elf_CLASS": [0, 4000, 8000, 16000, 32000, 64000, 120000, 250000, 400000, 600000, 800000, 1000000, 1200000, 1400000],  // Levels 11-14 added for optional extended progression
   "Halfling_CLASS": [0, 2000, 4000, 8000, 16000, 32000, 64000, 120000, 240000, 360000, 480000, 600000, 720000, 840000],
-  "Gnome_CLASS": [0, 3000, 6000, 12000, 30000, 60000, 120000, 240000, 360000, 480000, 600000, 720000, 840000, 960000],
-  "Spellblade_CLASS": [0, 4000, 8000, 16000, 32000, 64000, 120000, 250000, 400000, 600000, 800000, 1000000, 1200000, 1400000]  // Levels 11-14 added for optional extended progression (+200k per level)
+  "Gnome_CLASS": [0, 3000, 6000, 12000, 30000, 60000, 120000, 240000, 360000, 480000, 600000, 720000, 840000, 960000]
 };
 
 // ============================================================================
@@ -666,11 +666,11 @@ export const HIT_DICE_SCALE = {
   "Thief_CLASS": "D4_2",
   "Magic-User_CLASS": "D4_1",
   "Cleric_CLASS": "D6_1",
+  "Spellblade_CLASS": "D6_2",
   "Dwarf_CLASS": "D8_2",
   "Elf_CLASS": "D6_2",
   "Halfling_CLASS": "D6_1",
-  "Gnome_CLASS": "D4_1",
-  "Spellblade_CLASS": "D6_2"
+  "Gnome_CLASS": "D4_1"
 };
 
 // ============================================================================
@@ -682,9 +682,9 @@ export const HIT_DICE_SCALE = {
 export const SPELL_SLOT_SCALE = {
   "Cleric_CLASS": "DIVINE",
   "Magic-User_CLASS": "ARCANE",
+  "Spellblade_CLASS": "ARCANE",
   "Elf_CLASS": "ARCANE",
-  "Gnome_CLASS": "ARCANE",
-  "Spellblade_CLASS": "ARCANE"
+  "Gnome_CLASS": "ARCANE"
 };
 
 // Export all for use in other modules

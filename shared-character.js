@@ -29,7 +29,9 @@ export function createCharacter(options) {
         hp,
         progressionData,
         features,
-        racialAbilities
+        racialAbilities,
+        name,
+        background
     } = options;
     
     console.log('\n=== Creating Character Object ===');
@@ -44,9 +46,11 @@ export function createCharacter(options) {
     // Create character object
     const character = {
         // Basic info
+        name: name || '',
         level: level,
         class: className,
         mode: mode,
+        background: background || null,
         
         // Ability scores
         abilityScores: { ...abilityScores },

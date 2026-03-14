@@ -105,3 +105,42 @@ export function getDemihumanLimits() {
         'Gnome': 8
     };
 }
+
+/**
+ * Get class prime requisites
+ * @param {string} className - Class name
+ * @returns {Array<string>} Array of prime requisite ability names
+ */
+export function getClassPrimeRequisites(className) {
+    const primeRequisites = {
+        'Cleric': ['WIS'],
+        'Fighter': ['STR'],
+        'Magic-User': ['INT'],
+        'Thief': ['DEX'],
+        'Dwarf': ['STR'],
+        'Elf': ['INT', 'STR'],
+        'Halfling': ['DEX', 'STR'],
+        'Gnome': ['INT'],
+        'Spellblade': ['INT', 'STR']
+    };
+    return primeRequisites[className] || [];
+}
+
+/**
+ * Check if ability scores meet class prime requisite requirements
+ * @param {Object} scores - Ability scores object
+ * @param {string} className - Class name
+ * @param {number} minimum - Minimum score required (9 or 13)
+ * @returns {boolean} True if requirements met
+ */
+export function meetsClassPrimeRequisites(scores, className, minimum) {
+    const primeReqs = getClassPrimeRequisites(className);
+    
+    // If no prime requisites defined, always pass
+    if (primeReqs.length === 0) {
+        return true;
+    }
+    
+    // Check if at least one prime requisite meets the minimum
+    return primeReqs.some(ability => scores[ability] >= minimum);
+}

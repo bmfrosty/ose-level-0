@@ -142,20 +142,28 @@ export function rollAbilityScore(minimum, abilityName) {
  * @param {Object} minimumScores - Minimum scores for each ability
  * @param {boolean} toughCharacters - Whether Tough Characters is enabled
  * @param {string} className - Class name (optional, for prime requisite check)
- * @param {boolean} primeRequisite13 - Whether prime requisites must be ≥ 13
+ * @param {boolean|number} primeRequisite13 - Whether prime requisites must be ≥ 13 (legacy boolean) OR minimum value (9 or 13)
  * @returns {Object} Ability scores object
  */
 export function rollAbilities(minimumScores, toughCharacters, className = null, primeRequisite13 = false) {
     let scores;
     let setAttempts = 0;
     
+    // Handle both legacy boolean and new number format
+    let primeReqMinimum = null;
+    if (primeRequisite13 === true) {
+        primeReqMinimum = 13; // Legacy: true means ≥ 13
+    } else if (typeof primeRequisite13 === 'number') {
+        primeReqMinimum = primeRequisite13; // New: 9 or 13
+    }
+    
     console.log('=== Rolling Ability Scores ===');
     if (toughCharacters) {
         console.log('Tough Characters enabled: At least one of STR/DEX/INT/WIS must be ≥ 13');
     }
-    if (primeRequisite13 && className) {
+    if (primeReqMinimum && className) {
         const primeReqs = getPrimeRequisites(className);
-        console.log(`Strong Prime Requisites enabled: ${primeReqs.join(', ')} must be ≥ 13 for ${className}`);
+        console.log(`Prime Requisite ≥ ${primeReqMinimum} enabled: At least one of ${primeReqs.join(', ')} must be ≥ ${primeReqMinimum} for ${className}`);
     }
     
     do {
@@ -182,11 +190,15 @@ export function rollAbilities(minimumScores, toughCharacters, className = null, 
         }
         
         // Check Prime Requisite requirement
-        if (primeRequisite13 && className && !meetsPrimeRequisiteRequirements(scores, className)) {
+        if (primeReqMinimum && className) {
             const primeReqs = getPrimeRequisites(className);
-            const failedReqs = primeReqs.filter(ability => scores[ability] < 13);
-            console.log(`❌ Failed Prime Requisite check (${failedReqs.join(', ')} must be ≥ 13 for ${className})`);
-            continue;
+            // Check if at least ONE prime requisite meets the minimum
+            const meetsPR = primeReqs.some(ability => scores[ability] >= primeReqMinimum);
+            if (!meetsPR) {
+                const prValues = primeReqs.map(ability => `${ability}=${scores[ability]}`).join(', ');
+                console.log(`❌ Failed Prime Requisite check (need at least one of ${primeReqs.join(', ')} ≥ ${primeReqMinimum}, got: ${prValues})`);
+                continue;
+            }
         }
         
         // All checks passed

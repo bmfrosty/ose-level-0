@@ -407,9 +407,18 @@
             </div>
         </div>
 
+        <!-- Character Name -->
+        <div class="control-section">
+            <h3>3. Character Name</h3>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <input type="text" id="characterName" placeholder="Enter character name..." style="flex: 1; padding: 8px; font-size: 14px; border: 2px solid #ccc; border-radius: 3px;">
+                <button class="roll-button" id="randomNameButton" style="margin-top: 0;">Random Name</button>
+            </div>
+        </div>
+
         <!-- Ability Scores -->
         <div class="control-section">
-            <h3>3. Minimum Ability Scores</h3>
+            <h3>4. Minimum Ability Scores</h3>
             
             <div class="ability-grid">
                 <!-- Row 1: STR, INT, WIS -->
@@ -457,7 +466,7 @@
 
         <!-- Race/Class Restrictions -->
         <div class="control-section">
-            <h3>4. Race/Class Restrictions</h3>
+            <h3>5. Race/Class Restrictions</h3>
             <div class="radio-option">
                 <label>
                     <input type="radio" name="raceClassMode" id="strictOSE" value="strict" checked>
@@ -491,7 +500,7 @@
 
         <!-- Race/Class Selection Grid -->
         <div class="control-section">
-            <h3>5. Select Race & Class</h3>
+            <h3>6. Select Race & Class</h3>
             <div class="race-class-grid">
                 <table id="raceClassGrid">
                     <thead>
@@ -552,7 +561,7 @@
 
         <!-- Generate Button -->
         <div class="control-section">
-            <h3>6. Generate</h3>
+            <h3>7. Generate</h3>
             <div class="checkbox-option">
                 <label>
                     <input type="checkbox" id="useFixedScores">

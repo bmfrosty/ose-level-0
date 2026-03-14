@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>About - OSE Character Generators</title>
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <title>OSE Character Generators</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -38,26 +37,145 @@
             color: #4CAF50;
             text-decoration: underline;
         }
+        
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .welcome-section {
+            background-color: #e8f5e9;
+            border-left: 4px solid #4CAF50;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 3px;
+        }
+        
+        .welcome-section h2 {
+            margin-top: 0;
+            color: #2e7d32;
+        }
+        
+        .generator-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        
+        .generator-card {
+            background-color: white;
+            border: 2px solid #4CAF50;
+            border-radius: 5px;
+            padding: 20px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .generator-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .generator-card h3 {
+            margin-top: 0;
+            color: #4CAF50;
+            font-size: 20px;
+        }
+        
+        .generator-card p {
+            color: #666;
+            margin: 10px 0;
+        }
+        
+        .generator-card a {
+            display: inline-block;
+            margin-top: 15px;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            text-decoration: none;
+            border-radius: 3px;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        
+        .generator-card a:hover {
+            background-color: #45a049;
+        }
+        
+        .mode-comparison {
+            background-color: #f8f9fa;
+            border: 2px solid #2196F3;
+            border-radius: 5px;
+            padding: 20px;
+            margin: 30px 0;
+        }
+        
+        .mode-comparison h2 {
+            margin-top: 0;
+            color: #1976D2;
+        }
+        
+        .mode-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        
+        .mode-table th,
+        .mode-table td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        
+        .mode-table th {
+            background-color: #2196F3;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .mode-table tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        
         .content-section {
             background-color: #f8f9fa;
             border-left: 4px solid #4CAF50;
             padding: 20px;
             margin: 20px 0;
         }
+        
         .content-section h2 {
             margin-top: 0;
             color: #333;
         }
+        
+        .gygar-section {
+            background-color: #f3e5f5;
+            border-left: 4px solid #9C27B0;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .gygar-section h2 {
+            margin-top: 0;
+            color: #6a1b9a;
+        }
+        
         .links-section {
             background-color: #e7f3ff;
             border-left: 4px solid #2196F3;
             padding: 20px;
             margin: 20px 0;
         }
+        
         .links-section h2 {
             margin-top: 0;
             color: #333;
         }
+        
         .links-section a {
             display: inline-block;
             margin: 5px 10px 5px 0;
@@ -68,68 +186,9 @@
             border-radius: 3px;
             font-weight: bold;
         }
+        
         .links-section a:hover {
             background-color: #0b7dda;
-        }
-        .gygar-section {
-            background-color: #f3e5f5;
-            border-left: 4px solid #9C27B0;
-            padding: 20px;
-            margin: 20px 0;
-        }
-        .gygar-section h2 {
-            margin-top: 0;
-            color: #6a1b9a;
-        }
-        #markdown-content {
-            background-color: white;
-            padding: 30px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            line-height: 1.6;
-            margin: 20px 0;
-            display: none;
-        }
-        #markdown-content table {
-            border-collapse: collapse;
-            width: 100%;
-            margin: 20px 0;
-        }
-        #markdown-content th, #markdown-content td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
-        }
-        #markdown-content th {
-            background-color: #f2f2f2;
-            font-weight: bold;
-        }
-        #markdown-content h1 {
-            color: #333;
-            border-bottom: 2px solid #4CAF50;
-            padding-bottom: 10px;
-        }
-        #markdown-content h2 {
-            color: #555;
-            margin-top: 30px;
-            border-bottom: 1px solid #ddd;
-            padding-bottom: 5px;
-        }
-        #markdown-content h3 {
-            color: #666;
-            margin-top: 20px;
-        }
-        .error {
-            background-color: #ffebee;
-            border: 2px solid #f44336;
-            padding: 20px;
-            border-radius: 5px;
-            color: #c62828;
-        }
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: #666;
         }
     </style>
 </head>
@@ -144,37 +203,131 @@
         <a href="index.html" class="active">About</a>
     </nav>
 
-    <h1>About These Tools</h1>
+    <h1>OSE Character Generators</h1>
 
-    <div class="content-section">
-        <h2>📖 Project Background</h2>
-        <p>These character generators and class references were created by the author to support running a <strong>Ruins of Castle Gygar</strong> campaign using the Old-School Essentials (OSE) ruleset.</p>
+    <div class="welcome-section">
+        <h2>Welcome!</h2>
+        <p>These tools help you create characters for <strong>Old-School Essentials (OSE)</strong> campaigns. Choose from three different generators depending on your needs:</p>
+    </div>
+
+    <div class="generator-grid">
+        <div class="generator-card">
+            <h3>🎲 Level 0 Character Generator</h3>
+            <p><strong>For:</strong> Funnel-style adventures where players start as ordinary people</p>
+            <p><strong>Features:</strong></p>
+            <ul>
+                <li>Random backgrounds and occupations</li>
+                <li>1d4 hit points</li>
+                <li>Basic equipment</li>
+                <li>Racial abilities (Human, Dwarf, Elf, Gnome, Halfling)</li>
+                <li>Export to PNG, PDF, Markdown, or JSON</li>
+            </ul>
+            <a href="0level.html">Generate Level 0 Character →</a>
+        </div>
+
+        <div class="generator-card">
+            <h3>⚔️ Basic Mode (Levels 1-14)</h3>
+            <p><strong>For:</strong> Traditional OSE race-as-class system</p>
+            <p><strong>Features:</strong></p>
+            <ul>
+                <li>Human classes: Cleric, Fighter, Magic-User, Thief</li>
+                <li>Demihuman classes: Dwarf, Elf, Halfling, Gnome</li>
+                <li>Spellblade (fighter/magic-user hybrid)</li>
+                <li>Full progression tables (saves, attack bonus, XP)</li>
+                <li>Spell slots, thief skills, turn undead</li>
+            </ul>
+            <a href="basic.html">Generate Basic Character →</a>
+        </div>
+
+        <div class="generator-card">
+            <h3>🛡️ Advanced Mode (Levels 1-14)</h3>
+            <p><strong>For:</strong> Separate race and class selection</p>
+            <p><strong>Features:</strong></p>
+            <ul>
+                <li>Choose race: Human, Dwarf, Elf, Gnome, Halfling</li>
+                <li>Choose class: Cleric, Fighter, Magic-User, Thief, Spellblade</li>
+                <li>Racial ability adjustments and minimums</li>
+                <li>Flexible race/class combinations</li>
+                <li>Full progression tables</li>
+            </ul>
+            <a href="advanced.html">Generate Advanced Character →</a>
+        </div>
+
+        <div class="generator-card">
+            <h3>📚 Class Reference</h3>
+            <p><strong>For:</strong> Looking up class details and progression tables</p>
+            <p><strong>Features:</strong></p>
+            <ul>
+                <li>Complete class documentation</li>
+                <li>OSE Standard and Smoothified Mode versions</li>
+                <li>Saving throws, attack bonus, XP requirements</li>
+                <li>Class abilities and special features</li>
+                <li>Side-by-side comparisons</li>
+            </ul>
+            <a href="classes.html">Browse Classes →</a>
+        </div>
+    </div>
+
+    <div class="mode-comparison">
+        <h2>📊 Mode Comparison: OSE Standard vs Smoothified</h2>
+        <p>All three generators support two progression modes:</p>
         
-        <p>The tools include both the standard OSE classes and "smoothified" versions with more gradual progression curves, as well as the Spellblade class—a fighter/magic-user hybrid designed specifically for the Gygar campaign setting.</p>
+        <table class="mode-table">
+            <thead>
+                <tr>
+                    <th>Feature</th>
+                    <th>OSE Standard</th>
+                    <th>Smoothified Mode</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Progression</strong></td>
+                    <td>Original OSE tables with irregular jumps</td>
+                    <td>Smoothed progressions with gradual improvements</td>
+                </tr>
+                <tr>
+                    <td><strong>Demihuman Level Limits</strong></td>
+                    <td>Yes (Dwarf 12, Elf 10, Halfling 8, Gnome 8)</td>
+                    <td>No limits - all classes to level 14</td>
+                </tr>
+                <tr>
+                    <td><strong>Attack Bonus</strong></td>
+                    <td>Starts at +0 (level 1-3)</td>
+                    <td>Starts at +1 (level 1)</td>
+                </tr>
+                <tr>
+                    <td><strong>Saving Throws</strong></td>
+                    <td>Original OSE progression</td>
+                    <td>More frequent improvements</td>
+                </tr>
+                <tr>
+                    <td><strong>Best For</strong></td>
+                    <td>By-the-book OSE campaigns</td>
+                    <td>Castle Gygar and house-ruled campaigns</td>
+                </tr>
+            </tbody>
+        </table>
     </div>
 
     <div class="gygar-section">
-        <h2>🏰 Campaign Evolution</h2>
+        <h2>🏰 Campaign Background</h2>
+        <p>These character generators were created to support running a <strong>Ruins of Castle Gygar</strong> campaign using the Old-School Essentials (OSE) ruleset.</p>
+        
         <p>The author initially started the campaign using <strong>Basic OSE</strong> (race-as-class system), where Dwarf, Elf, and Halfling are classes rather than races. After a few sessions, the campaign transitioned to <strong>Advanced OSE</strong>, which separates race from class and allows for more flexible character combinations.</p>
         
-        <p>Because of this mid-campaign transition, these tools support both approaches:</p>
-        <ul>
-            <li><strong>Basic Mode:</strong> Traditional race-as-class system</li>
-            <li><strong>Advanced Mode:</strong> Separate race and class selection</li>
-            <li><strong>OSE Standard:</strong> Original progression tables with irregular jumps</li>
-            <li><strong>Smoothified Mode:</strong> Smoothed progressions with more frequent, incremental improvements</li>
-        </ul>
+        <p>The "Smoothified Mode" progressions were designed to provide more gradual advancement and remove demihuman level limits, making the game feel more balanced and rewarding for players who choose non-human characters.</p>
     </div>
 
     <div class="content-section">
         <h2>✨ Key Features</h2>
         <ul>
-            <li><strong>Level 0 Character Generator:</strong> Create 0-level characters for funnel-style adventures</li>
+            <li><strong>Three Generators:</strong> Level 0, Basic Mode (race-as-class), and Advanced Mode (race + class)</li>
+            <li><strong>Two Progression Modes:</strong> OSE Standard and Smoothified Mode</li>
             <li><strong>Complete Class Documentation:</strong> All OSE classes with full progression tables</li>
-            <li><strong>Smoothified Progressions:</strong> Smoothified Mode variants with gradual advancement</li>
             <li><strong>Spellblade Class:</strong> Unique warrior-mage hybrid for Gygar campaigns</li>
-            <li><strong>Comparison Tools:</strong> Side-by-side analysis of OSE vs Gygar progressions</li>
-            <li><strong>Both Basic and Advanced:</strong> Support for race-as-class and race+class systems</li>
+            <li><strong>Flexible Options:</strong> Ability score minimums, HP requirements, level 0 HP inclusion</li>
+            <li><strong>Export Options:</strong> PNG, PDF, Markdown, and JSON formats (Level 0 only)</li>
         </ul>
     </div>
 
@@ -196,54 +349,5 @@
         <p>These tools are fan-made resources created to support play and are not official products.</p>
     </div>
 
-    <div class="links-section">
-        <h2>🎲 Get Started</h2>
-        <p><strong>Character Generators:</strong></p>
-        <a href="0level.html">Generate Level 0 Character</a>
-        <a href="basic.html">Basic Mode (Levels 1-14)</a>
-        <a href="advanced.html">Advanced Mode (Coming Soon)</a>
-        
-        <p style="margin-top: 20px;"><strong>Class Documentation:</strong></p>
-        <a href="classes.html">Browse All Classes</a>
-        
-        <p style="margin-top: 20px;"><strong>Comparisons & Analysis:</strong></p>
-        <a href="#" onclick="loadComparison('OSE_VS_GYGAR'); return false;">OSE vs Gygar Comparison</a>
-        <a href="#" onclick="loadComparison('ELF_VS_SPELLBLADE'); return false;">Elf vs Spellblade Comparison</a>
-        <a href="#" onclick="loadComparison('RACIAL_FEATURES_AUDIT'); return false;">Racial Features Audit</a>
-    </div>
-
-    <div id="markdown-content"></div>
-
-    <script>
-        async function loadComparison(docName) {
-            const contentDiv = document.getElementById('markdown-content');
-            contentDiv.style.display = 'block';
-            contentDiv.innerHTML = '<div class="loading">Loading...</div>';
-            
-            // Scroll to the content
-            contentDiv.scrollIntoView({ behavior: 'smooth' });
-
-            try {
-                const response = await fetch(`${docName}.md`);
-                if (!response.ok) {
-                    throw new Error(`Failed to load ${docName}.md (${response.status})`);
-                }
-                
-                const markdown = await response.text();
-                const html = marked.parse(markdown);
-                contentDiv.innerHTML = html;
-
-            } catch (error) {
-                contentDiv.innerHTML = `
-                    <div class="error">
-                        <h2>Error Loading Document</h2>
-                        <p><strong>File:</strong> ${docName}.md</p>
-                        <p><strong>Error:</strong> ${error.message}</p>
-                        <p>Make sure the markdown file exists in the same directory as this HTML file.</p>
-                    </div>
-                `;
-            }
-        }
-    </script>
 </body>
 </html>

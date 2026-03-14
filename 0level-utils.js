@@ -135,22 +135,33 @@ export function hasHighAbility(scores) {
 }
 
 /**
- * Check if scores meet "Born Adventurers" requirements
- * At least ONE of STR/DEX/INT/WIS must be ≥ 13
+ * Check if character meets Prime Requisite requirements
+ * Requires at least one of STR/DEX/INT/WIS ≥ minimum
  * @param {Object} scores - Ability scores object
+ * @param {number} minimum - Minimum score required (9 or 13)
  * @returns {boolean} True if requirements met
  */
-export function meetsBornAdventurersRequirements(scores) {
-    return scores.STR >= 13 || scores.DEX >= 13 || 
-           scores.INT >= 13 || scores.WIS >= 13;
+export function meetsPrimeRequisiteRequirements(scores, minimum) {
+    return scores.STR >= minimum || scores.DEX >= minimum || scores.INT >= minimum || scores.WIS >= minimum;
 }
 
 /**
- * Check if HP meets "Healthy Characters" requirement
- * HP must be ≥ 2
- * @param {number} hp - Hit points total
- * @returns {boolean} True if HP ≥ 2
+ * Check if scores meet "Born Adventurers" requirements (legacy)
+ * At least ONE of STR/DEX/INT/WIS must be ≥ 13
+ * @param {Object} scores - Ability scores object
+ * @returns {boolean} True if requirements met
+ * @deprecated Use meetsPrimeRequisiteRequirements(scores, 13) instead
  */
-export function meetsHealthyCharactersRequirement(hp) {
-    return hp >= 2;
+export function meetsBornAdventurersRequirements(scores) {
+    return meetsPrimeRequisiteRequirements(scores, 13);
+}
+
+/**
+ * Check if character meets "Healthy Characters" requirements
+ * Requires HP ≥ 2 at level 0
+ * @param {number} hitPoints - Character's hit points
+ * @returns {boolean} True if requirements met
+ */
+export function meetsHealthyCharactersRequirement(hitPoints) {
+    return hitPoints >= 2;
 }

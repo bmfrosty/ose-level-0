@@ -54,11 +54,11 @@ export const ATTACK_BONUS_SCALE = {
   "Thief_CLASS": "CLERIC",
   "Magic-User_CLASS": "MAGIC_USER",
   "Cleric_CLASS": "CLERIC",
+  "Spellblade_CLASS": "FIGHTER",  // Extended to level 14
   "Dwarf_CLASS": "FIGHTER",
   "Elf_CLASS": "FIGHTER",  // Extended to level 14
   "Halfling_CLASS": "FIGHTER",
-  "Gnome_CLASS": "MAGIC_USER",
-  "Spellblade_CLASS": "FIGHTER"  // Extended to level 14
+  "Gnome_CLASS": "MAGIC_USER"
 };
 
 // ============================================================================
@@ -95,6 +95,13 @@ export const SAVING_THROWS = {
     breath: [16, 16, 16, 16, 14, 14, 14, 14, 11, 11, 11, 11, 8, 8],
     spells: [15, 15, 15, 15, 12, 12, 12, 12, 9, 9, 9, 9, 7, 7]
   },
+  "Spellblade_CLASS": {
+    death: [12, 12, 12, 10, 10, 10, 8, 8, 8, 6, 6, 6, 4, 4],
+    wands: [13, 13, 13, 11, 11, 11, 9, 9, 9, 7, 7, 7, 5, 5],
+    paralysis: [13, 13, 13, 11, 11, 11, 9, 9, 9, 8, 8, 8, 6, 6],
+    breath: [15, 15, 15, 13, 13, 13, 10, 10, 10, 8, 8, 8, 6, 6],
+    spells: [15, 15, 15, 12, 12, 12, 10, 10, 10, 8, 8, 8, 6, 6]
+  },
   "Dwarf_CLASS": {
     death: [8, 8, 8, 6, 6, 6, 4, 4, 4, 2, 2, 2, 2, 2],
     wands: [9, 9, 9, 7, 7, 7, 5, 5, 5, 3, 3, 3, 3, 3],
@@ -122,13 +129,6 @@ export const SAVING_THROWS = {
     paralysis: [10, 10, 10, 10, 10, 8, 8, 8, 8, 8, 8, 8, 8, 8],
     breath: [14, 14, 14, 14, 14, 11, 11, 11, 11, 11, 11, 11, 11, 11],
     spells: [11, 11, 11, 11, 11, 9, 9, 9, 9, 9, 9, 9, 9, 9]
-  },
-  "Spellblade_CLASS": {
-    death: [12, 12, 12, 10, 10, 10, 8, 8, 8, 6, 6, 6, 4, 4],
-    wands: [13, 13, 13, 11, 11, 11, 9, 9, 9, 7, 7, 7, 5, 5],
-    paralysis: [13, 13, 13, 11, 11, 11, 9, 9, 9, 8, 8, 8, 6, 6],
-    breath: [15, 15, 15, 13, 13, 13, 10, 10, 10, 8, 8, 8, 6, 6],
-    spells: [15, 15, 15, 12, 12, 12, 10, 10, 10, 8, 8, 8, 6, 6]
   }
 };
 

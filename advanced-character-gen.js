@@ -237,7 +237,9 @@ export function createCharacterAdvanced(options) {
         classData,
         ClassDataShared,
         smoothifiedMode,
-        raceClassMode = 'strict'
+        raceClassMode = 'strict',
+        name,
+        background
     } = options;
     
     // Get racial adjustments for display
@@ -261,7 +263,9 @@ export function createCharacterAdvanced(options) {
         hp,
         progressionData: progression,
         features: features,
-        racialAbilities: racialAbilities
+        racialAbilities: racialAbilities,
+        name: name,
+        background: background
     });
     
     // Add Advanced Mode specific properties

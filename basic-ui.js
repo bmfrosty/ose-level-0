@@ -15,7 +15,8 @@ import {
     getMinimumScores,
     getClassRequirements,
     getHitDiceSize,
-    getDemihumanLimits
+    getDemihumanLimits,
+    meetsClassPrimeRequisites
 } from './basic-utils.js';
 import {
     rollAbilities,
@@ -25,6 +26,9 @@ import {
     getRacialAbilities,
     createCharacter
 } from './basic-character-gen.js';
+import { getRandomName } from './shared-names.js';
+import { getRandomBackground } from './shared-backgrounds.js';
+import { getModifierEffects } from './shared-modifier-effects.js';
 
 // Make modules available globally for debugging
 window.ClassDataOSE = ClassDataOSE;
@@ -42,6 +46,7 @@ let healthyCharacters = false;
 let includeLevel0HP = false;
 let useFixedScores = false;
 let showUndeadNames = false;
+let characterName = '';
 
 // Ability scores state
 let abilityScores = {
@@ -280,6 +285,44 @@ function updateRollButtonState() {
 }
 
 /**
+ * Get race name for name generation
+ * Maps class names to race names for the name generator
+ */
+function getRaceForNameGeneration(className) {
+    // Map demihuman classes to their race names
+    const classToRace = {
+        'Dwarf_CLASS': 'Dwarf',
+        'Elf_CLASS': 'Elf',
+        'Halfling_CLASS': 'Halfling',
+        'Gnome_CLASS': 'Gnome',
+        // All human classes map to Human
+        'Cleric_CLASS': 'Human',
+        'Fighter_CLASS': 'Human',
+        'Magic-User_CLASS': 'Human',
+        'Thief_CLASS': 'Human',
+        'Spellblade_CLASS': 'Human'
+    };
+    
+    return classToRace[className] || 'Human';
+}
+
+/**
+ * Handle Random Name button click
+ */
+function handleRandomName() {
+    if (!selectedClass) {
+        alert('Please select a class first!');
+        return;
+    }
+    
+    const race = getRaceForNameGeneration(selectedClass);
+    const name = getRandomName(race);
+    
+    document.getElementById('characterName').value = name;
+    characterName = name;
+}
+
+/**
  * Read ability scores from inputs and update state
  */
 function readAbilityScores() {
@@ -309,7 +352,17 @@ function handleRollAbilities() {
         );
     });
     
-    const scores = rollAbilities(effectiveMinimums, false, selectedClass, primeRequisite13);
+    // Read Prime Requisite mode from radio buttons
+    const primeReqMode = document.querySelector('input[name="primeRequisiteMode"]:checked')?.value || 'user';
+    let primeReqValue = false; // Default: no prime requisite check
+    
+    if (primeReqMode === '9') {
+        primeReqValue = 9; // Require prime requisite ≥ 9
+    } else if (primeReqMode === '13') {
+        primeReqValue = 13; // Require prime requisite ≥ 13
+    }
+    
+    const scores = rollAbilities(effectiveMinimums, false, selectedClass, primeReqValue);
     
     // Update state
     abilityScores = scores;
@@ -376,8 +429,24 @@ export function generateCharacter() {
         return;
     }
     
-    // Read current ability scores
-    readAbilityScores();
+    // If useFixedScores is checked, read current ability scores from inputs
+    // Otherwise, roll new ability scores
+    if (useFixedScores) {
+        readAbilityScores();
+    } else {
+        // Roll new ability scores
+        handleRollAbilities();
+    }
+    
+    // Read character name AFTER rolling abilities (so it doesn't get cleared)
+    characterName = document.getElementById('characterName').value.trim();
+    
+    // If no name provided, generate one
+    if (!characterName) {
+        const race = getRaceForNameGeneration(selectedClass);
+        characterName = getRandomName(race);
+        document.getElementById('characterName').value = characterName;
+    }
     
     // Determine mode
     const mode = smoothifiedMode ? 'Smoothified' : 'Normal';
@@ -413,6 +482,10 @@ export function generateCharacter() {
     // Get racial abilities (for demihuman classes)
     const racialAbilities = getRacialAbilities(selectedClass);
     
+    // Generate background based on HP
+    const background = getRandomBackground(hp);
+    console.log('Background:', background);
+    
     // Create character object
     const character = createCharacter({
         level: selectedLevel,
@@ -422,7 +495,9 @@ export function generateCharacter() {
         hp: hp,
         progressionData: progressionData,
         features: features,
-        racialAbilities: racialAbilities
+        racialAbilities: racialAbilities,
+        name: characterName,
+        background: background
     });
     
     console.log('\n========================================');
@@ -442,17 +517,34 @@ function displayCharacter(character) {
     const characterDisplay = document.getElementById('characterDisplay');
     
     const html = `
-        <h3>Level ${character.level} ${character.class} (${character.mode} Mode)</h3>
+        <h3>${character.name || 'Unnamed Character'}</h3>
+        <p><strong>Level ${character.level} ${character.class}</strong> (${character.mode} Mode)</p>
+        
+        ${character.background ? `
+            <h4>Background</h4>
+            <p>
+                <strong>Profession:</strong> ${character.background.profession}<br>
+                <strong>Starting Item(s):</strong> ${Array.isArray(character.background.item) ? character.background.item.join(', ') : character.background.item}<br>
+                <strong>Weapon:</strong> ${character.background.weapon}<br>
+                <strong>Armor:</strong> ${character.background.armor}
+            </p>
+        ` : ''}
         
         <h4>Ability Scores</h4>
-        <p>
-            <strong>STR:</strong> ${character.abilityScores.STR} (${formatModifier(character.abilityModifiers.STR)}) &nbsp;
-            <strong>INT:</strong> ${character.abilityScores.INT} (${formatModifier(character.abilityModifiers.INT)}) &nbsp;
-            <strong>WIS:</strong> ${character.abilityScores.WIS} (${formatModifier(character.abilityModifiers.WIS)})<br>
-            <strong>DEX:</strong> ${character.abilityScores.DEX} (${formatModifier(character.abilityModifiers.DEX)}) &nbsp;
-            <strong>CON:</strong> ${character.abilityScores.CON} (${formatModifier(character.abilityModifiers.CON)}) &nbsp;
-            <strong>CHA:</strong> ${character.abilityScores.CHA} (${formatModifier(character.abilityModifiers.CHA)})
-        </p>
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 12px;">
+            <tr style="background-color: #f0f0f0;">
+                <th style="border: 1px solid #000; padding: 5px; text-align: center;">Ability</th>
+                <th style="border: 1px solid #000; padding: 5px; text-align: center;">Score</th>
+                <th style="border: 1px solid #000; padding: 5px; text-align: left;">Effects</th>
+            </tr>
+            ${['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'].map(ability => `
+            <tr>
+                <td style="border: 1px solid #000; padding: 5px; text-align: center;"><strong>${ability}</strong></td>
+                <td style="border: 1px solid #000; padding: 5px; text-align: center;">${character.abilityScores[ability]}</td>
+                <td style="border: 1px solid #000; padding: 5px;">${getModifierEffects(ability, character.abilityModifiers[ability], character.abilityScores[ability])}</td>
+            </tr>
+            `).join('')}
+        </table>
         
         <h4>Combat Stats</h4>
         <p>
@@ -569,9 +661,8 @@ export function initializeEventListeners() {
         updateUI();
     });
 
-    document.getElementById('primeRequisite13').addEventListener('change', (e) => {
-        primeRequisite13 = e.target.checked;
-    });
+    // Prime Requisite mode radio buttons (no longer using primeRequisite13 checkbox)
+    // The radio buttons are read directly in handleRollAbilities()
 
     document.getElementById('healthyCharacters').addEventListener('change', (e) => {
         healthyCharacters = e.target.checked;
@@ -593,6 +684,7 @@ export function initializeEventListeners() {
     });
 
     // Button event listeners
+    document.getElementById('randomNameButton').addEventListener('click', handleRandomName);
     document.getElementById('rollAbilitiesButton').addEventListener('click', handleRollAbilities);
     document.getElementById('testHPButton').addEventListener('click', handleTestHP);
     document.getElementById('generateButton').addEventListener('click', generateCharacter);

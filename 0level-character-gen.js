@@ -9,6 +9,10 @@ import {
     rollAbilities
 } from './shared-ability-scores.js';
 
+// Import shared names and backgrounds
+import { getRandomName as getRandomNameFromModule } from './shared-names.js';
+import { getRandomBackground } from './shared-backgrounds.js';
+
 // Import 0-level utilities
 import {
     roll3d6,
@@ -17,7 +21,7 @@ import {
     getMinimumScores,
     meetsMinimumRequirements,
     hasHighAbility,
-    meetsBornAdventurersRequirements,
+    meetsPrimeRequisiteRequirements,
     meetsHealthyCharactersRequirement
 } from './0level-utils.js';
 
@@ -42,27 +46,8 @@ let currentCharacter = null;
  * @returns {Object} Background object {profession, item, weapon, armor}
  */
 export function getBackgroundByHitPoints(hitPoints) {
-    // Import background tables (will be available in global scope in browser)
-    const backgroundTables = (typeof window !== 'undefined' && window.backgroundTables) ? window.backgroundTables : {};
-    
-    // If not loaded yet, return a default background
-    if (!backgroundTables || Object.keys(backgroundTables).length === 0) {
-        return {
-            profession: 'Unknown',
-            item: 'None',
-            weapon: 'Club',
-            armor: 'None'
-        };
-    }
-    
-    // Cap hit points at 4 for occupation selection, minimum 1
-    const hpForOccupation = Math.min(Math.max(hitPoints, 1), 4);
-    const table = backgroundTables[hpForOccupation];
-    
-    // Roll 1d12 for background
-    const roll = Math.floor(Math.random() * 12) + 1;
-    
-    return table[roll - 1]; // d12 roll (1-12) maps to array index (0-11)
+    // Use shared backgrounds module
+    return getRandomBackground(hitPoints);
 }
 
 /**
@@ -101,21 +86,12 @@ export function rollRace() {
  * @returns {string} Random name
  */
 export function getRandomName(race) {
-    // Import names tables (will be available in global scope in browser)
-    const namesTables = (typeof window !== 'undefined' && window.namesTables) ? window.namesTables : {};
+    // Convert race name: remove _RACE suffix and capitalize first letter
+    const raceName = race.replace('_RACE', '');
+    const capitalizedRace = raceName.charAt(0).toUpperCase() + raceName.slice(1).toLowerCase();
     
-    // If not loaded yet, return a default name
-    if (!namesTables || Object.keys(namesTables).length === 0) {
-        return "Adventurer";
-    }
-    
-    // Convert race name to lowercase and remove _RACE suffix for table lookup
-    const raceKey = race.replace('_RACE', '').toLowerCase();
-    const names = namesTables[raceKey];
-    if (!names) return "Unknown";
-    
-    const roll = Math.floor(Math.random() * names.length);
-    return names[roll];
+    // Use shared names module
+    return getRandomNameFromModule(capitalizedRace);
 }
 
 /**
@@ -222,7 +198,7 @@ export function rollAbilityScores(minimums) {
  * Generate a single 0-level character
  * @returns {Object} Character object
  */
-export function generateSingleCharacter() {
+export async function generateSingleCharacter() {
     let results = [];
     let isValidArray = true;
     
@@ -256,7 +232,7 @@ export function generateSingleCharacter() {
         const humanRacialAbilities = humanAbilitiesCheckbox ? humanAbilitiesCheckbox.checked : true;
         
         // Apply race adjustments if Advanced mode
-        const adjustedResults = applyRaceAdjustments(results, tempRace, isAdvanced, humanRacialAbilities);
+        const adjustedResults = await applyRaceAdjustments(results, tempRace, isAdvanced, humanRacialAbilities);
         
         // Check race minimums if Advanced mode
         if (!meetsRaceMinimums(adjustedResults, tempRace, isAdvanced)) {
@@ -283,11 +259,16 @@ export function generateSingleCharacter() {
             continue;
         }
         
-        // Check "Born Adventurers" mode requirements if enabled
-        const bornAdventurersCheckbox = typeof document !== 'undefined' ? document.getElementById('bornAdventurers') : null;
-        const bornAdventurersEnabled = bornAdventurersCheckbox ? bornAdventurersCheckbox.checked : false;
+        // Check Prime Requisite mode requirements
+        const primeReqMode = typeof document !== 'undefined' ? 
+            (document.querySelector('input[name="primeRequisiteMode"]:checked')?.value || 'user') : 'user';
         
-        if (bornAdventurersEnabled && !meetsBornAdventurersRequirements(adjustedScores)) {
+        if (primeReqMode === '9' && !meetsPrimeRequisiteRequirements(adjustedScores, 9)) {
+            isValidArray = false;
+            continue;
+        }
+        
+        if (primeReqMode === '13' && !meetsPrimeRequisiteRequirements(adjustedScores, 13)) {
             isValidArray = false;
             continue;
         }
@@ -316,7 +297,7 @@ export function generateSingleCharacter() {
     const humanRacialAbilities = humanAbilitiesCheckbox ? humanAbilitiesCheckbox.checked : true;
     
     // Apply race adjustments to final results
-    const finalResults = applyRaceAdjustments(results, race, isAdvanced, humanRacialAbilities);
+    const finalResults = await applyRaceAdjustments(results, race, isAdvanced, humanRacialAbilities);
     
     const conModifier = finalResults.find(r => r.ability === "CON").modifier;
     const dexModifier = finalResults.find(r => r.ability === "DEX").modifier;
@@ -357,10 +338,10 @@ export function generateSingleCharacter() {
  * Generate a 0-level character and display it
  * This function is called by the UI
  */
-export function generate0LevelCharacter() {
+export async function generate0LevelCharacter() {
     rerollCount++; // Increment the counter on every call
     
-    const character = generateSingleCharacter();
+    const character = await generateSingleCharacter();
     
     // Store character data for PDF generation
     currentCharacter = character;

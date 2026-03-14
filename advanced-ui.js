@@ -26,6 +26,9 @@ import {
     createCharacterAdvanced,
     rollHitPoints
 } from './advanced-character-gen.js';
+import { getRandomName } from './shared-names.js';
+import { getRandomBackground } from './shared-backgrounds.js';
+import { getModifierEffects } from './shared-modifier-effects.js';
 
 // Make modules available globally for debugging
 window.ClassDataOSE = ClassDataOSE;
@@ -43,6 +46,7 @@ let healthyCharacters = false;
 let useFixedScores = false;
 let showUndeadNames = false;
 let includeLevel0HP = false;
+let characterName = '';
 let abilityScores = {
     STR: 3,
     INT: 3,
@@ -242,6 +246,32 @@ export function updateUI() {
 }
 
 /**
+ * Get race name for name generation (remove _RACE suffix)
+ */
+function getRaceForNameGeneration(raceName) {
+    if (raceName && raceName.endsWith('_RACE')) {
+        return raceName.replace('_RACE', '');
+    }
+    return raceName || 'Human';
+}
+
+/**
+ * Handle Random Name button click
+ */
+function handleRandomName() {
+    if (!selectedRace) {
+        alert('Please select a race first!');
+        return;
+    }
+    
+    const race = getRaceForNameGeneration(selectedRace);
+    const name = getRandomName(race);
+    
+    document.getElementById('characterName').value = name;
+    characterName = name;
+}
+
+/**
  * Handle Set to Minimums button click
  */
 function handleSetMinimums() {
@@ -364,6 +394,7 @@ export function initializeEventListeners() {
     });
 
     // Button event listeners
+    document.getElementById('randomNameButton').addEventListener('click', handleRandomName);
     document.getElementById('setMinimumsButton').addEventListener('click', handleSetMinimums);
     document.getElementById('rollAbilitiesButton').addEventListener('click', handleRollAbilities);
     document.getElementById('generateButton').addEventListener('click', generateCharacter);
@@ -395,8 +426,20 @@ export function generateCharacter() {
     const classData = smoothifiedMode ? ClassDataGygar : ClassDataOSE;
     console.log('Using class data:', smoothifiedMode ? 'Gygar (Smoothified)' : 'OSE (Normal)');
     
+    // Read character name AFTER determining if we're rolling or using fixed scores
+    // (but before actually rolling, so it doesn't get cleared)
+    characterName = document.getElementById('characterName').value.trim();
+    
+    // If no name provided, generate one
+    if (!characterName) {
+        const race = getRaceForNameGeneration(selectedRace);
+        characterName = getRandomName(race);
+        document.getElementById('characterName').value = characterName;
+    }
+    
     let baseScores, adjustedScores;
     
+    // Always roll new ability scores unless useFixedScores is checked
     if (useFixedScores) {
         // Use scores from input fields
         console.log('\n--- Using Fixed Ability Scores ---');
@@ -494,6 +537,10 @@ export function generateCharacter() {
     
     console.log('Total HP:', hp);
     
+    // Generate background based on HP
+    const background = getRandomBackground(hp);
+    console.log('Background:', background);
+    
     // Create character object
     console.log('\n--- Creating Character Object ---');
     const character = createCharacterAdvanced({
@@ -506,7 +553,9 @@ export function generateCharacter() {
         classData: classData,
         ClassDataShared: ClassDataShared,
         smoothifiedMode: smoothifiedMode,
-        raceClassMode: raceClassMode
+        raceClassMode: raceClassMode,
+        name: characterName,
+        background: background
     });
     
     console.log('Character object created:', character);
@@ -548,25 +597,34 @@ export function displayCharacter(character) {
     }
     
     const html = `
-        <h3>Level ${character.level} ${raceDisplay} ${classDisplay} (${mode} Mode)</h3>
+        <h3>${character.name || 'Unnamed Character'}</h3>
+        <p><strong>Level ${character.level} ${raceDisplay} ${classDisplay}</strong> (${mode} Mode)</p>
         
         ${racialAdjustmentsHTML}
         
+        ${character.background ? `
+            <h4>Background</h4>
+            <p>
+                <strong>Profession:</strong> ${character.background.profession}<br>
+                <strong>Starting Item(s):</strong> ${Array.isArray(character.background.item) ? character.background.item.join(', ') : character.background.item}<br>
+                <strong>Weapon:</strong> ${character.background.weapon}<br>
+                <strong>Armor:</strong> ${character.background.armor}
+            </p>
+        ` : ''}
+        
         <h4>Ability Scores</h4>
-        <table style="border-collapse: collapse; margin-bottom: 15px;">
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 12px;">
             <tr style="background-color: #f0f0f0;">
-                <th style="border: 1px solid #ccc; padding: 8px;">Ability</th>
-                <th style="border: 1px solid #ccc; padding: 8px;">Base</th>
-                <th style="border: 1px solid #ccc; padding: 8px;">Adjusted</th>
-                <th style="border: 1px solid #ccc; padding: 8px;">Modifier</th>
+                <th style="border: 1px solid #000; padding: 5px; text-align: center;">Ability</th>
+                <th style="border: 1px solid #000; padding: 5px; text-align: center;">Score</th>
+                <th style="border: 1px solid #000; padding: 5px; text-align: left;">Effects</th>
             </tr>
-            ${['STR', 'INT', 'WIS', 'DEX', 'CON', 'CHA'].map(ability => `
-                <tr>
-                    <td style="border: 1px solid #ccc; padding: 8px;"><strong>${ability}</strong></td>
-                    <td style="border: 1px solid #ccc; padding: 8px; text-align: center;">${character.baseScores[ability]}</td>
-                    <td style="border: 1px solid #ccc; padding: 8px; text-align: center;">${character.adjustedScores[ability]}</td>
-                    <td style="border: 1px solid #ccc; padding: 8px; text-align: center;">${formatModifier(character.abilityModifiers[ability])}</td>
-                </tr>
+            ${['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'].map(ability => `
+            <tr>
+                <td style="border: 1px solid #000; padding: 5px; text-align: center;"><strong>${ability}</strong></td>
+                <td style="border: 1px solid #000; padding: 5px; text-align: center;">${character.adjustedScores[ability]}${character.baseScores[ability] !== character.adjustedScores[ability] ? ` (${character.baseScores[ability]})` : ''}</td>
+                <td style="border: 1px solid #000; padding: 5px;">${getModifierEffects(ability, character.abilityModifiers[ability], character.adjustedScores[ability])}</td>
+            </tr>
             `).join('')}
         </table>
         

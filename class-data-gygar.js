@@ -55,11 +55,11 @@ export const ATTACK_BONUS_SCALE = {
   "Thief_CLASS": "CLERIC_SMOOTH",
   "Magic-User_CLASS": "MAGIC_USER_SMOOTH",
   "Cleric_CLASS": "CLERIC_SMOOTH",
+  "Spellblade_CLASS": "FIGHTER_SMOOTH",
   "Dwarf_CLASS": "FIGHTER_SMOOTH",
   "Elf_CLASS": "FIGHTER_SMOOTH",
   "Halfling_CLASS": "FIGHTER_SMOOTH",
-  "Gnome_CLASS": "MAGIC_USER_SMOOTH",
-  "Spellblade_CLASS": "FIGHTER_SMOOTH"
+  "Gnome_CLASS": "MAGIC_USER_SMOOTH"
 };
 
 // ============================================================================
@@ -97,6 +97,13 @@ export const SAVING_THROWS = {
     breath: [16, 16, 16, 15, 14, 14, 13, 12, 11, 11, 10, 9, 8, 8],
     spells: [15, 15, 14, 13, 12, 12, 11, 10, 9, 9, 9, 8, 7, 7]
   },
+  "Spellblade_CLASS": {
+    death: [12, 12, 11, 10, 10, 9, 8, 8, 7, 6, 6, 5, 4, 4],
+    wands: [13, 13, 12, 11, 11, 10, 9, 9, 8, 7, 7, 6, 5, 5],
+    paralysis: [13, 13, 12, 11, 11, 10, 9, 9, 9, 8, 8, 7, 6, 6],
+    breath: [15, 15, 14, 13, 12, 11, 10, 10, 9, 8, 7, 6, 5, 5],
+    spells: [15, 14, 13, 12, 12, 11, 10, 10, 9, 8, 8, 7, 6, 6]
+  },
   "Dwarf_CLASS": {
     death: [12, 12, 11, 10, 10, 9, 8, 8, 7, 6, 6, 5, 4, 4],
     wands: [13, 13, 12, 11, 11, 10, 9, 9, 8, 7, 7, 6, 5, 5],
@@ -124,13 +131,6 @@ export const SAVING_THROWS = {
     paralysis: [13, 13, 13, 13, 12, 11, 11, 11, 10, 9, 8, 8, 8, 8],
     breath: [16, 16, 16, 16, 15, 14, 14, 14, 13, 12, 11, 11, 11, 11],
     spells: [15, 15, 15, 14, 13, 12, 12, 11, 10, 9, 8, 8, 8, 8]
-  },
-  "Spellblade_CLASS": {
-    death: [12, 12, 11, 10, 10, 9, 8, 8, 7, 6, 6, 5, 4, 4],
-    wands: [13, 13, 12, 11, 11, 10, 9, 9, 8, 7, 7, 6, 5, 5],
-    paralysis: [13, 13, 12, 11, 11, 10, 9, 9, 9, 8, 8, 7, 6, 6],
-    breath: [15, 15, 14, 13, 12, 11, 10, 10, 9, 8, 7, 6, 5, 5],
-    spells: [15, 14, 13, 12, 12, 11, 10, 10, 9, 8, 8, 7, 6, 6]
   }
 };
 

@@ -1,4 +1,7 @@
 // Names tables from OSE 0-Level PDF pages 3-4
+// 
+// DEPRECATED: This file is kept for backward compatibility with 0-level generator.
+// New code should use shared-names.js ES6 module instead.
 
 // ============================================================================
 // BACKWARD COMPATIBILITY
@@ -7,7 +10,7 @@
 // LEGACY_RACE_NAMES and normalizeRaceName are defined in shared-race-names.js
 
 // ============================================================================
-// NAME TABLES
+// NAME TABLES (DEPRECATED - use shared-names.js)
 // ============================================================================
 
 const namesTables = {

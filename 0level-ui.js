@@ -9,6 +9,7 @@ import {
     getCurrentCharacter,
     getRerollCount
 } from './0level-character-gen.js';
+import { getModifierEffects } from './shared-modifier-effects.js';
 
 /**
  * Convert internal _RACE name to display name
@@ -52,8 +53,7 @@ export function display0LevelCharacter(results, total, background, hitPoints, ar
     const currentCharacter = getCurrentCharacter();
     const rerollCount = getRerollCount();
     
-    // Import getModifierEffects from global scope
-    const getModifierEffects = window.getModifierEffects;
+    // Import getRacialAbilities from global scope
     const getRacialAbilities = window.getRacialAbilities;
     
     // Build HTML for successful adventurer character - PDF-like layout (balanced for printing)
@@ -97,7 +97,7 @@ export function display0LevelCharacter(results, total, background, hitPoints, ar
         resultHtml += `
                 <tr>
                     <td style='border: 1px solid #000; padding: 5px; text-align: center;'><strong>${result.ability}</strong></td>
-                    <td style='border: 1px solid #000; padding: 5px; text-align: center;'>${result.roll}</td>
+                    <td style='border: 1px solid #000; padding: 5px; text-align: center;'>${result.roll}${result.originalRoll !== undefined && result.originalRoll !== result.roll ? ` (${result.originalRoll})` : ''}</td>
                     <td style='border: 1px solid #000; padding: 5px;'>${effects}</td>
                 </tr>`;
     }
