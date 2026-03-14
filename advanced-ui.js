@@ -733,6 +733,14 @@ export function displayCharacter(character) {
             <head>
                 <meta charset="UTF-8">
                 <title>${character.name} - OSE Character</title>
+                <style>
+                    body {
+                        font-family: Arial, sans-serif;
+                        max-width: 800px;
+                        margin: 0 auto;
+                        padding: 20px;
+                    }
+                </style>
             </head>
             <body>
                 ${html}

@@ -176,6 +176,14 @@ export function display0LevelCharacter(results, total, background, hitPoints, ar
             <head>
                 <meta charset="UTF-8">
                 <title>${name} - OSE 0-Level Character</title>
+                <style>
+                    body {
+                        font-family: Arial, sans-serif;
+                        max-width: 800px;
+                        margin: 0 auto;
+                        padding: 20px;
+                    }
+                </style>
             </head>
             <body>
                 ${resultHtml}
