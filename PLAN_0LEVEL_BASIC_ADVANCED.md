@@ -240,6 +240,90 @@ Not currently implemented, but not critical for Level 0 characters.
 
 **All tests passing!** ✅
 
+## Character Sheet Unification Plan
+
+### Goal
+Create a single, high-quality character sheet used by all three generators (0-level, Basic, Advanced) — both for the **HTML display** in the browser and the **PDF/PNG output**. Currently the HTML sheet and the canvas-rendered PDF sheet have different layouts, and each generator has its own display code.
+
+### Current State
+
+**HTML Character Sheet (in-browser display):**
+- `0level-ui.js` — custom HTML table layout (simple, functional)
+- `basic-ui.js` — different custom HTML layout
+- `advanced-ui.js` — different custom HTML layout
+- All three look different and are maintained separately
+
+**PDF/PNG Character Sheet (canvas renderer):**
+- `canvas-sheet-renderer.js` — high-quality 300 DPI canvas layout for 0-level
+- Has well-designed sections: Combat, Ability Scores, Weapons & Skills, Racial Abilities, Saving Throws, Equipment, Class Abilities, Treasure boxes
+- Not used by Basic or Advanced generators at all
+
+### Phase 1: Align HTML Sheet with PDF Layout - ✅ COMPLETE
+
+- [x] Redesigned `display0LevelCharacter()` in `0level-ui.js` to match PDF section layout
+- [x] Dark background + white text section headers (COMBAT, ABILITY SCORES, WEAPONS AND SKILLS, RACIAL ABILITIES, SAVING THROWS, EQUIPMENT, CLASS ABILITIES, TREASURE)
+- [x] COMBAT: 4 stat boxes (MAX HP, CUR HP blank, INIT, AC blank) — blank boxes for player to fill in
+- [x] Two-column layout: Left (ABILITY SCORES, WEAPONS AND SKILLS, RACIAL ABILITIES) | Right (SAVING THROWS, EQUIPMENT, CLASS ABILITIES, TREASURE)
+- [x] Ability scores show adjusted vs original (e.g., "12 (11)" for CON)
+- [x] CLASS ABILITIES section: "None (0-level)" in grey
+- [x] TREASURE: PP/GP/EP/SP/CP rows with black labels and blank fillable cells
+- [x] Tested in browser ✅ — looks clean and matches PDF structure
+
+### Phase 2: Extract Shared Character Sheet Component
+Extract the HTML character sheet into a reusable `shared-character-sheet.js` ES6 module that all three generators can use.
+
+**TODO:**
+- [ ] Create `shared-character-sheet.js`:
+  - [ ] `renderCharacterSheetHTML(character, options)` → HTML string
+  - [ ] Options: `{ mode: '0level'|'basic'|'advanced', showClassAbilities: bool, showSpellSlots: bool, showThiefSkills: bool, showTurnUndead: bool }`
+- [ ] Update `0level-ui.js` to use shared renderer
+- [ ] Update `basic-ui.js` to use shared renderer
+- [ ] Update `advanced-ui.js` to use shared renderer
+- [ ] Verify all three generators display consistently
+
+### Phase 3: Improve Both HTML and PDF Sheets
+Make coordinated improvements to both the HTML display and `canvas-sheet-renderer.js` in sync.
+
+**Known improvements needed:**
+- [ ] PDF: AC box should remain blank (AC changes during play; Starting AC is already shown in Equipment section — the commented-out `drawCenteredText` call should be removed)
+- [ ] HTML + PDF: Add "Starting Equipment" section with proper item list formatting
+- [ ] HTML + PDF: Better handling of long occupation names (no truncation)
+- [ ] HTML + PDF: Ability scores — show original roll vs adjusted score (e.g., "12 (11)")
+- [ ] HTML: Add print-friendly CSS for printing the HTML sheet directly
+- [ ] PDF: Consider adding a "Notes" section at the bottom
+
+### Phase 4: Extend to Basic and Advanced Generators
+Once the shared HTML renderer exists, extend the PDF renderer to support Level 1+ characters.
+
+**TODO (see also PLAN_CLASSES_IMPORT_TODO.md Phase 7G):**
+- [ ] Update `canvas-sheet-renderer.js` to handle Level 1+ characters:
+  - [ ] Show class instead of occupation
+  - [ ] Show level in the LEVEL box
+  - [ ] Spell slots section (for spellcasters)
+  - [ ] Thief skills section (single row, current level)
+  - [ ] Turn undead section (clerics)
+  - [ ] Class abilities section (populated instead of "None (0-level)")
+- [ ] Add "Generate PDF" / "Generate PNG" buttons to `basic.html` and `advanced.html`
+- [ ] Hook up `canvas-generator.js` to Basic and Advanced generators
+
+### Phase 5: Unified Export for All Generators
+All three generators should offer the same export options: HTML display, PDF, PNG, Markdown, JSON.
+
+**TODO:**
+- [ ] Import `canvas-generator.js` into `basic-ui.js` and `advanced-ui.js`
+- [ ] Add export buttons to `basic.html` and `advanced.html`
+- [ ] Pass the generated character object to the shared canvas renderer
+- [ ] Ensure `canvas-sheet-renderer.js` renders correctly for all three modes
+
+### Implementation Order
+1. ✅ **Phase 1** — Align HTML sheet with PDF layout (0-level only) — COMPLETE
+2. **Phase 2** — Extract `shared-character-sheet.js` ← **NEXT**
+3. **Phase 3** — Improve both HTML and PDF sheets
+4. **Phase 4** — Extend to Basic/Advanced (Level 1+ support in canvas renderer)
+5. **Phase 5** — Add PDF/PNG/MD/JSON export to Basic and Advanced generators
+
+---
+
 ## Future Expansion: Level 1+ Characters
 
 When adding Level 1+ character generation:

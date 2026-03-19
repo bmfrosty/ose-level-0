@@ -62,111 +62,180 @@ export function display0LevelCharacter(results, total, background, hitPoints, ar
     const currentCharacter = getCurrentCharacter();
     const rerollCount = getRerollCount();
     
-    // Build HTML for successful adventurer character - PDF-like layout (balanced for printing)
+    // CSS helper strings
+    const sectionHeader = `background-color: #000; color: #fff; padding: 4px 8px; font-weight: bold; font-size: 0.9em; letter-spacing: 0.05em;`;
+    const box = `border: 1px solid #000; padding: 8px; font-size: 0.9em;`;
+    const statBox = `border: 1px solid #000; padding: 6px; text-align: center; font-size: 0.85em;`;
+
+    // Build HTML character sheet matching PDF canvas layout
     let resultHtml = `
-            <h2 style='text-align: left; margin: 8px 0; font-size: 1.4em;'>${isAdvanced ? 'OLD-SCHOOL ESSENTIALS ADVANCED' : 'OLD-SCHOOL ESSENTIALS'}</h2>
-            <p style='margin: 2px 0; font-size: 0.95em;'>RETRO ADVENTURE GAME</p>
-            <hr style='margin: 8px 0;'>
-            
-            <div style='margin: 12px 0;'>
-                <p style='margin: 4px 0;'><strong>Character Name:</strong> ${name || 'Unknown'}</p>
-                <p style='margin: 4px 0;'><strong>Race:</strong> ${displayRace} | <strong>Level:</strong> 0 | <strong>Occupation:</strong> ${background.profession} | <strong>HD:</strong> 1d4</p>
+        <div style='font-family: Arial, sans-serif; max-width: 760px;'>
+
+        <!-- Header -->
+        <div style='margin-bottom: 8px;'>
+            <div style='font-size: 1.3em; font-weight: bold;'>${isAdvanced ? 'OLD-SCHOOL ESSENTIALS ADVANCED' : 'OLD-SCHOOL ESSENTIALS'}</div>
+            <div style='font-size: 0.85em; color: #444;'>RETRO ADVENTURE GAME</div>
+            <hr style='margin: 6px 0; border-color: #000;'>
+            <div style='display: grid; grid-template-columns: 3fr 2fr 3fr 1fr 1fr; gap: 0; font-size: 0.85em;'>
+                <div style='border: 1px solid #000; padding: 4px 8px;'>
+                    <div style='font-weight: bold; font-size: 0.75em; color: #666; text-transform: uppercase;'>Character Name</div>
+                    <div>${name || 'Unknown'}</div>
+                </div>
+                <div style='border: 1px solid #000; border-left: none; padding: 4px 8px;'>
+                    <div style='font-weight: bold; font-size: 0.75em; color: #666; text-transform: uppercase;'>Race &amp; Class</div>
+                    <div>${displayRace}</div>
+                </div>
+                <div style='border: 1px solid #000; border-left: none; padding: 4px 8px;'>
+                    <div style='font-weight: bold; font-size: 0.75em; color: #666; text-transform: uppercase;'>Occupation</div>
+                    <div>${background.profession}</div>
+                </div>
+                <div style='border: 1px solid #000; border-left: none; padding: 4px 8px; text-align: center;'>
+                    <div style='font-weight: bold; font-size: 0.75em; color: #666; text-transform: uppercase;'>HD</div>
+                    <div>1d4</div>
+                </div>
+                <div style='border: 1px solid #000; border-left: none; padding: 4px 8px; text-align: center;'>
+                    <div style='font-weight: bold; font-size: 0.75em; color: #666; text-transform: uppercase;'>Level</div>
+                    <div>0</div>
+                </div>
             </div>
-            
-            <h3 style='margin: 10px 0; font-size: 1.15em;'>COMBAT</h3>
-            <div style='display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 12px;'>
-                <div style='border: 1px solid #000; padding: 6px; text-align: center; font-size: 0.9em;'>
-                    <strong>MAX HP</strong><br>${Math.max(1, hitPoints.total)}
-                </div>
-                <div style='border: 1px solid #000; padding: 6px; text-align: center; font-size: 0.9em;'>
-                    <strong>CUR HP</strong><br>___
-                </div>
-                <div style='border: 1px solid #000; padding: 6px; text-align: center; font-size: 0.9em;'>
-                    <strong>INIT</strong><br>${results.find(r => r.ability === "DEX").modifier >= 0 ? '+' : ''}${results.find(r => r.ability === "DEX").modifier}
-                </div>
-                <div style='border: 1px solid #000; padding: 6px; text-align: center; font-size: 0.9em;'>
-                    <strong>AC</strong><br>${armorClass}
-                </div>
-            </div>
-            
-            <h3 style='margin: 10px 0; font-size: 1.15em;'>ABILITY SCORES</h3>
-            <table style='width: 100%; border-collapse: collapse; margin-bottom: 12px; font-size: 0.9em;'>
-                <tr style='background-color: #f0f0f0;'>
-                    <th style='border: 1px solid #000; padding: 5px; text-align: center;'>Ability</th>
-                    <th style='border: 1px solid #000; padding: 5px; text-align: center;'>Score</th>
-                    <th style='border: 1px solid #000; padding: 5px; text-align: left;'>Effects</th>
-                </tr>`;
-    
+        </div>
+
+        <!-- COMBAT -->
+        <div style='${sectionHeader}'>COMBAT</div>
+        <div style='display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; margin-bottom: 8px;'>
+            <div style='${statBox}'><div style='font-weight:bold; font-size:0.8em;'>MAX HP</div>${Math.max(1, hitPoints.total)}</div>
+            <div style='${statBox}'><div style='font-weight:bold; font-size:0.8em;'>CUR HP</div>&nbsp;</div>
+            <div style='${statBox}'><div style='font-weight:bold; font-size:0.8em;'>INIT</div>${results.find(r => r.ability === "DEX").modifier >= 0 ? '+' : ''}${results.find(r => r.ability === "DEX").modifier}</div>
+            <div style='${statBox}'><div style='font-weight:bold; font-size:0.8em;'>AC</div>&nbsp;</div>
+        </div>
+
+        <!-- Two column layout -->
+        <div style='display: grid; grid-template-columns: 1fr 1fr; gap: 8px;'>
+
+            <!-- LEFT COLUMN -->
+            <div>
+                <!-- ABILITY SCORES -->
+                <div style='${sectionHeader}'>ABILITY SCORES</div>
+                <table style='width: 100%; border-collapse: collapse; margin-bottom: 8px; font-size: 0.85em;'>
+                    <tr style='background-color: #eee;'>
+                        <th style='border: 1px solid #000; padding: 3px 6px; text-align: center; width: 20%;'>Ability</th>
+                        <th style='border: 1px solid #000; padding: 3px 6px; text-align: center; width: 15%;'>Score</th>
+                        <th style='border: 1px solid #000; padding: 3px 6px; text-align: left;'>Effects</th>
+                    </tr>`;
+
     for (let result of results) {
         const effects = getModifierEffects(result.ability, result.modifier, result.roll);
+        const scoreDisplay = (result.originalRoll !== undefined && result.originalRoll !== result.roll)
+            ? `<span style='text-decoration:line-through; color:#999; font-size:0.85em; margin-right:4px;'>${result.originalRoll}</span>${result.roll}`
+            : `${result.roll}`;
         resultHtml += `
-                <tr>
-                    <td style='border: 1px solid #000; padding: 5px; text-align: center;'><strong>${result.ability}</strong></td>
-                    <td style='border: 1px solid #000; padding: 5px; text-align: center;'>${result.roll}${result.originalRoll !== undefined && result.originalRoll !== result.roll ? ` (${result.originalRoll})` : ''}</td>
-                    <td style='border: 1px solid #000; padding: 5px;'>${effects}</td>
-                </tr>`;
+                    <tr>
+                        <td style='border: 1px solid #000; padding: 3px 6px; text-align: center; font-weight: bold;'>${result.ability}</td>
+                        <td style='border: 1px solid #000; padding: 3px 6px; text-align: center;'>${scoreDisplay}</td>
+                        <td style='border: 1px solid #000; padding: 3px 6px;'>${effects}</td>
+                    </tr>`;
     }
-    
-    resultHtml += `
-            </table>
-            
-            <div style='display: grid; grid-template-columns: 1fr 1fr; gap: 12px;'>
-                <div>
-                    <h3 style='margin: 10px 0; font-size: 1.15em;'>WEAPONS AND SKILLS</h3>
-                    <div style='border: 1px solid #000; padding: 9px; min-height: 65px; font-size: 0.9em;'>
-                        <p style='margin: 4px 0;'><strong>Weapon:</strong> ${background.weapon}</p>
-                        <p style='margin: 4px 0;'><strong>Attack Bonus:</strong> ${currentCharacter.attackBonus !== undefined ? (currentCharacter.attackBonus >= 0 ? '+' + currentCharacter.attackBonus : currentCharacter.attackBonus) : '+0'} (0-level)</p>
-                    </div>
-                    
-                    <h3 style='margin: 10px 0; font-size: 1.15em;'>RACIAL ABILITIES</h3>
-                    <div style='border: 1px solid #000; padding: 9px; min-height: 65px; font-size: 0.9em;'>`;
-    
+
+    const attackBonusDisplay = currentCharacter.attackBonus !== undefined
+        ? (currentCharacter.attackBonus >= 0 ? '+' + currentCharacter.attackBonus : currentCharacter.attackBonus)
+        : '+0';
     const racialAbilities = getAdvancedModeRacialAbilities(race);
+
+    resultHtml += `
+                </table>
+
+                <!-- WEAPONS AND SKILLS -->
+                <div style='${sectionHeader}'>WEAPONS AND SKILLS</div>
+                <div style='${box} margin-bottom: 8px; min-height: 60px;'>
+                    <div><strong>Weapon:</strong> ${background.weapon}</div>
+                    <div style='margin-top: 4px;'><strong>Attack Bonus:</strong> ${attackBonusDisplay} (0-level)</div>
+                </div>
+
+                <!-- RACIAL ABILITIES -->
+                <div style='${sectionHeader}'>RACIAL ABILITIES</div>
+                <div style='${box} min-height: 80px;'>`;
+
     if (racialAbilities && racialAbilities.length > 0) {
-        resultHtml += `<ul style='margin: 0; padding-left: 20px;'>`;
+        resultHtml += `<ul style='margin: 0; padding-left: 18px;'>`;
         for (let ability of racialAbilities) {
-            resultHtml += `<li>${ability}</li>`;
+            resultHtml += `<li style='margin-bottom: 2px;'>${ability}</li>`;
         }
         resultHtml += `</ul>`;
     } else {
-        resultHtml += `<p>None</p>`;
+        resultHtml += `<span style='color: #666;'>None</span>`;
     }
-    
-    resultHtml += `
-                    </div>
-                </div>
-                
-                <div>
-                    <h3 style='margin: 10px 0; font-size: 1.15em;'>SAVING THROWS</h3>
-                    <div style='display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; margin-bottom: 12px; font-size: 0.9em;'>
-                        <div style='border: 1px solid #000; padding: 4px; text-align: center;'><strong>Death</strong><br>${currentCharacter.savingThrows ? currentCharacter.savingThrows.Death : 14}</div>
-                        <div style='border: 1px solid #000; padding: 4px; text-align: center;'><strong>Wands</strong><br>${currentCharacter.savingThrows ? currentCharacter.savingThrows.Wands : 15}</div>
-                        <div style='border: 1px solid #000; padding: 4px; text-align: center;'><strong>Petrify</strong><br>${currentCharacter.savingThrows ? currentCharacter.savingThrows.Paralysis : 16}</div>
-                        <div style='border: 1px solid #000; padding: 4px; text-align: center;'><strong>Breath</strong><br>${currentCharacter.savingThrows ? currentCharacter.savingThrows.Breath : 17}</div>
-                        <div style='border: 1px solid #000; padding: 4px; text-align: center;'><strong>Spells</strong><br>${currentCharacter.savingThrows ? currentCharacter.savingThrows.Spells : 18}</div>
-                    </div>
-                    
-                    <h3 style='margin: 10px 0; font-size: 1.15em;'>EQUIPMENT</h3>
-                    <div style='border: 1px solid #000; padding: 9px; min-height: 110px; font-size: 0.9em;'>
-                        <p style='margin: 4px 0;'><strong>Armor:</strong> ${background.armor}</p>
-                        <p style='margin: 4px 0;'><strong>Item(s):</strong></p>
-                        <ul style='margin: 4px 0; padding-left: 20px;'>`;
-    
+
     const items = Array.isArray(background.item) ? background.item : [background.item];
+    const saves = currentCharacter.savingThrows;
+
+    resultHtml += `
+                </div>
+            </div>
+
+            <!-- RIGHT COLUMN -->
+            <div>
+                <!-- SAVING THROWS -->
+                <div style='${sectionHeader}'>SAVING THROWS</div>
+                <div style='display: grid; grid-template-columns: repeat(5, 1fr); gap: 0; margin-bottom: 8px;'>
+                    <div style='${statBox}'><div style='font-weight:bold; font-size:0.8em;'>Death</div>${saves ? saves.Death : 14}</div>
+                    <div style='${statBox}'><div style='font-weight:bold; font-size:0.8em;'>Wands</div>${saves ? saves.Wands : 15}</div>
+                    <div style='${statBox}'><div style='font-weight:bold; font-size:0.8em;'>Petrify</div>${saves ? saves.Paralysis : 16}</div>
+                    <div style='${statBox}'><div style='font-weight:bold; font-size:0.8em;'>Breath</div>${saves ? saves.Breath : 17}</div>
+                    <div style='${statBox}'><div style='font-weight:bold; font-size:0.8em;'>Spells</div>${saves ? saves.Spells : 18}</div>
+                </div>
+
+                <!-- EQUIPMENT AND ITEMS -->
+                <div style='${sectionHeader}'>EQUIPMENT AND ITEMS</div>
+                <div style='${box} margin-bottom: 8px;'>
+                    <div><strong>Armor:</strong> ${background.armor}</div>
+                    <div style='margin-top: 4px;'><strong>Items:</strong>
+                        <ul style='margin: 2px 0; padding-left: 18px;'>`;
+
     for (let item of items) {
         resultHtml += `<li>${item}</li>`;
     }
-    
+
     resultHtml += `
                         </ul>
-                        <p><strong>Starting AC:</strong> ${armorClass}</p>
-                        <p><strong>Starting Gold:</strong> ${startingGold || 0} gp</p>
                     </div>
+                    <div style='border-top: 1px solid #ccc; margin-top: 6px; padding-top: 4px; line-height: 1.8em;'>
+                        &nbsp;<br>&nbsp;<br>&nbsp;
+                    </div>
+                    <div style='margin-top: 4px; border-top: 1px solid #ccc; padding-top: 4px;'><strong>Starting AC:</strong> ${armorClass} &nbsp; <strong>Starting Gold:</strong> ${startingGold || 0} gp</div>
                 </div>
+
+                <!-- CLASS ABILITIES -->
+                <div style='${sectionHeader}'>CLASS ABILITIES</div>
+                <div style='${box} margin-bottom: 8px; min-height: 40px; color: #666;'>
+                    None (0-level)
+                </div>
+
+                <!-- TREASURE -->
+                <div style='${sectionHeader}'>TREASURE</div>
+                <div style='${box} margin-bottom: 4px; line-height: 2em;'>
+                    &nbsp;<br>&nbsp;<br>&nbsp;<br>&nbsp;<br>&nbsp;
+                </div>
+                <table style='width: 100%; border-collapse: collapse; font-size: 0.85em;'>`;
+
+    for (let coin of ['PP', 'GP', 'EP', 'SP', 'CP']) {
+        resultHtml += `
+                    <tr>
+                        <td style='background-color: #000; color: #fff; padding: 3px 8px; font-weight: bold; width: 40px;'>${coin}</td>
+                        <td style='border: 1px solid #000; border-left: none; padding: 3px;'>&nbsp;</td>
+                    </tr>`;
+    }
+
+    resultHtml += `
+                </table>
             </div>
-            
-            <hr style='margin-top: 20px;'>
-            <p style='font-size: 0.9em;'><strong>Generation Info:</strong> Total Modifiers: ${total} | Attempts: ${rerollCount} | Minimums: STR ${strMin}, DEX ${dexMin}, CON ${conMin}, INT ${intMin}, WIS ${wisMin}, CHA ${chaMin}</p>
+        </div>
+
+        <!-- Footer -->
+        <hr style='margin-top: 12px; border-color: #ccc;'>
+        <p style='font-size: 0.8em; color: #666; margin: 4px 0;'>
+            Total Modifiers: ${total} | Attempts: ${rerollCount} | Minimums: STR ${strMin}, DEX ${dexMin}, CON ${conMin}, INT ${intMin}, WIS ${wisMin}, CHA ${chaMin}
+        </p>
+        </div>
     `;
 
     // Check if we should open in new tab
