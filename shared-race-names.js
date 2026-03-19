@@ -8,7 +8,7 @@
  * Legacy race name mapping for backward compatibility
  * Maps old names (without _RACE suffix) to new names (with _RACE suffix)
  */
-const LEGACY_RACE_NAMES = {
+export const LEGACY_RACE_NAMES = {
     "Human": "Human_RACE",
     "Dwarf": "Dwarf_RACE",
     "Elf": "Elf_RACE",
@@ -21,7 +21,7 @@ const LEGACY_RACE_NAMES = {
  * @param {string} raceName - The race name (with or without _RACE suffix)
  * @returns {string} The normalized race name with _RACE suffix
  */
-function normalizeRaceName(raceName) {
+export function normalizeRaceName(raceName) {
     // If already has _RACE suffix, return as-is
     if (raceName.endsWith("_RACE")) {
         return raceName;

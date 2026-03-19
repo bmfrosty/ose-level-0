@@ -1,22 +1,11 @@
 // Racial abilities and bonuses for OSE characters
 // Extracted from names-tables.js for better code organization
+// ES6 Module
 
 // ============================================================================
-// RACE NAME NORMALIZATION
-// (Inlined here — this file is a global <script>, cannot use ES6 import)
+// IMPORTS
 // ============================================================================
-const LEGACY_RACE_NAMES = {
-    "Human": "Human_RACE",
-    "Dwarf": "Dwarf_RACE",
-    "Elf": "Elf_RACE",
-    "Gnome": "Gnome_RACE",
-    "Halfling": "Halfling_RACE"
-};
-
-function normalizeRaceName(raceName) {
-    if (raceName.endsWith("_RACE")) { return raceName; }
-    return LEGACY_RACE_NAMES[raceName] || raceName;
-}
+import { LEGACY_RACE_NAMES, normalizeRaceName } from './shared-race-names.js';
 
 // ============================================================================
 // RACIAL CLASS LEVEL LIMITS (NORMAL MODE)
@@ -24,7 +13,7 @@ function normalizeRaceName(raceName) {
 // Maximum level by race and class for Normal Mode (OSE Advanced Fantasy)
 // In Smoothified Mode (Gygar), these limits are ignored
 
-const RACIAL_CLASS_LEVEL_LIMITS = {
+export const RACIAL_CLASS_LEVEL_LIMITS = {
     "Drow_RACE": {
         "Acrobat_CLASS": 10,
         "Assassin_CLASS": 10,
@@ -123,7 +112,7 @@ const RACIAL_CLASS_LEVEL_LIMITS = {
  * @param {boolean} isSmootified - Whether Smoothified Mode is enabled (ignores limits)
  * @returns {number|null} Maximum level, or null if unlimited or combination not allowed
  */
-function getMaxLevel(race, className, isSmootified = false) {
+export function getMaxLevel(race, className, isSmootified = false) {
     // Smoothified Mode: no level limits
     if (isSmootified) {
         return null;  // null = unlimited
@@ -148,7 +137,7 @@ function getMaxLevel(race, className, isSmootified = false) {
  * @param {boolean} allowNonTraditional - Whether to allow non-traditional combinations
  * @returns {boolean} True if the combination is allowed
  */
-function canRaceTakeClass(race, className, allowNonTraditional = false) {
+export function canRaceTakeClass(race, className, allowNonTraditional = false) {
     // If non-traditional combinations are allowed, any race can take any class
     if (allowNonTraditional) {
         return true;
@@ -174,8 +163,13 @@ function canRaceTakeClass(race, className, allowNonTraditional = false) {
 // RACIAL ABILITIES DATA
 // ============================================================================
 
-// Function to get racial abilities text (returns array of lines)
-function getRacialAbilities(race) {
+/**
+ * Get racial abilities text for Advanced/0-Level Mode (returns array of lines)
+ * In Advanced/0-Level Mode, race is separate from class
+ * @param {string} race - The race name (e.g., "Dwarf_RACE", "Elf_RACE")
+ * @returns {string[]} Array of racial ability descriptions
+ */
+export function getAdvancedModeRacialAbilities(race) {
     const normalizedRace = normalizeRaceName(race);
     // Check if Advanced mode is enabled
     let isAdvanced = false;
@@ -236,14 +230,21 @@ function getRacialAbilities(race) {
     return RACIAL_ABILITIES[normalizedRace] || [];
 }
 
-// Legacy function for backward compatibility
-function getCommonDemihumanAbilities() {
+/**
+ * Legacy function for backward compatibility
+ * @returns {string} Common demihuman abilities description
+ */
+export function getCommonDemihumanAbilities() {
     return "All demihumans speak additional native languages and have a 2-in-6 chance of hearing noises when listening at a door.";
 }
 
+// ============================================================================
+// SAVING THROWS AND ATTACK BONUSES
+// ============================================================================
+
 // Saving throw tables for level 0 characters
 // Same values for both Normal and Gygar modes at level 0
-const savingThrowsLevel0 = {
+export const savingThrowsLevel0 = {
     Death: 14,
     Wands: 15,
     Paralysis: 16,
@@ -253,14 +254,18 @@ const savingThrowsLevel0 = {
 
 // Attack bonus tables for level 0 characters
 // Different values for Normal vs Gygar mode
-const attackBonusLevel0 = {
+export const attackBonusLevel0 = {
     Normal: -1,  // Penalty for untrained characters
     Gygar: 0     // No penalty in Gygar Mode (Castle Gygar house rules)
 };
 
-// Calculate Dwarf Resilience bonus based on CON score
-// Applies in both Basic and Advanced modes for Level 0 Dwarves
-function getDwarfResilienceBonus(conScore) {
+/**
+ * Calculate Dwarf Resilience bonus based on CON score
+ * Applies in both Basic and Advanced modes for Level 0 Dwarves
+ * @param {number} conScore - Constitution score
+ * @returns {number} Resilience bonus
+ */
+export function getDwarfResilienceBonus(conScore) {
     if (conScore <= 6) return 0;
     if (conScore >= 7 && conScore <= 10) return 2;
     if (conScore >= 11 && conScore <= 14) return 3;
@@ -269,9 +274,13 @@ function getDwarfResilienceBonus(conScore) {
     return 0; // Fallback
 }
 
-// Calculate Gnome Magic Resistance bonus based on CON score
-// Applies in both Basic and Advanced modes for Level 0 Gnomes
-function getGnomeMagicResistanceBonus(conScore) {
+/**
+ * Calculate Gnome Magic Resistance bonus based on CON score
+ * Applies in both Basic and Advanced modes for Level 0 Gnomes
+ * @param {number} conScore - Constitution score
+ * @returns {number} Magic Resistance bonus
+ */
+export function getGnomeMagicResistanceBonus(conScore) {
     if (conScore <= 6) return 0;
     if (conScore >= 7 && conScore <= 10) return 2;
     if (conScore >= 11 && conScore <= 14) return 3;
@@ -280,10 +289,14 @@ function getGnomeMagicResistanceBonus(conScore) {
     return 0; // Fallback
 }
 
-// Calculate Halfling Resilience bonus based on CON score
-// Applies in both Basic and Advanced modes for Level 0 Halflings
-// Same formula as Dwarf Resilience but applies to different save categories
-function getHalflingResilienceBonus(conScore) {
+/**
+ * Calculate Halfling Resilience bonus based on CON score
+ * Applies in both Basic and Advanced modes for Level 0 Halflings
+ * Same formula as Dwarf Resilience but applies to different save categories
+ * @param {number} conScore - Constitution score
+ * @returns {number} Resilience bonus
+ */
+export function getHalflingResilienceBonus(conScore) {
     if (conScore <= 6) return 0;
     if (conScore >= 7 && conScore <= 10) return 2;
     if (conScore >= 11 && conScore <= 14) return 3;
@@ -296,10 +309,16 @@ function getHalflingResilienceBonus(conScore) {
 // HELPER FUNCTIONS
 // ============================================================================
 
-// Calculate saving throws for a character
-// Inputs: level, race, CON score, isAdvanced, isGygar
-// Output: Object with Death, Wands, Paralysis, Breath, Spells
-function calculateSavingThrows(level, race, conScore, isAdvanced, isGygar) {
+/**
+ * Calculate saving throws for a character
+ * @param {number} level - Character level
+ * @param {string} race - Race name
+ * @param {number} conScore - Constitution score
+ * @param {boolean} isAdvanced - Whether Advanced mode is enabled
+ * @param {boolean} isGygar - Whether Gygar/Smoothified mode is enabled
+ * @returns {Object} Object with Death, Wands, Paralysis, Breath, Spells
+ */
+export function calculateSavingThrows(level, race, conScore, isAdvanced, isGygar) {
     const normalizedRace = normalizeRaceName(race);
     // Start with base values for level 0
     // (Future: will use different tables for higher levels)
@@ -340,10 +359,15 @@ function calculateSavingThrows(level, race, conScore, isAdvanced, isGygar) {
     return saves;
 }
 
-// Calculate attack bonus for a character
-// Inputs: level, race, isAdvanced, isGygar
-// Output: Number (attack bonus)
-function calculateAttackBonus(level, race, isAdvanced, isGygar) {
+/**
+ * Calculate attack bonus for a character
+ * @param {number} level - Character level
+ * @param {string} race - Race name
+ * @param {boolean} isAdvanced - Whether Advanced mode is enabled
+ * @param {boolean} isGygar - Whether Gygar/Smoothified mode is enabled
+ * @returns {number} Attack bonus
+ */
+export function calculateAttackBonus(level, race, isAdvanced, isGygar) {
     // For level 0 characters
     if (level === 0) {
         // Gygar Mode: no penalty at level 0
@@ -357,24 +381,4 @@ function calculateAttackBonus(level, race, isAdvanced, isGygar) {
     // Future: will use different tables for higher levels
     // For now, just return 0 for any level above 0
     return 0;
-}
-
-// Export for Node.js
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = {
-        LEGACY_RACE_NAMES,
-        normalizeRaceName,
-        RACIAL_CLASS_LEVEL_LIMITS,
-        getMaxLevel,
-        canRaceTakeClass,
-        getRacialAbilities,
-        getCommonDemihumanAbilities,
-        savingThrowsLevel0,
-        attackBonusLevel0,
-        getDwarfResilienceBonus,
-        getGnomeMagicResistanceBonus,
-        getHalflingResilienceBonus,
-        calculateSavingThrows,
-        calculateAttackBonus
-    };
 }

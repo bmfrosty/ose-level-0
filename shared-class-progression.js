@@ -171,11 +171,12 @@ export function getClassFeatures(options) {
 
 /**
  * Get racial abilities for demihuman classes (Basic Mode only)
- * @param {string} className - Class name
+ * In Basic Mode, race = class (Dwarf class, Elf class, etc.)
+ * @param {string} className - Class name (e.g., "Dwarf", "Elf")
  * @returns {Array} Array of racial ability strings, or empty array if not demihuman
  */
-export function getRacialAbilities(className) {
-    console.log('\n=== Getting Racial Abilities ===');
+export function getBasicModeRacialAbilities(className) {
+    console.log('\n=== Getting Basic Mode Racial Abilities ===');
     console.log(`Class: ${className}`);
     
     const demihumanClasses = ['Dwarf', 'Elf', 'Halfling', 'Gnome'];

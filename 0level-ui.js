@@ -10,6 +10,15 @@ import {
     getRerollCount
 } from './0level-character-gen.js';
 import { getModifierEffects } from './shared-modifier-effects.js';
+import { getAdvancedModeRacialAbilities } from './shared-racial-abilities.js';
+import {
+    generateCanvasPNG,
+    generateCanvasPDF,
+    generateCanvasBulkPDF,
+    generateMarkdown,
+    generateJSON,
+    generateCountJSON
+} from './canvas-generator.js';
 
 /**
  * Convert internal _RACE name to display name
@@ -52,9 +61,6 @@ export function display0LevelCharacter(results, total, background, hitPoints, ar
     // Get current character for saving throws and attack bonus
     const currentCharacter = getCurrentCharacter();
     const rerollCount = getRerollCount();
-    
-    // Import getRacialAbilities from global scope
-    const getRacialAbilities = window.getRacialAbilities;
     
     // Build HTML for successful adventurer character - PDF-like layout (balanced for printing)
     let resultHtml = `
@@ -115,7 +121,7 @@ export function display0LevelCharacter(results, total, background, hitPoints, ar
                     <h3 style='margin: 10px 0; font-size: 1.15em;'>RACIAL ABILITIES</h3>
                     <div style='border: 1px solid #000; padding: 9px; min-height: 65px; font-size: 0.9em;'>`;
     
-    const racialAbilities = getRacialAbilities(race);
+    const racialAbilities = getAdvancedModeRacialAbilities(race);
     if (racialAbilities && racialAbilities.length > 0) {
         resultHtml += `<ul style='margin: 0; padding-left: 20px;'>`;
         for (let ability of racialAbilities) {
@@ -217,9 +223,7 @@ export function setRaceAndGenerate(race) {
 export function setRaceAndGeneratePNG(race) {
     document.getElementById('forceRace').value = race === 'Demihuman' ? '' : race;
     document.getElementById('forceDemihuman').checked = race === 'Demihuman';
-    if (typeof window.generateCanvasPNG !== 'undefined') {
-        window.generateCanvasPNG();
-    }
+    generateCanvasPNG();
 }
 
 /**
@@ -229,9 +233,7 @@ export function setRaceAndGeneratePNG(race) {
 export function setRaceAndGeneratePDF(race) {
     document.getElementById('forceRace').value = race === 'Demihuman' ? '' : race;
     document.getElementById('forceDemihuman').checked = race === 'Demihuman';
-    if (typeof window.generateCanvasPDF !== 'undefined') {
-        window.generateCanvasPDF();
-    }
+    generateCanvasPDF();
 }
 
 /**
@@ -241,9 +243,7 @@ export function setRaceAndGeneratePDF(race) {
 export function setRaceAndGenerateBulkPDF(race) {
     document.getElementById('forceRace').value = race === 'Demihuman' ? '' : race;
     document.getElementById('forceDemihuman').checked = race === 'Demihuman';
-    if (typeof window.generateCanvasBulkPDF !== 'undefined') {
-        window.generateCanvasBulkPDF();
-    }
+    generateCanvasBulkPDF();
 }
 
 /**
@@ -253,9 +253,7 @@ export function setRaceAndGenerateBulkPDF(race) {
 export function setRaceAndGenerateJSON(race) {
     document.getElementById('forceRace').value = race === 'Demihuman' ? '' : race;
     document.getElementById('forceDemihuman').checked = race === 'Demihuman';
-    if (typeof window.generateJSON !== 'undefined') {
-        window.generateJSON();
-    }
+    generateJSON();
 }
 
 /**
@@ -266,9 +264,7 @@ export function setRaceAndGenerateJSON(race) {
 export function setRaceAndGenerateCountJSON(race, count) {
     document.getElementById('forceRace').value = race === 'Demihuman' ? '' : race;
     document.getElementById('forceDemihuman').checked = race === 'Demihuman';
-    if (typeof window.generateCountJSON !== 'undefined') {
-        window.generateCountJSON(count);
-    }
+    generateCountJSON(count);
 }
 
 /**
@@ -278,9 +274,7 @@ export function setRaceAndGenerateCountJSON(race, count) {
 export function setRaceAndGenerateMarkdown(race) {
     document.getElementById('forceRace').value = race === 'Demihuman' ? '' : race;
     document.getElementById('forceDemihuman').checked = race === 'Demihuman';
-    if (typeof window.generateMarkdown !== 'undefined') {
-        window.generateMarkdown();
-    }
+    generateMarkdown();
 }
 
 /**

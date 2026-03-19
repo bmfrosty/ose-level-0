@@ -1,10 +1,18 @@
 # TODO List
 
 ## Planning Documents
-- **PLAN_0LEVEL_BASIC_ADVANCED.md** - Plan for Level 0 characters with Basic/Advanced campaign compatibility
-- **PLAN_UPPER_LEVEL.md** - Plan for Level 1+ character generation
-- **PLAN_CLASSES_IMPORT.md** - Combined plan for importing OSE Standard and Smoothified Mode classes
+- **PLAN_0LEVEL_BASIC_ADVANCED.md** - Plan for Level 0 UI improvements to match Basic/Advanced generators
+- **PLAN_CLASSES_IMPORT_TODO.md** - Active plan for completing Advanced Mode (advanced.html)
+- **PLAN_REFACTOR_TODO.md** - Documentation and optional enhancements for refactoring
+- **PLAN_CLASS_GENERATION_MARKDOWN_FROM_CODE.md** - Future plan for dynamic class documentation generation
 - **CHARACTER_CREATION_BASIC.md** - Specification for Level 1+ Basic Method character creation
+- **CHARACTER_CREATION_ADVANCED.md** - Specification for Level 1+ Advanced Method character creation
+
+**Completed Plans** (moved to PLANS_COMPLETED/):
+- **PLAN_REFACTOR_JS_MODULES.md** - ✅ Complete - All generators refactored to ES6 modules
+- **PLAN_UPPER_LEVEL.md** - ✅ Complete - Level 0 dynamic saves/attack bonuses implemented
+- **PLAN_FIX_RACE_SELECTION.md** - ✅ Complete - Race selection bug fixed
+- **PLAN_REFACTOR_COMPLETE.md** - ✅ Complete - Full refactoring history
 
 ## High Priority
 

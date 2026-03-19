@@ -1,10 +1,14 @@
 // Browser-based PDF generator using canvas rendering
-// Uses shared CanvasCharacterSheet class for consistent output
+// ES6 Module - imports from shared modules
+
+import { CanvasCharacterSheet } from './canvas-sheet-renderer.js';
+import { generateCharacterMarkdown } from './markdown-generator.js';
+import { generateSingleCharacter } from './0level-character-gen.js';
 
 // Generate PNG image only (no PDF)
-function generateCanvasPNG() {
+export async function generateCanvasPNG() {
     // Generate a fresh character for image
-    const character = generateSingleCharacter();
+    const character = await generateSingleCharacter();
 
     // Create browser canvas
     const canvas = document.createElement('canvas');
@@ -41,9 +45,9 @@ function generateCanvasPNG() {
 }
 
 // Generate PDF with embedded high-resolution image
-function generateCanvasPDF() {
+export async function generateCanvasPDF() {
     // Generate a fresh character for PDF
-    const character = generateSingleCharacter();
+    const character = await generateSingleCharacter();
 
     // Create browser canvas
     const canvas = document.createElement('canvas');
@@ -76,7 +80,6 @@ function generateCanvasPDF() {
         const pdfBlob = doc.output('blob');
         const url = URL.createObjectURL(pdfBlob);
         window.open(url, '_blank');
-        // Note: URL will be revoked when the window is closed
     } else {
         // Download file
         doc.save(filename);
@@ -84,7 +87,7 @@ function generateCanvasPDF() {
 }
 
 // Generate bulk PDF with canvas rendering
-function generateCanvasBulkPDF() {
+export async function generateCanvasBulkPDF() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF('portrait', 'pt', 'letter');
     
@@ -101,7 +104,7 @@ function generateCanvasBulkPDF() {
     
     // Generate 4 characters
     for (let i = 0; i < 4; i++) {
-        const character = generateSingleCharacter();
+        const character = await generateSingleCharacter();
         
         // Generate character sheet on canvas
         canvasGen.generateCharacterSheet(character);
@@ -132,9 +135,9 @@ function generateCanvasBulkPDF() {
 }
 
 // Generate Markdown file
-function generateMarkdown() {
+export async function generateMarkdown() {
     // Generate a fresh character for Markdown
-    const character = generateSingleCharacter();
+    const character = await generateSingleCharacter();
     
     // Check if Advanced mode is enabled
     const advancedCheckbox = document.getElementById('advanced');
@@ -158,25 +161,20 @@ function generateMarkdown() {
     const shouldOpenFile = openFileCheckbox ? openFileCheckbox.checked : false;
     
     if (shouldOpenFile) {
-        // Open in new tab/window
         window.open(url, '_blank');
-        // Note: URL will be revoked when the window is closed
     } else {
-        // Create download link and trigger download
         const link = document.createElement('a');
         link.download = filename;
         link.href = url;
         link.click();
-        
-        // Clean up
         URL.revokeObjectURL(url);
     }
 }
 
 // Generate JSON file
-function generateJSON() {
+export async function generateJSON() {
     // Generate a fresh character for JSON
-    const character = generateSingleCharacter();
+    const character = await generateSingleCharacter();
     
     // Convert character object to JSON string with pretty printing
     const jsonString = JSON.stringify(character, null, 2);
@@ -196,32 +194,27 @@ function generateJSON() {
     const shouldOpenFile = openFileCheckbox ? openFileCheckbox.checked : false;
     
     if (shouldOpenFile) {
-        // Open in new tab/window
         window.open(url, '_blank');
-        // Note: URL will be revoked when the window is closed
     } else {
-        // Create download link and trigger download
         const link = document.createElement('a');
         link.download = filename;
         link.href = url;
         link.click();
-        
-        // Clean up
         URL.revokeObjectURL(url);
     }
 }
 
 // Generate bulk JSON file (4 characters as array)
-function generateBulkJSON() {
-    generateCountJSON(4);
+export async function generateBulkJSON() {
+    await generateCountJSON(4);
 }
 
 // Generate JSON file with specified count of characters
-function generateCountJSON(count) {
+export async function generateCountJSON(count) {
     // Generate characters
     const characters = [];
     for (let i = 0; i < count; i++) {
-        const character = generateSingleCharacter();
+        const character = await generateSingleCharacter();
         characters.push(character);
     }
     

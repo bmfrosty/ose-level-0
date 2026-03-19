@@ -13,6 +13,12 @@ import {
 import { getRandomName as getRandomNameFromModule } from './shared-names.js';
 import { getRandomBackground } from './shared-backgrounds.js';
 
+// Import shared racial abilities
+import {
+    calculateSavingThrows as calculateSavingThrowsFromModule,
+    calculateAttackBonus as calculateAttackBonusFromModule
+} from './shared-racial-abilities.js';
+
 // Import 0-level utilities
 import {
     roll3d6,
@@ -24,6 +30,12 @@ import {
     meetsPrimeRequisiteRequirements,
     meetsHealthyCharactersRequirement
 } from './0level-utils.js';
+
+// Import race adjustments
+import {
+    applyRaceAdjustments as applyRaceAdjustmentsFromModule,
+    meetsRaceMinimums as meetsRaceMinimumsFromModule
+} from './shared-race-adjustments.js';
 
 /**
  * Default ability names
@@ -96,6 +108,7 @@ export function getRandomName(race) {
 
 /**
  * Apply race adjustments to ability scores (Advanced mode only)
+ * Delegates to shared-race-adjustments.js ES6 module
  * @param {Array} results - Array of ability score objects
  * @param {string} race - Character race
  * @param {boolean} isAdvanced - Whether Advanced mode is enabled
@@ -103,34 +116,24 @@ export function getRandomName(race) {
  * @returns {Array} Adjusted ability score objects
  */
 export function applyRaceAdjustments(results, race, isAdvanced, humanRacialAbilities) {
-    // Import from global scope (loaded via script tag in browser)
-    if (typeof window !== 'undefined' && typeof window.applyRaceAdjustments !== 'undefined') {
-        return window.applyRaceAdjustments(results, race, isAdvanced, humanRacialAbilities);
-    }
-    
-    // Fallback: no adjustments
-    return results;
+    return applyRaceAdjustmentsFromModule(results, race, isAdvanced, humanRacialAbilities);
 }
 
 /**
  * Check if character meets race minimums (Advanced mode only)
+ * Delegates to shared-race-adjustments.js ES6 module
  * @param {Array} results - Array of ability score objects
  * @param {string} race - Character race
  * @param {boolean} isAdvanced - Whether Advanced mode is enabled
  * @returns {boolean} True if requirements met
  */
 export function meetsRaceMinimums(results, race, isAdvanced) {
-    // Import from global scope (loaded via script tag in browser)
-    if (typeof window !== 'undefined' && typeof window.meetsRaceMinimums !== 'undefined') {
-        return window.meetsRaceMinimums(results, race, isAdvanced);
-    }
-    
-    // Fallback: always true
-    return true;
+    return meetsRaceMinimumsFromModule(results, race, isAdvanced);
 }
 
 /**
  * Calculate saving throws for a character
+ * Uses imported function from shared-racial-abilities.js
  * @param {number} level - Character level
  * @param {string} race - Character race
  * @param {number} conScore - Constitution score
@@ -139,23 +142,12 @@ export function meetsRaceMinimums(results, race, isAdvanced) {
  * @returns {Object} Saving throws object
  */
 export function calculateSavingThrows(level, race, conScore, isAdvanced, isGygar) {
-    // Import from global scope (loaded via script tag in browser)
-    if (typeof window !== 'undefined' && typeof window.calculateSavingThrows !== 'undefined') {
-        return window.calculateSavingThrows(level, race, conScore, isAdvanced, isGygar);
-    }
-    
-    // Fallback: default level 0 saves
-    return {
-        Death: 14,
-        Wands: 15,
-        Paralysis: 16,
-        Breath: 17,
-        Spells: 18
-    };
+    return calculateSavingThrowsFromModule(level, race, conScore, isAdvanced, isGygar);
 }
 
 /**
  * Calculate attack bonus for a character
+ * Uses imported function from shared-racial-abilities.js
  * @param {number} level - Character level
  * @param {string} race - Character race
  * @param {boolean} isAdvanced - Whether Advanced mode is enabled
@@ -163,13 +155,7 @@ export function calculateSavingThrows(level, race, conScore, isAdvanced, isGygar
  * @returns {number} Attack bonus
  */
 export function calculateAttackBonus(level, race, isAdvanced, isGygar) {
-    // Import from global scope (loaded via script tag in browser)
-    if (typeof window !== 'undefined' && typeof window.calculateAttackBonus !== 'undefined') {
-        return window.calculateAttackBonus(level, race, isAdvanced, isGygar);
-    }
-    
-    // Fallback: -1 for Normal mode, 0 for Gygar mode
-    return isGygar ? 0 : -1;
+    return calculateAttackBonusFromModule(level, race, isAdvanced, isGygar);
 }
 
 /**

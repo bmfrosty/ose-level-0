@@ -20,7 +20,7 @@ import {
 import {
     getClassProgressionData as sharedGetClassProgressionData,
     getClassFeatures as sharedGetClassFeatures,
-    getRacialAbilities as sharedGetRacialAbilities
+    getBasicModeRacialAbilities
 } from './shared-class-progression.js';
 
 // Import shared character utilities
@@ -80,7 +80,7 @@ export function getClassProgressionData(className, level, abilityScores, classDa
  * @returns {Array} Array of racial ability strings, or empty array if not demihuman
  */
 export function getRacialAbilities(className) {
-    return sharedGetRacialAbilities(className);
+    return getBasicModeRacialAbilities(className);
 }
 
 /**

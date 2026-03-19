@@ -1,20 +1,10 @@
 // Markdown generator for OSE 0-Level characters
-// Shared between browser and Node.js
+// ES6 Module
 
-function generateCharacterMarkdown(character, isAdvanced) {
-    // Get required functions
-    let getModifierEffectsFunc, getRacialAbilitiesFunc;
-    
-    if (typeof getModifierEffects !== 'undefined') {
-        // Browser
-        getModifierEffectsFunc = getModifierEffects;
-        getRacialAbilitiesFunc = getRacialAbilities;
-    } else {
-        // Node.js
-        getModifierEffectsFunc = require('./ose-modifiers.js').getModifierEffects;
-        getRacialAbilitiesFunc = require('./names-tables.js').getRacialAbilities;
-    }
-    
+import { getModifierEffects } from './shared-modifier-effects.js';
+import { getAdvancedModeRacialAbilities as getRacialAbilities } from './shared-racial-abilities.js';
+
+export function generateCharacterMarkdown(character, isAdvanced) {
     let markdown = `# ${character.name}\n\n`;
     markdown += `## ${isAdvanced ? 'OLD-SCHOOL ESSENTIALS ADVANCED' : 'OLD-SCHOOL ESSENTIALS'}\n`;
     markdown += `**RETRO ADVENTURE GAME**\n\n`;
@@ -31,7 +21,7 @@ function generateCharacterMarkdown(character, isAdvanced) {
     markdown += `| Ability | Score | Effects |\n`;
     markdown += `|---------|-------|----------|\n`;
     for (let result of character.results) {
-        const effects = getModifierEffectsFunc(result.ability, result.modifier, result.roll);
+        const effects = getModifierEffects(result.ability, result.modifier, result.roll);
         markdown += `| **${result.ability}** | ${result.roll} | ${effects} |\n`;
     }
     markdown += `\n`;
@@ -44,7 +34,7 @@ function generateCharacterMarkdown(character, isAdvanced) {
     markdown += `- **Attack Bonus:** ${attackBonusText} (0-level)\n\n`;
     
     markdown += `## Racial Abilities\n\n`;
-    const racialAbilities = getRacialAbilitiesFunc(character.race);
+    const racialAbilities = getRacialAbilities(character.race);
     if (racialAbilities && racialAbilities.length > 0) {
         for (let ability of racialAbilities) {
             markdown += `- ${ability}\n`;
@@ -76,9 +66,4 @@ function generateCharacterMarkdown(character, isAdvanced) {
     markdown += `- **Starting Gold:** ${character.startingGold || 0} gp\n`;
     
     return markdown;
-}
-
-// Export for Node.js
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { generateCharacterMarkdown };
 }

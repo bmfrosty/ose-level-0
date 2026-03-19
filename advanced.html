@@ -614,10 +614,8 @@
         </div>
     </div>
 
-    <!-- Load shared race names first (required by racial-abilities.js) -->
-    <script src="shared-race-names.js"></script>
-    
     <!-- Load racial abilities globally (not as ES6 module) -->
+    <!-- Note: racial-abilities.js is self-contained; shared-race-names.js is now an ES6 module -->
     <script src="racial-abilities.js"></script>
     
     <script type="module">

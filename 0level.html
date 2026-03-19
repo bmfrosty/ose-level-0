@@ -347,18 +347,12 @@
     <!-- External libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     
-    <!-- Shared race names (must load FIRST to avoid conflicts) -->
-    <script src="shared-race-names.js"></script>
-    
-    <!-- Legacy non-module scripts (loaded globally) -->
-    <!-- REMOVED: deprecated-js/background-tables.js - now using shared-backgrounds.js ES6 module -->
-    <script src="racial-abilities.js"></script>
-    <!-- REMOVED: deprecated-js/names-tables.js - now using shared-names.js ES6 module -->
-    <!-- REMOVED: deprecated-js/ose-modifiers.js - now using shared-modifier-effects.js ES6 module -->
-    <script src="race-adjustments.js"></script>
-    <script src="markdown-generator.js"></script>
-    <script src="canvas-sheet-renderer.js"></script>
-    <script src="canvas-generator.js"></script>
+    <!-- All scripts now loaded as ES6 modules via 0level-ui.js import chain -->
+    <!-- REMOVED: markdown-generator.js - now ES6 module, imported by canvas-generator.js -->
+    <!-- REMOVED: canvas-sheet-renderer.js - now ES6 module, imported by canvas-generator.js -->
+    <!-- REMOVED: canvas-generator.js - now ES6 module, imported by 0level-ui.js -->
+    <!-- REMOVED: race-adjustments.js - now shared-race-adjustments.js ES6 module -->
+    <!-- REMOVED: shared-race-names.js - now ES6 module, no global script needed -->
     
     <!-- ES6 Module - Main UI -->
     <script type="module">

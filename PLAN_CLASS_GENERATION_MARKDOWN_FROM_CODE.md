@@ -1,8 +1,22 @@
 # Plan: Dynamic Class Document Generation from Code
 
+> **Status:** FUTURE WORK - Not yet started
+> **Priority:** Low - Current static markdown files in CLASS_MARKDOWN/ are working well
+> **Purpose:** Automate class documentation generation from code data structures
+
 ## Overview
 
 Create a system to dynamically generate class markdown documents from the structured data in `class-data-ose.js`, `class-data-gygar.js`, and `class-data-shared.js`. This will allow us to generate documentation for any class/race combination without manually maintaining separate markdown files.
+
+**Current State:**
+- Static markdown files exist in CLASS_MARKDOWN/ directory (GYGAR_*.md files)
+- These files are manually maintained and used by classes.html
+- Works well for current needs
+
+**Future Benefits:**
+- Single source of truth (code → documentation)
+- Automatic regeneration when data changes
+- Can generate any valid race/class combination on demand
 
 ## Problem Statement
 

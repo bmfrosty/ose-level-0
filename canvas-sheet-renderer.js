@@ -2,7 +2,11 @@
 // Works in both browser and Node.js environments
 // Renders at 300 DPI for consistent PDF embedding
 
-class CanvasCharacterSheet {
+// ES6 imports (for browser module use)
+import { getModifierEffects } from './shared-modifier-effects.js';
+import { getAdvancedModeRacialAbilities as getRacialAbilities } from './shared-racial-abilities.js';
+
+export class CanvasCharacterSheet {
     constructor(canvas) {
         // Accept canvas from external source (browser or Node.js)
         this.canvas = canvas;

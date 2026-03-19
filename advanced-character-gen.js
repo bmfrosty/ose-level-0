@@ -22,6 +22,11 @@ import {
     getClassFeatures as sharedGetClassFeatures
 } from './shared-class-progression.js';
 
+// Import shared racial abilities
+import {
+    getAdvancedModeRacialAbilities
+} from './shared-racial-abilities.js';
+
 // Import shared character utilities
 import {
     createCharacter as sharedCreateCharacter
@@ -84,6 +89,7 @@ export function rollAbilitiesAdvanced(minimumScores, race, className, toughChara
 
 /**
  * Get racial abilities for a race (not class-dependent in Advanced Mode)
+ * Simplified wrapper that uses the imported ES6 module function
  * @param {string} race - Race name (with _RACE suffix)
  * @param {string} raceClassMode - Race/class mode ('strict', 'traditional-extended', 'allow-all')
  * @returns {Array} Array of racial ability strings
@@ -95,63 +101,41 @@ export function getRacialAbilities(race, raceClassMode = 'strict') {
     const humanAbilitiesEnabled = (raceClassMode === 'traditional-extended' || raceClassMode === 'allow-all');
     console.log('[getRacialAbilities] humanAbilitiesEnabled:', humanAbilitiesEnabled);
     
-    // Import from global scope (loaded via script tag in browser)
-    if (typeof window !== 'undefined' && typeof window.getRacialAbilities !== 'undefined') {
-        console.log('[getRacialAbilities] window.getRacialAbilities exists');
+    // The shared function checks document.getElementById('humanRacialAbilities')
+    // We need to temporarily set this checkbox if it exists
+    if (typeof document !== 'undefined') {
+        const humanCheckbox = document.getElementById('humanRacialAbilities');
+        const advancedCheckbox = document.getElementById('advanced');
         
-        // racial-abilities.js checks for BOTH 'advanced' and 'humanRacialAbilities' checkboxes
-        // We need to create/set both
+        // Store original values
+        const originalHumanValue = humanCheckbox ? humanCheckbox.checked : null;
+        const originalAdvancedValue = advancedCheckbox ? advancedCheckbox.checked : null;
         
-        const originalAdvancedCheckbox = document.getElementById('advanced');
-        const originalHumanCheckbox = document.getElementById('humanRacialAbilities');
-        console.log('[getRacialAbilities] originalAdvancedCheckbox:', originalAdvancedCheckbox);
-        console.log('[getRacialAbilities] originalHumanCheckbox:', originalHumanCheckbox);
-        
-        // Create temp checkboxes
-        const tempAdvancedCheckbox = document.createElement('input');
-        tempAdvancedCheckbox.type = 'checkbox';
-        tempAdvancedCheckbox.id = 'advanced';
-        tempAdvancedCheckbox.checked = true; // Always true for Advanced Mode
-        
-        const tempHumanCheckbox = document.createElement('input');
-        tempHumanCheckbox.type = 'checkbox';
-        tempHumanCheckbox.id = 'humanRacialAbilities';
-        tempHumanCheckbox.checked = humanAbilitiesEnabled;
-        
-        // Add temp checkboxes if they don't exist
-        if (!originalAdvancedCheckbox) {
-            console.log('[getRacialAbilities] Adding temp advanced checkbox, checked: true');
-            document.body.appendChild(tempAdvancedCheckbox);
+        // Set checkboxes for the function call
+        if (humanCheckbox) {
+            humanCheckbox.checked = humanAbilitiesEnabled;
+        }
+        if (advancedCheckbox) {
+            advancedCheckbox.checked = true; // Always true for Advanced Mode
         }
         
-        if (!originalHumanCheckbox) {
-            console.log('[getRacialAbilities] Adding temp human checkbox, checked:', humanAbilitiesEnabled);
-            document.body.appendChild(tempHumanCheckbox);
-        } else {
-            console.log('[getRacialAbilities] Original human checkbox exists, setting checked to:', humanAbilitiesEnabled);
-            originalHumanCheckbox.checked = humanAbilitiesEnabled;
+        // Call the imported function
+        const abilities = getAdvancedModeRacialAbilities(race);
+        
+        // Restore original values
+        if (humanCheckbox && originalHumanValue !== null) {
+            humanCheckbox.checked = originalHumanValue;
         }
-        console.log('[getRacialAbilities] Calling window.getRacialAbilities with:', race);
-        const abilities = window.getRacialAbilities(race);
+        if (advancedCheckbox && originalAdvancedValue !== null) {
+            advancedCheckbox.checked = originalAdvancedValue;
+        }
+        
         console.log('[getRacialAbilities] Returned abilities:', abilities);
-        
-        // Clean up temp checkboxes
-        if (!originalAdvancedCheckbox && tempAdvancedCheckbox.parentNode) {
-            console.log('[getRacialAbilities] Removing temp advanced checkbox');
-            tempAdvancedCheckbox.parentNode.removeChild(tempAdvancedCheckbox);
-        }
-        
-        if (!originalHumanCheckbox && tempHumanCheckbox.parentNode) {
-            console.log('[getRacialAbilities] Removing temp human checkbox');
-            tempHumanCheckbox.parentNode.removeChild(tempHumanCheckbox);
-        }
-        
         return abilities;
     }
     
-    console.log('[getRacialAbilities] window.getRacialAbilities not found, returning empty array');
-    // Fallback: empty array
-    return [];
+    // Fallback for non-browser environments
+    return getAdvancedModeRacialAbilities(race);
 }
 
 /**
