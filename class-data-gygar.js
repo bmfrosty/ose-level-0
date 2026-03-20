@@ -235,15 +235,8 @@ export function getSpellSlots(className, level) {
     return result;
   }
   
-  if (className === "Spellblade_CLASS") {
-    // Spellblade max level 10, uses 5 spell levels
-    if (level < 1 || level > 10) return null;
-    const result = {};
-    for (let i = 1; i <= 5; i++) {
-      result[i] = baseSlots[i][level - 1];
-    }
-    return result;
-  }
+  // Spellblade uses the same arcane spell slot progression as Magic-User at every level
+  // (When house rules allow levels past 10, give full arcane progression for that level)
   
   // Standard progression
   if (level < 1 || level > 14) return null;

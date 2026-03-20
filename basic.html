@@ -413,7 +413,7 @@
         <div class="control-section">
             <h3>4. Character Name</h3>
             <div style="display: flex; gap: 10px; align-items: center;">
-                <input type="text" id="characterName" placeholder="Enter character name..." style="flex: 1; padding: 10px; font-size: 16px; border: 2px solid #ccc; border-radius: 3px;">
+                <input type="text" id="characterName" placeholder="Enter character name..." style="flex: 1; padding: 8px; font-size: 14px; border: 2px solid #ccc; border-radius: 3px;">
                 <button class="roll-button" id="randomNameButton" style="margin-top: 0;">Random Name</button>
             </div>
         </div>
@@ -522,6 +522,12 @@
                 <label>
                     <input type="checkbox" id="openInNewTab">
                     <span><strong>Open character in new tab</strong> (unchecked = display on this page)</span>
+                </label>
+            </div>
+            <div class="checkbox-option" style="margin-left: 24px;">
+                <label>
+                    <input type="checkbox" id="autoPrintInNewTab">
+                    <span>Auto-open print dialog when tab opens</span>
                 </label>
             </div>
             <button class="generate-button" id="generateButton" disabled>Generate Character</button>

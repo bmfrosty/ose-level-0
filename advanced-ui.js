@@ -30,6 +30,8 @@ import {
 import { getRandomName } from './shared-names.js';
 import { getRandomBackground } from './shared-backgrounds.js';
 import { getModifierEffects } from './shared-modifier-effects.js';
+import { displayCharacterSheet } from './shared-character-sheet.js';
+import { getMaxLevel } from './shared-racial-abilities.js';
 
 // Make modules available globally for debugging
 window.ClassDataOSE = ClassDataOSE;
@@ -232,6 +234,16 @@ export function updateUI() {
         // (not all races like in allow-all mode)
         if (raceClassMode === 'traditional-extended' && className === 'Spellblade') {
             isAvailable = (race === 'Human' || race === 'Elf');
+        }
+
+        // In Strict OSE Rules mode, enforce per-race/class level caps.
+        // getMaxLevel returns null for unlimited, or a number for the cap.
+        // isSmootified=false because Strict mode always uses OSE level limits.
+        if (isAvailable && raceClassMode === 'strict' && selectedLevel) {
+            const maxLevel = getMaxLevel(`${race}_RACE`, `${className}_CLASS`, false);
+            if (maxLevel !== null && selectedLevel > maxLevel) {
+                isAvailable = false;
+            }
         }
         
         if (isAvailable) {
@@ -439,12 +451,16 @@ export function generateCharacter() {
     const classData = getClassDataForMode(progressionMode);
     console.log('Using class data:', progressionMode === 'smooth' ? 'Gygar (Smoothified)' : progressionMode === 'll' ? 'LL (Labyrinth Lord)' : 'OSE (Standard)');
     
-    // Read character name AFTER determining if we're rolling or using fixed scores
-    // (but before actually rolling, so it doesn't get cleared)
-    characterName = document.getElementById('characterName').value.trim();
-    
-    // If no name provided, generate one
-    if (!characterName) {
+    // Name handling: if using fixed scores, respect what's in the field;
+    // otherwise always generate a new random name each time
+    if (useFixedScores) {
+        characterName = document.getElementById('characterName').value.trim();
+        if (!characterName) {
+            const race = getRaceForNameGeneration(selectedRace);
+            characterName = getRandomName(race);
+            document.getElementById('characterName').value = characterName;
+        }
+    } else {
         const race = getRaceForNameGeneration(selectedRace);
         characterName = getRandomName(race);
         document.getElementById('characterName').value = characterName;
@@ -582,182 +598,83 @@ export function generateCharacter() {
 }
 
 /**
- * Display character in HTML
+ * Display character using the shared character sheet module
  * @param {Object} character - Character object
  */
 export function displayCharacter(character) {
-    const characterInfo = document.getElementById('characterInfo');
-    const characterDisplay = document.getElementById('characterDisplay');
-    
-    // Get display names
     const raceDisplay = getRaceDisplayName(character.race);
     const classDisplay = getClassDisplayName(character.class);
     const mode = progressionMode === 'smooth' ? 'Smoothified' : progressionMode === 'll' ? 'Labyrinth Lord' : 'OSE Standard';
-    
-    // Build racial adjustments display
-    let racialAdjustmentsHTML = '';
-    if (character.racialAdjustments) {
-        const adjustments = [];
-        for (const ability in character.racialAdjustments) {
-            const adj = character.racialAdjustments[ability];
-            if (adj !== 0) {
-                adjustments.push(`${ability} ${formatModifier(adj)}`);
-            }
-        }
-        if (adjustments.length > 0) {
-            racialAdjustmentsHTML = `<p><strong>Racial Adjustments:</strong> ${adjustments.join(', ')}</p>`;
-        }
-    }
-    
-    const html = `
-        <h3>${character.name || 'Unnamed Character'}</h3>
-        <p><strong>Level ${character.level} ${raceDisplay} ${classDisplay}</strong> (${mode} Mode)</p>
-        
-        ${racialAdjustmentsHTML}
-        
-        ${character.background ? `
-            <h4>Background</h4>
-            <p>
-                <strong>Profession:</strong> ${character.background.profession}<br>
-                <strong>Starting Item(s):</strong> ${Array.isArray(character.background.item) ? character.background.item.join(', ') : character.background.item}<br>
-                <strong>Weapon:</strong> ${character.background.weapon}<br>
-                <strong>Armor:</strong> ${character.background.armor}
-            </p>
-        ` : ''}
-        
-        <h4>Ability Scores</h4>
-        <table style="width: 100%; border-collapse: collapse; margin-bottom: 12px;">
-            <tr style="background-color: #f0f0f0;">
-                <th style="border: 1px solid #000; padding: 5px; text-align: center;">Ability</th>
-                <th style="border: 1px solid #000; padding: 5px; text-align: center;">Score</th>
-                <th style="border: 1px solid #000; padding: 5px; text-align: left;">Effects</th>
-            </tr>
-            ${['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'].map(ability => `
-            <tr>
-                <td style="border: 1px solid #000; padding: 5px; text-align: center;"><strong>${ability}</strong></td>
-                <td style="border: 1px solid #000; padding: 5px; text-align: center;">${character.adjustedScores[ability]}${character.baseScores[ability] !== character.adjustedScores[ability] ? ` (${character.baseScores[ability]})` : ''}</td>
-                <td style="border: 1px solid #000; padding: 5px;">${getModifierEffects(ability, character.abilityModifiers[ability], character.adjustedScores[ability])}</td>
-            </tr>
-            `).join('')}
-        </table>
-        
-        <h4>Combat Stats</h4>
-        <p>
-            <strong>HP:</strong> ${character.hp.current}/${character.hp.max} &nbsp;
-            <strong>AC:</strong> ${character.armorClass} &nbsp;
-            <strong>Attack Bonus:</strong> ${character.attackBonus >= 0 ? '+' : ''}${character.attackBonus}
-        </p>
-        
-        <h4>Saving Throws</h4>
-        <p>
-            <strong>Death/Poison:</strong> ${character.savingThrows.death} &nbsp;
-            <strong>Wands:</strong> ${character.savingThrows.wands} &nbsp;
-            <strong>Paralysis/Petrify:</strong> ${character.savingThrows.paralysis} &nbsp;
-            <strong>Breath:</strong> ${character.savingThrows.breath} &nbsp;
-            <strong>Spells:</strong> ${character.savingThrows.spells}
-        </p>
-        
-        <h4>Experience</h4>
-        <p>
-            <strong>Current XP:</strong> ${character.xp.current} &nbsp;
-            <strong>XP for Level ${character.level}:</strong> ${character.xp.forCurrentLevel} &nbsp;
-            ${character.xp.forNextLevel ? `<strong>XP for Level ${character.level + 1}:</strong> ${character.xp.forNextLevel} &nbsp;` : '<strong>Maximum level reached!</strong> &nbsp;'}
-            <strong>XP Bonus:</strong> ${character.xp.bonus >= 0 ? '+' : ''}${character.xp.bonus}%
-        </p>
-        
-        ${character.spellSlots ? `
-            <h4>Spell Slots</h4>
-            <p>${Object.entries(character.spellSlots).filter(([_, slots]) => slots > 0).map(([level, slots]) => `<strong>Level ${level}:</strong> ${slots}`).join(' &nbsp; ')}</p>
-        ` : ''}
-        
-        ${character.thiefSkills ? `
-            <h4>Thief Skills</h4>
-            <p>${Object.entries(character.thiefSkills).map(([skill, value]) => {
-                // Convert camelCase to Title Case with spaces
-                const displayName = skill.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
-                return `<strong>${displayName}:</strong> ${value}%`;
-            }).join(' &nbsp; ')}</p>
-        ` : ''}
-        
-        ${character.turnUndead ? `
-            <h4>Turn Undead</h4>
-            <p>${Object.entries(character.turnUndead).map(([type, target]) => {
-                // HD to monster name mapping
-                const monsterNames = {
-                    '1HD': 'Skeleton',
-                    '2HD': 'Zombie',
-                    '2*HD': 'Ghoul',
-                    '3HD': 'Wight',
-                    '4HD': 'Wraith',
-                    '5HD': 'Mummy',
-                    '6HD': 'Spectre',
-                    '7-9HD': 'Vampire'
-                };
-                
-                // Use monster name if checkbox is checked, otherwise use HD
-                const displayType = showUndeadNames ? monsterNames[type] || type : type;
-                
-                // Display target value, handling null/undefined
-                const displayTarget = target !== null && target !== undefined ? target : '-';
-                return `<strong>${displayType}:</strong> ${displayTarget}`;
-            }).join(' &nbsp; ')}</p>
-        ` : ''}
-        
-        ${character.classAbilities && character.classAbilities.length > 0 ? `
-            <h4>Class Abilities</h4>
-            <ul>
-                ${character.classAbilities.map(ability => `<li><strong>${ability.name}:</strong> ${ability.description}</li>`).join('')}
-            </ul>
-        ` : ''}
-        
-        ${character.racialAbilities && character.racialAbilities.length > 0 ? `
-            <h4>Racial Abilities</h4>
-            <ul>
-                ${character.racialAbilities.map(ability => `<li>${ability}</li>`).join('')}
-            </ul>
-        ` : ''}
-        
-        <p style="margin-top: 20px;"><em>Check the browser console for detailed generation log.</em></p>
-    `;
-    
-    // Check if we should open in new tab
-    const openInNewTabCheckbox = document.getElementById('openInNewTab');
-    const openInNewTab = openInNewTabCheckbox ? openInNewTabCheckbox.checked : false;
-    
-    if (openInNewTab) {
-        // Open in new tab
-        const newWindow = window.open('', '_blank');
-        newWindow.document.write(`
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset="UTF-8">
-                <title>${character.name} - OSE Character</title>
-                <style>
-                    body {
-                        font-family: Arial, sans-serif;
-                        max-width: 800px;
-                        margin: 0 auto;
-                        padding: 20px;
-                    }
-                </style>
-            </head>
-            <body>
-                ${html}
-            </body>
-            </html>
-        `);
-        newWindow.document.close();
-        
-        // Clear the result div on main page
-        characterInfo.innerHTML = '<p style="text-align: center;">Character opened in new tab.</p>';
-        characterDisplay.classList.add('visible');
-    } else {
-        // Display in current page
-        characterInfo.innerHTML = html;
-        characterDisplay.classList.add('visible');
-        characterDisplay.scrollIntoView({ behavior: 'smooth' });
-    }
+    const xpBonus = character.xp.bonus >= 0 ? `+${character.xp.bonus}%` : `${character.xp.bonus}%`;
+    const items = character.background
+        ? (Array.isArray(character.background.item) ? character.background.item : [character.background.item])
+        : [];
+    const hasRacial = character.racialAbilities && character.racialAbilities.length > 0;
+    const hasClass = character.classAbilities && character.classAbilities.length > 0;
+    const sanitize = (str) => (str || '').replace(/[/\\?%*:|"<>]/g, '-').trim();
+    const raceClassDisplay = raceDisplay === classDisplay ? raceDisplay : `${raceDisplay} ${classDisplay}`;
+
+    const sheet = {
+        title: 'OLD-SCHOOL ESSENTIALS ADVANCED',
+        subtitle: `RETRO ADVENTURE GAME &nbsp;·&nbsp; ${mode} Mode`,
+        header: {
+            columns: [
+                { label: 'Character Name', value: character.name || 'Unknown', flex: 3 },
+                { label: 'Race & Class', value: raceClassDisplay, flex: 2 },
+                { label: 'Level', value: character.level, flex: 1, center: true },
+                { label: 'XP Bonus', value: xpBonus, flex: 1, center: true }
+            ]
+        },
+        combat: {
+            maxHP: character.hp.max,
+            initMod: character.abilityModifiers.DEX
+        },
+        abilityScores: ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'].map(a => ({
+            name: a,
+            score: character.adjustedScores[a],
+            originalScore: (character.baseScores[a] !== character.adjustedScores[a]) ? character.baseScores[a] : null,
+            effects: getModifierEffects(a, character.abilityModifiers[a], character.adjustedScores[a])
+        })),
+        weaponsAndSkills: {
+            weapon: character.background?.weapon || null,
+            classAttackBonus: character.attackBonus,
+            meleeMod: character.abilityModifiers.STR,
+            rangedMod: character.abilityModifiers.DEX,
+            thiefSkills: character.thiefSkills || null
+        },
+        abilitiesSection: {
+            header: (hasRacial && hasClass) ? 'RACIAL & CLASS ABILITIES' : hasRacial ? 'RACIAL ABILITIES' : 'CLASS ABILITIES',
+            racial: character.racialAbilities || [],
+            class: character.classAbilities || []
+        },
+        savingThrows: character.savingThrows,
+        experience: {
+            current: character.xp.current,
+            forLevel: character.level,
+            forLevelXP: character.xp.forCurrentLevel,
+            forNext: character.xp.forNextLevel,
+            bonus: xpBonus
+        },
+        equipment: {
+            armor: character.background?.armor || null,
+            items: items,
+            startingAC: character.armorClass,
+            startingGold: null
+        },
+        spellSlots: character.spellSlots || null,
+        turnUndead: character.turnUndead || null,
+        showUndeadNames: showUndeadNames,
+        footer: `Level ${character.level} ${raceDisplay} ${classDisplay} &nbsp;·&nbsp; ${mode} Mode`,
+        printTitle: `OSE Advanced - ${sanitize(raceDisplay)} - ${sanitize(classDisplay)} - Level ${character.level} - ${sanitize(character.background?.profession || '')} - ${sanitize(character.name)}`,
+        openInNewTab: document.getElementById('openInNewTab')?.checked || false,
+        autoPrint: document.getElementById('autoPrintInNewTab')?.checked || false
+    };
+
+    displayCharacterSheet(
+        sheet,
+        document.getElementById('characterInfo'),
+        document.getElementById('characterDisplay')
+    );
 }
 
 /**

@@ -12,13 +12,11 @@ import {
 import { getModifierEffects } from './shared-modifier-effects.js';
 import { getAdvancedModeRacialAbilities } from './shared-racial-abilities.js';
 import {
-    generateCanvasPNG,
-    generateCanvasPDF,
-    generateCanvasBulkPDF,
     generateMarkdown,
     generateJSON,
     generateCountJSON
 } from './canvas-generator.js';
+import { displayCharacterSheet } from './shared-character-sheet.js';
 
 /**
  * Convert internal _RACE name to display name
@@ -44,235 +42,82 @@ function getRaceDisplayName(raceName) {
  * @param {number} startingGold - Starting gold
  */
 export function display0LevelCharacter(results, total, background, hitPoints, armorClass, race, name, startingGold) {
-    // Convert race name for display
     const displayRace = getRaceDisplayName(race);
-    // Get the minimum values from the input fields
     const strMin = parseInt(document.getElementById('strMin').value) || 3;
     const dexMin = parseInt(document.getElementById('dexMin').value) || 3;
     const conMin = parseInt(document.getElementById('conMin').value) || 3;
     const intMin = parseInt(document.getElementById('intMin').value) || 3;
     const wisMin = parseInt(document.getElementById('wisMin').value) || 3;
     const chaMin = parseInt(document.getElementById('chaMin').value) || 3;
-
-    // Check if Advanced mode is enabled
     const advancedCheckbox = document.getElementById('advanced');
     const isAdvanced = advancedCheckbox ? advancedCheckbox.checked : false;
-    
-    // Get current character for saving throws and attack bonus
     const currentCharacter = getCurrentCharacter();
     const rerollCount = getRerollCount();
-    
-    // CSS helper strings
-    const sectionHeader = `background-color: #000; color: #fff; padding: 4px 8px; font-weight: bold; font-size: 0.9em; letter-spacing: 0.05em;`;
-    const box = `border: 1px solid #000; padding: 8px; font-size: 0.9em;`;
-    const statBox = `border: 1px solid #000; padding: 6px; text-align: center; font-size: 0.85em;`;
-
-    // Build HTML character sheet matching PDF canvas layout
-    let resultHtml = `
-        <div style='font-family: Arial, sans-serif; max-width: 760px;'>
-
-        <!-- Header -->
-        <div style='margin-bottom: 8px;'>
-            <div style='font-size: 1.3em; font-weight: bold;'>${isAdvanced ? 'OLD-SCHOOL ESSENTIALS ADVANCED' : 'OLD-SCHOOL ESSENTIALS'}</div>
-            <div style='font-size: 0.85em; color: #444;'>RETRO ADVENTURE GAME</div>
-            <hr style='margin: 6px 0; border-color: #000;'>
-            <div style='display: grid; grid-template-columns: 3fr 2fr 3fr 1fr 1fr; gap: 0; font-size: 0.85em;'>
-                <div style='border: 1px solid #000; padding: 4px 8px;'>
-                    <div style='font-weight: bold; font-size: 0.75em; color: #666; text-transform: uppercase;'>Character Name</div>
-                    <div>${name || 'Unknown'}</div>
-                </div>
-                <div style='border: 1px solid #000; border-left: none; padding: 4px 8px;'>
-                    <div style='font-weight: bold; font-size: 0.75em; color: #666; text-transform: uppercase;'>Race &amp; Class</div>
-                    <div>${displayRace}</div>
-                </div>
-                <div style='border: 1px solid #000; border-left: none; padding: 4px 8px;'>
-                    <div style='font-weight: bold; font-size: 0.75em; color: #666; text-transform: uppercase;'>Occupation</div>
-                    <div>${background.profession}</div>
-                </div>
-                <div style='border: 1px solid #000; border-left: none; padding: 4px 8px; text-align: center;'>
-                    <div style='font-weight: bold; font-size: 0.75em; color: #666; text-transform: uppercase;'>HD</div>
-                    <div>1d4</div>
-                </div>
-                <div style='border: 1px solid #000; border-left: none; padding: 4px 8px; text-align: center;'>
-                    <div style='font-weight: bold; font-size: 0.75em; color: #666; text-transform: uppercase;'>Level</div>
-                    <div>0</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- COMBAT -->
-        <div style='${sectionHeader}'>COMBAT</div>
-        <div style='display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; margin-bottom: 8px;'>
-            <div style='${statBox}'><div style='font-weight:bold; font-size:0.8em;'>MAX HP</div>${Math.max(1, hitPoints.total)}</div>
-            <div style='${statBox}'><div style='font-weight:bold; font-size:0.8em;'>CUR HP</div>&nbsp;</div>
-            <div style='${statBox}'><div style='font-weight:bold; font-size:0.8em;'>INIT</div>${results.find(r => r.ability === "DEX").modifier >= 0 ? '+' : ''}${results.find(r => r.ability === "DEX").modifier}</div>
-            <div style='${statBox}'><div style='font-weight:bold; font-size:0.8em;'>AC</div>&nbsp;</div>
-        </div>
-
-        <!-- Two column layout -->
-        <div style='display: grid; grid-template-columns: 1fr 1fr; gap: 8px;'>
-
-            <!-- LEFT COLUMN -->
-            <div>
-                <!-- ABILITY SCORES -->
-                <div style='${sectionHeader}'>ABILITY SCORES</div>
-                <table style='width: 100%; border-collapse: collapse; margin-bottom: 8px; font-size: 0.85em;'>
-                    <tr style='background-color: #eee;'>
-                        <th style='border: 1px solid #000; padding: 3px 6px; text-align: center; width: 20%;'>Ability</th>
-                        <th style='border: 1px solid #000; padding: 3px 6px; text-align: center; width: 15%;'>Score</th>
-                        <th style='border: 1px solid #000; padding: 3px 6px; text-align: left;'>Effects</th>
-                    </tr>`;
-
-    for (let result of results) {
-        const effects = getModifierEffects(result.ability, result.modifier, result.roll);
-        const scoreDisplay = (result.originalRoll !== undefined && result.originalRoll !== result.roll)
-            ? `<span style='text-decoration:line-through; color:#999; font-size:0.85em; margin-right:4px;'>${result.originalRoll}</span>${result.roll}`
-            : `${result.roll}`;
-        resultHtml += `
-                    <tr>
-                        <td style='border: 1px solid #000; padding: 3px 6px; text-align: center; font-weight: bold;'>${result.ability}</td>
-                        <td style='border: 1px solid #000; padding: 3px 6px; text-align: center;'>${scoreDisplay}</td>
-                        <td style='border: 1px solid #000; padding: 3px 6px;'>${effects}</td>
-                    </tr>`;
-    }
-
-    const attackBonusDisplay = currentCharacter.attackBonus !== undefined
-        ? (currentCharacter.attackBonus >= 0 ? '+' + currentCharacter.attackBonus : currentCharacter.attackBonus)
-        : '+0';
+    const saves = currentCharacter.savingThrows || {};
     const racialAbilities = getAdvancedModeRacialAbilities(race);
-
-    resultHtml += `
-                </table>
-
-                <!-- WEAPONS AND SKILLS -->
-                <div style='${sectionHeader}'>WEAPONS AND SKILLS</div>
-                <div style='${box} margin-bottom: 8px; min-height: 60px;'>
-                    <div><strong>Weapon:</strong> ${background.weapon}</div>
-                    <div style='margin-top: 4px;'><strong>Attack Bonus:</strong> ${attackBonusDisplay} (0-level)</div>
-                </div>
-
-                <!-- RACIAL ABILITIES -->
-                <div style='${sectionHeader}'>RACIAL ABILITIES</div>
-                <div style='${box} min-height: 80px;'>`;
-
-    if (racialAbilities && racialAbilities.length > 0) {
-        resultHtml += `<ul style='margin: 0; padding-left: 18px;'>`;
-        for (let ability of racialAbilities) {
-            resultHtml += `<li style='margin-bottom: 2px;'>${ability}</li>`;
-        }
-        resultHtml += `</ul>`;
-    } else {
-        resultHtml += `<span style='color: #666;'>None</span>`;
-    }
-
     const items = Array.isArray(background.item) ? background.item : [background.item];
-    const saves = currentCharacter.savingThrows;
+    const sanitize = (str) => (str || '').replace(/[/\\?%*:|"<>]/g, '-').trim();
+    const modeLabel = isAdvanced ? 'Advanced' : 'Basic';
 
-    resultHtml += `
-                </div>
-            </div>
+    // Build normalized sheet object for shared renderer
+    const sheet = {
+        title: isAdvanced ? 'OLD-SCHOOL ESSENTIALS ADVANCED' : 'OLD-SCHOOL ESSENTIALS',
+        subtitle: 'RETRO ADVENTURE GAME',
+        header: {
+            columns: [
+                { label: 'Character Name', value: name || 'Unknown', flex: 3 },
+                { label: 'Race & Class', value: displayRace, flex: 2 },
+                { label: 'Occupation', value: background.profession, flex: 3 },
+                { label: 'HD', value: '1d4', flex: 1, center: true },
+                { label: 'Level', value: '0', flex: 1, center: true }
+            ]
+        },
+        combat: {
+            maxHP: Math.max(1, hitPoints.total),
+            initMod: results.find(r => r.ability === 'DEX').modifier
+        },
+        abilityScores: results.map(r => ({
+            name: r.ability,
+            score: r.roll,
+            originalScore: (r.originalRoll !== undefined && r.originalRoll !== r.roll) ? r.originalRoll : null,
+            effects: getModifierEffects(r.ability, r.modifier, r.roll)
+        })),
+        weaponsAndSkills: {
+            weapon: background.weapon,
+            classAttackBonus: currentCharacter.attackBonus !== undefined ? currentCharacter.attackBonus : 0,
+            meleeMod: results.find(r => r.ability === 'STR').modifier,
+            rangedMod: results.find(r => r.ability === 'DEX').modifier,
+            thiefSkills: null
+        },
+        abilitiesSection: {
+            header: 'RACIAL ABILITIES',
+            racial: racialAbilities || [],
+            class: []
+        },
+        savingThrows: {
+            death: saves.Death || 14,
+            wands: saves.Wands || 15,
+            paralysis: saves.Paralysis || 16,
+            breath: saves.Breath || 17,
+            spells: saves.Spells || 18
+        },
+        experience: null,
+        equipment: {
+            armor: background.armor,
+            items: items,
+            startingAC: armorClass,
+            startingGold: startingGold || 0
+        },
+        spellSlots: null,
+        turnUndead: null,
+        showUndeadNames: false,
+        footer: `Total Modifiers: ${total} | Attempts: ${rerollCount} | Minimums: STR ${strMin}, DEX ${dexMin}, CON ${conMin}, INT ${intMin}, WIS ${wisMin}, CHA ${chaMin}`,
+        printTitle: `OSE ${modeLabel} - ${sanitize(displayRace)} - 0-Level - ${sanitize(background.profession)} - ${sanitize(name)}`,
+        openInNewTab: document.getElementById('openInNewTab')?.checked || false,
+        autoPrint: document.getElementById('autoPrintInNewTab')?.checked || false
+    };
 
-            <!-- RIGHT COLUMN -->
-            <div>
-                <!-- SAVING THROWS -->
-                <div style='${sectionHeader}'>SAVING THROWS</div>
-                <div style='display: grid; grid-template-columns: repeat(5, 1fr); gap: 0; margin-bottom: 8px;'>
-                    <div style='${statBox}'><div style='font-weight:bold; font-size:0.8em;'>Death</div>${saves ? saves.Death : 14}</div>
-                    <div style='${statBox}'><div style='font-weight:bold; font-size:0.8em;'>Wands</div>${saves ? saves.Wands : 15}</div>
-                    <div style='${statBox}'><div style='font-weight:bold; font-size:0.8em;'>Petrify</div>${saves ? saves.Paralysis : 16}</div>
-                    <div style='${statBox}'><div style='font-weight:bold; font-size:0.8em;'>Breath</div>${saves ? saves.Breath : 17}</div>
-                    <div style='${statBox}'><div style='font-weight:bold; font-size:0.8em;'>Spells</div>${saves ? saves.Spells : 18}</div>
-                </div>
-
-                <!-- EQUIPMENT AND ITEMS -->
-                <div style='${sectionHeader}'>EQUIPMENT AND ITEMS</div>
-                <div style='${box} margin-bottom: 8px;'>
-                    <div><strong>Armor:</strong> ${background.armor}</div>
-                    <div style='margin-top: 4px;'><strong>Items:</strong>
-                        <ul style='margin: 2px 0; padding-left: 18px;'>`;
-
-    for (let item of items) {
-        resultHtml += `<li>${item}</li>`;
-    }
-
-    resultHtml += `
-                        </ul>
-                    </div>
-                    <div style='border-top: 1px solid #ccc; margin-top: 6px; padding-top: 4px; line-height: 1.8em;'>
-                        &nbsp;<br>&nbsp;<br>&nbsp;
-                    </div>
-                    <div style='margin-top: 4px; border-top: 1px solid #ccc; padding-top: 4px;'><strong>Starting AC:</strong> ${armorClass} &nbsp; <strong>Starting Gold:</strong> ${startingGold || 0} gp</div>
-                </div>
-
-                <!-- CLASS ABILITIES -->
-                <div style='${sectionHeader}'>CLASS ABILITIES</div>
-                <div style='${box} margin-bottom: 8px; min-height: 40px; color: #666;'>
-                    None (0-level)
-                </div>
-
-                <!-- TREASURE -->
-                <div style='${sectionHeader}'>TREASURE</div>
-                <div style='${box} margin-bottom: 4px; line-height: 2em;'>
-                    &nbsp;<br>&nbsp;<br>&nbsp;<br>&nbsp;<br>&nbsp;
-                </div>
-                <table style='width: 100%; border-collapse: collapse; font-size: 0.85em;'>`;
-
-    for (let coin of ['PP', 'GP', 'EP', 'SP', 'CP']) {
-        resultHtml += `
-                    <tr>
-                        <td style='background-color: #000; color: #fff; padding: 3px 8px; font-weight: bold; width: 40px;'>${coin}</td>
-                        <td style='border: 1px solid #000; border-left: none; padding: 3px;'>&nbsp;</td>
-                    </tr>`;
-    }
-
-    resultHtml += `
-                </table>
-            </div>
-        </div>
-
-        <!-- Footer -->
-        <hr style='margin-top: 12px; border-color: #ccc;'>
-        <p style='font-size: 0.8em; color: #666; margin: 4px 0;'>
-            Total Modifiers: ${total} | Attempts: ${rerollCount} | Minimums: STR ${strMin}, DEX ${dexMin}, CON ${conMin}, INT ${intMin}, WIS ${wisMin}, CHA ${chaMin}
-        </p>
-        </div>
-    `;
-
-    // Check if we should open in new tab
-    const openInNewTabCheckbox = document.getElementById('openInNewTab');
-    const openInNewTab = openInNewTabCheckbox ? openInNewTabCheckbox.checked : false;
-    
-    if (openInNewTab) {
-        // Open in new tab
-        const newWindow = window.open('', '_blank');
-        newWindow.document.write(`
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset="UTF-8">
-                <title>${name} - OSE 0-Level Character</title>
-                <style>
-                    body {
-                        font-family: Arial, sans-serif;
-                        max-width: 800px;
-                        margin: 0 auto;
-                        padding: 20px;
-                    }
-                </style>
-            </head>
-            <body>
-                ${resultHtml}
-            </body>
-            </html>
-        `);
-        newWindow.document.close();
-        
-        // Clear the result div on main page
-        document.getElementById('result').innerHTML = '<p style="text-align: center;">Character opened in new tab.</p>';
-    } else {
-        // Display in current page
-        document.getElementById('result').innerHTML = resultHtml;
-    }
+    displayCharacterSheet(sheet, document.getElementById('result'), null);
 }
 
 /**
@@ -283,36 +128,6 @@ export function setRaceAndGenerate(race) {
     document.getElementById('forceRace').value = race === 'Demihuman' ? '' : race;
     document.getElementById('forceDemihuman').checked = race === 'Demihuman';
     generate0LevelCharacter();
-}
-
-/**
- * Set race selection and generate PNG
- * @param {string} race - Race to generate
- */
-export function setRaceAndGeneratePNG(race) {
-    document.getElementById('forceRace').value = race === 'Demihuman' ? '' : race;
-    document.getElementById('forceDemihuman').checked = race === 'Demihuman';
-    generateCanvasPNG();
-}
-
-/**
- * Set race selection and generate PDF
- * @param {string} race - Race to generate
- */
-export function setRaceAndGeneratePDF(race) {
-    document.getElementById('forceRace').value = race === 'Demihuman' ? '' : race;
-    document.getElementById('forceDemihuman').checked = race === 'Demihuman';
-    generateCanvasPDF();
-}
-
-/**
- * Set race selection and generate bulk PDF
- * @param {string} race - Race to generate
- */
-export function setRaceAndGenerateBulkPDF(race) {
-    document.getElementById('forceRace').value = race === 'Demihuman' ? '' : race;
-    document.getElementById('forceDemihuman').checked = race === 'Demihuman';
-    generateCanvasBulkPDF();
 }
 
 /**
@@ -356,9 +171,6 @@ export function initialize() {
     
     // Make button handler functions available globally
     window.setRaceAndGenerate = setRaceAndGenerate;
-    window.setRaceAndGeneratePNG = setRaceAndGeneratePNG;
-    window.setRaceAndGeneratePDF = setRaceAndGeneratePDF;
-    window.setRaceAndGenerateBulkPDF = setRaceAndGenerateBulkPDF;
     window.setRaceAndGenerateJSON = setRaceAndGenerateJSON;
     window.setRaceAndGenerateCountJSON = setRaceAndGenerateCountJSON;
     window.setRaceAndGenerateMarkdown = setRaceAndGenerateMarkdown;

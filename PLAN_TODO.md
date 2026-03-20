@@ -1,341 +1,201 @@
-# TODO List
+# TODO — Active Planning Document
 
-## Planning Documents
-- **PLAN_0LEVEL_BASIC_ADVANCED.md** - Plan for Level 0 UI improvements to match Basic/Advanced generators
-- **PLAN_CLASSES_IMPORT_TODO.md** - Active plan for completing Advanced Mode (advanced.html)
-- **PLAN_REFACTOR_TODO.md** - Documentation and optional enhancements for refactoring
-- **PLAN_CLASS_GENERATION_MARKDOWN_FROM_CODE.md** - Future plan for dynamic class documentation generation
-- **CHARACTER_CREATION_BASIC.md** - Specification for Level 1+ Basic Method character creation
-- **CHARACTER_CREATION_ADVANCED.md** - Specification for Level 1+ Advanced Method character creation
+> **Status:** All three generators complete and working. README updated (2026-03-19). Remaining: HTML sheet improvements, comprehensive testing, misc enhancements.
+> **History:** See `PLANS_COMPLETED/` for all completed work.
 
-**Completed Plans** (moved to PLANS_COMPLETED/):
-- **PLAN_REFACTOR_JS_MODULES.md** - ✅ Complete - All generators refactored to ES6 modules
-- **PLAN_UPPER_LEVEL.md** - ✅ Complete - Level 0 dynamic saves/attack bonuses implemented
-- **PLAN_FIX_RACE_SELECTION.md** - ✅ Complete - Race selection bug fixed
-- **PLAN_REFACTOR_COMPLETE.md** - ✅ Complete - Full refactoring history
+---
 
-## High Priority
+## Priority Order
 
-### Level 0 Occupations: Missing Weapon Assignments
-**Need user input for appropriate weapons for these OSE Secondary Skills:**
+1. ~~**README.md update**~~ ✅ Complete (2026-03-19)
+2. **Upper level character generation** — class abilities, wealth, automatic equipment purchase, background selection ← HIGH PRIORITY
+3. **HTML sheet improvements** — `@media print` CSS, equipment formatting, Notes section
+4. **Comprehensive class/level testing** — saves, attacks, spell slots at levels 1/5/10/14
+5. **Level 0 occupation weapon assignments** — ~17 occupations still need weapons
+6. **Optional enhancements** — combat stats display, UI polish, export improvements
 
-The following occupations from the OSE Advanced Fantasy Player's Tome Secondary Skills table (p25) are not yet in our Level 0 background tables. User needs to determine appropriate weapons for each:
+---
 
-- [ ] **Animal trainer** - Need weapon assignment
-- [ ] **Bookbinder** - Need weapon assignment
-- [ ] **Brewer** - Need weapon assignment
-- [ ] **Chandler** - Need weapon assignment
-- [ ] **Coppersmith** - Need weapon assignment
-- [ ] **Furrier** - Need weapon assignment
-- [ ] **Glassblower** - Need weapon assignment
-- [ ] **Lapidary / jeweller** - Already have "Jeweller" but may need to verify weapon
-- [ ] **Lorimer** (maker of horse bits, spurs, stirrups) - Need weapon assignment
-- [ ] **Mapmaker** - Need weapon assignment
-- [ ] **Potter** - Need weapon assignment
-- [ ] **Roper** (rope maker) - Need weapon assignment
-- [ ] **Seafarer** - Already have "Sailor" but may need separate entry
-- [ ] **Tanner** - Need weapon assignment
-- [ ] **Thatcher / roofer** - Need weapon assignment
-- [ ] **Vintner** (wine maker) - Need weapon assignment
-- [ ] **Woodcutter** - Need weapon assignment
+## 1. README Update — ✅ COMPLETE
 
-**Occupations we have that match OSE list:**
-- ✅ Armourer (HP 4)
-- ✅ Baker (need to add - similar to Cook?)
-- ✅ Blacksmith (HP 4)
-- ✅ Bowyer / fletcher - Have "Bowyer" (HP 3) and "Fletcher" (HP 2)
-- ✅ Butcher (HP 2)
-- ✅ Carpenter (HP 4)
-- ✅ Cooper (HP 3)
-- ✅ Farmer (HP 4)
-- ✅ Fisher (HP 3)
-- ✅ Huntsman - Have "Hunter" (HP 4)
-- ✅ Mason (HP 4)
-- ✅ Miner (HP 4)
-- ✅ Shipwright (HP 4)
-- ✅ Tailor (HP 2)
+README.md has been rewritten to document:
+- Three generators (0level.html, basic.html, advanced.html) and what each does
+- Quick start: `python3 -m http.server 8000`
+- PDF workflow: Open in New Tab → browser Print / Save as PDF
+- OSE Standard / Smoothified (Gygar) / Labyrinth Lord modes and class lists
+- Level 0 "Advanced" checkbox explanation
+- Full module/file structure table
+- Removed files documented (generate-pdf.sh, node-canvas-generator.js, deprecated-js/)
 
-**Occupations we have that are NOT in OSE Secondary Skills list:**
-- Acolyte (HP 1) - Keep (religious profession)
-- Actor (HP 1) - Keep (entertainment profession)
-- Alchemist's Apprentice (HP 1) - Keep (specialized apprentice)
-- Artist (HP 1) - Keep (creative profession)
-- Beggar (HP 1) - Keep (social outcast)
-- Butler (HP 2) - Keep (household servant)
-- Cook (HP 2) - Keep (food preparation)
-- Executioner (HP 3) - Keep (grim profession)
-- Gambler (HP 2) - Keep (vice profession)
-- Groom (HP 3) - Keep (animal care)
-- Hermit (HP 3) - Keep (reclusive mystic)
-- Horse Thief (HP 2) - Keep (criminal profession)
-- Innkeeper (HP 2) - Keep (hospitality profession)
-- Juggler (HP 1) - Keep (entertainment profession)
-- Kennel Master (HP 3) - Keep (animal care)
-- Leatherworker (HP 3) - Keep (craftsperson)
-- Limner (HP 3) - Keep (artist/illuminator)
-- Money Lender (HP 1) - Keep (financial profession)
-- Navigator (HP 2) - Keep (specialized sailor)
-- Sailor (HP 3) - Keep (seafaring profession)
-- Scribe (HP 1) - Keep (literate profession)
-- Shepherd (HP 2) - Keep (pastoral profession)
-- Squire (HP 4) - Keep (martial apprentice)
-- Teamster (HP 3) - Keep (transport profession)
-- Trader (HP 2) - Keep (merchant profession)
-- Trapper (HP 3) - Keep (wilderness profession)
-- Trumpet Player (HP 1) - Keep (musician)
-- Wealthy Heir (HP 1) - Keep (privileged background)
-- Weaponsmith (HP 4) - Keep (specialized smith)
-- Weaver (HP 2) - Keep (textile craftsperson)
-- Wizard's Apprentice (HP 1) - Keep (magical apprentice)
+---
 
+## 2. Upper Level Character Generation — PENDING ← NEXT (HIGH PRIORITY)
 
-### Fix Level 0 Racial Abilities Display
-**See:** PLAN_0LEVEL_BASIC_ADVANCED.md
+Features for `basic.html` and `advanced.html` to make upper-level characters feel complete at generation time. Class abilities are currently a significant gap — generated characters have stats and progression but no abilities listed.
 
-**STATUS: ALREADY CORRECT - NO CHANGES NEEDED**
+- [ ] **Class abilities** — display all class abilities appropriate to the character's level on the sheet (e.g. Cleric: turn undead; Thief: thief skill %s at level; Fighter: combat abilities; Magic-User/Elf: spell list; Dwarf: detection abilities; Halfling: hiding; Gnome: defensive bonus; Spellblade: hybrid abilities). Both Basic and Advanced modes.
+- [ ] **Racial abilities** — display racial special abilities on the sheet for Basic Mode demihuman classes (currently only shown in 0-level/Advanced mode)
+- [ ] **Wealth generator** — roll starting gold per class (e.g. 3d6×10 gp for fighters, 2d6×10 for magic-users) and display on the character sheet
+- [ ] **Automatic equipment purchase** — spend starting gold automatically on class-appropriate gear (weapons, armor, adventuring supplies) based on class and available funds
+- [ ] **Background selection at upper levels** — always roll on the level-0 background/occupation table to give upper-level characters a pre-adventuring backstory; display occupation on sheet
 
-The implementation in `names-tables.js` already works correctly:
-- [x] Demihumans always show racial abilities (both Basic and Advanced modes) ✅
-- [x] Humans only show abilities in Advanced mode (if enabled) ✅
-- [x] Saving throw bonuses (Resilience, Magic Resistance) apply in both modes ✅
-- [x] Racial abilities display correctly in both modes ✅
-- [x] Ability adjustments only apply in Advanced mode ✅
+---
 
-**Verification:**
-- `getRacialAbilities()` returns hardcoded ability arrays for demihumans (not mode-dependent)
-- Humans only get abilities when `isAdvanced && humanRacialAbilities` are both true
-- `calculateSavingThrows()` applies bonuses in both Basic and Advanced modes
-- `applyRaceAdjustments()` only applies ability score changes in Advanced mode
+## 3. HTML Sheet Improvements — PENDING
 
-### Update Racial Bonuses (Advanced Mode)
-- [x] Review OSE Advanced Fantasy Player's Tome for all racial bonuses
-- [x] Update `race-adjustments.js` with correct bonuses for:
-  - [x] Dwarf (verified correct: +1 CON, -1 CHA)
-  - [x] Elf (verified correct: +1 DEX, -1 CON)
-  - [x] Gnome (verified correct: No modifiers)
-  - [x] Halfling (verified correct: +1 DEX, -1 STR)
-  - [x] Human (verified correct: +1 CON, +1 CHA)
-- [x] Update `names-tables.js` getRacialAbilities() with correct abilities for:
-  - [x] Dwarf (Languages, weapon restrictions, detection, infravision, listening, Resilience)
-  - [x] Elf (Languages, detect secret doors, infravision, listening, ghoul immunity)
-  - [x] Gnome (Languages, weapon restrictions, detect construction, infravision, listening, AC bonus, Magic Resistance)
-  - [x] Halfling (Languages, weapon restrictions, listening, missile bonus, AC bonus, Resilience)
-  - [x] Human (Blessed, Decisiveness, Leadership - optional)
-- [x] Implement saving throw bonuses:
-  - [x] Dwarf Resilience (Death, Wands, Spells)
-  - [x] Gnome Magic Resistance (Wands, Spells)
-  - [x] Halfling Resilience (Death, Wands, Spells)
-- [x] Create SAVING_THROWS.md documentation
-- [x] Test all races to verify bonuses apply correctly
-- [x] Update README.md with complete racial bonus tables
+Print-friendly and formatting improvements to the shared HTML character sheet (`shared-character-sheet.js`).
 
-### Import Character Classes from Gygar Project ✅ COMPLETE (Documentation Phase)
-**Source:** Gygar project (user's other project)
-**See:** PLAN_GYGAR_IMPORT.md
+- [ ] Add `@media print` CSS — hide buttons, set `@page` letter size, control page breaks
+- [ ] Better "Starting Equipment" section — render as a proper `<ul>` list, not a comma-joined string
+- [ ] Handle long occupation names gracefully (no truncation/overflow)
+- [ ] Add optional "Notes" section at the bottom of the sheet
+- [ ] Verify ability score display clarity — confirm "12 (11)" format (adjusted vs original) is clear
 
-- [x] Import class data for Smoothified Mode (as markdown documentation): ✅
-  - [x] Cleric → GYGAR_CLERIC.md ✅
-  - [x] Fighter → GYGAR_FIGHTER.md ✅
-  - [x] Thief → GYGAR_THIEF.md ✅
-  - [x] Magic-User → GYGAR_MAGIC_USER.md ✅
-  - [x] Spellblade (Gygar-specific class) → GYGAR_SPELLBLADE.md ✅
-- [ ] Create new file: `class-data-gygar.js` (PENDING - for level 1+ implementation)
-- [ ] Add class-specific data to JavaScript (PENDING - for level 1+ implementation)
-- [ ] Update character generation to support class selection (PENDING - for level 1+ implementation)
-- [ ] Add UI controls for class selection (when level > 0) (PENDING - for level 1+ implementation)
+**Reference:** Originally Phase 3 of PLAN_0LEVEL_BASIC_ADVANCED.md
 
-### Create Gygar Versions of Demihuman Classes ✅ COMPLETE (Documentation Phase)
-**Note:** Smoothified Mode has different saving throw/attack progressions for demihumans
+---
 
-- [x] Create Gygar Dwarf class documentation → GYGAR_DWARF.md ✅
-  - [x] Use Gygar-specific saving throw progression ✅
-  - [x] Use Gygar-specific attack bonus progression ✅
-  - [x] Keep Dwarf racial abilities (including Resilience) ✅
-- [x] Create Gygar Elf class documentation → GYGAR_ELF.md ✅
-  - [x] **Use Spellblade saving throw progression** (Elf = Spellblade in Smoothified Mode) ✅
-  - [x] Use Gygar-specific attack bonus progression ✅
-  - [x] Keep Elf racial abilities ✅
-  - [x] Note: Elf in Smoothified Mode uses Spellblade tables ✅
-- [x] Create Gygar Halfling class documentation → GYGAR_HALFLING.md ✅
-  - [x] Use Gygar-specific saving throw progression ✅
-  - [x] Use Gygar-specific attack bonus progression ✅
-  - [x] Keep Halfling racial abilities ✅
-- [x] Create Gygar Gnome class documentation → GYGAR_GNOME.md ✅
-- [ ] Add mode detection: Basic Mode vs Smoothified Mode for demihuman classes (PENDING - for level 1+ implementation)
-- [x] Update documentation to explain Gygar demihuman differences → OSE_VS_GYGAR.md ✅
+## 4. Class/Level Testing — PENDING
 
-### Import Character Classes from OSE Website ✅ COMPLETE (Documentation Phase)
-**Source:** OSE SRD website (https://oldschoolessentials.necroticgnome.com/)
-**See:** PLAN_OSE_IMPORT.md
+Verify that saves, attack bonuses, and spell slots are correct for all classes at all key levels in each progression mode. Compare against source documents.
 
-- [x] Import class data for OSE Standard (as markdown documentation): ✅
-  - [x] Cleric → OSE_CLERIC.md ✅
-  - [x] Fighter → OSE_FIGHTER.md ✅
-  - [x] Thief → OSE_THIEF.md ✅
-  - [x] Magic-User → OSE_MAGIC_USER.md ✅
-  - [x] Dwarf (as class, not race) → OSE_DWARF.md ✅
-  - [x] Elf (as class, not race) → OSE_ELF.md ✅
-  - [x] Halfling (as class, not race) → OSE_HALFLING.md ✅
-  - [x] Gnome → OSE_GNOME.md ✅
-- [ ] Create new file: `class-data-ose.js` (PENDING - for level 1+ implementation)
-- [ ] Add class-specific data to JavaScript (PENDING - for level 1+ implementation)
-- [ ] Update character generation to support OSE Standard Mode (PENDING - for level 1+ implementation)
-- [ ] Add UI toggle for OSE Standard vs Smoothified Mode (PENDING - for level 1+ implementation)
+### OSE Standard
+- [ ] Cleric (levels 1, 5, 10, 14)
+- [ ] Fighter (levels 1, 5, 10, 14)
+- [ ] Magic-User (levels 1, 5, 10, 14)
+- [ ] Thief (levels 1, 5, 10, 14)
+- [ ] Dwarf (levels 1, 5, 10, 12)
+- [ ] Elf (levels 1, 5, 10)
+- [ ] Halfling (levels 1, 5, 8)
+- [ ] Gnome (levels 1, 5, 8)
 
-## Medium Priority
+### Smoothified (Gygar)
+- [ ] Cleric (levels 1, 5, 10, 14)
+- [ ] Fighter (levels 1, 5, 10, 14)
+- [ ] Magic-User (levels 1, 5, 10, 14)
+- [ ] Thief (levels 1, 5, 10, 14)
+- [ ] Dwarf (levels 1, 5, 10, 14)
+- [ ] Elf (levels 1, 5, 10, 14)
+- [ ] Halfling (levels 1, 5, 10, 14)
+- [ ] Gnome (levels 1, 5, 10, 14)
+- [ ] Spellblade (levels 1, 5, 10)
 
-### Higher Level Character Support
-**See:** PLAN_UPPER_LEVEL.md
+### Verification Checklist
+- [ ] Saving throws match source documents
+- [ ] Attack bonuses match source documents
+- [ ] Spell slots match source documents
+- [ ] Compare OSE vs Gygar progressions at same level
+- [ ] Test mode switching (OSE Standard / Smoothified / Labyrinth Lord)
 
-- [ ] Add level selection UI (0-14)
-- [ ] Implement level-based saving throw progressions
-- [ ] Implement level-based attack bonus progressions
-- [ ] Add class selection when level > 0
-- [ ] Add XP tracking
-- [ ] Add spell slots for spellcasters
-- [ ] Add class abilities by level
+**Reference:** Originally Phase 9 of PLAN_CLASSES_IMPORT_TODO.md
 
-### Basic Mode Implementation
-**See:** PLAN_0LEVEL_BASIC_ADVANCED.md
+---
 
-- [ ] Add "Basic Mode" checkbox to UI
-- [ ] When Basic Mode enabled:
-  - [ ] Hide race selection (or show only Human)
-  - [ ] Show class selection (Cleric, Fighter, Thief, Magic-User, Dwarf, Elf, Halfling)
-  - [ ] Use class-based saving throws and attack bonuses
-  - [ ] Disable racial abilities (classes have their own abilities)
-- [ ] Update all renderers to handle Basic Mode
-- [ ] Update documentation
+## 5. Level 0 Occupations: Missing Weapon Assignments
 
-### Smoothified Mode Enhancements
-- [ ] Get complete Smoothified Mode saving throw progressions from user
-- [ ] Get complete Smoothified Mode attack bonus progressions from user
-- [ ] Implement different progressions for Gygar vs Normal Mode
-- [ ] Add Spellblade class support (Gygar-specific)
-- [ ] Document Smoothified Mode differences in README.md
+The following OSE Advanced Fantasy Player's Tome Secondary Skills still need weapon assignments in the background tables:
 
-## Low Priority
+- [ ] Animal trainer
+- [ ] Bookbinder
+- [ ] Brewer
+- [ ] Chandler
+- [ ] Coppersmith
+- [ ] Furrier
+- [ ] Glassblower
+- [ ] Lapidary / jeweller (have "Jeweller" — verify weapon)
+- [ ] Lorimer (horse bits, spurs, stirrups maker)
+- [ ] Mapmaker
+- [ ] Potter
+- [ ] Roper (rope maker)
+- [ ] Seafarer (have "Sailor" — need separate entry?)
+- [ ] Tanner
+- [ ] Thatcher / roofer
+- [ ] Vintner (wine maker)
+- [ ] Woodcutter
 
-### UI Improvements
-- [ ] Add tooltips for all options
-- [ ] Add "What's This?" links for Advanced/Basic/Gygar modes
-- [ ] Improve mobile responsiveness
-- [ ] Add character portrait upload option
-- [ ] Add custom background/profession entry
-- [ ] Update checkbox label: "Advanced Campaign (ability adjustments)"
+---
+
+## 6. Optional Enhancements
+
+### Combat Stats Display (basic.html / advanced.html)
+
+The 0-level generator shows Class Attack Bonus, Melee Modifier, and Ranged Modifier separately. Basic and Advanced generators only show the single combined attack bonus value.
+
+- [ ] `basic-ui.js` — display STR and DEX modifiers on attack/AC separately
+- [ ] `advanced-ui.js` — display STR and DEX modifiers on attack/AC separately
+- [ ] Consider `shared-combat-stats.js` for consistent attack/AC calculations across all generators
+
+### Advanced Mode Race/Class Grid
+
+- [ ] Show class requirements (ability minimums) on hover/click in the `advanced.html` race/class grid
+
+### UI Polish
+- [ ] Tooltips for all options
+- [ ] Mobile responsiveness improvements
+- [ ] Custom background/profession entry field
 
 ### Export Improvements
-- [ ] Add CSV export for multiple characters
-- [ ] Add character import from JSON
-- [ ] Add "Save Character" feature (localStorage)
-- [ ] Add "Load Character" feature
-- [ ] Add character comparison view
+- [ ] CSV export for multiple 0-level characters
+- [ ] Save/Load character to localStorage
+- [ ] JSON import
 
-### Testing
-- [ ] Add automated tests for all races
-- [ ] Add automated tests for all classes (when implemented)
-- [ ] Add automated tests for all levels (when implemented)
-- [ ] Add automated tests for all modes (Advanced, Basic, Gygar, Normal)
-- [ ] Add integration tests for all output formats
-- [ ] Test Level 0 Basic mode (demihumans show abilities, no adjustments)
-- [ ] Test Level 0 Advanced mode (all abilities + adjustments)
+### Testing Automation
+- [ ] Automated tests for all races
+- [ ] Automated tests for all classes at all levels
+- [ ] Test Markdown export (0level generator)
+- [ ] Test JSON export (0level generator)
 
 ### Documentation
-- [ ] Add examples of each race with screenshots
-- [ ] Add examples of each class with screenshots
-- [ ] Create video tutorial for web interface
-- [ ] Create video tutorial for command-line usage
-- [ ] Add FAQ section to README.md
-- [ ] Document Level 0 Basic vs Advanced differences
+- [ ] Screenshots of each generator for README
 
-## Future Ideas
-
-### Advanced Features
-- [ ] Multi-character party generator
-- [ ] Character advancement tracker
-- [ ] Equipment shop/generator
-- [ ] Spell book generator for spellcasters
-- [ ] Random encounter generator
-- [ ] Dungeon generator integration
-
-### Integration
-- [ ] Export to VTT formats (Roll20, Foundry VTT, etc.)
-- [ ] Import from other character generators
-- [ ] API for programmatic character generation
+### VTT Integration (far future)
+- [ ] Export to Roll20 / Foundry VTT formats
 - [ ] Discord bot integration
 
-## Notes
+---
 
-### Data Sources
-- **OSE Advanced Fantasy Player's Tome:** For Advanced Mode racial bonuses and abilities
-- **OSE SRD Website:** For Basic Mode class data (https://oldschoolessentials.necroticgnome.com/)
-- **Gygar Project:** For Smoothified Mode class data and Spellblade class
-- **The Ruins of Castle Gygar Module:** For Smoothified Mode saving throw/attack bonus progressions
+## 7. Future: Dynamic Class Document Generation
 
-### Mode Compatibility Matrix
-**See PLAN_0LEVEL_BASIC_ADVANCED.md for detailed explanation**
+**Status:** Low priority — static markdown files in `CLASS_MARKDOWN/` work well currently.
 
-| Feature | Level 0 Basic | Level 0 Advanced | Level 1+ Basic | Level 1+ Advanced |
-|---------|---------------|------------------|----------------|-------------------|
-| Races | All races | All races | Human only | All races |
-| Racial Abilities | Yes (demihumans only) | Yes (all if enabled) | No | Yes |
-| Ability Adjustments | No | Yes | No | Yes |
-| Racial Minimums | No | Yes | No | Yes |
-| Attack Bonus | -1 (Normal) / 0 (Gygar) | -1 (Normal) / 0 (Gygar) | Class-based | Class-based |
-| Saving Throws | D14 W15 P16 B17 S18 | D14 W15 P16 B17 S18 + Resilience | Class-based | Class-based |
+**Goal:** Generate class documentation dynamically from `class-data-ose.js`, `class-data-gygar.js`, and `class-data-shared.js` instead of maintaining separate markdown files.
 
-### Implementation Order
-1. ✅ Phase 1-8: Basic dynamic saving throws and attack bonuses (COMPLETE)
-2. ✅ Dwarf racial abilities updated with concise descriptions (COMPLETE)
-3. ✅ All racial abilities updated from Advanced Player's Tome (COMPLETE)
-4. ✅ All racial saving throw bonuses implemented (COMPLETE)
-5. ✅ SAVING_THROWS.md documentation created (COMPLETE)
-6. ✅ Racial abilities display verified correct for both Basic and Advanced modes (COMPLETE)
-7. **Next:** Import class data from Gygar project and OSE website (see PLAN_UPPER_LEVEL.md)
-8. **Then:** Implement Basic Mode toggle and class selection
-9. **Then:** Add higher level support (levels 1-14)
-10. **Finally:** Polish UI and add advanced features
+**Key phases when ready:**
+- [ ] Create `class-markdown-generator.js` with table/section generators
+- [ ] Implement `generateXPTable`, `generateSavingThrowsTable`, `generateSpellSlotsTable`
+- [ ] Support Basic Mode (race-as-class) and Advanced Mode (race + class) templates
+- [ ] Batch generation for all classes × modes
 
-## Completed
-- ✅ Dynamic saving throws for level 0
-- ✅ Dynamic attack bonus for level 0
-- ✅ Dwarf Resilience ability (Advanced Mode)
-- ✅ Smoothified Mode toggle (UI and CLI)
-- ✅ Character object includes level, attackBonus, savingThrows
-- ✅ All renderers use dynamic values
-- ✅ Comprehensive README.md
-- ✅ Bazzite/distrobox support
-- ✅ Race selection bug fix
-- ✅ All racial abilities updated from OSE Advanced Fantasy Player's Tome:
-  - ✅ Dwarf (Languages, weapon restrictions, detection, infravision, listening, Resilience)
-  - ✅ Elf (Languages, detect secret doors, infravision, listening, ghoul immunity)
-  - ✅ Gnome (Languages, weapon restrictions, detect construction, infravision, listening, AC bonus, Magic Resistance)
-  - ✅ Halfling (Languages, weapon restrictions, listening, missile bonus, AC bonus, Resilience)
-  - ✅ Human (Blessed, Decisiveness, Leadership - optional)
-- ✅ All racial ability score modifiers verified correct
-- ✅ All racial saving throw bonuses implemented:
-  - ✅ Dwarf Resilience (Death, Wands, Spells based on CON)
-  - ✅ Gnome Magic Resistance (Wands, Spells based on CON)
-  - ✅ Halfling Resilience (Death, Wands, Spells based on CON)
-- ✅ SAVING_THROWS.md documentation created
-- ✅ Racial abilities display verified correct:
-  - ✅ Demihumans always show abilities (both Basic and Advanced modes)
-  - ✅ Humans only show abilities when Advanced + Human Abilities enabled
-  - ✅ Saving throw bonuses apply in both modes
-  - ✅ Ability score adjustments only apply in Advanced mode
-- ✅ Planning documents created (PLAN_0LEVEL_BASIC_ADVANCED.md, PLAN_UPPER_LEVEL.md, CHARACTER_CREATION_*.md)
-- ✅ **OSE Import Phase 1-4 Complete** (PLAN_OSE_IMPORT.md):
-  - ✅ All 8 OSE classes imported as markdown (Cleric, Fighter, Magic-User, Thief, Dwarf, Elf, Halfling, Gnome)
-  - ✅ All 9 Gygar classes created as markdown (Cleric, Fighter, Magic-User, Thief, Dwarf, Elf, Halfling, Gnome, Spellblade)
-  - ✅ Comparison documents created (OSE_VS_GYGAR.md, ELF_VS_SPELLBLADE.md, RACIAL_FEATURES_AUDIT.md)
-  - ✅ Code refactoring: Created racial-abilities.js for better organization
-  - ✅ Updated index.html to load racial-abilities.js
-  - ✅ All tests passing
-- ✅ **PDF Generation Improvements**:
-  - ✅ Modified generate-pdf.sh to generate separate PDF files for each character when using `-n 4`
-  - ✅ Fixed calculateSavingThrows export bug in names-tables.js
-  - ✅ Expanded racial abilities box from 100pt to 151pt with text wrapping
-  - ✅ Aligned treasure boxes (CP box bottom) with racial abilities box bottom (both at y=706)
-  - ✅ Split equipment section into Equipment and Class Abilities sections with proper gaps
-  - ✅ Added 5pt gaps between equipment box, class abilities header, and class abilities box
-  - ✅ Repositioned Starting AC and Starting Gold to bottom of Class Abilities box
+Valid Advanced Mode combinations (for reference):
+
+| Class | Human | Dwarf | Elf | Halfling | Gnome |
+|-------|-------|-------|-----|----------|-------|
+| **Cleric** | ✓ | ✓ | ✗ | ✗ | ✓ |
+| **Fighter** | ✓ | ✓ | ✓ | ✓ | ✓ |
+| **Magic-User** | ✓ | ✗ | ✓ | ✗ | ✗ |
+| **Thief** | ✓ | ✗ | ✗ | ✓ | ✓ |
+| **Spellblade** | ✓ | ✗ | ✓ | ✗ | ✗ |
+
+---
+
+## Reference: PDF Workflow (Implemented — Option 4)
+
+The PDF workflow is fully implemented via "Open in New Tab" → browser Print / Save as PDF:
+- ✅ `@media print` CSS in new-tab template (hides controls bar, sets `@page` letter size)
+- ✅ "🖨 Print / Save as PDF" button + "✕ Close" button in controls bar
+- ✅ Tip text: "In the print dialog, choose Save as PDF and set margins to None or Minimum"
+
+If higher-fidelity silent-download PDF is ever needed, the next option to try is `jsPDF.html()` (already available — just call `doc.html(container, { callback })`). No new library needed.
+
+---
+
+## Reference: File Organization
+
+See `README.md` for the complete module/file structure table.
+
+**Quick summary:**
+- `shared-*.js` — shared ES6 modules (ability scores, character creation, class data, sheet renderer)
+- `class-data-{ose,gygar,ll}.js` — mode-specific class progression data
+- `{0level,basic,advanced}-{ui,character-gen,utils}.js` — generator-specific files
+- `PLANS_COMPLETED/` — completed planning documents (for historical reference)
+- `CLASS_MARKDOWN/` — static class documentation (GYGAR_*.md)

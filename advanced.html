@@ -602,6 +602,12 @@
                     <span><strong>Open character in new tab</strong> (unchecked = display on this page)</span>
                 </label>
             </div>
+            <div class="checkbox-option" style="margin-left: 24px;">
+                <label>
+                    <input type="checkbox" id="autoPrintInNewTab">
+                    <span>Auto-open print dialog when tab opens</span>
+                </label>
+            </div>
             <button class="generate-button" id="generateButton" disabled>Generate Character</button>
         </div>
     </div>
@@ -614,10 +620,6 @@
         </div>
     </div>
 
-    <!-- Load racial abilities globally (not as ES6 module) -->
-    <!-- Note: racial-abilities.js is self-contained; shared-race-names.js is now an ES6 module -->
-    <script src="racial-abilities.js"></script>
-    
     <script type="module">
         import { initialize } from './advanced-ui.js';
         // Module will auto-initialize

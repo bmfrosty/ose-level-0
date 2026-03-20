@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OSE Class Reference</title>
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <title>OSE Class Reference — Smoothified Progressions</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            max-width: 800px;
+            max-width: 860px;
             margin: 0 auto;
             padding: 20px;
             font-size: 11px;
+            line-height: 1.5;
         }
         nav {
             background-color: #f0f0f0;
@@ -22,124 +22,100 @@
             justify-content: space-between;
             align-items: center;
         }
-        nav .nav-left {
-            display: flex;
-            gap: 20px;
-        }
-        nav a {
-            text-decoration: none;
-            color: #333;
-            font-weight: bold;
-        }
-        nav a:hover {
-            color: #4CAF50;
-        }
-        nav a.active {
-            color: #4CAF50;
-            text-decoration: underline;
-        }
-        .class-selector {
-            background-color: #f8f9fa;
-            padding: 20px;
+        nav .nav-left { display: flex; gap: 20px; }
+        nav a { text-decoration: none; color: #333; font-weight: bold; }
+        nav a:hover { color: #4CAF50; }
+        nav a.active { color: #4CAF50; text-decoration: underline; }
+
+        h1 { color: #333; margin-bottom: 6px; }
+        .subtitle { color: #666; margin-bottom: 20px; font-size: 12px; }
+
+        .intro-box {
+            background: #f3e5f5;
+            border-left: 4px solid #9C27B0;
+            padding: 14px 18px;
+            border-radius: 3px;
             margin-bottom: 20px;
-            border-radius: 5px;
         }
-        .class-selector h3 {
-            margin-top: 0;
-        }
+        .intro-box p { margin: 4px 0; }
+
+        /* Class selector buttons */
         .class-buttons {
             display: flex;
             flex-wrap: wrap;
-            gap: 10px;
-            margin-top: 10px;
+            gap: 8px;
+            margin-bottom: 20px;
         }
-        .class-buttons button {
-            padding: 10px 15px;
-            background-color: #2196F3;
-            color: white;
-            border: none;
-            border-radius: 3px;
-            cursor: pointer;
-        }
-        .class-buttons button:hover {
-            background-color: #0b7dda;
-        }
-        .class-buttons button.active {
-            background-color: #4CAF50;
-        }
-        .class-buttons button.gygar {
+        .class-btn {
+            padding: 8px 14px;
             background-color: #9C27B0;
+            color: white;
+            border: 2px solid transparent;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+            transition: background-color 0.15s;
         }
-        .class-buttons button.gygar:hover {
-            background-color: #7B1FA2;
+        .class-btn:hover { background-color: #7B1FA2; }
+        .class-btn.active {
+            background-color: #4a148c;
+            border-color: #ce93d8;
         }
-        .class-buttons button.gygar.active {
-            background-color: #6a1b9a;
-        }
-        .class-buttons button.comparison {
-            background-color: #FF9800;
-        }
-        .class-buttons button.comparison:hover {
-            background-color: #F57C00;
-        }
-        #markdown-content {
-            background-color: white;
-            padding: 30px;
+
+        /* Progression table */
+        #class-display {
+            background: white;
             border: 1px solid #ddd;
             border-radius: 5px;
-            line-height: 1.6;
+            padding: 20px;
         }
-        #markdown-content table {
+        #class-display h2 {
+            margin-top: 0;
+            color: #4a148c;
+            border-bottom: 2px solid #9C27B0;
+            padding-bottom: 6px;
+        }
+        .table-note {
+            color: #666;
+            font-style: italic;
+            margin: 6px 0 12px;
+        }
+        table {
             border-collapse: collapse;
             width: 100%;
-            margin: 20px 0;
         }
-        #markdown-content th, #markdown-content td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
+        th, td {
+            border: 1px solid #ccc;
+            padding: 5px 8px;
+            text-align: center;
         }
-        #markdown-content th {
-            background-color: #f2f2f2;
+        th {
+            background-color: #6a1b9a;
+            color: white;
             font-weight: bold;
+            white-space: nowrap;
         }
-        #markdown-content h1 {
-            color: #333;
-            border-bottom: 2px solid #4CAF50;
-            padding-bottom: 10px;
-        }
-        #markdown-content h2 {
-            color: #555;
-            margin-top: 30px;
-            border-bottom: 1px solid #ddd;
-            padding-bottom: 5px;
-        }
-        #markdown-content h3 {
-            color: #666;
-            margin-top: 20px;
-        }
-        #markdown-content code {
-            background-color: #f4f4f4;
-            padding: 2px 6px;
+        tr:nth-child(even) { background-color: #faf0ff; }
+        tr:hover { background-color: #f3e5f5; }
+        td:first-child { font-weight: bold; }
+        td.tohit { font-weight: bold; color: #1a237e; }
+
+        /* Spellblade / special notes */
+        .class-note {
+            background: #e8f5e9;
+            border-left: 4px solid #4CAF50;
+            padding: 12px 16px;
             border-radius: 3px;
+            margin-bottom: 14px;
         }
-        #markdown-content pre {
-            background-color: #f4f4f4;
-            padding: 15px;
-            border-radius: 5px;
-            overflow-x: auto;
-        }
-        .error {
-            background-color: #ffebee;
-            border: 2px solid #f44336;
-            padding: 20px;
-            border-radius: 5px;
-            color: #c62828;
-        }
-        .loading {
+        .class-note strong { display: block; margin-bottom: 4px; color: #2e7d32; }
+
+        .placeholder {
+            color: #999;
             text-align: center;
             padding: 40px;
-            color: #666;
+            font-size: 13px;
         }
     </style>
 </head>
@@ -155,82 +131,151 @@
     </nav>
 
     <h1>OSE Class Reference</h1>
+    <p class="subtitle">Smoothified (Gygar) progressions — to-hit bonus and saving throws for all classes, levels 1–14</p>
 
-    <div class="class-selector">
-        <h3>📚 OSE Standard Classes</h3>
-        <p>For official OSE class documentation, please visit the <a href="https://oldschoolessentials.necroticgnome.com/srd/index.php/Main_Page" target="_blank" style="color: #2196F3; font-weight: bold;">Old-School Essentials SRD</a>.</p>
+    <div class="intro-box">
+        <p><strong>Smoothified Mode</strong> uses gradual attack bonus and saving throw progressions instead of the original OSE big jumps. All classes advance every 1–2 levels. Demihuman level limits are removed — all classes reach level 14.</p>
+        <p>For official OSE Standard progressions, see the <a href="https://oldschoolessentials.necroticgnome.com/srd/index.php/Main_Page" target="_blank" style="color:#6a1b9a;font-weight:bold;">OSE SRD</a>.</p>
     </div>
 
-    <div class="class-selector">
-        <h3>🏰 Smoothified Mode Classes:</h3>
-        <div class="class-buttons">
-            <button class="gygar" onclick="loadClass('GYGAR_CLERIC')">Cleric</button>
-            <button class="gygar" onclick="loadClass('GYGAR_DWARF')">Dwarf</button>
-            <button class="gygar" onclick="loadClass('GYGAR_ELF')">Elf</button>
-            <button class="gygar" onclick="loadClass('GYGAR_FIGHTER')">Fighter</button>
-            <button class="gygar" onclick="loadClass('GYGAR_HALFLING')">Halfling</button>
-            <button class="gygar" onclick="loadClass('GYGAR_MAGIC_USER')">Magic-User</button>
-            <button class="gygar" onclick="loadClass('GYGAR_SPELLBLADE')">Spellblade</button>
-            <button class="gygar" onclick="loadClass('GYGAR_THIEF')">Thief</button>
-        </div>
+    <div class="class-buttons" id="class-buttons">
+        <!-- populated by JS -->
     </div>
 
-    <div id="markdown-content">
-        <div class="loading">
-            <p>Select a class above to view its documentation.</p>
-            <p>Or use the URL parameter: <code>?class=OSE_FIGHTER</code> or <code>?compare=OSE_VS_GYGAR</code></p>
-        </div>
+    <div id="class-display">
+        <div class="placeholder">Select a class above to view its progression table.</div>
     </div>
 
-    <script>
-        // Get URL parameters
-        const urlParams = new URLSearchParams(window.location.search);
-        const classParam = urlParams.get('class');
-        const compareParam = urlParams.get('compare');
+    <script type="module">
+        import {
+            ATTACK_BONUS_PROGRESSIONS,
+            ATTACK_BONUS_SCALE,
+            SAVING_THROWS
+        } from './class-data-gygar.js';
 
-        // Load class on page load if specified in URL
-        if (classParam) {
-            loadClass(classParam);
-        } else if (compareParam) {
-            loadClass(compareParam);
+        import {
+            XP_REQUIREMENTS,
+            HIT_DICE_SCALE,
+            HIT_DICE_PROGRESSIONS
+        } from './class-data-shared.js';
+
+        const CLASSES = [
+            { key: "Cleric_CLASS",      name: "Cleric" },
+            { key: "Dwarf_CLASS",       name: "Dwarf" },
+            { key: "Elf_CLASS",         name: "Elf" },
+            { key: "Fighter_CLASS",     name: "Fighter" },
+            { key: "Halfling_CLASS",    name: "Halfling" },
+            { key: "Magic-User_CLASS",  name: "Magic-User" },
+            { key: "Spellblade_CLASS",  name: "Spellblade" },
+            { key: "Thief_CLASS",       name: "Thief" },
+        ];
+
+        // Extra per-class notes shown at the top of the table
+        const CLASS_NOTES = {
+            "Spellblade_CLASS": {
+                text: `The <strong>Spellblade</strong> is the Basic Mode Elf class with the elf racial features stripped out
+                (no infravision, no detect secret doors, no ghoul paralysis immunity, no elvish languages).
+                This allows the Spellblade progression — fighter-speed attack bonus combined with arcane spell slots —
+                to be used with <em>any</em> race in Advanced Mode. A Human or Elf Spellblade has the same
+                combat + magic progression; the elf's inherent racial abilities come from the Elf race selection,
+                not the class.`
+            },
+            "Elf_CLASS": {
+                text: `In Smoothified Mode, the <strong>Basic Elf</strong> class uses the same progression tables as the Spellblade.
+                The difference is that the Basic Elf is a race-as-class and includes all elf racial abilities (infravision 60',
+                detect secret doors, immunity to ghoul paralysis, elvish languages). See Spellblade for the "class only" version
+                used in Advanced Mode.`
+            },
+        };
+
+        function fmt(n) { return n >= 0 ? `+${n}` : `${n}`; }
+
+        function buildTable(classKey) {
+            const saves   = SAVING_THROWS[classKey];
+            const scale   = ATTACK_BONUS_SCALE[classKey];
+            const attacks = ATTACK_BONUS_PROGRESSIONS[scale];
+            const xpReqs  = XP_REQUIREMENTS[classKey];
+            const hd      = HIT_DICE_PROGRESSIONS[HIT_DICE_SCALE[classKey]];
+            const maxLvl  = xpReqs ? xpReqs.length : 14;
+
+            let rows = '';
+            for (let lvl = 1; lvl <= maxLvl; lvl++) {
+                const i = lvl - 1;
+                rows += `<tr>
+                    <td>${lvl}</td>
+                    <td>${hd[i]}</td>
+                    <td>${xpReqs[i].toLocaleString()}</td>
+                    <td class="tohit">${fmt(attacks[i])}</td>
+                    <td>${saves.death[i]}</td>
+                    <td>${saves.wands[i]}</td>
+                    <td>${saves.paralysis[i]}</td>
+                    <td>${saves.breath[i]}</td>
+                    <td>${saves.spells[i]}</td>
+                </tr>`;
+            }
+
+            return `<table>
+                <thead>
+                    <tr>
+                        <th>Lvl</th>
+                        <th>HD</th>
+                        <th>XP Required</th>
+                        <th>To-Hit</th>
+                        <th title="Death / Poison">Death</th>
+                        <th title="Wands / Rods / Staves">Wands</th>
+                        <th title="Paralysis / Petrify">Para.</th>
+                        <th title="Breath Attacks">Breath</th>
+                        <th title="Spells / Rods / Staves">Spells</th>
+                    </tr>
+                </thead>
+                <tbody>${rows}</tbody>
+            </table>`;
         }
 
-        async function loadClass(className) {
-            const contentDiv = document.getElementById('markdown-content');
-            contentDiv.innerHTML = '<div class="loading">Loading...</div>';
+        function showClass(classKey) {
+            const cls = CLASSES.find(c => c.key === classKey);
+            if (!cls) return;
 
             // Update active button
-            document.querySelectorAll('.class-buttons button').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            event?.target?.classList.add('active');
+            document.querySelectorAll('.class-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('btn-' + classKey).classList.add('active');
 
-            try {
-                const response = await fetch(`CLASS_MARKDOWN/${className}.md`);
-                if (!response.ok) {
-                    throw new Error(`Failed to load CLASS_MARKDOWN/${className}.md (${response.status})`);
-                }
-                
-                const markdown = await response.text();
-                const html = marked.parse(markdown);
-                contentDiv.innerHTML = html;
+            const note = CLASS_NOTES[classKey];
+            const noteHtml = note
+                ? `<div class="class-note"><strong>ℹ Note</strong>${note.text}</div>`
+                : '';
 
-                // Update URL without reloading page
-                const newUrl = new URL(window.location);
-                newUrl.searchParams.set('class', className);
-                window.history.pushState({}, '', newUrl);
+            document.getElementById('class-display').innerHTML = `
+                <h2>${cls.name} — Smoothified Progressions</h2>
+                ${noteHtml}
+                <p class="table-note">
+                    Saving throws: <em>lower is better</em> (roll ≥ target to succeed).
+                    To-hit bonus: <em>higher is better</em> (ascending AC system).
+                </p>
+                ${buildTable(classKey)}
+            `;
 
-            } catch (error) {
-                contentDiv.innerHTML = `
-                    <div class="error">
-                        <h2>Error Loading Class</h2>
-                        <p><strong>File:</strong> ${className}.md</p>
-                        <p><strong>Error:</strong> ${error.message}</p>
-                        <p>Make sure the markdown file exists in the same directory as this HTML file.</p>
-                    </div>
-                `;
-            }
+            // Update URL without reload
+            const url = new URL(window.location);
+            url.searchParams.set('class', classKey);
+            window.history.replaceState({}, '', url);
         }
+
+        // Build buttons
+        const btnContainer = document.getElementById('class-buttons');
+        CLASSES.forEach(cls => {
+            const btn = document.createElement('button');
+            btn.className = 'class-btn';
+            btn.id = 'btn-' + cls.key;
+            btn.textContent = cls.name;
+            btn.addEventListener('click', () => showClass(cls.key));
+            btnContainer.appendChild(btn);
+        });
+
+        // Load from URL param or default to Fighter
+        const urlParam = new URLSearchParams(window.location.search).get('class');
+        const initial = CLASSES.find(c => c.key === urlParam) ? urlParam : 'Fighter_CLASS';
+        showClass(initial);
     </script>
 </body>
 </html>

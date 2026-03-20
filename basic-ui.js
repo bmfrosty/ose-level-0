@@ -30,6 +30,7 @@ import {
 import { getRandomName } from './shared-names.js';
 import { getRandomBackground } from './shared-backgrounds.js';
 import { getModifierEffects } from './shared-modifier-effects.js';
+import { displayCharacterSheet } from './shared-character-sheet.js';
 
 // Make modules available globally for debugging
 window.ClassDataOSE = ClassDataOSE;
@@ -435,11 +436,16 @@ export function generateCharacter() {
         handleRollAbilities();
     }
     
-    // Read character name AFTER rolling abilities (so it doesn't get cleared)
-    characterName = document.getElementById('characterName').value.trim();
-    
-    // If no name provided, generate one
-    if (!characterName) {
+    // Name handling: if using fixed scores, respect what's in the field;
+    // otherwise always generate a new random name each time
+    if (useFixedScores) {
+        characterName = document.getElementById('characterName').value.trim();
+        if (!characterName) {
+            const race = getRaceForNameGeneration(selectedClass);
+            characterName = getRandomName(race);
+            document.getElementById('characterName').value = characterName;
+        }
+    } else {
         const race = getRaceForNameGeneration(selectedClass);
         characterName = getRandomName(race);
         document.getElementById('characterName').value = characterName;
@@ -506,163 +512,80 @@ export function generateCharacter() {
 }
 
 /**
- * Display character in HTML
+ * Display character using the shared character sheet module
  * @param {Object} character - Character object
  */
 function displayCharacter(character) {
-    const characterInfo = document.getElementById('characterInfo');
-    const characterDisplay = document.getElementById('characterDisplay');
-    
-    // Remove _CLASS suffix from class name for display
     const displayClass = character.class.replace('_CLASS', '');
-    
-    const html = `
-        <h3>${character.name || 'Unnamed Character'}</h3>
-        <p><strong>Level ${character.level} ${displayClass}</strong> (${character.mode} Mode)</p>
-        
-        ${character.background ? `
-            <h4>Background</h4>
-            <p>
-                <strong>Profession:</strong> ${character.background.profession}<br>
-                <strong>Starting Item(s):</strong> ${Array.isArray(character.background.item) ? character.background.item.join(', ') : character.background.item}<br>
-                <strong>Weapon:</strong> ${character.background.weapon}<br>
-                <strong>Armor:</strong> ${character.background.armor}
-            </p>
-        ` : ''}
-        
-        <h4>Ability Scores</h4>
-        <table style="width: 100%; border-collapse: collapse; margin-bottom: 12px;">
-            <tr style="background-color: #f0f0f0;">
-                <th style="border: 1px solid #000; padding: 5px; text-align: center;">Ability</th>
-                <th style="border: 1px solid #000; padding: 5px; text-align: center;">Score</th>
-                <th style="border: 1px solid #000; padding: 5px; text-align: left;">Effects</th>
-            </tr>
-            ${['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'].map(ability => `
-            <tr>
-                <td style="border: 1px solid #000; padding: 5px; text-align: center;"><strong>${ability}</strong></td>
-                <td style="border: 1px solid #000; padding: 5px; text-align: center;">${character.abilityScores[ability]}</td>
-                <td style="border: 1px solid #000; padding: 5px;">${getModifierEffects(ability, character.abilityModifiers[ability], character.abilityScores[ability])}</td>
-            </tr>
-            `).join('')}
-        </table>
-        
-        <h4>Combat Stats</h4>
-        <p>
-            <strong>HP:</strong> ${character.hp.current}/${character.hp.max} &nbsp;
-            <strong>AC:</strong> ${character.armorClass} &nbsp;
-            <strong>Attack Bonus:</strong> ${character.attackBonus >= 0 ? '+' : ''}${character.attackBonus}
-        </p>
-        
-        <h4>Saving Throws</h4>
-        <p>
-            <strong>Death/Poison:</strong> ${character.savingThrows.death} &nbsp;
-            <strong>Wands:</strong> ${character.savingThrows.wands} &nbsp;
-            <strong>Paralysis/Petrify:</strong> ${character.savingThrows.paralysis} &nbsp;
-            <strong>Breath:</strong> ${character.savingThrows.breath} &nbsp;
-            <strong>Spells:</strong> ${character.savingThrows.spells}
-        </p>
-        
-        <h4>Experience</h4>
-        <p>
-            <strong>Current XP:</strong> ${character.xp.current} &nbsp;
-            <strong>XP for Level ${character.level}:</strong> ${character.xp.forCurrentLevel} &nbsp;
-            ${character.xp.forNextLevel ? `<strong>XP for Level ${character.level + 1}:</strong> ${character.xp.forNextLevel} &nbsp;` : '<strong>Maximum level reached!</strong> &nbsp;'}
-            <strong>XP Bonus:</strong> ${character.xp.bonus >= 0 ? '+' : ''}${character.xp.bonus}%
-        </p>
-        
-        ${character.spellSlots ? `
-            <h4>Spell Slots</h4>
-            <p>${Object.entries(character.spellSlots).filter(([_, slots]) => slots > 0).map(([level, slots]) => `<strong>Level ${level}:</strong> ${slots}`).join(' &nbsp; ')}</p>
-        ` : ''}
-        
-        ${character.thiefSkills ? `
-            <h4>Thief Skills</h4>
-            <p>${Object.entries(character.thiefSkills).map(([skill, value]) => {
-                // Convert camelCase to Title Case with spaces
-                const displayName = skill.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
-                return `<strong>${displayName}:</strong> ${value}%`;
-            }).join(' &nbsp; ')}</p>
-        ` : ''}
-        
-        ${character.turnUndead ? `
-            <h4>Turn Undead</h4>
-            <p>${Object.entries(character.turnUndead).map(([type, target]) => {
-                // HD to monster name mapping
-                const monsterNames = {
-                    '1HD': 'Skeleton',
-                    '2HD': 'Zombie',
-                    '2*HD': 'Ghoul',
-                    '3HD': 'Wight',
-                    '4HD': 'Wraith',
-                    '5HD': 'Mummy',
-                    '6HD': 'Spectre',
-                    '7-9HD': 'Vampire'
-                };
-                
-                // Use monster name if checkbox is checked, otherwise use HD
-                const displayType = showUndeadNames ? monsterNames[type] || type : type;
-                
-                // Display target value, handling null/undefined
-                const displayTarget = target !== null && target !== undefined ? target : '-';
-                return `<strong>${displayType}:</strong> ${displayTarget}`;
-            }).join(' &nbsp; ')}</p>
-        ` : ''}
-        
-        ${character.classAbilities && character.classAbilities.length > 0 ? `
-            <h4>Class Abilities</h4>
-            <ul>
-                ${character.classAbilities.map(ability => `<li><strong>${ability.name}:</strong> ${ability.description}</li>`).join('')}
-            </ul>
-        ` : ''}
-        
-        ${character.racialAbilities && character.racialAbilities.length > 0 ? `
-            <h4>Racial Abilities</h4>
-            <ul>
-                ${character.racialAbilities.map(ability => `<li>${ability}</li>`).join('')}
-            </ul>
-        ` : ''}
-        
-        <p style="margin-top: 20px;"><em>Check the browser console for detailed generation log.</em></p>
-    `;
-    
-    // Check if we should open in new tab
-    const openInNewTabCheckbox = document.getElementById('openInNewTab');
-    const openInNewTab = openInNewTabCheckbox ? openInNewTabCheckbox.checked : false;
-    
-    if (openInNewTab) {
-        // Open in new tab
-        const newWindow = window.open('', '_blank');
-        newWindow.document.write(`
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset="UTF-8">
-                <title>${character.name} - OSE Character</title>
-                <style>
-                    body {
-                        font-family: Arial, sans-serif;
-                        max-width: 800px;
-                        margin: 0 auto;
-                        padding: 20px;
-                    }
-                </style>
-            </head>
-            <body>
-                ${html}
-            </body>
-            </html>
-        `);
-        newWindow.document.close();
-        
-        // Clear the result div on main page
-        characterInfo.innerHTML = '<p style="text-align: center;">Character opened in new tab.</p>';
-        characterDisplay.classList.add('visible');
-    } else {
-        // Display in current page
-        characterInfo.innerHTML = html;
-        characterDisplay.classList.add('visible');
-        characterDisplay.scrollIntoView({ behavior: 'smooth' });
-    }
+    const xpBonus = character.xp.bonus >= 0 ? `+${character.xp.bonus}%` : `${character.xp.bonus}%`;
+    const items = character.background
+        ? (Array.isArray(character.background.item) ? character.background.item : [character.background.item])
+        : [];
+    const hasRacial = character.racialAbilities && character.racialAbilities.length > 0;
+    const hasClass = character.classAbilities && character.classAbilities.length > 0;
+    const sanitize = (str) => (str || '').replace(/[/\\?%*:|"<>]/g, '-').trim();
+
+    const sheet = {
+        title: 'OLD-SCHOOL ESSENTIALS',
+        subtitle: `RETRO ADVENTURE GAME &nbsp;·&nbsp; ${character.mode} Mode`,
+        header: {
+            columns: [
+                { label: 'Character Name', value: character.name || 'Unknown', flex: 3 },
+                { label: 'Class', value: displayClass, flex: 2 },
+                { label: 'Level', value: character.level, flex: 1, center: true },
+                { label: 'XP Bonus', value: xpBonus, flex: 1, center: true }
+            ]
+        },
+        combat: {
+            maxHP: character.hp.max,
+            initMod: character.abilityModifiers.DEX
+        },
+        abilityScores: ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'].map(a => ({
+            name: a,
+            score: character.abilityScores[a],
+            originalScore: null,
+            effects: getModifierEffects(a, character.abilityModifiers[a], character.abilityScores[a])
+        })),
+        weaponsAndSkills: {
+            weapon: character.background?.weapon || null,
+            classAttackBonus: character.attackBonus,
+            meleeMod: character.abilityModifiers.STR,
+            rangedMod: character.abilityModifiers.DEX,
+            thiefSkills: character.thiefSkills || null
+        },
+        abilitiesSection: {
+            header: (hasRacial && hasClass) ? 'RACIAL & CLASS ABILITIES' : hasRacial ? 'RACIAL ABILITIES' : 'CLASS ABILITIES',
+            racial: character.racialAbilities || [],
+            class: character.classAbilities || []
+        },
+        savingThrows: character.savingThrows,
+        experience: {
+            current: character.xp.current,
+            forLevel: character.level,
+            forLevelXP: character.xp.forCurrentLevel,
+            forNext: character.xp.forNextLevel,
+            bonus: xpBonus
+        },
+        equipment: {
+            armor: character.background?.armor || null,
+            items: items,
+            startingAC: character.armorClass,
+            startingGold: null
+        },
+        spellSlots: character.spellSlots || null,
+        turnUndead: character.turnUndead || null,
+        showUndeadNames: showUndeadNames,
+        footer: `Level ${character.level} ${displayClass} &nbsp;·&nbsp; ${character.mode} Mode`,
+        printTitle: `OSE Basic - ${sanitize(displayClass)} - Level ${character.level} - ${sanitize(character.background?.profession || '')} - ${sanitize(character.name)}`,
+        openInNewTab: document.getElementById('openInNewTab')?.checked || false,
+        autoPrint: document.getElementById('autoPrintInNewTab')?.checked || false
+    };
+
+    displayCharacterSheet(
+        sheet,
+        document.getElementById('characterInfo'),
+        document.getElementById('characterDisplay')
+    );
 }
 
 /**

@@ -126,6 +126,35 @@
             border-color: #4CAF50;
         }
         
+        /* Help tooltip */
+        .help-tip {
+            position: relative;
+            display: inline-block;
+            cursor: help;
+            margin-left: 4px;
+            font-size: 0.95em;
+            vertical-align: middle;
+        }
+        .help-tip .tooltip-text {
+            display: none;
+            position: absolute;
+            left: 0;
+            top: 120%;
+            background: #333;
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 11px;
+            line-height: 1.6;
+            white-space: nowrap;
+            z-index: 1000;
+            min-width: 320px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+        }
+        .help-tip:hover .tooltip-text {
+            display: block;
+        }
+        
         /* Character Sheet Display */
         #result {
             font-size: 1em;
@@ -190,8 +219,16 @@
         <label for="gygar">
             <input type="checkbox" id="gygar" checked> Smoothified Mode (Attack bonus 0 instead of -1)
         </label>
-        <label for="openInNewTab">
+        <label for="openInNewTab" style="display: inline;">
             <input type="checkbox" id="openInNewTab"> Open character display in new tab
+        </label><span class="help-tip">ℹ️<span class="tooltip-text">The new tab will include a 🖨 Print / Save as PDF button.<br>
+To stop the browser from switching to the new tab automatically:<br>
+• <strong>Firefox:</strong> Settings → General → Tabs → uncheck "switch to it immediately"<br>
+• <strong>Chrome:</strong> No built-in setting. Try Ctrl+Click (Win) or Cmd+Click (Mac) on buttons.<br>
+• <strong>Chrome extension:</strong> Search for "open tabs in background" in the Chrome Web Store.<br>
+• <strong>Alternative:</strong> Use the Print buttons below after generating (no new tab needed).</span></span>
+        <label for="autoPrintInNewTab" style="margin-left: 24px; display: inline;">
+            <input type="checkbox" id="autoPrintInNewTab"> Auto-open print dialog when tab opens
         </label>
         <label for="openFileInsteadOfSave">
             <input type="checkbox" id="openFileInsteadOfSave"> Open file instead of saving (PNG/PDF/MD/JSON - best effort)
@@ -218,34 +255,7 @@
             <button onclick="setRaceAndGenerate('Gnome')">Gnome</button>
             <button onclick="setRaceAndGenerate('Halfling')">Halfling</button>
             
-            <!-- Row 2: Generate PNG -->
-            <button onclick="setRaceAndGeneratePNG('')" style="background-color: #FF9800;">Random PNG</button>
-            <button onclick="setRaceAndGeneratePNG('Demihuman')" style="background-color: #FF9800;">Demihuman PNG</button>
-            <button onclick="setRaceAndGeneratePNG('Human')" style="background-color: #FF9800;">Human PNG</button>
-            <button onclick="setRaceAndGeneratePNG('Dwarf')" style="background-color: #FF9800;">Dwarf PNG</button>
-            <button onclick="setRaceAndGeneratePNG('Elf')" style="background-color: #FF9800;">Elf PNG</button>
-            <button onclick="setRaceAndGeneratePNG('Gnome')" style="background-color: #FF9800;">Gnome PNG</button>
-            <button onclick="setRaceAndGeneratePNG('Halfling')" style="background-color: #FF9800;">Halfling PNG</button>
-            
-            <!-- Row 3: Generate PDF -->
-            <button onclick="setRaceAndGeneratePDF('')" style="background-color: #9C27B0;">Random PDF</button>
-            <button onclick="setRaceAndGeneratePDF('Demihuman')" style="background-color: #9C27B0;">Demihuman PDF</button>
-            <button onclick="setRaceAndGeneratePDF('Human')" style="background-color: #9C27B0;">Human PDF</button>
-            <button onclick="setRaceAndGeneratePDF('Dwarf')" style="background-color: #9C27B0;">Dwarf PDF</button>
-            <button onclick="setRaceAndGeneratePDF('Elf')" style="background-color: #9C27B0;">Elf PDF</button>
-            <button onclick="setRaceAndGeneratePDF('Gnome')" style="background-color: #9C27B0;">Gnome PDF</button>
-            <button onclick="setRaceAndGeneratePDF('Halfling')" style="background-color: #9C27B0;">Halfling PDF</button>
-            
-            <!-- Row 4: Generate 4 Character PDF -->
-            <button onclick="setRaceAndGenerateBulkPDF('')" style="background-color: #E91E63;">Random 4-PDF</button>
-            <button onclick="setRaceAndGenerateBulkPDF('Demihuman')" style="background-color: #E91E63;">Demihuman 4-PDF</button>
-            <button onclick="setRaceAndGenerateBulkPDF('Human')" style="background-color: #E91E63;">Human 4-PDF</button>
-            <button onclick="setRaceAndGenerateBulkPDF('Dwarf')" style="background-color: #E91E63;">Dwarf 4-PDF</button>
-            <button onclick="setRaceAndGenerateBulkPDF('Elf')" style="background-color: #E91E63;">Elf 4-PDF</button>
-            <button onclick="setRaceAndGenerateBulkPDF('Gnome')" style="background-color: #E91E63;">Gnome 4-PDF</button>
-            <button onclick="setRaceAndGenerateBulkPDF('Halfling')" style="background-color: #E91E63;">Halfling 4-PDF</button>
-            
-            <!-- Row 5: Generate Markdown -->
+            <!-- Row 2: Generate Markdown (PDF via Open in New Tab → Print) -->
             <button onclick="setRaceAndGenerateMarkdown('')" style="background-color: #607D8B;">Random MD</button>
             <button onclick="setRaceAndGenerateMarkdown('Demihuman')" style="background-color: #607D8B;">Demihuman MD</button>
             <button onclick="setRaceAndGenerateMarkdown('Human')" style="background-color: #607D8B;">Human MD</button>
@@ -296,24 +306,6 @@
             document.getElementById('forceRace').value = race === 'Demihuman' ? '' : race;
             document.getElementById('forceDemihuman').checked = race === 'Demihuman';
             generate0LevelCharacter();
-        }
-        
-        function setRaceAndGeneratePNG(race) {
-            document.getElementById('forceRace').value = race === 'Demihuman' ? '' : race;
-            document.getElementById('forceDemihuman').checked = race === 'Demihuman';
-            generateCanvasPNG();
-        }
-        
-        function setRaceAndGeneratePDF(race) {
-            document.getElementById('forceRace').value = race === 'Demihuman' ? '' : race;
-            document.getElementById('forceDemihuman').checked = race === 'Demihuman';
-            generateCanvasPDF();
-        }
-        
-        function setRaceAndGenerateBulkPDF(race) {
-            document.getElementById('forceRace').value = race === 'Demihuman' ? '' : race;
-            document.getElementById('forceDemihuman').checked = race === 'Demihuman';
-            generateCanvasBulkPDF();
         }
         
         function setRaceAndGenerateJSON(race) {

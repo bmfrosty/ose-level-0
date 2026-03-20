@@ -1,303 +1,196 @@
-# OSE 0-Level Character Generator
+# OSE Character Generators
 
-A web-based and command-line tool for generating Old-School Essentials (OSE) 0-level characters with support for Advanced Mode, Smoothified Mode, and dynamic saving throws/attack bonuses.
-
-## Features
-
-### Core Features
-- **Random Character Generation:** Generate 0-level characters with random ability scores, backgrounds, and equipment
-- **Multiple Output Formats:** Web display, PDF, PNG, Markdown, and JSON
-- **Race Support:** Human, Dwarf, Elf, Gnome, Halfling
-- **Background System:** 100 unique 0-level professions with appropriate equipment
-- **Advanced Mode:** Race-based ability adjustments and racial abilities (OSE Advanced Fantasy)
-- **Smoothified Mode:** Alternative attack bonus progression (from "The Ruins of Castle Gygar" module)
-
-### Advanced Features (NEW!)
-- **Dynamic Saving Throws:** Saving throws calculated based on race and abilities
-- **Dwarf Resilience:** Dwarves in Advanced Mode get CON-based bonuses to Death/Wands/Spells saves
-  - CON 7-10: +2 bonus
-  - CON 11-14: +3 bonus
-  - CON 15-17: +4 bonus
-  - CON 18: +5 bonus
-- **Dynamic Attack Bonus:** Attack bonus varies by mode
-  - Smoothified Mode (default): +0 at level 0
-  - Normal Mode: -1 at level 0
-- **Character Object Fields:** All characters now include `level`, `attackBonus`, and `savingThrows` fields
-
-### Generation Options
-- **Ability Score Minimums:** Set minimum values for each ability score
-- **Tough Guys Mode:** Requires at least one prime requisite ≥13 and HP ≥2
-- **Force Race:** Generate specific race characters
-- **Force Demihuman:** Generate only demihuman characters
-- **Sheet Styles:** Classic or Underground character sheet layouts
+A collection of browser-based character generators for **Old-School Essentials (OSE)** campaigns. No installation required — just open in a browser.
 
 ## Quick Start
 
-### Web Interface
-1. Open `index.html` in a web browser
-2. Configure options (Advanced Mode, Smoothified Mode, minimums, etc.)
-3. Click "Generate Character" or use race-specific buttons
-4. Export as PDF, PNG, Markdown, or JSON
-
-### Command Line
 ```bash
-# Generate a single character PDF
-./generate-pdf.sh
-
-# Generate a Dwarf character
-./generate-pdf.sh --race Dwarf
-
-# Generate 4 characters
-./generate-pdf.sh -n 4
-
-# Generate with minimum stats
-./generate-pdf.sh --str-min 13 --dex-min 13 --tough-guys
-
-# Generate as PNG
-./generate-pdf.sh --race Elf --format png
-
-# Generate as Markdown to stdout
-./generate-pdf.sh --race Gnome --format md --stdout
-
-# Generate with Underground sheet style
-./generate-pdf.sh --race Halfling --style underground
+cd /path/to/ose-level-0
+python3 -m http.server 8000
 ```
 
-## Modes
+Then open <http://localhost:8000> in any browser. That's it — no Node.js, no build step, no dependencies.
 
-### Advanced Mode (Default: ON)
-- Enables race-based ability score adjustments
-- Enables racial abilities (including Dwarf Resilience)
-- Humans can optionally get racial abilities (checkbox)
-- Dwarves get CON-based saving throw bonuses
+> **Tip:** You can also open the `.html` files directly (`file://…`) without a server, but a local server is recommended so ES6 module imports work correctly in all browsers.
 
-### Smoothified Mode (Default: ON)
-- Named after "The Ruins of Castle Gygar" module
-- Changes attack bonus at level 0 from -1 to 0
-- Future: Will have different saving throw progressions at higher levels
-- Link: https://www.drivethrurpg.com/en/product/510225/the-ruins-of-castle-gygar
+---
 
-### Normal Mode
-- Disable Advanced Mode: No racial adjustments or abilities
-- Disable Smoothified Mode: Attack bonus -1 at level 0
+## Three Generators
 
-## Racial Abilities and Bonuses
+### 🎲 `0level.html` — Level 0 Character Generator
 
-All races have unique abilities and bonuses. In Advanced Mode, races also have ability score modifiers.
+Generates **ordinary people** before they become adventurers — for funnel-style play.
 
-### Ability Score Modifiers (Advanced Mode Only)
+- Random background / occupation (100 entries) with appropriate starting gear
+- 1d4 hit points
+- Races: Human, Dwarf, Elf, Gnome, Halfling
+- **Advanced checkbox** (see below) — enables racial ability score adjustments and racial abilities
+- Export to PNG, Markdown, or JSON; PDF via browser Print
 
-| Race | Modifiers | Requirements |
-|------|-----------|--------------|
-| **Human** | +1 CON, +1 CHA | None |
-| **Dwarf** | +1 CON, -1 CHA | CON 9+ |
-| **Elf** | +1 DEX, -1 CON | INT 9+ |
-| **Gnome** | None | CON 9+, INT 9+ |
-| **Halfling** | +1 DEX, -1 STR | CON 9+, DEX 9+ |
+### ⚔️ `basic.html` — Basic Mode Generator (Levels 1–14)
 
-**Note:** Ability score modifiers only apply when Advanced Mode is enabled. Requirements are enforced in Advanced Mode.
+Generates **race-as-class** characters — the traditional OSE approach where Dwarf, Elf, Halfling, and Gnome are classes rather than races.
 
-### Racial Abilities
+- Classes: Cleric, Fighter, Magic-User, Thief, Dwarf, Elf, Halfling, Gnome (+ Spellblade in Smoothified mode)
+- Full progression tables: saves, attack bonus, XP, hit dice, spell slots, thief skills
+- Three progression modes (see below)
+- Optional demihuman level limits (standard or extended to 14)
 
-#### Human (Optional - Advanced Mode Only)
-When Advanced Mode and Human Racial Abilities are both enabled:
-- **Blessed:** Roll HP twice, take best (including at 1st level)
-- **Decisiveness:** Act first on tied initiative (+1 to individual initiative)
-- **Leadership:** Retainers/mercenaries +1 loyalty and morale
+### 🛡️ `advanced.html` — Advanced Mode Generator (Levels 1–14)
 
-#### Dwarf
-- **Languages:** Alignment, Common, Dwarvish, Gnomish, Goblin, Kobold
-- **Weapon Restrictions:** Small/normal weapons only (no longbows or two-handed swords)
-- **Detect Construction Tricks:** 2-in-6 when searching
-- **Detect Room Traps:** 2-in-6 when searching
-- **Infravision:** 60'
-- **Listen at Doors:** 2-in-6
-- **Resilience:** CON-based bonus to Death/Wands/Spells saves (see table below)
+Generates characters with **separate race and class** — more flexible combinations.
 
-#### Elf
-- **Languages:** Alignment, Common, Elvish, Gnoll, Hobgoblin, Orcish
-- **Detect Secret Doors:** 2-in-6 when actively searching
-- **Infravision:** 60'
-- **Listen at Doors:** 2-in-6
-- **Immunity to Ghoul Paralysis**
+- Races: Human, Dwarf, Elf, Gnome, Halfling (with racial ability adjustments and minimums)
+- Classes: Cleric, Fighter, Magic-User, Thief, Spellblade
+- Full progression tables and racial abilities
+- Three progression modes (see below)
 
-#### Gnome
-- **Languages:** Alignment, Common, Dwarvish, Gnomish, Kobold, burrowing mammals
-- **Weapon Restrictions:** Small/normal weapons only (no longbows or two-handed swords)
-- **Detect Construction Tricks:** 2-in-6 when searching
-- **Infravision:** 90'
-- **Listen at Doors:** 2-in-6
-- **Defensive Bonus:** +2 AC vs large opponents (greater than human-sized)
-- **Magic Resistance:** CON-based bonus to Wands/Spells saves (see table below)
+### 📚 `classes.html` — Class Reference
 
-#### Halfling
-- **Languages:** Alignment, Common, Halfling
-- **Weapon Restrictions:** Small/normal weapons only (no longbows or two-handed swords)
-- **Listen at Doors:** 2-in-6
-- **Missile Attack Bonus:** +1 to all missile attack rolls
-- **Defensive Bonus:** +2 AC vs large opponents (greater than human-sized)
-- **Resilience:** CON-based bonus to Death/Wands/Spells saves (see table below)
+Browse complete class documentation, progression tables, and side-by-side comparisons for all modes.
 
-### Saving Throw Bonuses
+---
 
-Some races have natural resistances that provide bonuses to saving throws based on Constitution:
+## PDF Workflow
 
-#### Dwarf Resilience
-Applies to: **Death, Wands, Spells** (not Paralysis or Breath)
+1. Check the **"Open character display in new tab"** checkbox in any generator
+2. Generate a character — a new browser tab opens with the formatted sheet
+3. Use the browser's **Print / Save as PDF** function (Ctrl+P / Cmd+P)
 
-| CON Score | Bonus |
-|-----------|-------|
-| 6 or lower | +0 |
-| 7-10 | +2 |
-| 11-14 | +3 |
-| 15-17 | +4 |
-| 18 | +5 |
+That's the entire PDF workflow. No scripts or command-line tools needed.
 
-**Example:** A Dwarf with CON 12 has saves of D11 W12 P16 B17 S15 (instead of base D14 W15 P16 B17 S18).
+---
 
-#### Gnome Magic Resistance
-Applies to: **Wands, Spells** (not Death, Paralysis, or Breath)
+## Progression Modes
 
-| CON Score | Bonus |
-|-----------|-------|
-| 6 or lower | +0 |
-| 7-10 | +2 |
-| 11-14 | +3 |
-| 15-17 | +4 |
-| 18 | +5 |
+`basic.html` and `advanced.html` offer three selectable **Progression** modes that affect attack bonus, saving throws, and XP tables.
 
-**Example:** A Gnome with CON 15 has saves of D14 W11 P16 B17 S14 (instead of base D14 W15 P16 B17 S18).
+### OSE Standard
 
-#### Halfling Resilience
-Applies to: **Death, Wands, Spells** (not Paralysis or Breath)
+Official rules from *Old-School Essentials Advanced Fantasy*. Demihuman classes have level caps (Dwarf 12, Elf 10, Halfling 8, Gnome 8), and attack/save progressions follow the original irregular tables.
 
-| CON Score | Bonus |
-|-----------|-------|
-| 6 or lower | +0 |
-| 7-10 | +2 |
-| 11-14 | +3 |
-| 15-17 | +4 |
-| 18 | +5 |
+**Classes:** Cleric, Fighter, Magic-User, Thief, Dwarf, Elf, Halfling, Gnome
 
-**Example:** A Halfling with CON 9 has saves of D12 W13 P16 B17 S16 (instead of base D14 W15 P16 B17 S18).
+### Smoothified (Gygar)
 
-**Important Notes:**
-- Saving throw bonuses apply in **both** Basic and Advanced modes
-- Bonuses are based on CON score (not modifier)
-- Lower saving throw values are better (easier to roll)
-- See `SAVING_THROWS.md` for complete documentation
+House-ruled progressions from *The Ruins of Castle Gygar*. Attack bonuses and saving throws improve more gradually and consistently each level — no big jumps or plateaus. Demihuman level limits are removed (all classes go to 14).
 
-## Command Line Options
+Key differences from OSE Standard:
+- Attack bonus increments every 1–2 levels instead of every 3
+- Saving throws improve more frequently
+- **Elf** uses Spellblade progression tables (fighter/magic-user hybrid)
+- **Spellblade** is an additional selectable class (not present in OSE Standard or LL)
 
-```
-Usage: ./generate-pdf.sh [OPTIONS]
+**Classes:** Cleric, Fighter, Magic-User, Thief, Dwarf, Elf, Halfling, Gnome, **Spellblade**
 
-OPTIONS:
-    -n, --count NUM          Number of characters (1 or 4, default: 1)
-    -f, --format FORMAT      Output format: pdf, png, json, or md (default: pdf)
-    -o, --output FILE        Output filename (default: auto-generated)
-    
-    Ability Score Minimums:
-    --str-min NUM            Minimum STR score (3-18, default: 3)
-    --dex-min NUM            Minimum DEX score (3-18, default: 3)
-    --con-min NUM            Minimum CON score (3-18, default: 3)
-    --int-min NUM            Minimum INT score (3-18, default: 3)
-    --wis-min NUM            Minimum WIS score (3-18, default: 3)
-    --cha-min NUM            Minimum CHA score (3-18, default: 3)
-    
-    Character Options:
-    -t, --tough-guys         Enable Tough Guys mode
-    -d, --demihuman          Force demihuman characters only
-    -r, --race RACE          Force specific race (Human, Dwarf, Elf, Gnome, Halfling)
-    -s, --style STYLE        Sheet style: classic or underground (default: classic)
-    --not-advanced           Disable Advanced mode
-    --gygar                  Enable Smoothified Mode (default: ON)
-    --not-gygar              Disable Smoothified Mode
-    --stdout                 Output to stdout (json/md only)
-    --print-markdown         Print character data as markdown to stderr
-    
-    Other:
-    -h, --help               Show help message
-```
+See [OSE_VS_GYGAR.md](OSE_VS_GYGAR.md) and [ELF_VS_SPELLBLADE.md](ELF_VS_SPELLBLADE.md) for detailed comparisons.
 
-## Output Formats
+### Labyrinth Lord
 
-### PDF
-High-quality character sheets suitable for printing. Two styles available:
-- **Classic:** Clean, modern layout
-- **Underground:** OSE Advanced Adventure Compendium style
+Progressions from *Labyrinth Lord* (Goblinoid Games). Saving throw numbers differ from OSE Standard at some levels; attack progressions are largely the same. Same class set as OSE Standard (no Spellblade).
 
-### PNG
-Character sheets as image files (same styles as PDF)
+**Classes:** Cleric, Fighter, Magic-User, Thief, Dwarf, Elf, Halfling, Gnome
 
-### Markdown
-Plain text format with all character data in Markdown tables
+---
 
-### JSON
-Complete character data in JSON format, including:
-- `level`: Character level (always 0 for this generator)
-- `attackBonus`: Dynamic attack bonus based on mode
-- `savingThrows`: Object with Death, Wands, Paralysis, Breath, Spells values
-- All ability scores, background, equipment, etc.
+## Level 0 "Advanced" Checkbox
 
-## Development
+On `0level.html`, the **Advanced** checkbox controls whether racial adjustments apply:
 
-### Requirements
-- Node.js (for PDF/PNG generation)
-- npm packages: canvas, jspdf
+| Advanced OFF | Advanced ON |
+|---|---|
+| No ability score adjustments | Racial ±1 adjustments applied (e.g. Elf +1 DEX / −1 CON) |
+| No racial ability requirements | Minimum ability score requirements enforced |
+| No racial special abilities listed | Racial abilities shown (infravision, detecting tricks, resilience, etc.) |
+| Attack bonus −1 at level 0 | Attack bonus follows mode selection |
 
-### Bazzite/Immutable OS Users
-This project uses distrobox for Node.js development. The `generate-pdf.sh` script automatically detects Bazzite and enters the distrobox container.
+This lets you use 0-level characters with or without the racial crunch from OSE Advanced Fantasy.
 
-For manual Node.js commands:
-```bash
-# Enter distrobox
-distrobox enter fedora
+---
 
-# Rebuild canvas module if needed
-npm rebuild canvas
+## Module / File Structure
 
-# Run Node.js commands
-node -e "..."
-```
+All JavaScript is ES6 modules (`type="module"`). There is no bundler or transpiler — files are loaded directly by the browser.
 
-See `CLINE.md` for more development environment details.
+### Shared Modules (used by 2+ generators)
 
-## Files
+| File | Purpose |
+|------|---------|
+| `shared-ability-scores.js` | Ability score rolling + modifiers |
+| `shared-character.js` | Base character object creation |
+| `shared-class-progression.js` | Class progression data + Basic Mode racial abilities |
+| `shared-hit-points.js` | HP rolling |
+| `shared-names.js` | Name generation |
+| `shared-backgrounds.js` | Background / occupation tables (0-level) |
+| `shared-modifier-effects.js` | Ability modifier effect descriptions |
+| `shared-race-names.js` | Race name normalisation constants |
+| `shared-race-adjustments.js` | Racial ability score adjustments |
+| `shared-racial-abilities.js` | Racial ability descriptions (Advanced / 0-level mode) |
+| `shared-character-sheet.js` | HTML character sheet renderer (`renderCharacterSheetHTML`) |
+| `class-data-ose.js` | OSE Standard class data (saves, attack, XP, spell slots) |
+| `class-data-gygar.js` | Smoothified (Gygar) class data |
+| `class-data-ll.js` | Labyrinth Lord class data |
+| `class-data-shared.js` | Shared class utilities and XP/HD tables |
 
-- `index.html` - Web interface
-- `generate-pdf.sh` - Command-line PDF generator
-- `main-generator.js` - Browser character generation logic
-- `node-canvas-generator.js` - Node.js character generation
-- `canvas-sheet-renderer.js` - Classic sheet renderer
-- `underground-sheet-renderer.js` - Underground sheet renderer
-- `markdown-generator.js` - Markdown export
-- `character-display.js` - Web display
-- `names-tables.js` - Race names, saving throws, attack bonuses
-- `background-tables.js` - 100 0-level professions
-- `race-adjustments.js` - Advanced Mode racial adjustments
-- `ose-modifiers.js` - Ability score modifiers
-- `character-utils.js` - HP, AC, background selection
+### 0-Level Generator (`0level.html`)
 
-## Future Plans
+| File | Purpose |
+|------|---------|
+| `0level-ui.js` | UI logic and event handlers |
+| `0level-character-gen.js` | Character generation |
+| `0level-utils.js` | Utility functions |
+| `canvas-generator.js` | Markdown / JSON / PNG export |
+| `canvas-sheet-renderer.js` | Canvas-based character sheet rendering |
+| `markdown-generator.js` | Markdown export |
 
-### Basic Mode (Planned)
-- Support for OSE Basic (class-based, no races)
-- Dwarf, Elf, Halfling as classes instead of races
-- Class-based saving throws and attack bonuses
+### Basic Generator (`basic.html`)
 
-### Higher Levels (Planned)
-- Support for generating characters above level 0
-- Level-based saving throw progressions
-- Level-based attack bonus progressions
-- Different progressions for Smoothified Mode vs Normal Mode
+| File | Purpose |
+|------|---------|
+| `basic-ui.js` | UI logic and event handlers |
+| `basic-character-gen.js` | Character generation |
+| `basic-utils.js` | Utility functions |
 
-## Credits
+### Advanced Generator (`advanced.html`)
 
-- **Old-School Essentials** by Necrotic Gnome
-- **The Ruins of Castle Gygar** module (Smoothified Mode inspiration)
-- Background tables and 0-level character concept from OSE 0-Level PDF
+| File | Purpose |
+|------|---------|
+| `advanced-ui.js` | UI logic and event handlers |
+| `advanced-character-gen.js` | Character generation |
+| `advanced-utils.js` | Utility functions |
 
-## License
+### Legacy / Reference (not ES6 modules)
 
-This is a fan-made tool for Old-School Essentials. All game content belongs to Necrotic Gnome.
+| File | Purpose |
+|------|---------|
+| `race-adjustments.js` | Old global script — superseded by `shared-race-adjustments.js`, kept for reference |
+| `weapons-and-armor.js` | Reference data (unused by generators) |
+
+### Removed Files (documented for history)
+
+The following were removed when the project moved to a browser-only architecture:
+
+- `generate-pdf.sh`, `get-new-pdf.sh` — shell scripts (PDF now via browser Print)
+- `node-canvas-generator.js` — Node.js CLI generator (replaced by browser generators)
+- `underground-sheet-renderer.js` — Node.js-only renderer (removed with CLI)
+- `racial-abilities.js` — replaced by `shared-racial-abilities.js`
+- `deprecated-js/` — all old modules removed
+
+---
+
+## Development Notes
+
+- All generators use `<script type="module">` — no globals, no jQuery, no frameworks
+- A local HTTP server (e.g. `python3 -m http.server 8000`) is needed for module imports to work in Chrome/Firefox when opening from `file://`
+- `index.html` is the landing/about page with links to all three generators
+- `classes.html` is a standalone class reference page
+
+---
+
+## Credits & License
+
+- **Old-School Essentials** by Necrotic Gnome — <https://necroticgnome.com/>
+- **The Ruins of Castle Gygar** by Tidal Wave Games (Smoothified progressions) — <https://www.drivethrurpg.com/en/product/510225/the-ruins-of-castle-gygar>
+- **Labyrinth Lord** by Goblinoid Games
+
+These generators are unofficial fan-made tools. All game content and trademarks belong to their respective owners.
