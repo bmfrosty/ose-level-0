@@ -27,6 +27,7 @@ import {
     getRacialAbilities,
     createCharacter
 } from './basic-character-gen.js';
+import { rollStartingGold, calcStartingGold } from './shared-character.js';
 import { getRandomName } from './shared-names.js';
 import { getRandomBackground } from './shared-backgrounds.js';
 import { getModifierEffects } from './shared-modifier-effects.js';
@@ -48,6 +49,7 @@ let includeLevel0HP = false;
 let useFixedScores = false;
 let showUndeadNames = false;
 let characterName = '';
+let wealthPct = 50; // Starting wealth % for level 2+ characters
 
 // Ability scores state
 let abilityScores = {
@@ -211,6 +213,36 @@ export function updateUI() {
         document.querySelectorAll('.class-button').forEach(button => {
             button.disabled = false;
         });
+    }
+
+    // Show/hide Starting Wealth section (level 2+ only) and update preview
+    const wealthSection = document.getElementById('startingWealthSection');
+    const wealthPreview = document.getElementById('wealthPreview');
+    if (selectedLevel && selectedLevel >= 2) {
+        wealthSection.style.display = 'block';
+        // Update preview text if we have class data for the level
+        if (selectedClass) {
+            try {
+                const classData = getClassDataForMode(progressionMode);
+                const progData = getClassProgressionData(selectedClass, selectedLevel, { STR:10,INT:10,WIS:10,DEX:10,CON:10,CHA:10 }, classData);
+                const xpForLevel = progData?.xpForCurrentLevel || 0;
+                if (xpForLevel > 0 && wealthPct > 0) {
+                    const gp = calcStartingGold(xpForLevel, wealthPct);
+                    wealthPreview.textContent = `= ${gp.toLocaleString()} gp (${wealthPct}% of ${xpForLevel.toLocaleString()} XP)`;
+                } else if (wealthPct === 0) {
+                    wealthPreview.textContent = '= 0 gp';
+                } else {
+                    wealthPreview.textContent = '';
+                }
+            } catch (e) {
+                wealthPreview.textContent = '';
+            }
+        } else {
+            wealthPreview.textContent = '';
+        }
+    } else {
+        wealthSection.style.display = 'none';
+        wealthPreview.textContent = '';
     }
 
     // Enable generate button if level and class are selected
@@ -489,6 +521,15 @@ export function generateCharacter() {
     const background = getRandomBackground(hp);
     console.log('Background:', background);
     
+    // Compute starting gold
+    let startingGold;
+    if (selectedLevel === 1) {
+        startingGold = rollStartingGold(progressionMode);
+    } else {
+        startingGold = calcStartingGold(progressionData.xpForCurrentLevel, wealthPct);
+    }
+    console.log('Starting Gold:', startingGold);
+
     // Create character object
     const character = createCharacter({
         level: selectedLevel,
@@ -500,7 +541,8 @@ export function generateCharacter() {
         features: features,
         racialAbilities: racialAbilities,
         name: characterName,
-        background: background
+        background: background,
+        startingGold: startingGold
     });
     
     console.log('\n========================================');
@@ -570,7 +612,7 @@ function displayCharacter(character) {
             armor: character.background?.armor || null,
             items: items,
             startingAC: character.armorClass,
-            startingGold: null
+            startingGold: character.startingGold
         },
         spellSlots: character.spellSlots || null,
         turnUndead: character.turnUndead || null,
@@ -653,6 +695,14 @@ export function initializeEventListeners() {
 
     document.getElementById('showUndeadNames').addEventListener('change', (e) => {
         showUndeadNames = e.target.checked;
+    });
+
+    // Wealth % radio buttons
+    document.querySelectorAll('input[name="wealthPct"]').forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            wealthPct = parseInt(e.target.value);
+            updateUI();
+        });
     });
 
     // Button event listeners

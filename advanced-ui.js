@@ -25,8 +25,10 @@ import {
     rollAbilitiesAdvanced,
     getRacialAbilities,
     createCharacterAdvanced,
-    rollHitPoints
+    rollHitPoints,
+    getClassProgressionData
 } from './advanced-character-gen.js';
+import { rollStartingGold, calcStartingGold } from './shared-character.js';
 import { getRandomName } from './shared-names.js';
 import { getRandomBackground } from './shared-backgrounds.js';
 import { getModifierEffects } from './shared-modifier-effects.js';
@@ -51,6 +53,7 @@ let useFixedScores = false;
 let showUndeadNames = false;
 let includeLevel0HP = false;
 let characterName = '';
+let wealthPct = 50; // Starting wealth % for level 2+ characters
 let abilityScores = {
     STR: 3,
     INT: 3,
@@ -262,6 +265,35 @@ export function updateUI() {
     // Update XP bonus
     updateXPBonus();
 
+    // Show/hide Starting Wealth section (level 2+ only) and update preview
+    const wealthSection = document.getElementById('startingWealthSection');
+    const wealthPreview = document.getElementById('wealthPreview');
+    if (selectedLevel && selectedLevel >= 2) {
+        wealthSection.style.display = 'block';
+        if (selectedClass) {
+            try {
+                const classData = getClassDataForMode(progressionMode);
+                const progData = getClassProgressionData(selectedClass, selectedLevel, { STR:10,INT:10,WIS:10,DEX:10,CON:10,CHA:10 }, classData);
+                const xpForLevel = progData?.xpForCurrentLevel || 0;
+                if (xpForLevel > 0 && wealthPct > 0) {
+                    const gp = calcStartingGold(xpForLevel, wealthPct);
+                    wealthPreview.textContent = `= ${gp.toLocaleString()} gp (${wealthPct}% of ${xpForLevel.toLocaleString()} XP)`;
+                } else if (wealthPct === 0) {
+                    wealthPreview.textContent = '= 0 gp';
+                } else {
+                    wealthPreview.textContent = '';
+                }
+            } catch (e) {
+                wealthPreview.textContent = '';
+            }
+        } else {
+            wealthPreview.textContent = '';
+        }
+    } else {
+        wealthSection.style.display = 'none';
+        wealthPreview.textContent = '';
+    }
+
     // Enable generate button if level, race, and class are selected
     const generateButton = document.getElementById('generateButton');
     generateButton.disabled = !(selectedLevel && selectedRace && selectedClass);
@@ -407,6 +439,14 @@ export function initializeEventListeners() {
     document.querySelectorAll('input[name="raceClassMode"]').forEach(radio => {
         radio.addEventListener('change', (e) => {
             raceClassMode = e.target.value;
+            updateUI();
+        });
+    });
+
+    // Wealth % radio buttons
+    document.querySelectorAll('input[name="wealthPct"]').forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            wealthPct = parseInt(e.target.value);
             updateUI();
         });
     });
@@ -570,6 +610,16 @@ export function generateCharacter() {
     const background = getRandomBackground(hp);
     console.log('Background:', background);
     
+    // Compute starting gold
+    const progressionData = getClassProgressionData(selectedClass, selectedLevel, adjustedScores, classData);
+    let startingGold;
+    if (selectedLevel === 1) {
+        startingGold = rollStartingGold(progressionMode);
+    } else {
+        startingGold = calcStartingGold(progressionData?.xpForCurrentLevel || 0, wealthPct);
+    }
+    console.log('Starting Gold:', startingGold);
+
     // Create character object
     console.log('\n--- Creating Character Object ---');
     const character = createCharacterAdvanced({
@@ -587,6 +637,7 @@ export function generateCharacter() {
         background: background
     });
     
+    character.startingGold = startingGold;
     console.log('Character object created:', character);
     
     console.log('\n========================================');
@@ -659,7 +710,7 @@ export function displayCharacter(character) {
             armor: character.background?.armor || null,
             items: items,
             startingAC: character.armorClass,
-            startingGold: null
+            startingGold: character.startingGold ?? null
         },
         spellSlots: character.spellSlots || null,
         turnUndead: character.turnUndead || null,

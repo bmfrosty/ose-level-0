@@ -254,15 +254,15 @@ export function getSpellSlots(className, level) {
  */
 export function getThiefSkills(level) {
   if (level < 1 || level > 14) return null;
-  
+  const i = level - 1;
   return {
-    climbSheerSurfaces: THIEF_SKILLS.climbSheerSurfaces[level - 1],
-    findRemoveTraps: THIEF_SKILLS.findRemoveTraps[level - 1],
-    hearNoise: THIEF_SKILLS.hearNoise[level - 1],
-    hideInShadows: THIEF_SKILLS.hideInShadows[level - 1],
-    moveSilently: THIEF_SKILLS.moveSilently[level - 1],
-    openLocks: THIEF_SKILLS.openLocks[level - 1],
-    pickPockets: THIEF_SKILLS.pickPockets[level - 1]
+    climbSheerSurfaces: `${THIEF_SKILLS.climbSheerSurfaces[i]}%`,
+    findRemoveTraps: `${THIEF_SKILLS.findRemoveTraps[i]}%`,
+    hearNoise: `1-${THIEF_SKILLS.hearNoise[i]} on 1d6`,
+    hideInShadows: `${THIEF_SKILLS.hideInShadows[i]}%`,
+    moveSilently: `${THIEF_SKILLS.moveSilently[i]}%`,
+    openLocks: `${THIEF_SKILLS.openLocks[i]}%`,
+    pickPockets: `${THIEF_SKILLS.pickPockets[i]}%`
   };
 }
 

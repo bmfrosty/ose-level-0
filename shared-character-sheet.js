@@ -82,7 +82,7 @@ export function renderCharacterSheetHTML(sheet) {
         <div style='margin-top: 8px; border-top: 1px solid #ccc; padding-top: 4px;'>
             ${Object.entries(ws.thiefSkills).map(([skill, value]) => {
                 const displayName = skill.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase());
-                return `<span style='font-size:0.85em;'><strong>${displayName}:</strong> ${value}%</span>`;
+                return `<span style='font-size:0.85em;'><strong>${displayName}:</strong> ${value}</span>`;
             }).join(' &nbsp; ')}
         </div>` : '';
 

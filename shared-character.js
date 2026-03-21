@@ -8,6 +8,31 @@
 import { calculateModifier } from './shared-ability-scores.js';
 
 /**
+ * Roll starting gold for a level 1 character.
+ * OSE Standard / Smoothified: 3d6 × 10 gp
+ * Labyrinth Lord: 3d8 × 10 gp
+ * @param {string} progression - 'ose', 'smooth', or 'll'
+ * @returns {number} Starting gold in gp
+ */
+export function rollStartingGold(progression) {
+    const roll = (n, sides) =>
+        Array.from({ length: n }, () => Math.ceil(Math.random() * sides))
+             .reduce((a, b) => a + b, 0);
+    return (progression === 'll' ? roll(3, 8) : roll(3, 6)) * 10;
+}
+
+/**
+ * Calculate starting gold for a level 2+ character based on XP for their current level.
+ * @param {number} xpForLevel - Minimum XP required to reach the character's current level
+ * @param {number} pct - Wealth percentage (0, 25, 50, 75, or 100)
+ * @returns {number} Starting gold in gp
+ */
+export function calcStartingGold(xpForLevel, pct) {
+    if (!xpForLevel || pct === 0) return 0;
+    return Math.floor(xpForLevel * pct / 100);
+}
+
+/**
  * Create comprehensive character object
  * @param {Object} options - Character generation options
  * @param {number} options.level - Character level
@@ -31,7 +56,8 @@ export function createCharacter(options) {
         features,
         racialAbilities,
         name,
-        background
+        background,
+        startingGold = null
     } = options;
     
     console.log('\n=== Creating Character Object ===');
@@ -83,7 +109,10 @@ export function createCharacter(options) {
         classAbilities: features.classAbilities,
         
         // Racial abilities (for demihuman classes)
-        racialAbilities: racialAbilities
+        racialAbilities: racialAbilities,
+
+        // Starting wealth
+        startingGold: startingGold
     };
     
     console.log('\n--- Character Object Created ---');

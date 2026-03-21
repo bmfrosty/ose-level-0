@@ -407,6 +407,18 @@
                     </span>
                 </label>
             </div>
+            <div id="startingWealthSection" style="display:none; margin-top: 12px; border-top: 1px solid #ddd; padding-top: 10px;">
+                <strong>Starting Wealth (level 2+):</strong>
+                <span style="color:#555; font-size:0.95em;"> — % of minimum XP for level, in gp</span>
+                <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:6px;">
+                    <label style="display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="radio" name="wealthPct" value="0"> 0%</label>
+                    <label style="display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="radio" name="wealthPct" value="25"> 25%</label>
+                    <label style="display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="radio" name="wealthPct" value="50" checked> 50%</label>
+                    <label style="display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="radio" name="wealthPct" value="75"> 75%</label>
+                    <label style="display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="radio" name="wealthPct" value="100"> 100%</label>
+                </div>
+                <div id="wealthPreview" style="margin-top:6px; color:#555; font-size:0.9em;"></div>
+            </div>
         </div>
 
         <!-- Character Name -->

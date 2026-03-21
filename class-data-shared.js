@@ -438,7 +438,7 @@ export const CLASS_ABILITIES = {
     },
     {
       name: "Hiding",
-      description: "In woods or undergrowth, can hide with 90% chance of success. Must be motionless.",
+      description: "In woods or undergrowth: 90% chance to hide. In dungeons: 2-in-6 chance to hide in shadows or behind cover. Must be motionless and alone (or with other halflings).",
       availableAt: 1
     },
     {

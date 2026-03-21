@@ -154,8 +154,8 @@ export function getClassFeatures(options) {
         });
     }
     
-    // Class abilities
-    const allAbilities = ClassDataShared.getAbilitiesAtLevel(className, level);
+    // Class abilities (strip _CLASS suffix — CLASS_ABILITIES keys are plain names like "Cleric", "Fighter")
+    const allAbilities = ClassDataShared.getAbilitiesAtLevel(baseClassName, level);
     if (allAbilities && allAbilities.length > 0) {
         features.classAbilities = allAbilities;
         console.log('\nClass Abilities:');
