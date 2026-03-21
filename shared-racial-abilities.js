@@ -167,24 +167,29 @@ export function canRaceTakeClass(race, className, allowNonTraditional = false) {
  * Get racial abilities text for Advanced/0-Level Mode (returns array of lines)
  * In Advanced/0-Level Mode, race is separate from class
  * @param {string} race - The race name (e.g., "Dwarf_RACE", "Elf_RACE")
+ * @param {Object} [options] - Optional overrides (bypass DOM reading)
+ * @param {boolean} [options.isAdvanced] - Whether Advanced mode is active
+ * @param {boolean} [options.humanRacialAbilities] - Whether human racial abilities are enabled
  * @returns {string[]} Array of racial ability descriptions
  */
-export function getAdvancedModeRacialAbilities(race) {
+export function getAdvancedModeRacialAbilities(race, options = {}) {
     const normalizedRace = normalizeRaceName(race);
-    // Check if Advanced mode is enabled
-    let isAdvanced = false;
-    let humanRacialAbilities = false;
-    
-    if (typeof document !== 'undefined') {
-        // Browser: check checkboxes
-        const advancedCheckbox = document.getElementById('advanced');
-        const humanAbilitiesCheckbox = document.getElementById('humanRacialAbilities');
-        isAdvanced = advancedCheckbox ? advancedCheckbox.checked : false;
-        humanRacialAbilities = humanAbilitiesCheckbox ? humanAbilitiesCheckbox.checked : false;
-    } else if (typeof process !== 'undefined' && process.env) {
-        // Node.js: check environment variables
-        isAdvanced = process.env.ADVANCED === 'true';
-        humanRacialAbilities = process.env.HUMAN_RACIAL_ABILITIES === 'true';
+    // Use provided options if given; otherwise fall back to DOM / env vars
+    let isAdvanced = options.isAdvanced;
+    let humanRacialAbilities = options.humanRacialAbilities;
+
+    if (isAdvanced === undefined || humanRacialAbilities === undefined) {
+        if (typeof document !== 'undefined') {
+            // Browser: check checkboxes
+            const advancedCheckbox = document.getElementById('advanced');
+            const humanAbilitiesCheckbox = document.getElementById('humanRacialAbilities');
+            if (isAdvanced === undefined) isAdvanced = advancedCheckbox ? advancedCheckbox.checked : false;
+            if (humanRacialAbilities === undefined) humanRacialAbilities = humanAbilitiesCheckbox ? humanAbilitiesCheckbox.checked : false;
+        } else if (typeof process !== 'undefined' && process.env) {
+            // Node.js: check environment variables
+            if (isAdvanced === undefined) isAdvanced = process.env.ADVANCED === 'true';
+            if (humanRacialAbilities === undefined) humanRacialAbilities = process.env.HUMAN_RACIAL_ABILITIES === 'true';
+        }
     }
     
     const RACIAL_ABILITIES = {

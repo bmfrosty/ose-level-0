@@ -89,53 +89,26 @@ export function rollAbilitiesAdvanced(minimumScores, race, className, toughChara
 
 /**
  * Get racial abilities for a race (not class-dependent in Advanced Mode)
- * Simplified wrapper that uses the imported ES6 module function
+ * Passes values directly to avoid any DOM dependency.
  * @param {string} race - Race name (with _RACE suffix)
- * @param {string} raceClassMode - Race/class mode ('strict', 'traditional-extended', 'allow-all')
+ * @param {string} raceClassMode - Race/class mode ('strict', 'strict-human', 'traditional-extended', 'allow-all')
  * @returns {Array} Array of racial ability strings
  */
 export function getRacialAbilities(race, raceClassMode = 'strict') {
     console.log('[getRacialAbilities] Called with race:', race, 'raceClassMode:', raceClassMode);
     
-    // For humans, only return abilities if level caps are lifted
-    const humanAbilitiesEnabled = (raceClassMode === 'traditional-extended' || raceClassMode === 'allow-all');
+    // Human racial abilities are enabled for all modes except pure 'strict'
+    const humanAbilitiesEnabled = (raceClassMode === 'strict-human' || raceClassMode === 'traditional-extended' || raceClassMode === 'allow-all');
     console.log('[getRacialAbilities] humanAbilitiesEnabled:', humanAbilitiesEnabled);
     
-    // The shared function checks document.getElementById('humanRacialAbilities')
-    // We need to temporarily set this checkbox if it exists
-    if (typeof document !== 'undefined') {
-        const humanCheckbox = document.getElementById('humanRacialAbilities');
-        const advancedCheckbox = document.getElementById('advanced');
-        
-        // Store original values
-        const originalHumanValue = humanCheckbox ? humanCheckbox.checked : null;
-        const originalAdvancedValue = advancedCheckbox ? advancedCheckbox.checked : null;
-        
-        // Set checkboxes for the function call
-        if (humanCheckbox) {
-            humanCheckbox.checked = humanAbilitiesEnabled;
-        }
-        if (advancedCheckbox) {
-            advancedCheckbox.checked = true; // Always true for Advanced Mode
-        }
-        
-        // Call the imported function
-        const abilities = getAdvancedModeRacialAbilities(race);
-        
-        // Restore original values
-        if (humanCheckbox && originalHumanValue !== null) {
-            humanCheckbox.checked = originalHumanValue;
-        }
-        if (advancedCheckbox && originalAdvancedValue !== null) {
-            advancedCheckbox.checked = originalAdvancedValue;
-        }
-        
-        console.log('[getRacialAbilities] Returned abilities:', abilities);
-        return abilities;
-    }
+    // Pass options directly — no DOM reading or manipulation needed
+    const abilities = getAdvancedModeRacialAbilities(race, {
+        isAdvanced: true,               // Always in Advanced Mode
+        humanRacialAbilities: humanAbilitiesEnabled
+    });
     
-    // Fallback for non-browser environments
-    return getAdvancedModeRacialAbilities(race);
+    console.log('[getRacialAbilities] Returned abilities:', abilities);
+    return abilities;
 }
 
 /**

@@ -29,6 +29,7 @@ import {
     getClassProgressionData
 } from './advanced-character-gen.js';
 import { rollStartingGold, calcStartingGold } from './shared-character.js';
+import { purchaseEquipment } from './shared-equipment.js';
 import { getRandomName } from './shared-names.js';
 import { getRandomBackground } from './shared-backgrounds.js';
 import { getModifierEffects } from './shared-modifier-effects.js';
@@ -46,7 +47,7 @@ let selectedLevel = null;
 let selectedRace = null;
 let selectedClass = null;
 let progressionMode = 'smooth'; // 'ose', 'smooth', or 'll'
-let raceClassMode = 'strict'; // 'strict', 'traditional-extended', 'allow-all'
+let raceClassMode = 'strict-human'; // 'strict', 'strict-human', 'traditional-extended', 'allow-all'
 let primeRequisiteMode = 'user'; // 'user', '9', '13'
 let healthyCharacters = false;
 let useFixedScores = false;
@@ -218,14 +219,11 @@ export function updateUI() {
         
         // Determine allowNonTraditional based on raceClassMode
         let allowNonTraditional = false;
-        if (raceClassMode === 'traditional-extended') {
-            // Traditional + Spellblade for all races
-            allowNonTraditional = false;
-        } else if (raceClassMode === 'allow-all') {
+        if (raceClassMode === 'allow-all') {
             // All combinations allowed
             allowNonTraditional = true;
         }
-        // else raceClassMode === 'strict' - use traditional combinations
+        // 'strict', 'strict-human', 'traditional-extended' all use traditional combinations
         
         // Get available classes for this race
         const availableClasses = getAvailableClasses(race, allowNonTraditional);
@@ -239,10 +237,10 @@ export function updateUI() {
             isAvailable = (race === 'Human' || race === 'Elf');
         }
 
-        // In Strict OSE Rules mode, enforce per-race/class level caps.
+        // In Strict OSE Rules modes (strict, strict-human), enforce per-race/class level caps.
         // getMaxLevel returns null for unlimited, or a number for the cap.
-        // isSmootified=false because Strict mode always uses OSE level limits.
-        if (isAvailable && raceClassMode === 'strict' && selectedLevel) {
+        // isSmootified=false because Strict modes always use OSE level limits.
+        if (isAvailable && (raceClassMode === 'strict' || raceClassMode === 'strict-human') && selectedLevel) {
             const maxLevel = getMaxLevel(`${race}_RACE`, `${className}_CLASS`, false);
             if (maxLevel !== null && selectedLevel > maxLevel) {
                 isAvailable = false;
@@ -620,6 +618,11 @@ export function generateCharacter() {
     }
     console.log('Starting Gold:', startingGold);
 
+    // Purchase equipment
+    const dexModifier = abilityModifiers.DEX;
+    const purchased = purchaseEquipment(selectedClass, startingGold, dexModifier, background, progressionMode);
+    console.log('Purchased equipment:', purchased);
+
     // Create character object
     console.log('\n--- Creating Character Object ---');
     const character = createCharacterAdvanced({
@@ -645,21 +648,19 @@ export function generateCharacter() {
     console.log('========================================\n');
     
     // Display character
-    displayCharacter(character);
+    displayCharacter(character, purchased);
 }
 
 /**
  * Display character using the shared character sheet module
  * @param {Object} character - Character object
+ * @param {Object} purchased - Result from purchaseEquipment()
  */
-export function displayCharacter(character) {
+export function displayCharacter(character, purchased) {
     const raceDisplay = getRaceDisplayName(character.race);
     const classDisplay = getClassDisplayName(character.class);
     const mode = progressionMode === 'smooth' ? 'Smoothified' : progressionMode === 'll' ? 'Labyrinth Lord' : 'OSE Standard';
     const xpBonus = character.xp.bonus >= 0 ? `+${character.xp.bonus}%` : `${character.xp.bonus}%`;
-    const items = character.background
-        ? (Array.isArray(character.background.item) ? character.background.item : [character.background.item])
-        : [];
     const hasRacial = character.racialAbilities && character.racialAbilities.length > 0;
     const hasClass = character.classAbilities && character.classAbilities.length > 0;
     const sanitize = (str) => (str || '').replace(/[/\\?%*:|"<>]/g, '-').trim();
@@ -687,7 +688,7 @@ export function displayCharacter(character) {
             effects: getModifierEffects(a, character.abilityModifiers[a], character.adjustedScores[a])
         })),
         weaponsAndSkills: {
-            weapon: character.background?.weapon || null,
+            weapon: purchased.weapon || null,
             classAttackBonus: character.attackBonus,
             meleeMod: character.abilityModifiers.STR,
             rangedMod: character.abilityModifiers.DEX,
@@ -707,10 +708,10 @@ export function displayCharacter(character) {
             bonus: xpBonus
         },
         equipment: {
-            armor: character.background?.armor || null,
-            items: items,
-            startingAC: character.armorClass,
-            startingGold: character.startingGold ?? null
+            armor: purchased.armor || null,
+            items: purchased.items,
+            startingAC: purchased.startingAC,
+            startingGold: purchased.goldRemaining
         },
         spellSlots: character.spellSlots || null,
         turnUndead: character.turnUndead || null,

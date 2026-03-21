@@ -28,6 +28,7 @@ import {
     createCharacter
 } from './basic-character-gen.js';
 import { rollStartingGold, calcStartingGold } from './shared-character.js';
+import { purchaseEquipment } from './shared-equipment.js';
 import { getRandomName } from './shared-names.js';
 import { getRandomBackground } from './shared-backgrounds.js';
 import { getModifierEffects } from './shared-modifier-effects.js';
@@ -530,6 +531,11 @@ export function generateCharacter() {
     }
     console.log('Starting Gold:', startingGold);
 
+    // Purchase equipment
+    const dexModifier = calculateModifier(abilityScores.DEX);
+    const purchased = purchaseEquipment(selectedClass, startingGold, dexModifier, background, progressionMode);
+    console.log('Purchased equipment:', purchased);
+
     // Create character object
     const character = createCharacter({
         level: selectedLevel,
@@ -549,20 +555,18 @@ export function generateCharacter() {
     console.log('CHARACTER GENERATION COMPLETE');
     console.log('========================================\n');
     
-    // Display character (placeholder for now)
-    displayCharacter(character);
+    // Display character
+    displayCharacter(character, purchased);
 }
 
 /**
  * Display character using the shared character sheet module
  * @param {Object} character - Character object
+ * @param {Object} purchased - Result from purchaseEquipment()
  */
-function displayCharacter(character) {
+function displayCharacter(character, purchased) {
     const displayClass = character.class.replace('_CLASS', '');
     const xpBonus = character.xp.bonus >= 0 ? `+${character.xp.bonus}%` : `${character.xp.bonus}%`;
-    const items = character.background
-        ? (Array.isArray(character.background.item) ? character.background.item : [character.background.item])
-        : [];
     const hasRacial = character.racialAbilities && character.racialAbilities.length > 0;
     const hasClass = character.classAbilities && character.classAbilities.length > 0;
     const sanitize = (str) => (str || '').replace(/[/\\?%*:|"<>]/g, '-').trim();
@@ -589,7 +593,7 @@ function displayCharacter(character) {
             effects: getModifierEffects(a, character.abilityModifiers[a], character.abilityScores[a])
         })),
         weaponsAndSkills: {
-            weapon: character.background?.weapon || null,
+            weapon: purchased.weapon || null,
             classAttackBonus: character.attackBonus,
             meleeMod: character.abilityModifiers.STR,
             rangedMod: character.abilityModifiers.DEX,
@@ -609,10 +613,10 @@ function displayCharacter(character) {
             bonus: xpBonus
         },
         equipment: {
-            armor: character.background?.armor || null,
-            items: items,
-            startingAC: character.armorClass,
-            startingGold: character.startingGold
+            armor: purchased.armor || null,
+            items: purchased.items,
+            startingAC: purchased.startingAC,
+            startingGold: purchased.goldRemaining
         },
         spellSlots: character.spellSlots || null,
         turnUndead: character.turnUndead || null,

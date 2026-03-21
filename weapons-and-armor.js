@@ -254,6 +254,33 @@ export function getArmorData(armorName) {
   return ARMOR[armorName] || null;
 }
 
+export const ADVENTURING_GEAR = {
+  "Backpack":                   { cost: 5 },
+  "Crowbar":                    { cost: 10 },
+  "Garlic":                     { cost: 5 },
+  "Grappling hook":             { cost: 25 },
+  "Hammer (small)":             { cost: 2 },
+  "Holy symbol":                { cost: 25 },
+  "Holy water (vial)":          { cost: 25 },
+  "Iron spikes (12)":           { cost: 1 },
+  "Lantern":                    { cost: 10 },
+  "Mirror (hand-sized, steel)": { cost: 5 },
+  "Oil (1 flask)":              { cost: 2 },
+  "Pole (10' long, wooden)":    { cost: 1 },
+  "Rations (iron, 7 days)":     { cost: 15 },
+  "Rations (standard, 7 days)": { cost: 5 },
+  "Rope (50')":                 { cost: 1 },
+  "Sack (large)":               { cost: 2 },
+  "Sack (small)":               { cost: 1 },
+  "Stakes (3) and mallet":      { cost: 3 },
+  "Thieves' tools":             { cost: 25 },
+  "Tinder box (flint & steel)": { cost: 3 },
+  "Torches (6)":                { cost: 1 },
+  "Waterskin":                  { cost: 1 },
+  "Wine (2 pints)":             { cost: 1 },
+  "Wolfsbane (1 bunch)":        { cost: 10 }
+};
+
 // Export all for use in other modules
 export default {
   WEAPONS,

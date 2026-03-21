@@ -509,10 +509,20 @@
             <h3>6. Race/Class Restrictions</h3>
             <div class="radio-option">
                 <label>
-                    <input type="radio" name="raceClassMode" id="strictOSE" value="strict" checked>
+                    <input type="radio" name="raceClassMode" id="strictOSE" value="strict">
                     <span>
-                        <strong>Strict OSE Rules</strong> - Traditional combinations only, OSE level limits
+                        <strong>Strict OSE Rules</strong> - Traditional combinations only, OSE level limits, no human racial abilities
                         <br><small style="margin-left: 30px;">Example: Dwarf Fighter max 10, Elf Magic-User max 11, Halfling Thief max 8</small>
+                    </span>
+                </label>
+            </div>
+            <div class="radio-option">
+                <label>
+                    <input type="radio" name="raceClassMode" id="strictOSEHuman" value="strict-human" checked>
+                    <span>
+                        <strong>Strict OSE + Human Racial Abilities</strong> - Traditional combinations, OSE level limits, humans gain racial abilities
+                        <br><small style="margin-left: 30px;">Example: Dwarf Fighter max 10, Elf Magic-User max 11, Halfling Thief max 8</small>
+                        <br><small style="margin-left: 30px;"><em>Humans gain racial abilities (Blessed, Decisiveness, Leadership)</em></small>
                     </span>
                 </label>
             </div>
