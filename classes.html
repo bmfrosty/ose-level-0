@@ -109,7 +109,14 @@
             border-radius: 3px;
             margin-bottom: 14px;
         }
-        .class-note strong { display: block; margin-bottom: 4px; color: #2e7d32; }
+        .class-note strong:first-child { display: block; margin-bottom: 4px; color: #2e7d32; }
+
+        /* Fighter progression note */
+        .fighter-note {
+            background: #e3f2fd;
+            border-left: 4px solid #1976D2;
+        }
+        .fighter-note strong:first-child { color: #1565c0; }
 
         .placeholder {
             color: #999;
@@ -245,9 +252,30 @@
                 ? `<div class="class-note"><strong>ℹ Note</strong>${note.text}</div>`
                 : '';
 
+            // Fighter progression note — shown for all FIGHTER_SMOOTH classes
+            const isOnFighterScale = ATTACK_BONUS_SCALE[classKey] === "FIGHTER_SMOOTH";
+            const fighterNoteHtml = isOnFighterScale
+                ? (() => {
+                    const isFighterItself = classKey === "Fighter_CLASS";
+                    const text = isFighterItself
+                        ? `The <strong>Fighter attack bonus progression</strong> is intentionally front-loaded:
+                           it starts at +1 at level 1 and climbs steadily, reaching +9 by level 14.
+                           In comparison, the Cleric/Thief progression starts at +0 and tops out at +7, while the
+                           Magic-User progression is even slower. This ensures fighters — and fighter-progression classes —
+                           are consistently better at hitting things than Cleric- or Magic-User-progression classes
+                           at every level of play.`
+                        : `This class uses the <strong>Fighter attack bonus progression</strong>, which is intentionally
+                           front-loaded to give a consistent combat edge over Cleric- or Magic-User-progression classes
+                           at every level. It starts at +1 at level 1 (vs +0 for Clerics and Thieves) and stays ahead
+                           throughout the career — reflecting the martial heritage of this class.`;
+                    return `<div class="class-note fighter-note"><strong>⚔ Fighter To-Hit Progression</strong>${text}</div>`;
+                })()
+                : '';
+
             document.getElementById('class-display').innerHTML = `
                 <h2>${cls.name} — Smoothified Progressions</h2>
                 ${noteHtml}
+                ${fighterNoteHtml}
                 <p class="table-note">
                     Saving throws: <em>lower is better</em> (roll ≥ target to succeed).
                     To-hit bonus: <em>higher is better</em> (ascending AC system).

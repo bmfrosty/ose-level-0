@@ -42,7 +42,7 @@ import {
 
 export const ATTACK_BONUS_PROGRESSIONS = {
   // Fighter progression: +1, +2, +3, +4, +5, +5, +6, +6, +7, +7, +7, +8, +9, +9
-  FIGHTER_SMOOTH: [1, 2, 3, 4, 5, 5, 6, 6, 7, 7, 7, 8, 9, 9],
+  FIGHTER_SMOOTH: [1, 2, 3, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9],
   // Cleric/Thief progression: +0, +1, +1, +2, +2, +3, +3, +4, +5, +5, +6, +6, +7, +7
   CLERIC_SMOOTH: [0, 1, 1, 2, 2, 3, 3, 4, 5, 5, 6, 6, 7, 7],
   // Magic-User progression: +0, +0, +1, +1, +2, +2, +2, +3, +3, +4, +4, +5, +5, +5
