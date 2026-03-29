@@ -123,38 +123,27 @@ function updateRollButtonState() {
 }
 
 /**
- * Initialize level selection (radio buttons 1-14)
+ * Initialize level selection (styled buttons 1-14)
  */
 export function initializeLevelSelection() {
     const container = document.getElementById('levelSelection');
     for (let i = 1; i <= 14; i++) {
-        const radioDiv = document.createElement('div');
-        radioDiv.className = 'level-radio';
+        const btn = document.createElement('button');
+        btn.className = 'level-btn' + (i === 1 ? ' selected' : '');
+        btn.textContent = i;
+        btn.dataset.level = i;
         
-        const radio = document.createElement('input');
-        radio.type = 'radio';
-        radio.name = 'level';
-        radio.id = `level${i}`;
-        radio.value = i;
+        if (i === 1) selectedLevel = 1;
         
-        // Set level 1 as default
-        if (i === 1) {
-            radio.checked = true;
-            selectedLevel = 1;
-        }
-        
-        const label = document.createElement('label');
-        label.htmlFor = `level${i}`;
-        label.textContent = i;
-        
-        radio.addEventListener('change', () => {
-            selectedLevel = parseInt(radio.value);
+        btn.addEventListener('click', () => {
+            container.querySelectorAll('.level-btn').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            selectedLevel = parseInt(btn.dataset.level);
             updateUI();
+            generateCharacter();
         });
         
-        radioDiv.appendChild(radio);
-        radioDiv.appendChild(label);
-        container.appendChild(radioDiv);
+        container.appendChild(btn);
     }
 }
 
@@ -184,6 +173,7 @@ export function initializeRaceClassGrid() {
             }
             
             updateUI();
+            generateCharacter();
         });
     });
     
@@ -294,7 +284,7 @@ export function updateUI() {
 
     // Enable generate button if level, race, and class are selected
     const generateButton = document.getElementById('generateButton');
-    generateButton.disabled = !(selectedLevel && selectedRace && selectedClass);
+    if (generateButton) generateButton.disabled = !(selectedLevel && selectedRace && selectedClass);
 }
 
 /**
@@ -460,7 +450,8 @@ export function initializeEventListeners() {
     document.getElementById('randomNameButton').addEventListener('click', handleRandomName);
     document.getElementById('setMinimumsButton').addEventListener('click', handleSetMinimums);
     document.getElementById('rollAbilitiesButton').addEventListener('click', handleRollAbilities);
-    document.getElementById('generateButton').addEventListener('click', generateCharacter);
+    const generateButton = document.getElementById('generateButton');
+    if (generateButton) generateButton.addEventListener('click', generateCharacter);
 }
 
 /**
@@ -759,6 +750,7 @@ export function initialize() {
     updateRollButtonState();
     updateModifiers();
     updateUI();
+    generateCharacter();
 }
 
 // Auto-initialize when DOM is ready

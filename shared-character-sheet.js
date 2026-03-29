@@ -268,6 +268,53 @@ export function renderCharacterSheetHTML(sheet) {
 }
 
 /**
+ * Open a character sheet in a new print tab
+ * @param {string} html - Rendered character sheet HTML
+ * @param {string} printTitle - Title for the new tab
+ * @param {boolean} autoPrint - Whether to auto-open print dialog
+ */
+function openCharacterInPrintTab(html, printTitle, autoPrint = false) {
+    const newWindow = window.open('', '_blank');
+    if (newWindow) {
+        newWindow.document.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <title>${printTitle}</title>
+                <style>
+                    body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+                    .print-controls { background: #f0f0f0; border-bottom: 2px solid #333; padding: 10px 0; margin-bottom: 20px; display: flex; gap: 10px; align-items: center; }
+                    .print-controls button { padding: 8px 16px; font-size: 14px; font-weight: bold; border: none; border-radius: 3px; cursor: pointer; }
+                    .btn-print { background-color: #4CAF50; color: white; }
+                    .btn-print:hover { background-color: #45a049; }
+                    .btn-close { background-color: #ccc; color: #333; }
+                    .btn-close:hover { background-color: #bbb; }
+                    .print-hint { color: #666; font-size: 0.85em; font-style: italic; }
+                    @media print {
+                        .print-controls { display: none !important; }
+                        body { margin: 0; padding: 0; }
+                        @page { size: letter; margin: 0.5in; }
+                        * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="print-controls">
+                    <button class="btn-print" onclick="window.print()">🖨 Print / Save as PDF</button>
+                    <button class="btn-close" onclick="window.close()">✕ Close</button>
+                    <span class="print-hint">Tip: In the print dialog, choose "Save as PDF" and set margins to None or Minimum</span>
+                </div>
+                ${html}
+                ${autoPrint ? `<script>window.addEventListener('load', function() { setTimeout(function() { window.print(); }, 400); });<\/script>` : ''}
+            </body>
+            </html>
+        `);
+        newWindow.document.close();
+    }
+}
+
+/**
  * Display character sheet — render HTML and show in page or new tab
  * @param {Object} sheet - Normalized sheet object
  * @param {HTMLElement} targetInfo - Element to display character info in
@@ -277,44 +324,7 @@ export function displayCharacterSheet(sheet, targetInfo, targetDisplay) {
     const html = renderCharacterSheetHTML(sheet);
 
     if (sheet.openInNewTab) {
-        const newWindow = window.open('', '_blank');
-        if (newWindow) {
-            newWindow.document.write(`
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <meta charset="UTF-8">
-                    <title>${sheet.printTitle}</title>
-                    <style>
-                        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
-                        .print-controls { background: #f0f0f0; border-bottom: 2px solid #333; padding: 10px 0; margin-bottom: 20px; display: flex; gap: 10px; align-items: center; }
-                        .print-controls button { padding: 8px 16px; font-size: 14px; font-weight: bold; border: none; border-radius: 3px; cursor: pointer; }
-                        .btn-print { background-color: #4CAF50; color: white; }
-                        .btn-print:hover { background-color: #45a049; }
-                        .btn-close { background-color: #ccc; color: #333; }
-                        .btn-close:hover { background-color: #bbb; }
-                        .print-hint { color: #666; font-size: 0.85em; font-style: italic; }
-                        @media print {
-                            .print-controls { display: none !important; }
-                            body { margin: 0; padding: 0; }
-                            @page { size: letter; margin: 0.5in; }
-                            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-                        }
-                    </style>
-                </head>
-                <body>
-                    <div class="print-controls">
-                        <button class="btn-print" onclick="window.print()">🖨 Print / Save as PDF</button>
-                        <button class="btn-close" onclick="window.close()">✕ Close</button>
-                        <span class="print-hint">Tip: In the print dialog, choose "Save as PDF" and set margins to None or Minimum</span>
-                    </div>
-                    ${html}
-                    ${sheet.autoPrint ? `<script>window.addEventListener('load', function() { setTimeout(function() { window.print(); }, 400); });<\/script>` : ''}
-                </body>
-                </html>
-            `);
-            newWindow.document.close();
-        }
+        openCharacterInPrintTab(html, sheet.printTitle, sheet.autoPrint);
         if (targetInfo) {
             targetInfo.innerHTML = '<p style="text-align: center;">Character opened in new tab.</p>';
         }
@@ -323,7 +333,22 @@ export function displayCharacterSheet(sheet, targetInfo, targetDisplay) {
         }
     } else {
         if (targetInfo) {
-            targetInfo.innerHTML = html;
+            // Inject print button above the character sheet
+            const printBarHTML = `
+                <div class='ose-print-bar' style='margin-bottom: 12px; padding: 8px 12px; background: #f0f0f0; border-radius: 4px; display: flex; align-items: center; gap: 10px; border: 1px solid #ddd;'>
+                    <button id='openPrintTabBtn' style='padding: 7px 16px; font-size: 13px; font-weight: bold; background: #4CAF50; color: white; border: none; border-radius: 3px; cursor: pointer;'>🖨 Print / Save as PDF</button>
+                    <span style='color: #666; font-size: 0.85em; font-style: italic;'>Tip: In the print dialog, choose "Save as PDF" and set margins to None or Minimum</span>
+                </div>
+            `;
+            targetInfo.innerHTML = printBarHTML + html;
+
+            // Attach event listener to button (after it's in the DOM)
+            const btn = targetInfo.querySelector('#openPrintTabBtn');
+            if (btn) {
+                btn.addEventListener('click', () => {
+                    window.print();
+                });
+            }
         }
         if (targetDisplay) {
             targetDisplay.classList.add('visible');

@@ -159,6 +159,17 @@
         #result {
             font-size: 1em;
         }
+
+        /* Print styles — hides all controls, shows only the character sheet */
+        @media print {
+            nav,
+            h1,
+            #config,
+            .ose-print-bar { display: none !important; }
+            body { max-width: none !important; margin: 0 !important; padding: 0 !important; }
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            @page { size: letter; margin: 0.5in; }
+        }
     </style>
 </head>
 <body>
