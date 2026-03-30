@@ -46,8 +46,9 @@ export {
  * @param {boolean} healthyCharacters - Whether Healthy Characters is enabled
  * @returns {number} Total HP
  */
-export function rollHitPoints(className, level, conModifier, classData, includeLevel0HP, healthyCharacters) {
+export function rollHitPoints(className, level, conModifier, classData, includeLevel0HP, healthyCharacters, fixedRolls = null) {
     return sharedRollHitPoints({
+        fixedRolls,
         className,
         level,
         conModifier,

@@ -122,8 +122,9 @@ export function getRacialAbilities(race, raceClassMode = 'strict') {
  * @param {boolean} blessed - Whether character has Blessed ability (roll twice, take best)
  * @returns {number} Total HP
  */
-export function rollHitPoints(className, level, conModifier, classData, includeLevel0HP, healthyCharacters, blessed = false) {
+export function rollHitPoints(className, level, conModifier, classData, includeLevel0HP, healthyCharacters, blessed = false, fixedRolls = null) {
     return sharedRollHitPoints({
+        fixedRolls,
         className,
         level,
         conModifier,

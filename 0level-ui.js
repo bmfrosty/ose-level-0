@@ -111,6 +111,35 @@ export function display0LevelCharacter(results, total, background, hitPoints, ar
         spellSlots: null,
         turnUndead: null,
         showUndeadNames: false,
+        showQRCode: true,
+        // Compact params v2 — used to generate a short QR-friendly URL
+        cp: (() => {
+            const RACE_TO_CODE = {
+                'Human_RACE':'HU','Dwarf_RACE':'DW','Elf_RACE':'EL',
+                'Halfling_RACE':'HA','Gnome_RACE':'GN'
+            };
+            const saves = currentCharacter?.savingThrows || {};
+            return {
+                v:2, m:'Z',
+                r: RACE_TO_CODE[race] || 'HU',
+                s: ['STR','DEX','CON','INT','WIS','CHA'].map(a => {
+                    const r = results.find(r => r.ability === a);
+                    return r ? r.roll : 10;
+                }),
+                sv: [saves.Death||14, saves.Wands||15, saves.Paralysis||16, saves.Breath||17, saves.Spells||18],
+                h: Math.max(1, hitPoints.total),
+                n: name || '',
+                bg: background.profession || '',
+                ar: background.armor || null,
+                w: background.weapon || null,
+                it: Array.isArray(background.item) ? background.item : (background.item ? [background.item] : []),
+                g: startingGold || 0,
+                ac: armorClass || 10,
+                adv: isAdvanced ? 1 : 0,
+                un: 0,
+                qr: 1
+            };
+        })(),
         footer: `Total Modifiers: ${total} | Attempts: ${rerollCount} | Minimums: STR ${strMin}, DEX ${dexMin}, CON ${conMin}, INT ${intMin}, WIS ${wisMin}, CHA ${chaMin}`,
         printTitle: `OSE ${modeLabel} - ${sanitize(displayRace)} - 0-Level - ${sanitize(background.profession)} - ${sanitize(name)}`,
         openInNewTab: document.getElementById('openInNewTab')?.checked || false,

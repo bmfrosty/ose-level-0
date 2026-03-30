@@ -61,7 +61,8 @@ export function parseHitDice(hitDiceString) {
  * @param {boolean} [options.includeLevel0HP=false] - Whether to include level 0 HP
  * @param {boolean} [options.healthyCharacters=false] - Whether Healthy Characters is enabled
  * @param {boolean} [options.blessed=false] - Whether character has Blessed ability (roll twice, take best)
- * @returns {number} Total HP
+ * @param {number[]|null} [options.fixedRolls=null] - If provided, use these per-entry HP values instead of rolling
+ * @returns {{ max: number, rolls: number[], dice: number[] }} HP result with per-level breakdown
  */
 export function rollHitPoints(options) {
     const {
@@ -71,121 +72,99 @@ export function rollHitPoints(options) {
         classData,
         includeLevel0HP = false,
         healthyCharacters = false,
-        blessed = false
+        blessed = false,
+        fixedRolls = null   // array of per-entry HP; if set, skip random rolling
     } = options;
-    
-    console.log('\n=== Rolling Hit Points ===');
-    console.log(`Class: ${className}, Level: ${level}, CON Modifier: ${formatModifier(conModifier)}`);
-    if (blessed) {
-        console.log('✨ Blessed: Rolling each die twice, taking best result');
-    }
-    
-    let totalHP = 0;
-    let level0HP = 0;
-    
-    // Roll Level 0 HP if enabled
-    if (includeLevel0HP) {
-        console.log('\n--- Level 0 HP ---');
-        let l0Roll, l0HP;
-        let l0Attempts = 0;
-        
-        do {
-            l0Attempts++;
-            
-            if (blessed) {
-                // Blessed: Roll twice, take best
-                const roll1 = rollSingleDie(4);
-                const roll2 = rollSingleDie(4);
-                l0Roll = Math.max(roll1, roll2);
-                console.log(`  Blessed rolls: ${roll1}, ${roll2} → taking ${l0Roll}`);
-            } else {
-                l0Roll = rollSingleDie(4);
-            }
-            
-            l0HP = l0Roll + conModifier;
-            
-            // Minimum 1 HP
-            if (l0HP < 1) l0HP = 1;
-            
-            if (healthyCharacters && l0HP < 2) {
-                console.log(`  Level 0: [${l0Roll}] + ${formatModifier(conModifier)} = ${l0HP} (below minimum 2, rerolling...)`);
-            }
-        } while (healthyCharacters && l0HP < 2);
-        
-        console.log(`  Level 0: [${l0Roll}] + ${formatModifier(conModifier)} = ${l0HP}`);
-        if (healthyCharacters && l0Attempts > 1) {
-            console.log(`  ✅ Passed Healthy Characters check after ${l0Attempts} attempts`);
+
+    if (blessed) console.log('[HP Roll] ✨ Blessed: rolling each die TWICE, taking the best result');
+
+    // Helper: roll one die, logging both values when blessed
+    const rollDie = (sides, label) => {
+        if (blessed) {
+            const a = rollSingleDie(sides);
+            const b = rollSingleDie(sides);
+            const best = Math.max(a, b);
+            console.log(`  ${label}: 1d${sides} blessed → [${a}, ${b}] took ${best}`);
+            return best;
         }
-        
-        level0HP = l0HP;
-        totalHP += l0HP;
+        const r = rollSingleDie(sides);
+        console.log(`  ${label}: 1d${sides} → ${r}`);
+        return r;
+    };
+
+    // L0 is ALWAYS at rolls[0] / dice[0] — gives compact params a stable hr[] layout.
+    // It counts toward totalHP only when includeLevel0HP=true.
+    const rolls = [];   // per-entry final HP: [L0, L1, L2, ...]
+    const dice  = [];   // die sides:          [4,  X,  X, ...]
+    let totalHP = 0;
+
+    // ─── Level 0 ──────────────────────────────────────────────────────────────
+    dice.push(4);
+    let backgroundHP;
+    {
+        let l0HP;
+        if (fixedRolls && fixedRolls[0] !== undefined) {
+            l0HP = fixedRolls[0];   // stored value is already the final HP
+            console.log(`  L0${includeLevel0HP ? '' : ' (bg only)'}: fixed → ${l0HP}`);
+        } else {
+            // L0 is NEVER blessed — it determines background occupation
+            do {
+                const die = rollSingleDie(4);
+                const lbl = includeLevel0HP ? 'L0' : 'L0 (bg only)';
+                console.log(`  ${lbl}: 1d4 → ${die} (unblessed — background selection roll)`);
+                l0HP = Math.max(1, die + conModifier);
+            } while (healthyCharacters && includeLevel0HP && l0HP < 2);
+        }
+        rolls.push(l0HP);                       // always at index 0
+        if (includeLevel0HP) totalHP += l0HP;   // only counts when requested
+        backgroundHP = l0HP;
     }
-    
-    // Roll HP for each level from 1 to selected level
-    console.log(`\n--- Rolling HP for Levels 1-${level} ---`);
-    
+
+    // ─── Levels 1–N ─────────────────────────────────────────────────────────
     for (let lvl = 1; lvl <= level; lvl++) {
-        // className should already have _CLASS suffix
         const hitDiceString = classData.getHitDice(className, lvl);
         const hitDice = parseHitDice(hitDiceString);
-        
-        let levelHP, rolls;
-        let attempts = 0;
-        
-        do {
-            attempts++;
-            rolls = [];
-            levelHP = hitDice.bonus;
-            
-            // Roll the die
-            if (blessed) {
-                // Blessed: Roll twice, take best
-                const roll1 = rollSingleDie(hitDice.sides);
-                const roll2 = rollSingleDie(hitDice.sides);
-                const die = Math.max(roll1, roll2);
-                rolls.push(`${roll1},${roll2}→${die}`);
-                levelHP += die;
-            } else {
-                const die = rollSingleDie(hitDice.sides);
-                rolls.push(die);
-                levelHP += die;
-            }
-            
-            // Add CON modifier unless asterisk is present
-            if (!hitDice.noConModifier) {
-                levelHP += conModifier;
-            }
-            
-            // Minimum 1 HP
-            if (levelHP < 1) levelHP = 1;
-            
-            // Check Healthy Characters requirement (only for level 1 if no level 0 HP)
-            if (lvl === 1 && !includeLevel0HP && healthyCharacters && levelHP < 2) {
-                const conPart = hitDice.noConModifier ? '' : ` + ${formatModifier(conModifier)}`;
-                console.log(`  Level ${lvl}: [${rolls.join(', ')}]${conPart} = ${levelHP} (below minimum 2, rerolling...)`);
-            }
-        } while (lvl === 1 && !includeLevel0HP && healthyCharacters && levelHP < 2);
-        
-        // Log the final roll
-        const conPart = hitDice.noConModifier ? '' : ` + ${formatModifier(conModifier)}`;
-        const bonusPart = hitDice.bonus !== 0 ? ` + ${hitDice.bonus}` : '';
-        console.log(`  Level ${lvl}: [${rolls.join(', ')}]${bonusPart}${conPart} = ${levelHP}`);
-        
-        if (lvl === 1 && !includeLevel0HP && healthyCharacters && attempts > 1) {
-            console.log(`  ✅ Passed Healthy Characters check after ${attempts} attempts`);
+        const rollsIndex = lvl;   // L0 always occupies index 0
+
+        // Past-max-HD levels (noConModifier=true) get a fixed incremental HP gain —
+        // no die is ever rolled. Store sides=0 so the edit panel hides the 🎲 button.
+        dice.push(hitDice.noConModifier ? 0 : (hitDice.sides || 0));
+
+        let levelHP;
+        if (fixedRolls && fixedRolls[rollsIndex] !== undefined) {
+            levelHP = fixedRolls[rollsIndex];
+            console.log(`  L${lvl}: fixed → ${levelHP}`);
+        } else {
+            do {
+                let dieRoll, hpBonus;
+                if (hitDice.noConModifier) {
+                    // Past max HD: fixed increment — compute delta vs previous level's bonus.
+                    // e.g. "9d8+8*" (L13) minus "9d8+6*" (L12) = +2 HP, no die roll, no CON mod.
+                    dieRoll = 0;
+                    const prevHd = parseHitDice(classData.getHitDice(className, lvl - 1));
+                    hpBonus = hitDice.bonus - prevHd.bonus;
+                } else {
+                    dieRoll = hitDice.sides > 0 ? rollDie(hitDice.sides, `L${lvl}`) : 0;
+                    hpBonus = hitDice.bonus;
+                }
+                levelHP = hpBonus + dieRoll;
+                if (!hitDice.noConModifier) levelHP += conModifier;
+                if (levelHP < 1) levelHP = 1;
+            // L1 floor: when L0 HP is NOT included in the total, the character's
+            // level-1 HP IS their total HP — it must be at least as high as their
+            // level-0 HP so they can't lose HP on gaining their first class level.
+            // Also reroll for Healthy Characters (min 2 HP at L1).
+            } while (lvl === 1 && !includeLevel0HP && (
+                levelHP < backgroundHP ||
+                (healthyCharacters && levelHP < 2)
+            ));
         }
-        
+
+        rolls.push(levelHP);
         totalHP += levelHP;
     }
-    
-    // Summary
-    console.log('\n--- Hit Points Summary ---');
-    if (includeLevel0HP) {
-        console.log(`Level 0 HP: ${level0HP}`);
-        console.log(`Levels 1-${level} HP: ${totalHP - level0HP}`);
-    }
-    console.log(`Total HP: ${totalHP}`);
-    console.log('==========================\n');
-    
-    return totalHP;
+
+    const label = rolls.map((r,i) => `[${i===0 ? 'L0' : 'L'+i}:${r}]`).join(' ');
+    console.log(`HP total: ${label} = ${totalHP}  (bg L0 hp=${backgroundHP}${blessed?' ✨blessed':''})`);
+    return { max: totalHP, rolls, dice, backgroundHP };
 }

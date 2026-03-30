@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Character Sheet</title>
+    <link rel="icon" href="favicon.ico">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        #print-controls {
+            background: #f0f0f0;
+            border-bottom: 2px solid #333;
+            padding: 10px 0;
+            margin-bottom: 12px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        #print-controls button {
+            padding: 8px 16px;
+            font-size: 14px;
+            font-weight: bold;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .btn-print  { background-color: #4CAF50; color: white; }
+        .btn-print:hover  { background-color: #45a049; }
+        .btn-edit   { background-color: #2196F3; color: white; }
+        .btn-edit:hover   { background-color: #1976D2; }
+        .btn-levelup { background-color: #7B1FA2; color: white; }
+        .btn-levelup:hover { background-color: #6A1B9A; }
+        .btn-close  { background-color: #ccc; color: #333; }
+        .btn-close:hover  { background-color: #bbb; }
+        .print-hint { color: #666; font-size: 0.85em; font-style: italic; }
+
+        /* Edit panel — blue theme */
+        #edit-panel {
+            display: none;
+            background: #e3f2fd;
+            border: 2px solid #2196F3;
+            border-radius: 5px;
+            padding: 14px;
+            margin-bottom: 16px;
+            font-size: 12px;
+        }
+        #edit-panel h3 { margin: 0 0 12px; color: #1565C0; font-size: 1.1em; }
+        #edit-panel .ep-section { margin-bottom: 10px; }
+        #edit-panel strong { font-size: 12px; }
+        #edit-panel input[type=number], #edit-panel input[type=text] {
+            padding: 3px 5px; border: 1px solid #ccc; border-radius: 3px;
+        }
+        #edit-panel .reroll-btn {
+            padding: 2px 6px; font-size: 11px; border: 1px solid #aaa;
+            border-radius: 3px; cursor: pointer; background: white;
+        }
+
+        /* Level Up panel — purple theme */
+        #level-up-panel {
+            display: none;
+            background: #f3e5f5;
+            border: 2px solid #7B1FA2;
+            border-radius: 5px;
+            padding: 14px;
+            margin-bottom: 16px;
+            font-size: 12px;
+        }
+        #level-up-panel h3 { margin: 0 0 12px; color: #4A148C; font-size: 1.1em; }
+        #level-up-panel .lup-section { margin-bottom: 10px; }
+        #level-up-panel strong { font-size: 12px; }
+
+        /* Shared level button style used by Level Up panel */
+        .ose-level-btn {
+            padding: 4px 8px; font-size: 11px; font-weight: bold;
+            border: 2px solid #7B1FA2; border-radius: 3px; cursor: pointer;
+            background: white; color: #7B1FA2; transition: all 0.12s;
+        }
+        .ose-level-btn.sel { background: #7B1FA2; color: white; }
+
+        #error {
+            color: red; padding: 20px; border: 1px solid red;
+            border-radius: 4px; background: #fff0f0; display: none;
+        }
+        @media print {
+            #print-controls  { display: none !important; }
+            #edit-panel      { display: none !important; }
+            #level-up-panel  { display: none !important; }
+            body { margin: 0; padding: 0; }
+            @page { size: letter; margin: 0.5in; }
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+        }
+    </style>
+</head>
+<body>
+    <div id="print-controls">
+        <button class="btn-print" onclick="window.print()">🖨 Print / Save as PDF</button>
+        <button class="btn-edit"    id="toggleEditBtn"    style="display:none">✏️ Edit Character</button>
+        <button class="btn-levelup" id="toggleLevelUpBtn" style="display:none">⬆ Level Up</button>
+        <button class="btn-close" onclick="window.close()">✕ Close</button>
+        <span class="print-hint">Tip: In the print dialog, choose "Save as PDF" and set margins to None or Minimum</span>
+    </div>
+
+    <!-- Level Up panel — level selector + display options only -->
+    <div id="level-up-panel">
+        <h3>⬆ Level Up</h3>
+
+        <div class="lup-section">
+            <strong>New Level:</strong>
+            <div id="lup-level-btns" style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;"></div>
+        </div>
+
+        <div class="lup-section" style="margin-top:10px;">
+            <strong>Options:</strong>
+            <div style="display:flex;flex-wrap:wrap;gap:14px;margin-top:4px;">
+                <label style="display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="checkbox" id="lup-undead"> Show Undead Monster Names</label>
+                <label style="display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="checkbox" id="lup-qr" checked> Show QR Code</label>
+            </div>
+        </div>
+
+        <div style="display:flex;gap:8px;margin-top:12px;">
+            <button id="lup-apply-btn" style="padding:7px 16px;font-size:12px;font-weight:bold;background:#6A1B9A;color:white;border:none;border-radius:3px;cursor:pointer;">Apply Level Up</button>
+            <button id="lup-cancel-btn" style="padding:7px 16px;font-size:12px;font-weight:bold;background:#ccc;color:#333;border:none;border-radius:3px;cursor:pointer;">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Edit panel — character details (no level change) -->
+    <div id="edit-panel">
+        <h3>✏️ Edit Character</h3>
+
+        <div class="ep-section" id="ep-prog-section">
+            <strong>Progression Mode:</strong>
+            <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:4px;">
+                <label style="display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="radio" name="ep-prog" value="ose"> OSE Standard</label>
+                <label style="display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="radio" name="ep-prog" value="smooth" checked> Smoothified</label>
+                <label style="display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="radio" name="ep-prog" value="ll"> Labyrinth Lord</label>
+            </div>
+        </div>
+
+        <div class="ep-section">
+            <strong>Name:</strong>
+            <input type="text" id="ep-name" style="margin-left:8px;width:200px;font-size:12px;">
+        </div>
+
+        <div class="ep-section">
+            <strong>Ability Scores:</strong>
+            <div id="ep-ability-inputs" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:6px;max-width:320px;"></div>
+        </div>
+
+        <div class="ep-section" id="ep-hp-section">
+            <!-- populated by JS: per-level HP rows (if hr data available) or single total HP -->
+        </div>
+
+        <div class="ep-section">
+            <strong>Options:</strong>
+            <div style="display:flex;flex-wrap:wrap;gap:14px;margin-top:4px;">
+                <label style="display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="checkbox" id="ep-undead"> Show Undead Monster Names</label>
+                <label style="display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="checkbox" id="ep-qr" checked> Show QR Code</label>
+            </div>
+        </div>
+
+        <div style="display:flex;gap:8px;margin-top:12px;">
+            <button id="ep-apply-btn" style="padding:7px 16px;font-size:12px;font-weight:bold;background:#1976D2;color:white;border:none;border-radius:3px;cursor:pointer;">Apply Changes</button>
+            <button id="ep-cancel-btn" style="padding:7px 16px;font-size:12px;font-weight:bold;background:#ccc;color:#333;border:none;border-radius:3px;cursor:pointer;">Cancel</button>
+        </div>
+    </div>
+
+    <div id="sheet-content"></div>
+    <div id="error"></div>
+
+    <script type="module">
+        import { renderCharacterSheetHTML } from './shared-character-sheet.js';
+
+        const errorEl   = document.getElementById('error');
+        const contentEl = document.getElementById('sheet-content');
+
+        // HD sides per class code
+        const CLASS_HD = {FI:8, CL:6, MU:4, TH:4, SB:6, DW:8, EL:6, HA:6, GN:4};
+        const PROG_TO_CODE = {ose:'O', smooth:'S', ll:'L'};
+        const CODE_TO_PROG = {O:'ose', S:'smooth', L:'ll'};
+        const ABILITIES = ['STR','DEX','CON','INT','WIS','CHA'];
+
+        /** Shared CON modifier helper (matches shared-hit-points.js logic). */
+        const getConMod = s => s >= 15 ? 1 : s >= 13 ? 1 : s <= 6 ? -1 : s <= 8 ? -1 : 0;
+
+        /** Decompress a base64url-encoded gzip string back to a UTF-8 string. */
+        async function decompressFromBase64Url(b64url) {
+            const b64 = b64url.replace(/-/g, '+').replace(/_/g, '/');
+            const padded = b64 + '='.repeat((4 - b64.length % 4) % 4);
+            const binary = atob(padded);
+            const bytes = new Uint8Array(binary.length);
+            for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+            const ds = new DecompressionStream('gzip');
+            const writer = ds.writable.getWriter();
+            writer.write(bytes);
+            writer.close();
+            const decompressed = await new Response(ds.readable).arrayBuffer();
+            return new TextDecoder().decode(decompressed);
+        }
+
+        /** Compress a string and return a base64url string. */
+        async function compressToBase64Url(str) {
+            const bytes = new TextEncoder().encode(str);
+            const cs = new CompressionStream('gzip');
+            const writer = cs.writable.getWriter();
+            writer.write(bytes);
+            writer.close();
+            const compressed = await new Response(cs.readable).arrayBuffer();
+            const uint8 = new Uint8Array(compressed);
+            let binary = '';
+            for (const b of uint8) binary += String.fromCharCode(b);
+            return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+        }
+
+        /**
+         * Expand a compact v2 params object into a full sheet object ready for renderCharacterSheetHTML.
+         */
+        async function expandCompactV2(cp) {
+            const CODE_TO_CLASS = {FI:'Fighter_CLASS',CL:'Cleric_CLASS',MU:'Magic-User_CLASS',
+                                   TH:'Thief_CLASS',SB:'Spellblade_CLASS',DW:'Dwarf_CLASS',
+                                   EL:'Elf_CLASS',HA:'Halfling_CLASS',GN:'Gnome_CLASS'};
+            const CODE_TO_RACE = {HU:'Human_RACE',DW:'Dwarf_RACE',EL:'Elf_RACE',
+                                  HA:'Halfling_RACE',GN:'Gnome_RACE'};
+            const CODE_TO_RCM  = {ST:'strict',SH:'strict-human',TE:'traditional-extended',AL:'allow-all'};
+
+            const mode  = cp.m;
+            const prog  = CODE_TO_PROG[cp.p] || 'smooth';
+            const race  = CODE_TO_RACE[cp.r] || 'Human_RACE';
+            const cls   = CODE_TO_CLASS[cp.c] || 'Fighter_CLASS';
+            const level = cp.l || 1;
+            const rcm   = CODE_TO_RCM[cp.rcm] || 'strict-human';
+
+            const adjArr  = cp.s  || [10,10,10,10,10,10];
+            const baseArr = cp.bs || adjArr;
+            const adj = {}, base = {};
+            ABILITIES.forEach((a,i) => { adj[a] = adjArr[i]; base[a] = baseArr[i]; });
+
+            const { calculateModifier } = await import('./shared-ability-scores.js');
+            const { getModifierEffects } = await import('./shared-modifier-effects.js');
+            const mods = {};
+            ABILITIES.forEach(a => mods[a] = calculateModifier(adj[a]));
+
+            const classDataMod = await import(
+                prog === 'll' ? './class-data-ll.js' :
+                prog === 'ose' ? './class-data-ose.js' : './class-data-gygar.js'
+            );
+            const ClassDataShared = await import('./class-data-shared.js');
+
+            const abilityScoresSheet = ABILITIES.map((a,i) => ({
+                name: a, score: adjArr[i],
+                originalScore: baseArr[i] !== adjArr[i] ? baseArr[i] : null,
+                effects: getModifierEffects(a, mods[a], adjArr[i])
+            }));
+
+            // ─── BASIC MODE ───────────────────────────────────────────────
+            if (mode === 'B') {
+                const { calculateXPBonus, getPrimeRequisites } = await import('./basic-utils.js');
+                const { getClassProgressionData, getClassFeatures, getRacialAbilities, createCharacter } =
+                    await import('./basic-character-gen.js');
+
+                const progData  = getClassProgressionData(cls, level, adj, classDataMod);
+                const features  = getClassFeatures(cls, level, classDataMod, ClassDataShared);
+                const racial    = getRacialAbilities(cls);
+                const character = createCharacter({
+                    level, className: cls,
+                    mode: prog==='smooth'?'Smoothified':prog==='ll'?'Labyrinth Lord':'OSE Standard',
+                    abilityScores: adj, hp: cp.h,
+                    progressionData: progData, features, racialAbilities: racial,
+                    name: cp.n, background: { profession: cp.bg }, startingGold: cp.g||0
+                });
+
+                const clsDisplay = cls.replace('_CLASS','');
+                const primeReqs  = getPrimeRequisites(cls);
+                let totalBonus = 0;
+                primeReqs.forEach(a => totalBonus += calculateXPBonus(adj[a]||10));
+                const xpBonusNum = primeReqs.length > 0 ? Math.floor(totalBonus/primeReqs.length) : 0;
+                const xpBonusStr = xpBonusNum >= 0 ? `+${xpBonusNum}%` : `${xpBonusNum}%`;
+                const hasRacial  = (character.racialAbilities||[]).length > 0;
+                const hasClass   = (character.classAbilities||[]).length > 0;
+
+                return {
+                    title: 'OLD-SCHOOL ESSENTIALS',
+                    subtitle: `RETRO ADVENTURE GAME &nbsp;·&nbsp; ${character.mode} Mode`,
+                    header: { columns: [
+                        {label:'Character Name', value:cp.n||'Unknown', flex:3},
+                        {label:'Background', value:cp.bg||'—', flex:2},
+                        {label:'Class', value:clsDisplay, flex:2},
+                        {label:'Level', value:level, flex:1, center:true},
+                        {label:'XP Bonus', value:xpBonusStr, flex:1, center:true}
+                    ]},
+                    combat: { maxHP:cp.h, initMod:mods.DEX },
+                    abilityScores: abilityScoresSheet,
+                    weaponsAndSkills: {
+                        weapon:cp.w||null, classAttackBonus:character.attackBonus||0,
+                        meleeMod:mods.STR, rangedMod:mods.DEX, thiefSkills:character.thiefSkills||null
+                    },
+                    abilitiesSection: {
+                        header:(hasRacial&&hasClass)?'RACIAL & CLASS ABILITIES':hasRacial?'RACIAL ABILITIES':'CLASS ABILITIES',
+                        racial:character.racialAbilities||[], class:character.classAbilities||[]
+                    },
+                    savingThrows: character.savingThrows,
+                    experience: {
+                        current:character.xp.current, forLevel:level,
+                        forLevelXP:character.xp.forCurrentLevel,
+                        forNext:character.xp.forNextLevel, bonus:xpBonusStr
+                    },
+                    equipment: {armor:cp.ar||null, shield:!!cp.sh, items:cp.it||[], startingAC:cp.ac||10, startingGold:cp.g||0},
+                    spellSlots:character.spellSlots||null, turnUndead:character.turnUndead||null,
+                    showUndeadNames:!!cp.un, showQRCode:cp.qr!==0,
+                    footer:`Level ${level} ${clsDisplay} &nbsp;·&nbsp; ${character.mode} Mode`,
+                    printTitle:`OSE Basic - ${clsDisplay} - Level ${level} - ${cp.bg||''} - ${cp.n||''}`,
+                    autoPrint:!!cp.ap
+                };
+            }
+
+            // ─── ADVANCED MODE ────────────────────────────────────────────
+            if (mode === 'A') {
+                const { calculateXPBonus, getPrimeRequisites, getRaceDisplayName, getClassDisplayName } =
+                    await import('./advanced-utils.js');
+                const { createCharacterAdvanced } = await import('./advanced-character-gen.js');
+
+                const character = createCharacterAdvanced({
+                    level, race, className:cls,
+                    baseScores:base, adjustedScores:adj,
+                    hp:cp.h, classData:classDataMod, ClassDataShared,
+                    progressionMode:prog, raceClassMode:rcm,
+                    name:cp.n, background:{profession:cp.bg}
+                });
+
+                const raceDisplay = getRaceDisplayName(race);
+                const clsDisplay  = getClassDisplayName(cls);
+                const modeStr = prog==='smooth'?'Smoothified':prog==='ll'?'Labyrinth Lord':'OSE Standard';
+                const raceClassDisplay = raceDisplay===clsDisplay?raceDisplay:`${raceDisplay} ${clsDisplay}`;
+
+                const primeReqs = getPrimeRequisites(cls);
+                let lowestBonus = 10;
+                primeReqs.forEach(a => lowestBonus = Math.min(lowestBonus, calculateXPBonus(adj[a]||10)));
+                const xpBonusStr = lowestBonus>=0?`+${lowestBonus}%`:`${lowestBonus}%`;
+                const hasRacial  = (character.racialAbilities||[]).length > 0;
+                const hasClass   = (character.classAbilities||[]).length > 0;
+
+                return {
+                    title: 'OLD-SCHOOL ESSENTIALS ADVANCED',
+                    subtitle:`RETRO ADVENTURE GAME &nbsp;·&nbsp; ${modeStr} Mode`,
+                    header: { columns: [
+                        {label:'Character Name', value:cp.n||'Unknown', flex:3},
+                        {label:'Background', value:cp.bg||'—', flex:2},
+                        {label:'Race & Class', value:raceClassDisplay, flex:2},
+                        {label:'Level', value:level, flex:1, center:true},
+                        {label:'XP Bonus', value:xpBonusStr, flex:1, center:true}
+                    ]},
+                    combat: {maxHP:cp.h, initMod:mods.DEX},
+                    abilityScores: abilityScoresSheet,
+                    weaponsAndSkills: {
+                        weapon:cp.w||null, classAttackBonus:character.attackBonus||0,
+                        meleeMod:mods.STR, rangedMod:mods.DEX, thiefSkills:character.thiefSkills||null
+                    },
+                    abilitiesSection: {
+                        header:(hasRacial&&hasClass)?'RACIAL & CLASS ABILITIES':hasRacial?'RACIAL ABILITIES':'CLASS ABILITIES',
+                        racial:character.racialAbilities||[], class:character.classAbilities||[]
+                    },
+                    savingThrows: character.savingThrows,
+                    experience: {
+                        current:character.xp.current, forLevel:level,
+                        forLevelXP:character.xp.forCurrentLevel,
+                        forNext:character.xp.forNextLevel, bonus:xpBonusStr
+                    },
+                    equipment:{armor:cp.ar||null, shield:!!cp.sh, items:cp.it||[], startingAC:cp.ac||10, startingGold:cp.g||0},
+                    spellSlots:character.spellSlots||null, turnUndead:character.turnUndead||null,
+                    showUndeadNames:!!cp.un, showQRCode:cp.qr!==0,
+                    footer:`Level ${level} ${raceDisplay} ${clsDisplay} &nbsp;·&nbsp; ${modeStr} Mode`,
+                    printTitle:`OSE Advanced - ${raceDisplay} - ${clsDisplay} - Level ${level} - ${cp.bg||''} - ${cp.n||''}`,
+                    autoPrint:!!cp.ap
+                };
+            }
+
+            // ─── 0-LEVEL MODE ─────────────────────────────────────────────
+            if (mode === 'Z') {
+                const { getAdvancedModeRacialAbilities } = await import('./shared-racial-abilities.js');
+                const racialAbilities = getAdvancedModeRacialAbilities(race);
+                const raceDisplay = race.replace('_RACE','');
+                const sv = cp.sv || [14,15,16,17,18];
+
+                return {
+                    title: cp.adv?'OLD-SCHOOL ESSENTIALS ADVANCED':'OLD-SCHOOL ESSENTIALS',
+                    subtitle:'RETRO ADVENTURE GAME',
+                    header: { columns: [
+                        {label:'Character Name', value:cp.n||'Unknown', flex:3},
+                        {label:'Race & Class', value:raceDisplay, flex:2},
+                        {label:'Occupation', value:cp.bg||'', flex:3},
+                        {label:'HD', value:'1d4', flex:1, center:true},
+                        {label:'Level', value:'0', flex:1, center:true}
+                    ]},
+                    combat:{maxHP:cp.h||1, initMod:mods.DEX},
+                    abilityScores: abilityScoresSheet,
+                    weaponsAndSkills:{weapon:cp.w||null, classAttackBonus:0, meleeMod:mods.STR, rangedMod:mods.DEX, thiefSkills:null},
+                    abilitiesSection:{header:'RACIAL ABILITIES', racial:racialAbilities||[], class:[]},
+                    savingThrows:{death:sv[0], wands:sv[1], paralysis:sv[2], breath:sv[3], spells:sv[4]},
+                    experience:null,
+                    equipment:{armor:cp.ar||null, items:cp.it||[], startingAC:cp.ac||10, startingGold:cp.g||0},
+                    spellSlots:null, turnUndead:null,
+                    showUndeadNames:!!cp.un, showQRCode:cp.qr!==0,
+                    footer:`0-Level ${raceDisplay}`,
+                    printTitle:`OSE ${cp.adv?'Advanced':'Basic'} - ${raceDisplay} - 0-Level - ${cp.bg||''} - ${cp.n||''}`,
+                    autoPrint:!!cp.ap
+                };
+            }
+
+            throw new Error(`Unknown compact mode: ${mode}`);
+        }
+
+        /**
+         * Initialise both the Edit Character panel and the Level Up panel.
+         * @param {Object} decoded - Fully decoded (no codes) compact params v2 object
+         */
+        function initEditPanel(decoded) {
+            const isZeroLevel = decoded.m === 'Z';
+
+            // ── Wire toggle buttons ────────────────────────────────────────
+            const editBtn    = document.getElementById('toggleEditBtn');
+            const levelUpBtn = document.getElementById('toggleLevelUpBtn');
+            const editPanel  = document.getElementById('edit-panel');
+            const lupPanel   = document.getElementById('level-up-panel');
+
+            editBtn.style.display = '';
+            editBtn.addEventListener('click', () => {
+                const wasOpen = editPanel.style.display === 'block';
+                lupPanel.style.display = 'none';   // close other panel
+                editPanel.style.display = wasOpen ? 'none' : 'block';
+                if (!wasOpen) editPanel.scrollIntoView({ behavior: 'smooth' });
+            });
+
+            // Level Up button — hidden for 0-level chars (no class to level into)
+            if (!isZeroLevel) {
+                levelUpBtn.style.display = '';
+                levelUpBtn.addEventListener('click', () => {
+                    const wasOpen = lupPanel.style.display === 'block';
+                    editPanel.style.display = 'none';  // close other panel
+                    lupPanel.style.display = wasOpen ? 'none' : 'block';
+                    if (!wasOpen) lupPanel.scrollIntoView({ behavior: 'smooth' });
+                });
+            }
+
+            // ── Cancel buttons ─────────────────────────────────────────────
+            document.getElementById('ep-cancel-btn').addEventListener('click', () => {
+                editPanel.style.display = 'none';
+            });
+            document.getElementById('lup-cancel-btn').addEventListener('click', () => {
+                lupPanel.style.display = 'none';
+            });
+
+            // ══════════════════════════════════════════════════════════════
+            // EDIT PANEL — progression, name, ability scores, HP, options
+            // ══════════════════════════════════════════════════════════════
+
+            // Hide progression mode for 0-level chars
+            if (isZeroLevel) {
+                document.getElementById('ep-prog-section').style.display = 'none';
+            } else {
+                const curProg = CODE_TO_PROG[decoded.p] || 'smooth';
+                const progRadio = document.querySelector(`input[name="ep-prog"][value="${curProg}"]`);
+                if (progRadio) progRadio.checked = true;
+            }
+
+            // ── Name ──────────────────────────────────────────────────────
+            document.getElementById('ep-name').value = decoded.n || '';
+
+            // ── Ability score inputs ───────────────────────────────────────
+            const scores = decoded.s || [10,10,10,10,10,10];
+            const abilityInputs = document.getElementById('ep-ability-inputs');
+            ABILITIES.forEach((ab, i) => {
+                const div = document.createElement('div');
+                div.style.cssText = 'display:flex;align-items:center;gap:5px;';
+                div.innerHTML = `
+                    <label style="font-weight:bold;min-width:35px;font-size:11px;">${ab}</label>
+                    <input type="number" id="ep-${ab}" value="${scores[i]}" min="3" max="18"
+                        style="width:45px;padding:3px;text-align:center;font-size:12px;font-weight:bold;border:1px solid #ccc;border-radius:3px;">
+                    <button class="reroll-btn ep-stat-reroll" data-stat="${ab}" title="Reroll ${ab} (3d6)">🎲</button>`;
+                abilityInputs.appendChild(div);
+            });
+            abilityInputs.querySelectorAll('.ep-stat-reroll').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const roll = (Math.floor(Math.random()*6)+1)
+                               + (Math.floor(Math.random()*6)+1)
+                               + (Math.floor(Math.random()*6)+1);
+                    const inp = document.getElementById('ep-' + btn.dataset.stat);
+                    if (inp) inp.value = Math.min(18, Math.max(3, roll));
+                });
+            });
+
+            // ── HP — per-level rows if hr data available, else single total ──
+            const hpSec = document.getElementById('ep-hp-section');
+            const hpRollsData  = decoded.hr && decoded.hr.length > 0 ? decoded.hr : null;
+            const hpDiceData   = decoded.hd || [];
+            const conScoreInit = decoded.s ? decoded.s[2] : 10;
+
+            if (hpRollsData) {
+                const conMod0 = getConMod(conScoreInit);
+                hpSec.innerHTML =
+                    `<strong>HP per Level:</strong> <span style="font-size:10px;color:#555;margin-left:8px;">CON mod: ${conMod0>=0?'+':''}${conMod0} &nbsp;·&nbsp; 🎲 rerolls 1 die</span>` +
+                    `<div id="ep-hp-rolls-wrap" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;"></div>`;
+                const wrap = hpSec.querySelector('#ep-hp-rolls-wrap');
+                hpRollsData.forEach((hp, i) => {
+                    const isL0  = i === 0;   // L0 always at index 0
+                    const label = isL0 ? 'L0' : `L${i}`;
+                    const sides = hpDiceData[i] || 0;
+                    const cell  = document.createElement('div');
+                    cell.style.cssText = 'display:flex;align-items:center;gap:3px;';
+                    cell.innerHTML =
+                        `<label style="font-size:11px;min-width:22px;font-weight:bold;color:#444;text-align:right;">${label}:</label>` +
+                        `<input type="number" class="ep-edit-hp" data-index="${i}" value="${hp}" min="1" max="99"` +
+                        ` style="width:38px;padding:3px;text-align:center;border:1px solid #ccc;border-radius:3px;font-size:12px;font-weight:bold;">` +
+                        (sides > 0 ? `<button class="reroll-btn ep-hp-reroll" data-index="${i}" data-sides="${sides}" title="Reroll 1d${sides}+CON">🎲</button>` : '');
+                    wrap.appendChild(cell);
+                });
+                hpSec.querySelectorAll('.ep-hp-reroll').forEach(rb => {
+                    rb.addEventListener('click', () => {
+                        const idx   = parseInt(rb.dataset.index);
+                        const sides = parseInt(rb.dataset.sides);
+                        const conScore = parseInt(document.getElementById('ep-CON')?.value) || conScoreInit;
+                        const hpVal = Math.max(1, Math.floor(Math.random() * sides) + 1 + getConMod(conScore));
+                        const inp = hpSec.querySelector(`.ep-edit-hp[data-index='${idx}']`);
+                        if (inp) inp.value = hpVal;
+                    });
+                });
+            } else {
+                // Fallback: single total HP input (old compact params without hr)
+                hpSec.innerHTML =
+                    `<strong>Total HP:</strong>` +
+                    `<input type="number" id="ep-hp" min="1" max="999" value="${decoded.h||1}"` +
+                    ` style="margin-left:8px;width:60px;text-align:center;font-size:12px;font-weight:bold;padding:3px;border:1px solid #ccc;border-radius:3px;">` +
+                    `<button class="reroll-btn" id="ep-reroll-hp" title="Roll new HP" style="margin-left:4px;">🎲 Reroll</button>`;
+                hpSec.querySelector('#ep-reroll-hp').addEventListener('click', () => {
+                    const sides = CLASS_HD[decoded.c] || 6;
+                    const lvl = decoded.l || 1;
+                    const conScore = parseInt(document.getElementById('ep-CON')?.value) || conScoreInit;
+                    const conMod = getConMod(conScore);
+                    let total = 0;
+                    for (let i = 0; i < lvl; i++) total += Math.max(1, Math.floor(Math.random() * sides) + 1 + conMod);
+                    hpSec.querySelector('#ep-hp').value = Math.max(1, total);
+                });
+            }
+
+            // ── Options ───────────────────────────────────────────────────
+            document.getElementById('ep-undead').checked = !!decoded.un;
+            document.getElementById('ep-qr').checked    = decoded.qr !== 0;
+
+            // ── Apply Changes (Edit panel — keeps current level) ───────────
+            document.getElementById('ep-apply-btn').addEventListener('click', async () => {
+                const { encodeCompactParams } = await import('./shared-compact-codes.js');
+
+                // Progression
+                const newProg = document.querySelector('input[name="ep-prog"]:checked')?.value || 'smooth';
+
+                // Ability scores
+                const newScores = ABILITIES.map(a => {
+                    const v = parseInt(document.getElementById('ep-' + a)?.value);
+                    return isNaN(v) ? 10 : Math.min(18, Math.max(3, v));
+                });
+
+                // HP — per-level rolls (if hr was present) or single total
+                const hpRollInputs = document.querySelectorAll('#ep-hp-section .ep-edit-hp');
+                let newHp, newHpRolls;
+                if (hpRollInputs.length > 0) {
+                    newHpRolls = Array.from(hpRollInputs).map(inp => Math.max(1, parseInt(inp.value) || 1));
+                    // L0 (index 0) only counts toward total when il=1 (includeLevel0HP)
+                    newHp = newHpRolls.reduce((a, b, i) => (i === 0 && !decoded.il) ? a : a + b, 0);
+                } else {
+                    newHp = Math.max(1, parseInt(document.querySelector('#ep-hp-section #ep-hp')?.value) || decoded.h || 1);
+                    newHpRolls = decoded.hr || [];
+                }
+
+                // Build new cp — keep current level unchanged
+                const newCp = {
+                    ...decoded,
+                    p:  PROG_TO_CODE[newProg],
+                    n:  document.getElementById('ep-name').value || decoded.n,
+                    s:  newScores,
+                    h:  newHp,
+                    hr: newHpRolls,
+                    un: document.getElementById('ep-undead').checked ? 1 : 0,
+                    qr: document.getElementById('ep-qr').checked ? 1 : 0,
+                    ap: 0,
+                };
+                // If base scores (bs) existed and we changed s, drop bs
+                // (we don't re-apply racial adjustments here)
+                if (newCp.bs) {
+                    const scoreChanged = newScores.some((v,i) => v !== (decoded.s?.[i] ?? 10));
+                    if (scoreChanged) delete newCp.bs;
+                }
+
+                const encoded = encodeCompactParams(newCp);
+                const b64url  = await compressToBase64Url(JSON.stringify(encoded));
+                window.location.href = `charactersheet.html?d=${b64url}`;
+            });
+
+            // ══════════════════════════════════════════════════════════════
+            // LEVEL UP PANEL — level selector + display options only
+            // ══════════════════════════════════════════════════════════════
+            if (!isZeroLevel) {
+                const lupLevelBtns = document.getElementById('lup-level-btns');
+                const curLevel = decoded.l || 1;
+
+                // Populate level buttons
+                for (let i = 1; i <= 14; i++) {
+                    const btn = document.createElement('button');
+                    btn.className = 'ose-level-btn' + (i === curLevel ? ' sel' : '');
+                    btn.textContent = i;
+                    btn.dataset.level = i;
+                    btn.addEventListener('click', () => {
+                        lupLevelBtns.querySelectorAll('.ose-level-btn').forEach(b => b.classList.remove('sel'));
+                        btn.classList.add('sel');
+                    });
+                    lupLevelBtns.appendChild(btn);
+                }
+
+                // Pre-fill options from current cp
+                document.getElementById('lup-undead').checked = !!decoded.un;
+                document.getElementById('lup-qr').checked    = decoded.qr !== 0;
+
+                // ── Apply Level Up ─────────────────────────────────────────
+                document.getElementById('lup-apply-btn').addEventListener('click', async () => {
+                    const { encodeCompactParams } = await import('./shared-compact-codes.js');
+                    const { parseHitDice }        = await import('./shared-hit-points.js');
+                    // HD progressions are shared across all modes — import once from class-data-shared
+                    const { HIT_DICE_PROGRESSIONS, HIT_DICE_SCALE } = await import('./class-data-shared.js');
+
+                    // decoded.c is the 2-char code ('FI'); map to full class key used in HIT_DICE_SCALE
+                    const CODE_TO_CLASS_LU = {
+                        FI:'Fighter_CLASS', CL:'Cleric_CLASS', MU:'Magic-User_CLASS',
+                        TH:'Thief_CLASS',   SB:'Spellblade_CLASS', DW:'Dwarf_CLASS',
+                        EL:'Elf_CLASS',     HA:'Halfling_CLASS',   GN:'Gnome_CLASS'
+                    };
+
+                    const selBtn   = lupLevelBtns.querySelector('.ose-level-btn.sel');
+                    const newLevel = selBtn ? parseInt(selBtn.dataset.level) : curLevel;
+                    const newUn    = document.getElementById('lup-undead').checked ? 1 : 0;
+                    const newQr    = document.getElementById('lup-qr').checked ? 1 : 0;
+
+                    const conScore  = decoded.s ? decoded.s[2] : 10;
+                    const conMod    = getConMod(conScore);
+                    const className = CODE_TO_CLASS_LU[decoded.c] || 'Fighter_CLASS';
+
+                    // Inline getHitDice — reads from shared progressions (same for all modes)
+                    const getHdStr = (cls, lvl) => {
+                        const scale = HIT_DICE_SCALE[cls];
+                        const prog  = scale ? HIT_DICE_PROGRESSIONS[scale] : null;
+                        return prog ? (prog[lvl - 1] || null) : null;
+                    };
+
+                    let newHpRolls = [...(decoded.hr || [])];
+                    let newHpDice  = [...(decoded.hd || [])];
+
+                    if (newLevel > curLevel) {
+                        // L0 HP floor — used when curLevel===0 to ensure L1 ≥ L0
+                        const l0HP = newHpRolls[0] || 1;
+
+                        // Add HP for each new level — detect past-max-HD via noConModifier flag
+                        for (let lvl = curLevel + 1; lvl <= newLevel; lvl++) {
+                            const hdStr = getHdStr(className, lvl);
+                            const hd    = parseHitDice(hdStr);
+                            let lvlHP;
+                            if (hd.noConModifier) {
+                                // Past max HD: fixed incremental gain — no die roll, no CON mod
+                                // Compute delta vs previous level's cumulative bonus
+                                const prevHd = parseHitDice(getHdStr(className, lvl - 1));
+                                lvlHP = Math.max(1, hd.bonus - prevHd.bonus);
+                            } else {
+                                // Normal HD level: roll 1 die + CON mod.
+                                // At L1: reroll until HP ≥ L0 HP (can't lose HP on first advancement)
+                                // when L0 is not included in the total (decoded.il === 0/false).
+                                const minHP = (lvl === 1 && !decoded.il) ? l0HP : 1;
+                                do {
+                                    lvlHP = Math.max(1, Math.floor(Math.random() * hd.sides) + 1 + conMod);
+                                } while (lvlHP < minHP);
+                            }
+                            newHpRolls.push(lvlHP);
+                            // Store sides=0 for fixed-gain levels so the edit panel hides the 🎲 button
+                            newHpDice.push(hd.noConModifier ? 0 : hd.sides);
+                        }
+                    } else if (newLevel < curLevel) {
+                        // Trim back: hr[0]=L0, hr[1]=L1, ..., hr[n]=Ln
+                        newHpRolls = newHpRolls.slice(0, newLevel + 1);
+                        newHpDice  = newHpDice.slice(0, newLevel + 1);
+                    }
+
+                    // Recalculate total HP (L0 included only when il=1)
+                    const newHp = newHpRolls.reduce((a, b, i) => (i === 0 && !decoded.il) ? a : a + b, 0);
+
+                    const newCp = {
+                        ...decoded,
+                        l:  newLevel,
+                        hr: newHpRolls,
+                        hd: newHpDice,
+                        h:  newHp,
+                        un: newUn,
+                        qr: newQr,
+                        ap: 0,
+                    };
+
+                    const encoded = encodeCompactParams(newCp);
+                    const b64url  = await compressToBase64Url(JSON.stringify(encoded));
+                    window.location.href = `charactersheet.html?d=${b64url}`;
+                });
+            }
+        }
+
+        async function main() {
+            const params     = new URLSearchParams(window.location.search);
+            const compressed = params.get('d');
+            const legacy     = params.get('data');
+
+            try {
+                let sheet;
+                let decodedCp = null;   // stored for the edit panel
+
+                if (compressed) {
+                    const json   = await decompressFromBase64Url(compressed);
+                    const parsed = JSON.parse(json);
+                    console.log('[charactersheet] Decompressed URL data:\n' + JSON.stringify(parsed, null, 2));
+
+                    if (parsed.v === 2) {
+                        const { decodeCompactParams } = await import('./shared-compact-codes.js');
+                        decodedCp = decodeCompactParams(parsed);
+                        console.log('[charactersheet] Decoded compact params:\n' + JSON.stringify(decodedCp, null, 2));
+                        sheet = await expandCompactV2(decodedCp);
+                    } else {
+                        sheet = parsed;
+                    }
+                } else if (legacy) {
+                    sheet = JSON.parse(legacy);
+                } else {
+                    errorEl.style.display = 'block';
+                    errorEl.textContent = 'No character data found in URL. Please generate a character and click "Print / Save as PDF".';
+                    return;
+                }
+
+                document.title      = sheet.printTitle || 'Character Sheet';
+                contentEl.innerHTML = renderCharacterSheetHTML(sheet);
+
+                if (sheet.autoPrint) setTimeout(() => window.print(), 400);
+
+                // Initialise Edit + Level Up panels only when we have v2 compact params
+                if (decodedCp) initEditPanel(decodedCp);
+
+                // QR code — current URL is already compact; make it clickable too
+                if (sheet.showQRCode !== false) {
+                    const qrImg  = document.getElementById('ose-qr-img');
+                    const qrLink = document.getElementById('ose-qr-link');
+                    if (qrLink) qrLink.href = window.location.href;
+                    if (qrImg) {
+                        try {
+                            const { default: QRCode } = await import('https://cdn.jsdelivr.net/npm/qrcode@1.5.3/+esm');
+                            const dataUrl = await QRCode.toDataURL(window.location.href, {
+                                margin: 1, color: { dark: '#000000ff', light: '#ffffffff' }
+                            });
+                            qrImg.src = dataUrl;
+                        } catch (e) { console.warn('QR code generation failed:', e); }
+                    }
+                }
+            } catch (e) {
+                errorEl.style.display = 'block';
+                errorEl.textContent   = 'Error loading character data: ' + e.message;
+                console.error('charactersheet.html error:', e);
+            }
+        }
+
+        main();
+    </script>
+</body>
+</html>

@@ -1,6 +1,6 @@
 # TODO — Active Planning Document
 
-> **Status:** All three generators complete and working. README updated (2026-03-19). Phase 2A (class abilities, thief skills, ability descriptions) complete (2026-03-20). Phase 2B (starting wealth) complete (2026-03-20). Phase 2C (automatic equipment purchase for basic.html and advanced.html) complete (2026-03-20). Phase 2D (racial abilities in Advanced mode) complete (2026-03-21). Remaining: HTML sheet improvements, comprehensive testing, misc enhancements.
+> **Status:** All three generators complete and working. README updated (2026-03-19). Phase 2A (class abilities, thief skills, ability descriptions) complete (2026-03-20). Phase 2B (starting wealth) complete (2026-03-20). Phase 2C (automatic equipment purchase for basic.html and advanced.html) complete (2026-03-20). Phase 2D (racial abilities in Advanced mode) complete (2026-03-21). Phase 2E (print button + cp v2 normalization) complete (2026-03-29). Phase 2F (Background in header + HP floor) complete (2026-03-29). Remaining: HTML sheet improvements, comprehensive testing, misc enhancements.
 
 > ⚠️ **IMPORTANT — ALWAYS UPDATE THIS FILE:** After completing any task, mark checklist items `[x]`, update the status line above with the date, and move "next up" markers accordingly. Do not leave this file stale.
 > **History:** See `PLANS_COMPLETED/` for all completed work.
@@ -264,11 +264,32 @@ Already works in Basic Mode. In Advanced Mode the race is selected separately fr
 - [x] **2D-2** Confirmed `createCharacterAdvanced()` in `advanced-character-gen.js` calls `getRacialAbilities(race, raceClassMode)` using the race argument (e.g. `"Dwarf_RACE"`) — not the class.
 - [x] **2D-3** Fixed `getAdvancedModeRacialAbilities()` in `shared-racial-abilities.js` to accept optional `{isAdvanced, humanRacialAbilities}` params (bypasses DOM). Fixed `getRacialAbilities()` wrapper in `advanced-character-gen.js` to pass values directly — no more DOM manipulation. Added new `'strict-human'` raceClassMode value (traditional combos + OSE level caps + humans get racial abilities), made it the default (2nd in the list). Verified: Human Fighter shows Blessed/Decisiveness/Leadership, Dwarf Fighter shows Infravision/etc., Elf Magic-User shows Detect Secret Doors/etc.
 
+#### Phase 2F — Background in Header + L1 HP Floor — ✅ COMPLETE (2026-03-29)
+
+- [x] **2F-1** Added **Background** column to the character sheet header row for Basic and Advanced modes, positioned between "Character Name" and "Class" / "Race & Class". Updated all four relevant files:
+  - `basic-ui.js` `displayCharacter()` — added `{ label:'Background', value:character.background?.profession||'—', flex:2 }` to `header.columns`
+  - `advanced-ui.js` `displayCharacter()` — same addition
+  - `charactersheet.html` `expandCompactV2()` — added Background column in both `m:'B'` and `m:'A'` sheet objects
+  - 0-level (`m:'Z'`) header is **unchanged** — it already uses "Occupation" in the same position
+- [x] **2F-2** Fixed `page2MiniHeader` in `shared-character-sheet.js` to find the class column by label (`c.label === 'Class' || c.label === 'Race & Class'`) rather than hardcoded `columns[1]` — necessary because inserting Background at index 1 shifted Class to index 2.
+- [x] **2F-3** Added **L1 HP floor** rule to `shared-hit-points.js`: when `includeLevel0HP=false`, Level 1 HP is rerolled until `levelHP >= backgroundHP` so a character cannot have fewer HP at Level 1 than they had as a Level 0 character. Existing Healthy Characters minimum-2 reroll preserved as a second OR condition. Verified with 1000 Monte Carlo runs (0 violations, worst case: Magic-User + CON −2).
+- [x] **2F-4** Applied the same L1 HP floor to the **Level Up panel** in `charactersheet.html`: captures `l0HP = newHpRolls[0]`, uses `do...while (lvlHP < l0HP)` at `lvl===1` when `decoded.il` is false.
+
+#### Phase 2E — Print Button + cp v2 Normalization — ✅ COMPLETE (2026-03-29)
+
+- [x] **2E-1** "🖨 Print / Save as PDF / EDIT" button in the print bar (top of generated sheet) opens `charactersheet.html?d=...` in a new tab — already existed and working. QR code on page 2 links to the same URL. `autoPrint` flag auto-opens the browser print dialog when set.
+- [x] **2E-2** `shared-hit-points.js` refactored: L0 background HP roll is **always at `rolls[0]`/`dice[0]`** regardless of the `includeLevel0HP` flag. `rollsIndex` for levels 1–N is now simply `lvl` (was `includeLevel0HP ? lvl : lvl-1`). L0 HP only contributes to `totalHP` when `includeLevel0HP=true`.
+- [x] **2E-3** `advanced-ui.js` and `basic-ui.js`: removed the prepend/slice logic that used to shift `hr[]` when toggling `includeLevel0HP`. The stable `hr[]` layout (`[L0, L1, L2, …]`) makes this unnecessary and was causing subtle bugs on edit round-trips.
+- [x] **2E-4** `advanced-ui.js` and `basic-ui.js` cp objects: added missing generation-option fields `hc` (healthyCharacters), `wp` (wealthPct), `prm` (primeRequisiteMode=0|9|13) — basic was missing all three.
+- [x] **2E-5** `charactersheet.html` Edit panel: fixed `isL0 = i === 0` (unconditional), `syncHpToLevel` offset is always `1`, and HP sum for Apply Changes correctly skips `hr[0]` when `il=0`.
+- [x] **2E-6** `shared-compact-codes.js`: added a full ASCII-table field reference documenting every field in the cp v2 object (type, allowed values, plain-English description). This is the canonical in-code reference.
+
 ### Suggested execution order
 1. ~~**2A** (class abilities, thief skills, ability descriptions)~~ ✅ Complete
 2. ~~**2B** (starting gold)~~ ✅ Complete
 3. ~~**2D** (racial abilities in Advanced mode)~~ ✅ Complete
-4. **2C** (equipment purchase — largely done, minor deferred items remain)
+4. ~~**2E** (print button + cp v2 normalization)~~ ✅ Complete
+5. **2C** (equipment purchase — largely done, minor deferred items remain)
 
 ---
 

@@ -52,9 +52,12 @@ let primeRequisiteMode = 'user'; // 'user', '9', '13'
 let healthyCharacters = false;
 let useFixedScores = false;
 let showUndeadNames = false;
+let showQRCode = true;
 let includeLevel0HP = false;
 let characterName = '';
 let wealthPct = 50; // Starting wealth % for level 2+ characters
+let fixedHPRolls = null;      // set by edit panel; null = roll normally
+let fixedStartingGold = null; // set by edit panel; null = roll/calculate normally
 let abilityScores = {
     STR: 3,
     INT: 3,
@@ -583,26 +586,30 @@ export function generateCharacter() {
     console.log('Include Level 0 HP:', includeLevel0HP);
     console.log('Blessed:', hasBlessed);
     
-    const hp = rollHitPoints(
+    const hpResult = rollHitPoints(
         selectedClass,
         selectedLevel,
         conModifier,
         classData,
         includeLevel0HP,
         false, // healthyCharacters - not used in Advanced Mode
-        hasBlessed // blessed - roll HP twice, take best
+        hasBlessed, // blessed - roll HP twice, take best
+        fixedHPRolls  // may be null (rolls normally) or array (uses fixed values)
     );
-    
+    const hp = hpResult.max;
+
     console.log('Total HP:', hp);
     
-    // Generate background based on HP
-    const background = getRandomBackground(hp);
+    // Generate background based on L0 HP (always rolled even when includeLevel0HP=false)
+    const background = getRandomBackground(hpResult.backgroundHP);
     console.log('Background:', background);
     
-    // Compute starting gold
+    // Compute starting gold (uses fixedStartingGold if set from edit panel)
     const progressionData = getClassProgressionData(selectedClass, selectedLevel, adjustedScores, classData);
     let startingGold;
-    if (selectedLevel === 1) {
+    if (fixedStartingGold !== null) {
+        startingGold = fixedStartingGold;
+    } else if (selectedLevel === 1) {
         startingGold = rollStartingGold(progressionMode);
     } else {
         startingGold = calcStartingGold(progressionData?.xpForCurrentLevel || 0, wealthPct);
@@ -630,8 +637,15 @@ export function generateCharacter() {
         name: characterName,
         background: background
     });
-    
+
+    // Store per-level HP breakdown and starting gold on the character
+    character.hpRolls = hpResult.rolls;
+    character.hpDice  = hpResult.dice;
     character.startingGold = startingGold;
+    // Reset overrides now that generation is complete
+    fixedHPRolls = null;
+    fixedStartingGold = null;
+
     console.log('Character object created:', character);
     
     console.log('\n========================================');
@@ -663,6 +677,7 @@ export function displayCharacter(character, purchased) {
         header: {
             columns: [
                 { label: 'Character Name', value: character.name || 'Unknown', flex: 3 },
+                { label: 'Background', value: character.background?.profession || '—', flex: 2 },
                 { label: 'Race & Class', value: raceClassDisplay, flex: 2 },
                 { label: 'Level', value: character.level, flex: 1, center: true },
                 { label: 'XP Bonus', value: xpBonus, flex: 1, center: true }
@@ -700,6 +715,7 @@ export function displayCharacter(character, purchased) {
         },
         equipment: {
             armor: purchased.armor || null,
+            shield: purchased.shield || false,
             items: purchased.items,
             startingAC: purchased.startingAC,
             startingGold: purchased.goldRemaining
@@ -707,10 +723,128 @@ export function displayCharacter(character, purchased) {
         spellSlots: character.spellSlots || null,
         turnUndead: character.turnUndead || null,
         showUndeadNames: showUndeadNames,
+        showQRCode: showQRCode,
+        // Compact params v2 — used to generate a short QR-friendly URL
+        cp: (() => {
+            const RACE_TO_CODE = {
+                'Human_RACE':'HU','Dwarf_RACE':'DW','Elf_RACE':'EL',
+                'Halfling_RACE':'HA','Gnome_RACE':'GN'
+            };
+            const CLASS_TO_CODE = {
+                'Fighter_CLASS':'FI','Cleric_CLASS':'CL','Magic-User_CLASS':'MU',
+                'Thief_CLASS':'TH','Spellblade_CLASS':'SB','Dwarf_CLASS':'DW',
+                'Elf_CLASS':'EL','Halfling_CLASS':'HA','Gnome_CLASS':'GN'
+            };
+            const PROG_TO_CODE = {'ose':'O','smooth':'S','ll':'L'};
+            const RCM_TO_CODE = {'strict':'ST','strict-human':'SH','traditional-extended':'TE','allow-all':'AL'};
+            const adjArr = ['STR','DEX','CON','INT','WIS','CHA'].map(a => character.adjustedScores[a]);
+            const baseArr = ['STR','DEX','CON','INT','WIS','CHA'].map(a => character.baseScores[a]);
+            const hasRacialAdj = adjArr.some((v, i) => v !== baseArr[i]);
+            return {
+                v:2, m:'A',
+                p: PROG_TO_CODE[progressionMode] || 'S',
+                r: RACE_TO_CODE[selectedRace] || 'HU',
+                c: CLASS_TO_CODE[selectedClass] || 'FI',
+                l: character.level,
+                s: adjArr,
+                ...(hasRacialAdj ? { bs: baseArr } : {}),
+                h: character.hp.max,
+                hr: character.hpRolls || [],
+                hd: character.hpDice || [],
+                il: includeLevel0HP ? 1 : 0,
+                n: character.name || '',
+                bg: character.background?.profession || '',
+                ar: purchased.armor || null,
+                sh: purchased.shield ? 1 : 0,
+                w: purchased.weapon || null,
+                it: purchased.items || [],
+                g: typeof purchased.goldRemaining === 'number' ? purchased.goldRemaining : 0,
+                ac: purchased.startingAC || 10,
+                rcm: RCM_TO_CODE[raceClassMode] || 'SH',
+                un: showUndeadNames ? 1 : 0,
+                qr: showQRCode ? 1 : 0,
+                hc: healthyCharacters ? 1 : 0,
+                wp: wealthPct,
+                prm: primeRequisiteMode === 'user' ? 0 : parseInt(primeRequisiteMode)
+            };
+        })(),
         footer: `Level ${character.level} ${raceDisplay} ${classDisplay} &nbsp;·&nbsp; ${mode} Mode`,
         printTitle: `OSE Advanced - ${sanitize(raceDisplay)} - ${sanitize(classDisplay)} - Level ${character.level} - ${sanitize(character.background?.profession || '')} - ${sanitize(character.name)}`,
         openInNewTab: document.getElementById('openInNewTab')?.checked || false,
-        autoPrint: document.getElementById('autoPrintInNewTab')?.checked || false
+        autoPrint: document.getElementById('autoPrintInNewTab')?.checked || false,
+        editState: {
+            level: character.level,
+            progressionMode: progressionMode,
+            name: character.name || '',
+            STR: character.baseScores.STR,
+            INT: character.baseScores.INT,
+            WIS: character.baseScores.WIS,
+            DEX: character.baseScores.DEX,
+            CON: character.baseScores.CON,
+            CHA: character.baseScores.CHA,
+            hpRolls: character.hpRolls || [],
+            hpDice: character.hpDice || [],
+            startingGold: character.startingGold || 0,
+            includeLevel0HP: includeLevel0HP,
+            showUndeadNames: showUndeadNames,
+            showQRCode: showQRCode,
+            conModifier: calculateModifier(character.adjustedScores.CON),
+            extraSections: [
+                {
+                    label: '6. Race/Class Restrictions',
+                    name: 'editRaceClassMode',
+                    options: [
+                        { value: 'strict', label: 'Strict OSE', checked: raceClassMode === 'strict' },
+                        { value: 'strict-human', label: 'Strict + Human Abilities', checked: raceClassMode === 'strict-human' },
+                        { value: 'traditional-extended', label: 'Traditional Extended', checked: raceClassMode === 'traditional-extended' },
+                        { value: 'allow-all', label: 'Allow All', checked: raceClassMode === 'allow-all' }
+                    ]
+                }
+            ]
+        },
+        onEditUpdate: (values) => {
+            // Update module-level state
+            selectedLevel = values.level;
+            progressionMode = values.progressionMode;
+            characterName = values.name;
+            abilityScores = { STR: values.STR, INT: values.INT, WIS: values.WIS, DEX: values.DEX, CON: values.CON, CHA: values.CHA };
+            if (values.editRaceClassMode) raceClassMode = values.editRaceClassMode;
+            // L0 is always at index 0 — no prepend/slice needed when toggling includeLevel0HP
+            includeLevel0HP = values.includeLevel0HP || false;
+            showUndeadNames = values.showUndeadNames || false;
+            showQRCode = values.showQRCode ?? true;
+            fixedHPRolls = (values.hpRolls && values.hpRolls.length > 0) ? [...values.hpRolls] : null;
+            fixedStartingGold = (values.startingGold !== null && values.startingGold !== undefined)
+                ? parseInt(values.startingGold) : null;
+
+            // Sync DOM so generateCharacter() picks up the edited base scores
+            ['STR', 'INT', 'WIS', 'DEX', 'CON', 'CHA'].forEach(a => {
+                const inp = document.getElementById(`score${a}`);
+                if (inp) inp.value = values[a];
+            });
+            const nameEl = document.getElementById('characterName');
+            if (nameEl) nameEl.value = characterName;
+            document.querySelectorAll('.level-btn').forEach(btn => {
+                btn.classList.toggle('selected', parseInt(btn.dataset.level) === selectedLevel);
+            });
+            document.querySelectorAll('input[name="progressionMode"]').forEach(r => {
+                r.checked = r.value === progressionMode;
+            });
+            document.querySelectorAll('input[name="raceClassMode"]').forEach(r => {
+                r.checked = r.value === raceClassMode;
+            });
+            const l0El = document.getElementById('includeLevel0HP');
+            if (l0El) l0El.checked = includeLevel0HP;
+            const undeadEl = document.getElementById('showUndeadNames');
+            if (undeadEl) undeadEl.checked = showUndeadNames;
+
+            // Lock scores so regeneration uses the edited values
+            useFixedScores = true;
+            const fixedEl = document.getElementById('useFixedScores');
+            if (fixedEl) fixedEl.checked = true;
+            updateRollButtonState();
+            generateCharacter();
+        }
     };
 
     displayCharacterSheet(
