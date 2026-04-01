@@ -3,7 +3,6 @@
  * Race ability adjustments and requirements for 0-Level and Advanced mode
  * ES6 Module - used by browser generators
  * 
- * Note: race-adjustments.js still exists for Node.js CLI (node-canvas-generator.js)
  */
 
 import { LEGACY_RACE_NAMES, normalizeRaceName } from './shared-race-names.js';

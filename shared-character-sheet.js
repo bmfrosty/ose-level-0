@@ -67,8 +67,18 @@ export function renderCharacterSheetHTML(sheet) {
         </div>`;
     }).join('');
 
+    // ── Ability score ordering ────────────────────────────────────────────────
+    // abilityOrder: 1 (default) = OSE/Basic order (STR, INT, WIS, DEX, CON, CHA)
+    //               0           = Modern/Advanced order (STR, DEX, CON, INT, WIS, CHA)
+    const _OSE_ABILITY_ORDER = ['STR', 'INT', 'WIS', 'DEX', 'CON', 'CHA'];
+    const _MOD_ABILITY_ORDER = ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'];
+    const _abilityOrderArr = (sheet.abilityOrder !== 0) ? _OSE_ABILITY_ORDER : _MOD_ABILITY_ORDER;
+    const _sortedAbilityScores = [...sheet.abilityScores].sort(
+        (a, b) => _abilityOrderArr.indexOf(a.name) - _abilityOrderArr.indexOf(b.name)
+    );
+
     // ── Ability scores rows ──────────────────────────────────────────────────
-    const abilityRows = sheet.abilityScores.map(a => {
+    const abilityRows = _sortedAbilityScores.map(a => {
         const scoreDisplay = (a.originalScore !== null && a.originalScore !== undefined && a.originalScore !== a.score)
             ? `<span style='text-decoration:line-through; color:#999; font-size:0.85em; margin-right:4px;'>${a.originalScore}</span>${a.score}`
             : `${a.score}`;
@@ -204,7 +214,7 @@ export function renderCharacterSheetHTML(sheet) {
     // ── Page-2 mini-header (character name + class reminder) ──────────────────
     const nameVal  = sheet.header.columns[0]?.value || '';
     // Find class by label — robust against the Background column being inserted at index 1
-    const _classCol = sheet.header.columns.find(c => c.label === 'Class' || c.label === 'Race & Class');
+    const _classCol = sheet.header.columns.find(c => c.label === 'Class' || c.label === 'Race & Class' || c.label === 'Race/Class');
     const classVal  = _classCol?.value || sheet.header.columns[1]?.value || '';
     const page2MiniHeader = `
         <div style='font-size: 0.8em; color: #444; margin-bottom: 10px;
@@ -323,6 +333,7 @@ export function renderCharacterSheetHTML(sheet) {
             <p style='font-size: 0.8em; color: #666; margin: 4px 0; flex: 1;'>${sheet.footer}</p>
             <div style='font-size: 0.8em; color: #444; white-space: nowrap; display: flex; gap: 16px;'>
                 ${startingAC !== null && startingAC !== undefined ? `<span><strong>Starting AC:</strong> ${startingAC}</span>` : ''}
+                ${eq.startingHD ? `<span><strong>Starting HD:</strong> ${eq.startingHD}</span>` : ''}
                 ${startingGold !== null ? `<span><strong>Starting Gold:</strong> ${startingGold} gp</span>` : ''}
             </div>
         </div>
@@ -629,11 +640,16 @@ async function buildPrintUrl(printSheet) {
  * @param {Object} sheet - Normalized sheet object
  * @param {boolean} autoPrint - Whether to auto-open print dialog
  */
-async function openCharacterInPrintTab(sheet, autoPrint = false) {
+async function openCharacterInPrintTab(sheet, autoPrint = false, backgroundTab = false) {
     const { onEditUpdate, editState, ...printSheet } = sheet;
     printSheet.autoPrint = autoPrint;
     const url = await buildPrintUrl(printSheet);
-    window.open(url, '_blank');
+    const newWin = window.open(url, '_blank');
+    if (backgroundTab && newWin) {
+        // Keep the new tab in the background — blur it and refocus the generator
+        newWin.blur();
+        window.focus();
+    }
 }
 
 /**
@@ -662,7 +678,7 @@ export function displayCharacterSheet(sheet, targetInfo, targetDisplay) {
     const html = renderCharacterSheetHTML(sheet);
 
     if (sheet.openInNewTab) {
-        openCharacterInPrintTab(sheet, sheet.autoPrint);
+        openCharacterInPrintTab(sheet, sheet.autoPrint, sheet.backgroundTab || false);
         if (targetInfo) {
             targetInfo.innerHTML = '<p style="text-align: center;">Character opened in new tab.</p>';
         }
@@ -672,16 +688,21 @@ export function displayCharacterSheet(sheet, targetInfo, targetDisplay) {
     } else {
         if (targetInfo) {
             const printBarHTML = `
-                <div class='ose-print-bar' style='margin-bottom: 12px; padding: 8px 12px; background: #f0f0f0; border-radius: 4px; display: flex; align-items: center; gap: 10px; border: 1px solid #ddd;'>
+                <div class='ose-print-bar' style='margin-bottom: 12px; padding: 8px 12px; background: #f0f0f0; border-radius: 4px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; border: 1px solid #ddd;'>
                     <button id='openPrintTabBtn' style='padding: 7px 16px; font-size: 13px; font-weight: bold; background: #4CAF50; color: white; border: none; border-radius: 3px; cursor: pointer;'>🖨 Print / Save as PDF / EDIT</button>
+                    <button id='openPrintTabNowBtn' style='padding: 7px 16px; font-size: 13px; font-weight: bold; background: #1976D2; color: white; border: none; border-radius: 3px; cursor: pointer;'>📄 Open in New Tab for Printing</button>
                     <span style='color: #666; font-size: 0.85em; font-style: italic;'>Tip: Opens character sheet in new tab — print, save, or edit there</span>
                 </div>
             `;
             targetInfo.innerHTML = printBarHTML + html;
 
-            // Print button — open character in a clean new tab for printing
+            // Print button — open character in a clean new tab for printing/editing
             const btn = targetInfo.querySelector('#openPrintTabBtn');
             if (btn) btn.addEventListener('click', () => openCharacterInPrintTab(sheet, false));
+
+            // "Open in New Tab for Printing" button — opens and auto-triggers print dialog
+            const printNowBtn = targetInfo.querySelector('#openPrintTabNowBtn');
+            if (printNowBtn) printNowBtn.addEventListener('click', () => openCharacterInPrintTab(sheet, true));
 
             // Async: generate inline QR code + make it clickable
             if (sheet.showQRCode !== false) {

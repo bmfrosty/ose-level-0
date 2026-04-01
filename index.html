@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OSE Character Generators</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>OSE Character Generator</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -196,10 +199,8 @@
 <body>
     <nav>
         <div class="nav-left">
-            <a href="0level.html">Level 0 Generator</a>
-            <a href="basic.html">Basic (Levels 1+)</a>
-            <a href="advanced.html">Advanced (Levels 1+)</a>
-            <a href="classes.html">Class Reference</a>
+            <a href="generator.html">Character Generator</a>
+            <a href="classes.html">Class Tables</a>
         </div>
         <div style="display:flex; gap:20px; align-items:center;">
             <a href="https://github.com/bmfrosty/ose-level-0" target="_blank" rel="noopener" title="View source on GitHub" style="color:#333;">⬡ GitHub</a>
@@ -207,74 +208,49 @@
         </div>
     </nav>
 
-    <h1>OSE Character Generators</h1>
+    <h1>OSE Character Generator</h1>
 
     <div class="welcome-section">
         <h2>Welcome!</h2>
-        <p>These tools help you create characters for <strong>Old-School Essentials (OSE)</strong> campaigns. Choose from three different generators depending on your needs:</p>
+        <p>A single <strong>Character Generator</strong> for <strong>Old-School Essentials (OSE)</strong> campaigns — supporting both Basic and Advanced modes in one place. Choose a mode below to jump straight in, or open the generator and switch modes at any time.</p>
     </div>
 
     <div class="generator-grid">
         <div class="generator-card">
-            <h3>🎲 Level 0 Character Generator</h3>
-            <p><strong>For:</strong> Funnel-style adventures where players start as ordinary people</p>
-            <p><strong>Features:</strong></p>
+            <h3>⚔️🛡️ Character Generator</h3>
+            <p><strong>For:</strong> Creating OSE characters — from funnel-style Level 0 all the way to Level 14</p>
+            <p><strong>Basic Mode</strong> — race-as-class:</p>
             <ul>
-                <li>Random backgrounds and occupations</li>
-                <li>1d4 hit points</li>
-                <li>Basic equipment</li>
-                <li>Racial abilities (Human, Dwarf, Elf, Gnome, Halfling)</li>
-                <li>Export to PNG, PDF, Markdown, or JSON</li>
-            </ul>
-            <a href="0level.html">Generate Level 0 Character →</a>
-        </div>
-
-        <div class="generator-card">
-            <h3>⚔️ Basic Mode (Levels 1-14)</h3>
-            <p><strong>For:</strong> Traditional OSE race-as-class system</p>
-            <p><strong>Features:</strong></p>
-            <ul>
-                <li>Human classes: Cleric, Fighter, Magic-User, Thief</li>
+                <li>Human classes: Cleric, Fighter, Magic-User, Thief, Spellblade</li>
                 <li>Demihuman classes: Dwarf, Elf, Halfling, Gnome</li>
-                <li>Spellblade (fighter/magic-user hybrid)</li>
-                <li>Full progression tables (saves, attack bonus, XP)</li>
-                <li>Spell slots, thief skills, turn undead</li>
+                <li>Optional demihuman level limits (standard or extended)</li>
             </ul>
-            <a href="basic.html">Generate Basic Character →</a>
+            <p><strong>Advanced Mode</strong> — separate race &amp; class:</p>
+            <ul>
+                <li>Races: Human, Dwarf, Elf, Gnome, Halfling</li>
+                <li>Classes: Cleric, Fighter, Magic-User, Thief, Spellblade</li>
+                <li>Racial ability adjustments, flexible race/class restrictions</li>
+            </ul>
+            <p><strong>Both modes:</strong> Level 0 funnel characters, full progression tables, spell slots, thief skills, turn undead, three progression modes (Smoothified / OSE Standard / Labyrinth Lord), shareable URLs &amp; QR codes</p>
+            <a href="generator.html">Open Generator →</a>
         </div>
 
         <div class="generator-card">
-            <h3>🛡️ Advanced Mode (Levels 1-14)</h3>
-            <p><strong>For:</strong> Separate race and class selection</p>
-            <p><strong>Features:</strong></p>
+            <h3>📊 Class Tables</h3>
+            <p><strong>For:</strong> Looking up Smoothified progression tables for each class</p>
             <ul>
-                <li>Choose race: Human, Dwarf, Elf, Gnome, Halfling</li>
-                <li>Choose class: Cleric, Fighter, Magic-User, Thief, Spellblade</li>
-                <li>Racial ability adjustments and minimums</li>
-                <li>Flexible race/class combinations</li>
-                <li>Full progression tables</li>
+                <li>To-hit bonus by level (ascending AC)</li>
+                <li>Saving throws by level</li>
+                <li>XP requirements and hit dice</li>
+                <li>7 entries: Cleric, Dwarf, Elf/Spellblade, Fighter, Halfling, Magic-User, Thief</li>
             </ul>
-            <a href="advanced.html">Generate Advanced Character →</a>
-        </div>
-
-        <div class="generator-card">
-            <h3>📚 Class Reference</h3>
-            <p><strong>For:</strong> Looking up class details and progression tables</p>
-            <p><strong>Features:</strong></p>
-            <ul>
-                <li>Complete class documentation</li>
-                <li>OSE Standard and Smoothified Mode versions</li>
-                <li>Saving throws, attack bonus, XP requirements</li>
-                <li>Class abilities and special features</li>
-                <li>Side-by-side comparisons</li>
-            </ul>
-            <a href="classes.html">Browse Classes →</a>
+            <a href="classes.html">View Class Tables →</a>
         </div>
     </div>
 
     <div class="mode-comparison">
         <h2>📊 Mode Comparison: OSE Standard vs Smoothified</h2>
-        <p>All three generators support two progression modes:</p>
+        <p>Both generator modes support three progression settings:</p>
         
         <table class="mode-table">
             <thead>
@@ -300,11 +276,6 @@
                     <td>Original OSE progression</td>
                     <td>More frequent, gradual improvements</td>
                 </tr>
-                <tr>
-                    <td><strong>Best For</strong></td>
-                    <td>By-the-book OSE campaigns</td>
-                    <td>House-ruled campaigns with smoother progression</td>
-                </tr>
             </tbody>
         </table>
     </div>
@@ -321,13 +292,13 @@
     <div class="content-section">
         <h2>✨ Key Features</h2>
         <ul>
-            <li><strong>Three Generators:</strong> Level 0, Basic Mode (race-as-class), and Advanced Mode (race + class)</li>
+            <li><strong>Two Modes in One Generator:</strong> Basic (race-as-class, Levels 0–14) and Advanced (race + class, Levels 0–14) — switch between them at any time</li>
             <li><strong>Three Progression Modes:</strong> OSE Standard, Smoothified, and Labyrinth Lord</li>
             <li><strong>Demihuman Level Limits:</strong> Optional in Basic Mode (standard or extended to 14), configurable in Advanced Mode</li>
             <li><strong>Complete Class Documentation:</strong> All OSE classes with full progression tables</li>
             <li><strong>Spellblade Class:</strong> Warrior-mage hybrid class option</li>
             <li><strong>Flexible Options:</strong> Ability score minimums, HP requirements, level 0 HP inclusion, prime requisite modes</li>
-            <li><strong>Export Options:</strong> PNG, PDF, Markdown, and JSON formats (Level 0 only)</li>
+            <li><strong>Export Options:</strong> PNG and PDF via print dialog on all character sheets</li>
         </ul>
     </div>
 
@@ -345,7 +316,7 @@
 
     <div class="content-section">
         <h2>📝 License & Attribution</h2>
-        <p>Old-School Essentials is a trademark of Necrotic Gnome. The OSE rules are used under the Open Game License.</p>
+        <p>Old-School Essentials is a trademark of Necrotic Gnome. The trademark and Old-School Essentials logo are used with permission of Necrotic Gnome, under license.</p>
         
         <p>The Ruins of Castle Gygar is a campaign setting by Tidal Wave Games, available on DriveThruRPG.</p>
         

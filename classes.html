@@ -3,11 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OSE Class Reference — Smoothified Progressions</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>OSE Class Tables — Smoothified Progressions</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            max-width: 860px;
+            max-width: 800px;
             margin: 0 auto;
             padding: 20px;
             font-size: 11px;
@@ -129,16 +132,17 @@
 <body>
     <nav>
         <div class="nav-left">
-            <a href="0level.html">Level 0 Generator</a>
-            <a href="basic.html">Basic (Levels 1+)</a>
-            <a href="advanced.html">Advanced (Levels 1+)</a>
-            <a href="classes.html" class="active">Class Reference</a>
+            <a href="generator.html">Character Generator</a>
+            <a href="classes.html" class="active">Class Tables</a>
         </div>
-        <a href="index.html">About</a>
+        <div style="display:flex; gap:20px; align-items:center;">
+            <a href="https://github.com/bmfrosty/ose-level-0" target="_blank" rel="noopener" title="View source on GitHub" style="color:#333;">⬡ GitHub</a>
+            <a href="index.html">About</a>
+        </div>
     </nav>
 
-    <h1>OSE Class Reference</h1>
-    <p class="subtitle">Smoothified (Gygar) progressions — to-hit bonus and saving throws for all classes, levels 1–14</p>
+    <h1>OSE Class Tables</h1>
+    <p class="subtitle">Smoothified progressions — to-hit bonus and saving throws for all classes, levels 1–14</p>
 
     <div class="intro-box">
         <p><strong>Smoothified Mode</strong> uses gradual attack bonus and saving throw progressions instead of the original OSE big jumps. All classes advance every 1–2 levels. Demihuman level limits are removed — all classes reach level 14.</p>
@@ -169,29 +173,23 @@
         const CLASSES = [
             { key: "Cleric_CLASS",      name: "Cleric" },
             { key: "Dwarf_CLASS",       name: "Dwarf" },
-            { key: "Elf_CLASS",         name: "Elf" },
+            { key: "Elf_CLASS",         name: "Elf / Spellblade" },
             { key: "Fighter_CLASS",     name: "Fighter" },
             { key: "Halfling_CLASS",    name: "Halfling" },
             { key: "Magic-User_CLASS",  name: "Magic-User" },
-            { key: "Spellblade_CLASS",  name: "Spellblade" },
             { key: "Thief_CLASS",       name: "Thief" },
         ];
 
         // Extra per-class notes shown at the top of the table
         const CLASS_NOTES = {
-            "Spellblade_CLASS": {
-                text: `The <strong>Spellblade</strong> is the Basic Mode Elf class with the elf racial features stripped out
-                (no infravision, no detect secret doors, no ghoul paralysis immunity, no elvish languages).
-                This allows the Spellblade progression — fighter-speed attack bonus combined with arcane spell slots —
-                to be used with <em>any</em> race in Advanced Mode. A Human or Elf Spellblade has the same
-                combat + magic progression; the elf's inherent racial abilities come from the Elf race selection,
-                not the class.`
-            },
             "Elf_CLASS": {
-                text: `In Smoothified Mode, the <strong>Basic Elf</strong> class uses the same progression tables as the Spellblade.
-                The difference is that the Basic Elf is a race-as-class and includes all elf racial abilities (infravision 60',
-                detect secret doors, immunity to ghoul paralysis, elvish languages). See Spellblade for the "class only" version
-                used in Advanced Mode.`
+                text: `The <strong>Elf / Spellblade</strong> share identical progression tables — same attack bonus, saving throws, XP, and spell slots at every level.
+                The difference is context:<br><br>
+                <strong>Basic Mode — Elf (race-as-class):</strong> The Elf is a combined race and class. It includes all elf racial abilities
+                (infravision 60', detect secret doors, immunity to ghoul paralysis, elvish languages) built into the class itself.<br><br>
+                <strong>Advanced Mode — Spellblade (class only):</strong> The Spellblade is the same fighter/mage progression without any racial features.
+                Racial abilities (including elf abilities) come from the race selection, not the class. This lets any race — Human, Elf, Dwarf, Gnome,
+                or Halfling — take the Spellblade class and benefit from the fighter-speed attack bonus combined with arcane spell slots.`
             },
         };
 

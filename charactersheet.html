@@ -111,8 +111,8 @@
         <h3>⬆ Level Up</h3>
 
         <div class="lup-section">
-            <strong>New Level:</strong>
-            <div id="lup-level-btns" style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;"></div>
+            <strong>Leveling Up:</strong>
+            <div id="lup-level-btns" style="margin-top:6px;"></div>
         </div>
 
         <div class="lup-section" style="margin-top:10px;">
@@ -175,14 +175,14 @@
 
     <script type="module">
         import { renderCharacterSheetHTML } from './shared-character-sheet.js';
+        import { buildOptionsLine } from './shared-compact-codes.js';
+        import { buildSheetSpec, CLASS_HD_CODES as CLASS_HD, CODE_TO_PROG } from './shared-sheet-builder.js';
 
         const errorEl   = document.getElementById('error');
         const contentEl = document.getElementById('sheet-content');
 
         // HD sides per class code
-        const CLASS_HD = {FI:8, CL:6, MU:4, TH:4, SB:6, DW:8, EL:6, HA:6, GN:4};
         const PROG_TO_CODE = {ose:'O', smooth:'S', ll:'L'};
-        const CODE_TO_PROG = {O:'ose', S:'smooth', L:'ll'};
         const ABILITIES = ['STR','DEX','CON','INT','WIS','CHA'];
 
         /** Shared CON modifier helper (matches shared-hit-points.js logic). */
@@ -232,8 +232,8 @@
             const prog  = CODE_TO_PROG[cp.p] || 'smooth';
             const race  = CODE_TO_RACE[cp.r] || 'Human_RACE';
             const cls   = CODE_TO_CLASS[cp.c] || 'Fighter_CLASS';
-            const level = cp.l || 1;
-            const rcm   = CODE_TO_RCM[cp.rcm] || 'strict-human';
+            const level = cp.l ?? 1;
+            const rcm   = CODE_TO_RCM[cp.rcm] || 'strict';
 
             const adjArr  = cp.s  || [10,10,10,10,10,10];
             const baseArr = cp.bs || adjArr;
@@ -257,144 +257,24 @@
                 effects: getModifierEffects(a, mods[a], adjArr[i])
             }));
 
-            // ─── BASIC MODE ───────────────────────────────────────────────
-            if (mode === 'B') {
-                const { calculateXPBonus, getPrimeRequisites } = await import('./basic-utils.js');
-                const { getClassProgressionData, getClassFeatures, getRacialAbilities, createCharacter } =
-                    await import('./basic-character-gen.js');
-
-                const progData  = getClassProgressionData(cls, level, adj, classDataMod);
-                const features  = getClassFeatures(cls, level, classDataMod, ClassDataShared);
-                const racial    = getRacialAbilities(cls);
-                const character = createCharacter({
-                    level, className: cls,
-                    mode: prog==='smooth'?'Smoothified':prog==='ll'?'Labyrinth Lord':'OSE Standard',
-                    abilityScores: adj, hp: cp.h,
-                    progressionData: progData, features, racialAbilities: racial,
-                    name: cp.n, background: { profession: cp.bg }, startingGold: cp.g||0
-                });
-
-                const clsDisplay = cls.replace('_CLASS','');
-                const primeReqs  = getPrimeRequisites(cls);
-                let totalBonus = 0;
-                primeReqs.forEach(a => totalBonus += calculateXPBonus(adj[a]||10));
-                const xpBonusNum = primeReqs.length > 0 ? Math.floor(totalBonus/primeReqs.length) : 0;
-                const xpBonusStr = xpBonusNum >= 0 ? `+${xpBonusNum}%` : `${xpBonusNum}%`;
-                const hasRacial  = (character.racialAbilities||[]).length > 0;
-                const hasClass   = (character.classAbilities||[]).length > 0;
-
-                return {
-                    title: 'OLD-SCHOOL ESSENTIALS',
-                    subtitle: `RETRO ADVENTURE GAME &nbsp;·&nbsp; ${character.mode} Mode`,
-                    header: { columns: [
-                        {label:'Character Name', value:cp.n||'Unknown', flex:3},
-                        {label:'Background', value:cp.bg||'—', flex:2},
-                        {label:'Class', value:clsDisplay, flex:2},
-                        {label:'Level', value:level, flex:1, center:true},
-                        {label:'XP Bonus', value:xpBonusStr, flex:1, center:true}
-                    ]},
-                    combat: { maxHP:cp.h, initMod:mods.DEX },
-                    abilityScores: abilityScoresSheet,
-                    weaponsAndSkills: {
-                        weapon:cp.w||null, classAttackBonus:character.attackBonus||0,
-                        meleeMod:mods.STR, rangedMod:mods.DEX, thiefSkills:character.thiefSkills||null
-                    },
-                    abilitiesSection: {
-                        header:(hasRacial&&hasClass)?'RACIAL & CLASS ABILITIES':hasRacial?'RACIAL ABILITIES':'CLASS ABILITIES',
-                        racial:character.racialAbilities||[], class:character.classAbilities||[]
-                    },
-                    savingThrows: character.savingThrows,
-                    experience: {
-                        current:character.xp.current, forLevel:level,
-                        forLevelXP:character.xp.forCurrentLevel,
-                        forNext:character.xp.forNextLevel, bonus:xpBonusStr
-                    },
-                    equipment: {armor:cp.ar||null, shield:!!cp.sh, items:cp.it||[], startingAC:cp.ac||10, startingGold:cp.g||0},
-                    spellSlots:character.spellSlots||null, turnUndead:character.turnUndead||null,
-                    showUndeadNames:!!cp.un, showQRCode:cp.qr!==0,
-                    footer:`Level ${level} ${clsDisplay} &nbsp;·&nbsp; ${character.mode} Mode`,
-                    printTitle:`OSE Basic - ${clsDisplay} - Level ${level} - ${cp.bg||''} - ${cp.n||''}`,
-                    autoPrint:!!cp.ap
-                };
-            }
-
-            // ─── ADVANCED MODE ────────────────────────────────────────────
-            if (mode === 'A') {
-                const { calculateXPBonus, getPrimeRequisites, getRaceDisplayName, getClassDisplayName } =
-                    await import('./advanced-utils.js');
-                const { createCharacterAdvanced } = await import('./advanced-character-gen.js');
-
-                const character = createCharacterAdvanced({
-                    level, race, className:cls,
-                    baseScores:base, adjustedScores:adj,
-                    hp:cp.h, classData:classDataMod, ClassDataShared,
-                    progressionMode:prog, raceClassMode:rcm,
-                    name:cp.n, background:{profession:cp.bg}
-                });
-
-                const raceDisplay = getRaceDisplayName(race);
-                const clsDisplay  = getClassDisplayName(cls);
-                const modeStr = prog==='smooth'?'Smoothified':prog==='ll'?'Labyrinth Lord':'OSE Standard';
-                const raceClassDisplay = raceDisplay===clsDisplay?raceDisplay:`${raceDisplay} ${clsDisplay}`;
-
-                const primeReqs = getPrimeRequisites(cls);
-                let lowestBonus = 10;
-                primeReqs.forEach(a => lowestBonus = Math.min(lowestBonus, calculateXPBonus(adj[a]||10)));
-                const xpBonusStr = lowestBonus>=0?`+${lowestBonus}%`:`${lowestBonus}%`;
-                const hasRacial  = (character.racialAbilities||[]).length > 0;
-                const hasClass   = (character.classAbilities||[]).length > 0;
-
-                return {
-                    title: 'OLD-SCHOOL ESSENTIALS ADVANCED',
-                    subtitle:`RETRO ADVENTURE GAME &nbsp;·&nbsp; ${modeStr} Mode`,
-                    header: { columns: [
-                        {label:'Character Name', value:cp.n||'Unknown', flex:3},
-                        {label:'Background', value:cp.bg||'—', flex:2},
-                        {label:'Race & Class', value:raceClassDisplay, flex:2},
-                        {label:'Level', value:level, flex:1, center:true},
-                        {label:'XP Bonus', value:xpBonusStr, flex:1, center:true}
-                    ]},
-                    combat: {maxHP:cp.h, initMod:mods.DEX},
-                    abilityScores: abilityScoresSheet,
-                    weaponsAndSkills: {
-                        weapon:cp.w||null, classAttackBonus:character.attackBonus||0,
-                        meleeMod:mods.STR, rangedMod:mods.DEX, thiefSkills:character.thiefSkills||null
-                    },
-                    abilitiesSection: {
-                        header:(hasRacial&&hasClass)?'RACIAL & CLASS ABILITIES':hasRacial?'RACIAL ABILITIES':'CLASS ABILITIES',
-                        racial:character.racialAbilities||[], class:character.classAbilities||[]
-                    },
-                    savingThrows: character.savingThrows,
-                    experience: {
-                        current:character.xp.current, forLevel:level,
-                        forLevelXP:character.xp.forCurrentLevel,
-                        forNext:character.xp.forNextLevel, bonus:xpBonusStr
-                    },
-                    equipment:{armor:cp.ar||null, shield:!!cp.sh, items:cp.it||[], startingAC:cp.ac||10, startingGold:cp.g||0},
-                    spellSlots:character.spellSlots||null, turnUndead:character.turnUndead||null,
-                    showUndeadNames:!!cp.un, showQRCode:cp.qr!==0,
-                    footer:`Level ${level} ${raceDisplay} ${clsDisplay} &nbsp;·&nbsp; ${modeStr} Mode`,
-                    printTitle:`OSE Advanced - ${raceDisplay} - ${clsDisplay} - Level ${level} - ${cp.bg||''} - ${cp.n||''}`,
-                    autoPrint:!!cp.ap
-                };
-            }
-
-            // ─── 0-LEVEL MODE ─────────────────────────────────────────────
-            if (mode === 'Z') {
+            // ─── LEVEL 0 (mode A or B with l=0) ──────────────────────────
+            if (level === 0) {
                 const { getAdvancedModeRacialAbilities } = await import('./shared-racial-abilities.js');
                 const racialAbilities = getAdvancedModeRacialAbilities(race);
                 const raceDisplay = race.replace('_RACE','');
                 const sv = cp.sv || [14,15,16,17,18];
-
+                const progLabel = prog==='smooth'?'Smoothified':prog==='ll'?'Labyrinth Lord':'OSE Standard';
+                const isAdvMode = mode === 'A';
                 return {
-                    title: cp.adv?'OLD-SCHOOL ESSENTIALS ADVANCED':'OLD-SCHOOL ESSENTIALS',
-                    subtitle:'RETRO ADVENTURE GAME',
+                    title: isAdvMode ? 'OLD-SCHOOL ESSENTIALS ADVANCED' : 'OLD-SCHOOL ESSENTIALS',
+                    subtitle: isAdvMode ? `RETRO ADVENTURE GAME &nbsp;·&nbsp; ${progLabel} Mode` : 'RETRO ADVENTURE GAME',
                     header: { columns: [
                         {label:'Character Name', value:cp.n||'Unknown', flex:3},
-                        {label:'Race & Class', value:raceDisplay, flex:2},
-                        {label:'Occupation', value:cp.bg||'', flex:3},
-                        {label:'HD', value:'1d4', flex:1, center:true},
-                        {label:'Level', value:'0', flex:1, center:true}
+                        {label:'Occupation', value:cp.bg||'', flex:2},
+                        {label:'Race/Class', value:'', flex:2},
+                        {label:'Level', value:'0', flex:1, center:true},
+                        {label:'HD', value:'', flex:1, center:true},
+                        {label:'XP Bonus', value:'', flex:1, center:true}
                     ]},
                     combat:{maxHP:cp.h||1, initMod:mods.DEX},
                     abilityScores: abilityScoresSheet,
@@ -402,16 +282,97 @@
                     abilitiesSection:{header:'RACIAL ABILITIES', racial:racialAbilities||[], class:[]},
                     savingThrows:{death:sv[0], wands:sv[1], paralysis:sv[2], breath:sv[3], spells:sv[4]},
                     experience:null,
-                    equipment:{armor:cp.ar||null, items:cp.it||[], startingAC:cp.ac||10, startingGold:cp.g||0},
+                    equipment:{armor:cp.ar||null, items:cp.it||[], startingAC:cp.ac||10, startingGold:cp.g||0, startingHD:'1d4'},
                     spellSlots:null, turnUndead:null,
-                    showUndeadNames:!!cp.un, showQRCode:cp.qr!==0,
-                    footer:`0-Level ${raceDisplay}`,
-                    printTitle:`OSE ${cp.adv?'Advanced':'Basic'} - ${raceDisplay} - 0-Level - ${cp.bg||''} - ${cp.n||''}`,
+                    showUndeadNames:!!cp.un, showQRCode:cp.qr!==0, abilityOrder:cp.ao??1,
+                    footer: (() => { const o = buildOptionsLine({ m: mode, p: cp.p||'O', l: 0, bl: cp.bl||0, hc: cp.hc||0 }); return `0-Level ${raceDisplay}` + (o ? `<br><small style="opacity:0.7;">${o}</small>` : ''); })(),
+                    printTitle:`OSE ${isAdvMode?'Advanced':'Basic'} - ${raceDisplay} - 0-Level - ${cp.bg||''} - ${cp.n||''}`,
                     autoPrint:!!cp.ap
                 };
             }
 
-            throw new Error(`Unknown compact mode: ${mode}`);
+            // ─── L1+ characters (Basic & Advanced merged) ────────────────
+            const isAdv   = mode === 'A';
+            const modeStr = prog==='smooth'?'Smoothified':prog==='ll'?'Labyrinth Lord':'OSE Standard';
+
+            // Per-mode character creation and display labels
+            let character, raceDisplay, clsDisplay, raceClassDisplay;
+
+            if (isAdv) {
+                const { calculateXPBonus: _cxb, getPrimeRequisites: _gpr,
+                        getRaceDisplayName, getClassDisplayName } = await import('./advanced-utils.js');
+                const { createCharacterAdvanced } = await import('./advanced-character-gen.js');
+                character = createCharacterAdvanced({
+                    level, race, className:cls,
+                    baseScores:base, adjustedScores:adj,
+                    hp:cp.h, classData:classDataMod, ClassDataShared,
+                    progressionMode:prog, raceClassMode:rcm,
+                    name:cp.n, background:{profession:cp.bg}
+                });
+                raceDisplay = getRaceDisplayName(race);
+                clsDisplay  = getClassDisplayName(cls);
+                raceClassDisplay = (cp.hhr && raceDisplay==='Human') ? clsDisplay
+                    : (raceDisplay===clsDisplay ? raceDisplay : `${raceDisplay} ${clsDisplay}`);
+            } else {
+                const { getClassProgressionData, getClassFeatures,
+                        getRacialAbilities, createCharacter } = await import('./basic-character-gen.js');
+                const progData = getClassProgressionData(cls, level, adj, classDataMod);
+                const features = getClassFeatures(cls, level, classDataMod, ClassDataShared);
+                const racial   = getRacialAbilities(cls);
+                character = createCharacter({
+                    level, className:cls, mode:modeStr,
+                    abilityScores:adj, hp:cp.h,
+                    progressionData:progData, features, racialAbilities:racial,
+                    name:cp.n, background:{profession:cp.bg}, startingGold:cp.g||0
+                });
+                raceDisplay = clsDisplay = cls.replace('_CLASS','');
+                raceClassDisplay = clsDisplay;
+            }
+
+            // XP bonus — OSE rule: LOWEST prime requisite score wins
+            const { calculateXPBonus, getPrimeRequisites } =
+                await import(isAdv ? './advanced-utils.js' : './basic-utils.js');
+            const primeReqs = getPrimeRequisites(cls);
+            let xpBonusNum = primeReqs.length > 0 ? 10 : 0;
+            primeReqs.forEach(a => { xpBonusNum = Math.min(xpBonusNum, calculateXPBonus(adj[a]||10)); });
+            const xpBonusStr = xpBonusNum >= 0 ? `+${xpBonusNum}%` : `${xpBonusNum}%`;
+            const hasRacial  = (character.racialAbilities||[]).length > 0;
+            const hasClass   = (character.classAbilities||[]).length > 0;
+
+            const hdSides = CLASS_HD[cp.c] || 6;
+            const sd = {
+                title:    isAdv ? 'OLD-SCHOOL ESSENTIALS ADVANCED' : 'OLD-SCHOOL ESSENTIALS',
+                subtitle: `RETRO ADVENTURE GAME &nbsp;·&nbsp; ${modeStr} Mode`,
+                name: cp.n, occupation: cp.bg,
+                raceClass: raceClassDisplay, level, hd: `1d${hdSides}`, xpBonus: xpBonusStr,
+                maxHP: cp.h, initMod: mods.DEX,
+                abilityScores: abilityScoresSheet,
+                weapon: cp.w, classAttackBonus: character.attackBonus||0,
+                meleeMod: mods.STR, rangedMod: mods.DEX, thiefSkills: character.thiefSkills||null,
+                abilitiesHeader: (hasRacial&&hasClass)?'RACIAL & CLASS ABILITIES':hasRacial?'RACIAL ABILITIES':'CLASS ABILITIES',
+                racialAbilities: character.racialAbilities||[], classAbilities: character.classAbilities||[],
+                savingThrows: character.savingThrows,
+                experience: { current:character.xp.current, forLevel:level,
+                    forLevelXP:character.xp.forCurrentLevel, forNext:character.xp.forNextLevel, bonus:xpBonusStr },
+                equipment: {armor:cp.ar||null, shield:!!cp.sh, items:cp.it||[], startingAC:cp.ac||10, startingGold:cp.g||0, startingHD:`1d${hdSides}`},
+                spellSlots: character.spellSlots||null,
+                turnUndead: character.turnUndead||null,
+                cp,
+                footer: (() => {
+                    const o   = buildOptionsLine(cp);
+                    const who = isAdv ? `${raceDisplay} ${clsDisplay}` : clsDisplay;
+                    return `Level ${level} ${who} &nbsp;·&nbsp; ${modeStr} Mode` +
+                           (o ? `<br><small style="opacity:0.7;">${o}</small>` : '');
+                })(),
+                printTitle: isAdv
+                    ? `OSE Advanced - ${raceDisplay} - ${clsDisplay} - Level ${level} - ${cp.bg||''} - ${cp.n||''}`
+                    : `OSE Basic - ${clsDisplay} - Level ${level} - ${cp.bg||''} - ${cp.n||''}`,
+            };
+            const opts = {
+                showUndeadNames: !!cp.un, showQRCode: cp.qr!==0, abilityOrder: cp.ao??1,
+                openInNewTab: false, autoPrint: !!cp.ap, backgroundTab: false
+            };
+            return buildSheetSpec(sd, opts);
         }
 
         /**
@@ -419,7 +380,7 @@
          * @param {Object} decoded - Fully decoded (no codes) compact params v2 object
          */
         function initEditPanel(decoded) {
-            const isZeroLevel = decoded.m === 'Z';
+            const isZeroLevel = decoded.l === 0;
 
             // ── Wire toggle buttons ────────────────────────────────────────
             const editBtn    = document.getElementById('toggleEditBtn');
@@ -435,16 +396,14 @@
                 if (!wasOpen) editPanel.scrollIntoView({ behavior: 'smooth' });
             });
 
-            // Level Up button — hidden for 0-level chars (no class to level into)
-            if (!isZeroLevel) {
-                levelUpBtn.style.display = '';
-                levelUpBtn.addEventListener('click', () => {
-                    const wasOpen = lupPanel.style.display === 'block';
-                    editPanel.style.display = 'none';  // close other panel
-                    lupPanel.style.display = wasOpen ? 'none' : 'block';
-                    if (!wasOpen) lupPanel.scrollIntoView({ behavior: 'smooth' });
-                });
-            }
+            // Level Up button — always shown (level 0 chars can level up to level 1)
+            levelUpBtn.style.display = '';
+            levelUpBtn.addEventListener('click', () => {
+                const wasOpen = lupPanel.style.display === 'block';
+                editPanel.style.display = 'none';  // close other panel
+                lupPanel.style.display = wasOpen ? 'none' : 'block';
+                if (!wasOpen) lupPanel.scrollIntoView({ behavior: 'smooth' });
+            });
 
             // ── Cancel buttons ─────────────────────────────────────────────
             document.getElementById('ep-cancel-btn').addEventListener('click', () => {
@@ -600,24 +559,147 @@
             });
 
             // ══════════════════════════════════════════════════════════════
-            // LEVEL UP PANEL — level selector + display options only
+            // LEVEL UP PANEL
             // ══════════════════════════════════════════════════════════════
-            if (!isZeroLevel) {
+            if (isZeroLevel) {
+                // ── Level 0 → Level 1: class selection required ────────────
+                const isAdv    = decoded.m === 'A';
+                const raceCode = decoded.r || 'HU';
+
+                // Advanced mode: races take human classes (no separate "Elf class" or "Dwarf class")
+                const advHumanClasses = [
+                    { code:'FI', name:'Fighter',    sides:8 },
+                    { code:'CL', name:'Cleric',     sides:6 },
+                    { code:'MU', name:'Magic-User', sides:4 },
+                    { code:'TH', name:'Thief',      sides:4 },
+                    { code:'SB', name:'Spellblade', sides:6 },
+                ];
+
+                // Basic mode: race-as-class — humans get human classes, demihumans only their own class
+                const basicHumanClasses = [
+                    { code:'FI', name:'Fighter',    sides:8 },
+                    { code:'CL', name:'Cleric',     sides:6 },
+                    { code:'MU', name:'Magic-User', sides:4 },
+                    { code:'TH', name:'Thief',      sides:4 },
+                ];
+                const basicDemihumanClass = {
+                    DW:[{ code:'DW', name:'Dwarf',    sides:8 }],
+                    EL:[{ code:'EL', name:'Elf',      sides:6 }],
+                    HA:[{ code:'HA', name:'Halfling', sides:6 }],
+                    GN:[{ code:'GN', name:'Gnome',    sides:4 }],
+                };
+
+                let availableClasses;
+                if (isAdv) {
+                    // Advanced: demihumans take human classes (not a "Dwarf class" or "Elf class")
+                    availableClasses = advHumanClasses;
+                } else {
+                    // Basic (race-as-class): Human → human classes; demihuman → only their own class
+                    availableClasses = basicDemihumanClass[raceCode] || basicHumanClasses;
+                }
+
                 const lupLevelBtns = document.getElementById('lup-level-btns');
+                lupLevelBtns.innerHTML =
+                    `<div style="margin-bottom:8px;font-size:12px;font-weight:bold;color:#4A148C;">Level 0 → Level 1 &nbsp;—&nbsp; choose a class:</div>` +
+                    `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;">` +
+                    availableClasses.map(c =>
+                        `<button class="ose-level-btn lup-class-btn" data-code="${c.code}" data-sides="${c.sides}">${c.name}</button>`
+                    ).join('') +
+                    `</div>`;
+
+                let selectedClassCode = null;
+                lupLevelBtns.querySelectorAll('.lup-class-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        lupLevelBtns.querySelectorAll('.lup-class-btn').forEach(b => b.classList.remove('sel'));
+                        btn.classList.add('sel');
+                        selectedClassCode = btn.dataset.code;
+                    });
+                });
+
+                document.getElementById('lup-undead').checked = !!decoded.un;
+                document.getElementById('lup-qr').checked    = decoded.qr !== 0;
+
+                document.getElementById('lup-apply-btn').addEventListener('click', async () => {
+                    if (!selectedClassCode) { alert('Please select a class first!'); return; }
+
+                    const { encodeCompactParams } = await import('./shared-compact-codes.js');
+                    const { parseHitDice }        = await import('./shared-hit-points.js');
+                    const { HIT_DICE_PROGRESSIONS, HIT_DICE_SCALE } = await import('./class-data-shared.js');
+
+                    const CODE_TO_CLASS_LU = {
+                        FI:'Fighter_CLASS', CL:'Cleric_CLASS', MU:'Magic-User_CLASS',
+                        TH:'Thief_CLASS',   SB:'Spellblade_CLASS', DW:'Dwarf_CLASS',
+                        EL:'Elf_CLASS',     HA:'Halfling_CLASS',   GN:'Gnome_CLASS'
+                    };
+
+                    const className = CODE_TO_CLASS_LU[selectedClassCode] || 'Fighter_CLASS';
+                    const conScore  = decoded.s ? decoded.s[2] : 10;
+                    const conMod    = getConMod(conScore);
+                    const l0HP      = decoded.h || 1;
+
+                    const getHdStr = (cls, lvl) => {
+                        const scale = HIT_DICE_SCALE[cls];
+                        const prog  = scale ? HIT_DICE_PROGRESSIONS[scale] : null;
+                        return prog ? (prog[lvl - 1] || null) : null;
+                    };
+                    const hdStr = getHdStr(className, 1);
+                    const hd    = parseHitDice(hdStr);
+                    const sides = hd.sides || CLASS_HD[selectedClassCode] || 6;
+
+                    // Roll L1 HP — must be ≥ L0 HP so character doesn't lose HP on advancement
+                    let l1HP;
+                    do {
+                        l1HP = Math.max(1, Math.floor(Math.random() * sides) + 1 + conMod);
+                    } while (l1HP < l0HP);
+
+                    const newMode = isAdv ? 'A' : 'B';
+                    const newCp = {
+                        v:2, m: newMode,
+                        p: 'S',                          // Smoothified default
+                        r: decoded.r || 'HU',
+                        c: selectedClassCode,
+                        l: 1,
+                        s: decoded.s || [10,10,10,10,10,10],
+                        h: l1HP,
+                        hr: [l0HP, l1HP],
+                        hd: [4, sides],
+                        il: 0,
+                        n:  decoded.n  || '',
+                        bg: decoded.bg || '',
+                        ar: decoded.ar || null,
+                        sh: 0,
+                        w:  decoded.w  || null,
+                        it: decoded.it || [],
+                        g:  decoded.g  || 0,
+                        ac: decoded.ac || 10,
+                        un: document.getElementById('lup-undead').checked ? 1 : 0,
+                        qr: document.getElementById('lup-qr').checked ? 1 : 0,
+                        ap: 0,
+                        ...(newMode === 'A' ? { rcm: 'SH' } : {}),
+                    };
+
+                    const encoded = encodeCompactParams(newCp);
+                    const b64url  = await compressToBase64Url(JSON.stringify(encoded));
+                    window.location.href = `charactersheet.html?d=${b64url}`;
+                });
+
+            } else {
+                // ── Level 1+ → Level N+1 ──────────────────────────────────
                 const curLevel = decoded.l || 1;
 
-                // Populate level buttons
-                for (let i = 1; i <= 14; i++) {
-                    const btn = document.createElement('button');
-                    btn.className = 'ose-level-btn' + (i === curLevel ? ' sel' : '');
-                    btn.textContent = i;
-                    btn.dataset.level = i;
-                    btn.addEventListener('click', () => {
-                        lupLevelBtns.querySelectorAll('.ose-level-btn').forEach(b => b.classList.remove('sel'));
-                        btn.classList.add('sel');
-                    });
-                    lupLevelBtns.appendChild(btn);
+                // Max level per class — hide Level Up button if already at class cap
+                const MAX_LEVEL_BY_CODE = {FI:14,CL:14,MU:14,TH:14,SB:14,DW:12,EL:10,HA:8,GN:8};
+                const classMaxLevel = MAX_LEVEL_BY_CODE[decoded.c] || 14;
+                if (curLevel >= classMaxLevel) {
+                    levelUpBtn.style.display = 'none';
+                    return;
                 }
+
+                // Only +1 at a time — show a simple display, no button grid
+                const nextLevel = curLevel + 1;
+                const lupLevelBtns = document.getElementById('lup-level-btns');
+                lupLevelBtns.innerHTML =
+                    `<span style="font-size:13px;font-weight:bold;color:#4A148C;">Level ${curLevel} → Level ${nextLevel}</span>`;
 
                 // Pre-fill options from current cp
                 document.getElementById('lup-undead').checked = !!decoded.un;
@@ -637,8 +719,8 @@
                         EL:'Elf_CLASS',     HA:'Halfling_CLASS',   GN:'Gnome_CLASS'
                     };
 
-                    const selBtn   = lupLevelBtns.querySelector('.ose-level-btn.sel');
-                    const newLevel = selBtn ? parseInt(selBtn.dataset.level) : curLevel;
+                    // Always advance exactly one level
+                    const newLevel = curLevel + 1;
                     const newUn    = document.getElementById('lup-undead').checked ? 1 : 0;
                     const newQr    = document.getElementById('lup-qr').checked ? 1 : 0;
 
@@ -675,18 +757,23 @@
                                 // At L1: reroll until HP ≥ L0 HP (can't lose HP on first advancement)
                                 // when L0 is not included in the total (decoded.il === 0/false).
                                 const minHP = (lvl === 1 && !decoded.il) ? l0HP : 1;
-                                do {
-                                    lvlHP = Math.max(1, Math.floor(Math.random() * hd.sides) + 1 + conMod);
-                                } while (lvlHP < minHP);
+                                if (decoded.bl) {
+                                    // Blessed: roll twice, take best
+                                    do {
+                                        const r1 = Math.max(1, Math.floor(Math.random() * hd.sides) + 1 + conMod);
+                                        const r2 = Math.max(1, Math.floor(Math.random() * hd.sides) + 1 + conMod);
+                                        lvlHP = Math.max(r1, r2);
+                                    } while (lvlHP < minHP);
+                                } else {
+                                    do {
+                                        lvlHP = Math.max(1, Math.floor(Math.random() * hd.sides) + 1 + conMod);
+                                    } while (lvlHP < minHP);
+                                }
                             }
                             newHpRolls.push(lvlHP);
                             // Store sides=0 for fixed-gain levels so the edit panel hides the 🎲 button
                             newHpDice.push(hd.noConModifier ? 0 : hd.sides);
                         }
-                    } else if (newLevel < curLevel) {
-                        // Trim back: hr[0]=L0, hr[1]=L1, ..., hr[n]=Ln
-                        newHpRolls = newHpRolls.slice(0, newLevel + 1);
-                        newHpDice  = newHpDice.slice(0, newLevel + 1);
                     }
 
                     // Recalculate total HP (L0 included only when il=1)

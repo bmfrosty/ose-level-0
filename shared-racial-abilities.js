@@ -193,8 +193,8 @@ export function getAdvancedModeRacialAbilities(race, options = {}) {
     }
     
     const RACIAL_ABILITIES = {
-        "Human_RACE": (isAdvanced && humanRacialAbilities) ? [
-            "Blessed: Roll HP twice, take best (including at 0th and 1st level)",
+        "Human_RACE": humanRacialAbilities ? [
+            "Blessed: Roll HP twice, take best at each level (does not apply to level 0 HP roll)",
             "Decisiveness: Act first on tied initiative (+1 to individual initiative)",
             "Leadership: Retainers/mercenaries +1 loyalty and morale"
         ] : [],

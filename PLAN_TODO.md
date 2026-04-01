@@ -1,6 +1,6 @@
 # TODO — Active Planning Document
 
-> **Status:** All three generators complete and working. README updated (2026-03-19). Phase 2A (class abilities, thief skills, ability descriptions) complete (2026-03-20). Phase 2B (starting wealth) complete (2026-03-20). Phase 2C (automatic equipment purchase for basic.html and advanced.html) complete (2026-03-20). Phase 2D (racial abilities in Advanced mode) complete (2026-03-21). Phase 2E (print button + cp v2 normalization) complete (2026-03-29). Phase 2F (Background in header + HP floor) complete (2026-03-29). Remaining: HTML sheet improvements, comprehensive testing, misc enhancements.
+> **Status:** All generators complete and working. 0-level generator deleted (2026-03-30) — Level 0 now integrated into basic.html and advanced.html. autoGenerate split into autoGenerateOnLevelChange + autoGenerateOnClassChange (2026-03-30). Nav links updated; 0level-only files removed. LICENSE_PLAN.md created. Generator merge plan (PLAN_MERGE_GENERATOR.md) created (2026-03-30). Remaining: merge basic+advanced→generator.html, HTML sheet improvements, testing.
 
 > ⚠️ **IMPORTANT — ALWAYS UPDATE THIS FILE:** After completing any task, mark checklist items `[x]`, update the status line above with the date, and move "next up" markers accordingly. Do not leave this file stale.
 > **History:** See `PLANS_COMPLETED/` for all completed work.
@@ -10,18 +10,20 @@
 ## Priority Order
 
 1. ~~**README.md update**~~ ✅ Complete (2026-03-19)
-2. **Upper level character generation** — class abilities, wealth, automatic equipment purchase, background selection ← HIGH PRIORITY
-3. **HTML sheet improvements** — `@media print` CSS, equipment formatting, Notes section
-4. **Comprehensive class/level testing** — saves, attacks, spell slots at levels 1/5/10/14
-5. **Level 0 occupation weapon assignments** — ~17 occupations still need weapons
-6. **Optional enhancements** — combat stats display, UI polish, export improvements
+2. ~~**0-level integration + deletion**~~ ✅ Complete (2026-03-30) — see `TODO_DELETE_0LEVEL_PAGE.md`
+3. **Merge basic + advanced → generator.html** — ~42% code reduction, single page with mode toggle ← NEXT (see `PLAN_MERGE_GENERATOR.md`)
+4. **HTML sheet improvements** — `@media print` CSS, equipment formatting, Notes section
+5. **Comprehensive class/level testing** — saves, attacks, spell slots at levels 1/5/10/14
+6. **OSE license compliance** — add logo, legal text, "Requires OSE" (see `LICENSE_PLAN.md`)
+7. **Level 0 occupation weapon assignments** — ~17 occupations still need weapons
+8. **Optional enhancements** — combat stats display, UI polish, export improvements
 
 ---
 
-## 1. README Update — ✅ COMPLETE
+## 1. README Update — ✅ COMPLETE (needs refresh after generator merge)
 
 README.md has been rewritten to document:
-- Three generators (0level.html, basic.html, advanced.html) and what each does
+- ~~Three generators (0level.html, basic.html, advanced.html)~~ → now two: basic.html and advanced.html (Level 0 integrated); will become one after generator merge
 - Quick start: `python3 -m http.server 8000`
 - PDF workflow: Open in New Tab → browser Print / Save as PDF
 - OSE Standard / Smoothified (Gygar) / Labyrinth Lord modes and class lists
@@ -351,7 +353,9 @@ TREASURE              ← ends up far below, stranded
 
 ### 3B. @media print CSS for Inline Display — PENDING
 
-**Problem:** When "Open character in new tab" is **unchecked**, the character sheet appears inline on the generator page (`basic.html` / `advanced.html` / `0level.html`). If the user prints this page directly (Ctrl+P), the entire generator UI — nav bar, level selector, ability score inputs, radio buttons, Generate button — all appear in the printout. The only clean print path currently is via "Open in New Tab."
+**Problem:** When "Open character in new tab" is **unchecked**, the character sheet appears inline on the generator page. If the user prints this page directly (Ctrl+P), the entire generator UI appears in the printout. The only clean print path currently is via "Open in New Tab."
+
+> **Note:** `0level.html` has been deleted. Applies to `basic.html` and `advanced.html` only (or `generator.html` after merge).
 
 **What already works:** The new-tab template (in `displayCharacterSheet()` → `openInNewTab: true` branch, ~line 230) already has full `@media print` CSS: hides `.print-controls`, sets `@page { size: letter; margin: 0.5in; }`, and forces color printing. This is the model to follow.
 
@@ -380,14 +384,11 @@ TREASURE              ← ends up far below, stranded
 }
 ```
 
-**Files to update:** `basic.html`, `advanced.html`, `0level.html` — add to each page's `<style>` block (inside `<head>`).
-
-**Note:** Do NOT touch `0level-ui.js` or `0level.html` JavaScript — only the `<style>` block CSS.
+**Files to update:** `basic.html`, `advanced.html` (or `generator.html` after merge) — add to each page's `<style>` block (inside `<head>`).
 
 **Checklist:**
 - [ ] **3B-1** Add `@media print` CSS to `basic.html` `<style>` block
 - [ ] **3B-2** Add `@media print` CSS to `advanced.html` `<style>` block
-- [ ] **3B-3** Add `@media print` CSS to `0level.html` `<style>` block
 - [ ] **3B-4** Test: generate a character in inline mode (new tab unchecked), Ctrl+P — verify only the character sheet appears, controls are hidden, colors print correctly
 
 ---
@@ -574,18 +575,10 @@ The 0-level generator shows Class Attack Bonus, Melee Modifier, and Ranged Modif
 
 - [ ] Show class requirements (ability minimums) on hover/click in the `advanced.html` race/class grid
 
-### 0-Level Page Visual Styling
-- [ ] Audit `0level.html` CSS against `basic.html` / `advanced.html` and align: control section layout, input sizing, button styles, font sizes, spacing, generator container border/background
-- [ ] Ensure the numbered control sections (1. Options, 2. Name, etc.) use the same `.control-section` pattern and heading style as the other pages
-- [ ] Remove Markdown and JSON export buttons/options (see 0-Level Export Cleanup above)
-
 ### UI Polish
 - [ ] Tooltips for all options
 - [ ] Mobile responsiveness improvements
 - [ ] Custom background/profession entry field
-
-### 0-Level Export Cleanup
-- [ ] Remove Markdown and JSON export buttons/options from `0level.html` and `0level-ui.js` (PDF via browser Print is sufficient; Markdown/JSON are unused in practice)
 
 ### Export Improvements
 - [ ] CSV export for multiple 0-level characters
@@ -595,8 +588,6 @@ The 0-level generator shows Class Attack Bonus, Melee Modifier, and Ranged Modif
 ### Testing Automation
 - [ ] Automated tests for all races
 - [ ] Automated tests for all classes at all levels
-- [ ] Test Markdown export (0level generator)
-- [ ] Test JSON export (0level generator)
 
 ### Documentation
 - [ ] Screenshots of each generator for README
@@ -649,6 +640,9 @@ See `README.md` for the complete module/file structure table.
 **Quick summary:**
 - `shared-*.js` — shared ES6 modules (ability scores, character creation, class data, sheet renderer)
 - `class-data-{ose,gygar,ll}.js` — mode-specific class progression data
-- `{0level,basic,advanced}-{ui,character-gen,utils}.js` — generator-specific files
+- `{basic,advanced}-{ui,character-gen,utils}.js` — current generator-specific files (to be merged into `generator-*.js`)
+- ~~`0level-*.js`, `canvas-*.js`, `markdown-generator.js`~~ — **DELETED** (2026-03-30)
 - `PLANS_COMPLETED/` — completed planning documents (for historical reference)
 - `CLASS_MARKDOWN/` — static class documentation (GYGAR_*.md)
+- `PLAN_MERGE_GENERATOR.md` — active plan for merging basic+advanced → generator.html
+- `TODO_DELETE_0LEVEL_PAGE.md` — Phase 1 + Phase 2 complete (0level deleted 2026-03-30)

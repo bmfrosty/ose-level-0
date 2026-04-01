@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OSE Character Generator (Levels 0–14)</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Keep small font for controls only */
+        .generator-container, nav, h1 {
+            font-size: 11px;
+        }
+        nav {
+            background-color: #f0f0f0;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        nav .nav-left {
+            display: flex;
+            gap: 20px;
+        }
+        nav a {
+            text-decoration: none;
+            color: #333;
+            font-weight: bold;
+        }
+        nav a:hover { color: #4CAF50; }
+        nav a.active { color: #4CAF50; text-decoration: underline; }
+
+        /* ── Accent colour — switches with mode ────────────────────────────── */
+        .generator-container {
+            --accent:      #4CAF50;   /* green  = basic  (default) */
+            --accent-bg:   #f1f8e9;
+            --accent-bg2:  #e8f5e9;
+            background-color: #f8f9fa;
+            border: 2px solid var(--accent);
+            border-radius: 5px;
+            padding: 30px;
+            margin: 20px 0;
+            transition: border-color 0.3s;
+        }
+        .generator-container.mode-advanced {
+            --accent:     #9C27B0;    /* purple = advanced */
+            --accent-bg:  #f3e5f5;
+            --accent-bg2: #ede7f6;
+        }
+
+        .control-section {
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+        .control-section:last-child { border-bottom: none; }
+        .control-section h3 { margin-top: 0; color: #333; }
+
+        /* ── Level buttons ─────────────────────────────────────────────────── */
+        .level-selection {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 10px;
+        }
+        .level-btn {
+            padding: 5px 9px;
+            font-size: 11px;
+            font-weight: bold;
+            border: 2px solid var(--accent);
+            border-radius: 3px;
+            background-color: white;
+            color: var(--accent);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .level-btn:hover { background-color: var(--accent-bg); }
+        .level-btn.selected { background-color: var(--accent); color: white; }
+
+        /* ── Class buttons (basic mode) ────────────────────────────────────── */
+        .class-selection {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .class-button {
+            padding: 5px 9px;
+            font-size: 11px;
+            font-weight: bold;
+            border: 2px solid var(--accent);
+            border-radius: 3px;
+            background-color: white;
+            color: var(--accent);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .class-button:hover:not(:disabled) { background-color: var(--accent-bg); }
+        .class-button.selected { background-color: var(--accent); color: white; }
+        .class-button:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            border-color: #ccc;
+            color: #ccc;
+        }
+
+        /* ── Race/Class Grid (advanced mode) ───────────────────────────────── */
+        .race-class-grid {
+            margin-top: 15px;
+            overflow-x: auto;
+        }
+        .race-class-grid table {
+            border-collapse: collapse;
+            width: 100%;
+            background-color: white;
+        }
+        .race-class-grid th {
+            background-color: var(--accent);
+            color: white;
+            padding: 12px;
+            text-align: center;
+            font-weight: bold;
+        }
+        .race-class-grid td {
+            padding: 8px;
+            text-align: center;
+            border: 1px solid #ddd;
+        }
+        .race-class-grid td.race-label {
+            background-color: var(--accent-bg);
+            font-weight: bold;
+            text-align: left;
+            padding-left: 15px;
+        }
+        .grid-button {
+            padding: 5px 7px;
+            font-size: 11px;
+            font-weight: bold;
+            border: 2px solid var(--accent);
+            border-radius: 3px;
+            background-color: white;
+            color: var(--accent);
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+        }
+        .grid-button:hover:not(:disabled) { background-color: var(--accent-bg); }
+        .grid-button.selected { background-color: var(--accent); color: white; }
+        .grid-button:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            border-color: #ccc;
+            color: #ccc;
+        }
+
+        /* ── Checkboxes & Radios ───────────────────────────────────────────── */
+        .checkbox-option { margin: 8px 0; }
+        .checkbox-option label {
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .checkbox-option input[type="checkbox"] { width: 14px; height: 14px; cursor: pointer; }
+        .radio-option { margin: 8px 0; }
+        .radio-option label {
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .radio-option input[type="radio"] { width: 14px; height: 14px; cursor: pointer; }
+
+        /* ── Ability Score Grid ────────────────────────────────────────────── */
+        .ability-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-top: 15px;
+            max-width: 800px;
+        }
+        .ability-box { display: flex; align-items: center; gap: 8px; }
+        .ability-label { font-weight: bold; color: #333; min-width: 35px; }
+        .ability-input {
+            width: 40px;
+            padding: 3px;
+            text-align: center;
+            border: 2px solid #ccc;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .ability-input:focus { outline: none; border-color: var(--accent); }
+        .ability-modifier { font-size: 12px; color: #666; font-weight: normal; min-width: 30px; }
+        /* ── Roll / Generate buttons ───────────────────────────────────────── */
+        .roll-button {
+            padding: 8px 16px;
+            font-size: 11px;
+            font-weight: bold;
+            background-color: white;
+            color: var(--accent);
+            border: 2px solid var(--accent);
+            border-radius: 3px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 10px;
+        }
+        .roll-button:hover:not(:disabled) { background-color: var(--accent-bg); }
+        .roll-button:disabled { opacity: 0.5; cursor: not-allowed; }
+        .generate-button {
+            padding: 12px 24px;
+            font-size: 14px;
+            font-weight: bold;
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .generate-button:hover:not(:disabled) { filter: brightness(0.9); }
+        .generate-button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* ── Section greyed ────────────────────────────────────────────────── */
+        .section-greyed { opacity: 0.4; pointer-events: none; }
+
+        /* ── Mode + Level section ──────────────────────────────────────────── */
+        .mode-option { margin: 6px 0; }
+        .mode-option label {
+            cursor: pointer;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+        .mode-option input[type="radio"] { width: 14px; height: 14px; margin-top: 2px; cursor: pointer; }
+
+        /* ── Character display ─────────────────────────────────────────────── */
+        .character-display { margin-top: 20px; }
+
+        /* Share / QR modal */
+        .share-modal-backdrop {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000;
+        }
+        .share-modal-box {
+            position: fixed; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: white; border-radius: 8px; padding: 24px;
+            z-index: 1001; min-width: 300px; max-width: 90vw;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3); font-size: 11px;
+        }
+        .share-modal-box h3 { font-size: 14px; margin-top: 0; }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <div class="nav-left">
+            <a href="generator.html" class="active">Character Generator</a>
+            <a href="classes.html">Class Tables</a>
+        </div>
+        <div style="display:flex; gap:20px; align-items:center;">
+            <a href="https://github.com/bmfrosty/ose-level-0" target="_blank" rel="noopener" title="View source on GitHub" style="color:#333;">⬡ GitHub</a>
+            <a href="index.html">About</a>
+        </div>
+    </nav>
+
+    <h1>OSE Character Generator (Levels 0–14)</h1>
+
+    <div class="generator-container mode-basic" id="generatorContainer">
+
+        <!-- Reset Settings + Share -->
+        <div style="margin-bottom: 10px; display:flex; gap:8px; flex-wrap:wrap;">
+            <button class="roll-button" id="resetSettingsButton" style="font-size:10px;padding:4px 10px;margin-top:0;">Reset Saved Settings</button>
+            <button class="roll-button" id="shareButton" style="font-size:10px;padding:4px 10px;margin-top:0;">📱 Share / QR</button>
+        </div>
+
+        <!-- 1. Select Mode & Level -->
+        <div class="control-section" id="modeLevelSection">
+            <h3>1. Select Mode &amp; Level</h3>
+            <div class="mode-option">
+                <label>
+                    <input type="radio" name="mode" value="basic" checked>
+                    <span>
+                        <strong>Basic</strong> — Race-as-class (Dwarf, Elf, Halfling are classes)
+                    </span>
+                </label>
+            </div>
+            <div class="mode-option">
+                <label>
+                    <input type="radio" name="mode" value="advanced">
+                    <span>
+                        <strong>Advanced</strong> — Separate race and class selection
+                    </span>
+                </label>
+            </div>
+            <div class="level-selection" id="levelSelection" style="margin-top: 12px;">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+
+        <!-- 2. Progression Mode -->
+        <div class="control-section">
+            <h3>2. Attack &amp; Saving Throw Progressions</h3>
+            <div class="radio-option">
+                <label>
+                    <input type="radio" name="progressionMode" id="progressionSmooth" value="smooth">
+                    <span>
+                        <strong>Smoothified (Recommended)</strong> - Smooth XP curve, gradual progression
+                    </span>
+                </label>
+            </div>
+            <div class="radio-option">
+                <label>
+                    <input type="radio" name="progressionMode" id="progressionOSE" value="ose" checked>
+                    <span>
+                        <strong>OSE Standard</strong> - Original OSE to-hit and saving throw progressions
+                    </span>
+                </label>
+            </div>
+            <div class="radio-option">
+                <label>
+                    <input type="radio" name="progressionMode" id="progressionLL" value="ll">
+                    <span>
+                        <strong>Labyrinth Lord</strong> - Labyrinth Lord to-hit and saving throw progressions
+                    </span>
+                </label>
+            </div>
+        </div>
+
+        <!-- 3. Options -->
+        <div class="control-section">
+            <h3>3. Options</h3>
+            <div class="radio-option">
+                <label>
+                    <input type="radio" name="primeRequisiteMode" id="primeReqUser" value="user" checked>
+                    <span>
+                        <strong>User Minimums Only</strong> - Use ability score minimums from Step 5 only
+                    </span>
+                </label>
+            </div>
+            <div class="radio-option">
+                <label>
+                    <input type="radio" name="primeRequisiteMode" id="primeReq9" value="9">
+                    <span>
+                        <strong>Prime Requisite ≥ 9</strong> - Require prime requisite(s) for selected class ≥ 9
+                    </span>
+                </label>
+            </div>
+            <div class="radio-option">
+                <label>
+                    <input type="radio" name="primeRequisiteMode" id="primeReq13" value="13">
+                    <span>
+                        <strong>Prime Requisite ≥ 13</strong> - Require prime requisite(s) for selected class ≥ 13
+                    </span>
+                </label>
+            </div>
+            <div class="checkbox-option">
+                <label>
+                    <input type="checkbox" id="healthyCharacters">
+                    <span><strong>Healthy Characters</strong> - Re-roll level 1 HP results of 1 (minimum 2 HP at level 1)</span>
+                </label>
+            </div>
+            <div class="checkbox-option">
+                <label>
+                    <input type="checkbox" id="includeLevel0HP">
+                    <span><strong>Include Level 0 HP</strong> - Include background HP roll in total HP</span>
+                </label>
+            </div>
+            <div class="checkbox-option">
+                <label>
+                    <input type="checkbox" id="showUndeadNames">
+                    <span><strong>Show Monster Names</strong> in Turn Undead table</span>
+                </label>
+            </div>
+            <div class="checkbox-option">
+                <label>
+                    <input type="checkbox" id="basicAbilityOrdering" checked>
+                    <span><strong>1977 Ability Score Ordering</strong> (STR, INT, WIS, DEX, CON, CHA) — unchecked uses modern order (STR, DEX, CON, INT, WIS, CHA)</span>
+                </label>
+            </div>
+            <div class="checkbox-option advanced-only">
+                <label>
+                    <input type="checkbox" id="hideHumanRace">
+                    <span><strong>Hide "Human" prefix for Human characters</strong> in Advanced mode &mdash; show "Fighter" instead of "Human Fighter"</span>
+                </label>
+            </div>
+
+            <div id="startingWealthSection" style="margin-top: 12px; border-top: 1px solid #ddd; padding-top: 10px;">
+                <strong>Starting Wealth (level 2+):</strong>
+                <span style="color:#555; font-size:0.95em;"> — % of minimum XP for level, in gp</span>
+                <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:6px;">
+                    <label style="display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="radio" name="wealthPct" value="0"> 0%</label>
+                    <label style="display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="radio" name="wealthPct" value="25"> 25%</label>
+                    <label style="display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="radio" name="wealthPct" value="50" checked> 50%</label>
+                    <label style="display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="radio" name="wealthPct" value="75"> 75%</label>
+                    <label style="display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="radio" name="wealthPct" value="100"> 100%</label>
+                </div>
+                <div id="wealthPreview" style="margin-top:6px; color:#555; font-size:0.9em;"></div>
+            </div>
+
+            <div style="margin-top: 12px; border-top: 1px solid #ddd; padding-top: 10px;">
+                <div class="checkbox-option">
+                    <label>
+                        <input type="checkbox" id="useFixedScores">
+                        <span><strong>Use the name and ability scores specified in Steps 4 and 5</strong> (unchecked = generate random name and roll abilities with minimums)</span>
+                    </label>
+                </div>
+                <div class="checkbox-option">
+                    <label>
+                        <input type="checkbox" id="autoGenerateOnLevelChange">
+                        <span><strong>Auto-generate</strong> when level changes</span>
+                    </label>
+                </div>
+                <div class="checkbox-option">
+                    <label>
+                        <input type="checkbox" id="autoGenerateOnClassChange">
+                        <span><strong>Auto-generate</strong> when race/class changes</span>
+                    </label>
+                </div>
+                <div class="checkbox-option">
+                    <label>
+                        <input type="checkbox" id="autoGenerateOnLoad">
+                        <span><strong>Auto-generate character on page load</strong></span>
+                    </label>
+                </div>
+                <div class="checkbox-option">
+                    <label>
+                        <input type="checkbox" id="openInNewTab">
+                        <span title="Tip: Hold Ctrl (Win/Linux) or ⌘ Cmd (Mac) when clicking Generate to open the new tab in the background."><strong>Open character in new tab</strong> (unchecked = display on this page)</span>
+                    </label>
+                </div>
+                <div class="checkbox-option" style="margin-left: 24px;">
+                    <label>
+                        <input type="checkbox" id="autoPrintInNewTab">
+                        <span>Auto-open print dialog when tab opens</span>
+                    </label>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- 4. Character Name -->
+        <div class="control-section">
+            <h3>4. Character Name</h3>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <input type="text" id="characterName" placeholder="Enter character name..." style="flex: 1; padding: 8px; font-size: 14px; border: 2px solid #ccc; border-radius: 3px;">
+                <button class="roll-button" id="randomNameButton" style="margin-top: 0;">Random Name</button>
+            </div>
+        </div>
+
+        <!-- 5. Minimum Ability Scores -->
+        <div class="control-section">
+            <h3>5. Minimum Ability Scores</h3>
+            <div class="ability-grid">
+                <div class="ability-box">
+                    <label class="ability-label" for="scoreSTR">STR</label>
+                    <input type="number" class="ability-input" id="scoreSTR" value="3" min="3" max="18">
+                    <span class="ability-modifier" id="modSTR">+0</span>
+                </div>
+                <div class="ability-box">
+                    <label class="ability-label" for="scoreINT">INT</label>
+                    <input type="number" class="ability-input" id="scoreINT" value="3" min="3" max="18">
+                    <span class="ability-modifier" id="modINT">+0</span>
+                </div>
+                <div class="ability-box">
+                    <label class="ability-label" for="scoreWIS">WIS</label>
+                    <input type="number" class="ability-input" id="scoreWIS" value="3" min="3" max="18">
+                    <span class="ability-modifier" id="modWIS">+0</span>
+                </div>
+                <div class="ability-box">
+                    <label class="ability-label" for="scoreDEX">DEX</label>
+                    <input type="number" class="ability-input" id="scoreDEX" value="3" min="3" max="18">
+                    <span class="ability-modifier" id="modDEX">+0</span>
+                </div>
+                <div class="ability-box">
+                    <label class="ability-label" for="scoreCON">CON</label>
+                    <input type="number" class="ability-input" id="scoreCON" value="6" min="3" max="18">
+                    <span class="ability-modifier" id="modCON">+0</span>
+                </div>
+                <div class="ability-box">
+                    <label class="ability-label" for="scoreCHA">CHA</label>
+                    <input type="number" class="ability-input" id="scoreCHA" value="3" min="3" max="18">
+                    <span class="ability-modifier" id="modCHA">+0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 6a. Demihuman Level Limits + Human Racial Abilities (basic-only) -->
+        <div class="control-section basic-only" id="demihumanLimitSection">
+            <h3>6. Demihuman Level Limits &amp; Human Racial Abilities</h3>
+            <div class="radio-option">
+                <label>
+                    <input type="radio" name="raceClassMode" id="basicStrict" value="strict" checked>
+                    <span>
+                        <strong>Strict OSE Rules</strong> - Standard demihuman level limits, no human racial abilities
+                        <br><small style="margin-left: 30px;">Dwarf max 12, Elf max 10, Halfling max 8</small>
+                    </span>
+                </label>
+            </div>
+            <div class="radio-option">
+                <label>
+                    <input type="radio" name="raceClassMode" id="basicStrictHuman" value="strict-human">
+                    <span>
+                        <strong>Strict OSE + Human Racial Abilities</strong> - Standard demihuman level limits, humans gain racial abilities
+                        <br><small style="margin-left: 30px;">Dwarf max 12, Elf max 10, Halfling max 8</small>
+                        <br><small style="margin-left: 30px;"><em>Humans gain: Blessed (best of 2 HP rolls), Decisiveness (+1 initiative on ties), Leadership (+1 retainer loyalty/morale)</em></small>
+                    </span>
+                </label>
+            </div>
+            <div class="radio-option">
+                <label>
+                    <input type="radio" name="raceClassMode" id="basicTraditionalExtended" value="traditional-extended">
+                    <span>
+                        <strong>Extended Levels + Human Racial Abilities</strong> - All demihumans reach level 14, humans gain racial abilities
+                        <br><small style="margin-left: 30px;"><em>Humans gain: Blessed (best of 2 HP rolls), Decisiveness (+1 initiative on ties), Leadership (+1 retainer loyalty/morale)</em></small>
+                    </span>
+                </label>
+            </div>
+        </div>
+
+        <!-- 6b. Race/Class Restrictions (advanced-only) -->
+        <div class="control-section advanced-only" id="raceClassRestrictionSection" style="display:none;">
+            <h3>6. Race/Class Restrictions</h3>
+            <div class="radio-option">
+                <label>
+                    <input type="radio" name="raceClassMode" id="strictOSE" value="strict" checked>
+                    <span>
+                        <strong>Strict OSE Rules</strong> - Traditional combinations only, OSE level limits, no human racial abilities
+                        <br><small style="margin-left: 30px;">Example: Dwarf Fighter max 10, Elf Magic-User max 11, Halfling Thief max 8</small>
+                    </span>
+                </label>
+            </div>
+            <div class="radio-option">
+                <label>
+                    <input type="radio" name="raceClassMode" id="strictOSEHuman" value="strict-human">
+                    <span>
+                        <strong>Strict OSE + Human Racial Abilities</strong> - Traditional combinations, OSE level limits, humans gain racial abilities
+                        <br><small style="margin-left: 30px;">Example: Dwarf Fighter max 10, Elf Magic-User max 11, Halfling Thief max 8</small>
+                        <br><small style="margin-left: 30px;"><em>Humans gain racial abilities (Blessed, Decisiveness, Leadership)</em></small>
+                    </span>
+                </label>
+            </div>
+            <div class="radio-option">
+                <label>
+                    <input type="radio" name="raceClassMode" id="traditionalExtended" value="traditional-extended">
+                    <span>
+                        <strong>Traditional Combinations, Extended Levels</strong> - Traditional combinations only, all to level 14
+                        <br><small style="margin-left: 30px;">Example: Dwarf Fighter max 14, Elf Magic-User max 14, Halfling Thief max 14</small>
+                        <br><small style="margin-left: 30px;"><em>Humans gain racial abilities (Blessed, Decisiveness, Leadership)</em></small>
+                    </span>
+                </label>
+            </div>
+            <div class="radio-option">
+                <label>
+                    <input type="radio" name="raceClassMode" id="allowAll" value="allow-all">
+                    <span>
+                        <strong>Allow All Combinations (House Rules)</strong> - Any race/class combo, all to level 14
+                        <br><small style="margin-left: 30px;">Example: Dwarf Magic-User max 14, Halfling Cleric max 14</small>
+                        <br><small style="margin-left: 30px;"><em>Humans gain racial abilities (Blessed, Decisiveness, Leadership)</em></small>
+                    </span>
+                </label>
+            </div>
+        </div>
+
+        <!-- 7. Generate Character -->
+        <div class="control-section">
+            <h3>7. Generate Character</h3>
+
+            <!-- Level 0: race selection (shared — shown when level 0) -->
+            <div id="zeroLevelSection">
+                <div style="margin-bottom: 10px;"><strong>Race:</strong></div>
+                <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:10px;" id="zeroRaceButtons">
+                    <button class="grid-button zero-race-btn selected" style="width:auto;padding:5px 9px;" data-race="">Random</button>
+                    <button class="grid-button zero-race-btn" style="width:auto;padding:5px 9px;" data-race="Human_RACE">Human</button>
+                    <button class="grid-button zero-race-btn" style="width:auto;padding:5px 9px;" data-race="Demihuman_RACE">Random Demihuman</button>
+                    <button class="grid-button zero-race-btn" style="width:auto;padding:5px 9px;" data-race="Dwarf_RACE">Dwarf</button>
+                    <button class="grid-button zero-race-btn" style="width:auto;padding:5px 9px;" data-race="Elf_RACE">Elf</button>
+                    <button class="grid-button zero-race-btn" style="width:auto;padding:5px 9px;" data-race="Gnome_RACE">Gnome</button>
+                    <button class="grid-button zero-race-btn" style="width:auto;padding:5px 9px;" data-race="Halfling_RACE">Halfling</button>
+                </div>
+            </div>
+
+            <!-- Level 1+: Class buttons (basic-only) -->
+            <div id="classSection" class="basic-only">
+                <div style="margin-bottom: 10px;">
+                    <strong>Human Classes:</strong>
+                </div>
+                <div class="class-selection">
+                    <button class="class-button" data-class="Cleric">Cleric</button>
+                    <button class="class-button" data-class="Fighter">Fighter</button>
+                    <button class="class-button" data-class="Magic-User">Magic-User</button>
+                    <button class="class-button" data-class="Thief">Thief</button>
+                </div>
+                <div style="margin-top: 15px; margin-bottom: 10px;">
+                    <strong>Demihuman Classes:</strong>
+                </div>
+                <div class="class-selection">
+                    <button class="class-button" data-class="Dwarf">Dwarf</button>
+                    <button class="class-button" data-class="Elf">Elf</button>
+                    <button class="class-button" data-class="Halfling">Halfling</button>
+                </div>
+            </div>
+
+            <!-- Level 1+: Race/Class grid (advanced-only) -->
+            <div id="raceClassSection" class="advanced-only" style="display:none;">
+                <div class="race-class-grid">
+                    <table id="raceClassGrid">
+                        <thead>
+                            <tr>
+                                <th>Race \ Class</th>
+                                <th>Cleric</th>
+                                <th>Fighter</th>
+                                <th>Magic-User</th>
+                                <th>Thief</th>
+                                <th id="spellbladeHeader">Spellblade</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="race-label">Human</td>
+                                <td><button class="grid-button" data-race="Human" data-class="Cleric">Cleric</button></td>
+                                <td><button class="grid-button" data-race="Human" data-class="Fighter">Fighter</button></td>
+                                <td><button class="grid-button" data-race="Human" data-class="Magic-User">Magic-User</button></td>
+                                <td><button class="grid-button" data-race="Human" data-class="Thief">Thief</button></td>
+                                <td><button class="grid-button" data-race="Human" data-class="Spellblade" id="humanSpellblade">Spellblade</button></td>
+                            </tr>
+                            <tr>
+                                <td class="race-label">Dwarf</td>
+                                <td><button class="grid-button" data-race="Dwarf" data-class="Cleric">Cleric</button></td>
+                                <td><button class="grid-button" data-race="Dwarf" data-class="Fighter">Fighter</button></td>
+                                <td><button class="grid-button" data-race="Dwarf" data-class="Magic-User">Magic-User</button></td>
+                                <td><button class="grid-button" data-race="Dwarf" data-class="Thief">Thief</button></td>
+                                <td><button class="grid-button" data-race="Dwarf" data-class="Spellblade">Spellblade</button></td>
+                            </tr>
+                            <tr>
+                                <td class="race-label">Elf</td>
+                                <td><button class="grid-button" data-race="Elf" data-class="Cleric">Cleric</button></td>
+                                <td><button class="grid-button" data-race="Elf" data-class="Fighter">Fighter</button></td>
+                                <td><button class="grid-button" data-race="Elf" data-class="Magic-User">Magic-User</button></td>
+                                <td><button class="grid-button" data-race="Elf" data-class="Thief">Thief</button></td>
+                                <td><button class="grid-button" data-race="Elf" data-class="Spellblade" id="elfSpellblade">Spellblade</button></td>
+                            </tr>
+                            <tr>
+                                <td class="race-label">Gnome</td>
+                                <td><button class="grid-button" data-race="Gnome" data-class="Cleric">Cleric</button></td>
+                                <td><button class="grid-button" data-race="Gnome" data-class="Fighter">Fighter</button></td>
+                                <td><button class="grid-button" data-race="Gnome" data-class="Magic-User">Magic-User</button></td>
+                                <td><button class="grid-button" data-race="Gnome" data-class="Thief">Thief</button></td>
+                                <td><button class="grid-button" data-race="Gnome" data-class="Spellblade">Spellblade</button></td>
+                            </tr>
+                            <tr>
+                                <td class="race-label">Halfling</td>
+                                <td><button class="grid-button" data-race="Halfling" data-class="Cleric">Cleric</button></td>
+                                <td><button class="grid-button" data-race="Halfling" data-class="Fighter">Fighter</button></td>
+                                <td><button class="grid-button" data-race="Halfling" data-class="Magic-User">Magic-User</button></td>
+                                <td><button class="grid-button" data-race="Halfling" data-class="Thief">Thief</button></td>
+                                <td><button class="grid-button" data-race="Halfling" data-class="Spellblade">Spellblade</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div style="margin-top: 15px;">
+                <button class="generate-button" id="generateButton">⚡ Generate Character</button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Character Display -->
+    <div class="character-display" id="characterDisplay">
+        <h2>Generated Character</h2>
+        <div id="characterInfo">
+            <!-- Character details will be displayed here -->
+        </div>
+    </div>
+
+    <script type="module">
+        import { initialize } from './generator-ui.js';
+        // Module auto-initializes via DOMContentLoaded listener in generator-ui.js
+    </script>
+
+</body>
+</html>

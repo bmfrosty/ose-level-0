@@ -57,12 +57,11 @@ export function getClassProgressionData(options) {
     const primeReqs = getPrimeRequisites(className);
     let xpBonus = 0;
     if (primeReqs.length > 0) {
-        let totalBonus = 0;
+        // OSE rule: bonus is determined by the LOWEST prime requisite score
+        xpBonus = 10; // sentinel — will be replaced by actual minimum
         primeReqs.forEach(ability => {
-            const score = abilityScores[ability];
-            totalBonus += calculateXPBonus(score);
+            xpBonus = Math.min(xpBonus, calculateXPBonus(abilityScores[ability]));
         });
-        xpBonus = Math.floor(totalBonus / primeReqs.length);
     }
     console.log(`  Prime Requisite XP Bonus: ${xpBonus >= 0 ? '+' : ''}${xpBonus}%`);
     
@@ -124,7 +123,9 @@ export function getClassFeatures(options) {
     
     // Thief skills
     if (baseClassName === 'Thief') {
-        features.thiefSkills = classData.getThiefSkills(level);
+        features.thiefSkills = typeof classData.getThiefSkills === 'function'
+            ? classData.getThiefSkills(level)
+            : null;
         console.log('\nThief Skills:');
         if (features.thiefSkills) {
             Object.entries(features.thiefSkills).forEach(([skill, value]) => {

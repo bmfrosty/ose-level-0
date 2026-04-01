@@ -39,17 +39,17 @@ export function readAbilityScores() {
 }
 
 /**
- * Get minimum scores for rolling (always 3)
+ * Get minimum scores for rolling from the DOM input fields in section 5.
  * @returns {Object} Minimum scores object
  */
 export function getMinimumScores() {
     return {
-        STR: 3,
-        INT: 3,
-        WIS: 3,
-        DEX: 3,
-        CON: 3,
-        CHA: 3
+        STR: parseInt(document.getElementById('scoreSTR')?.value) || 3,
+        INT: parseInt(document.getElementById('scoreINT')?.value) || 3,
+        WIS: parseInt(document.getElementById('scoreWIS')?.value) || 3,
+        DEX: parseInt(document.getElementById('scoreDEX')?.value) || 3,
+        CON: parseInt(document.getElementById('scoreCON')?.value) || 3,
+        CHA: parseInt(document.getElementById('scoreCHA')?.value) || 3
     };
 }
 
