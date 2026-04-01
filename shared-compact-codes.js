@@ -387,21 +387,25 @@ export function buildOptionsLine(cp) {
     // L0 HP inclusion — always show for level 1+ characters
     if (lvl >= 1) parts.push(cp.il ? 'L0 HP: Yes' : 'L0 HP: No');
 
-    // Prime Requisite mode — always show for level 1+ (class is known)
-    if (lvl >= 1) parts.push(cp.prm ? `Prime Req \u2265${cp.prm}` : 'User Min Scores');
+    // Prime Requisite mode — show whenever explicitly set (affects score rolling at all levels)
+    if (cp.prm != null) parts.push(cp.prm ? `Prime Req \u2265${cp.prm}` : 'User Min Scores');
 
     // Starting wealth — only meaningful at level 2+
     if (lvl >= 2 && cp.wp != null) parts.push(`Wealth: ${cp.wp}%`);
 
     // Score minimums — show non-default (>3) values, e.g. "Min: STR≥10 INT≥12"
-    if (Array.isArray(cp.sm) && lvl >= 1) {
+    if (Array.isArray(cp.sm)) {
         const ORDER = ['STR','DEX','CON','INT','WIS','CHA'];
         const minParts = ORDER.map((a, i) => (cp.sm[i] || 3) > 3 ? `${a}\u2265${cp.sm[i]}` : null).filter(Boolean);
         if (minParts.length > 0) parts.push(`Min: ${minParts.join(' ')}`);
     }
 
-    // Roll attempts — always show for level 1+ so the player knows how lucky they were
-    if (cp.rr != null && lvl >= 1) parts.push(`${cp.rr} roll${cp.rr === 1 ? '' : 's'}`);
+    // Fixed scores vs roll attempts
+    if (cp.fs) {
+        parts.push('Fixed Scores');
+    } else if (cp.rr != null) {
+        parts.push(`${cp.rr} roll${cp.rr === 1 ? '' : 's'}`);
+    }
 
     return parts.join(' &nbsp;·&nbsp; ');
 }

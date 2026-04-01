@@ -146,7 +146,7 @@
 
         <div style="margin-bottom:10px;">
             <strong>Ability Scores:</strong>
-            <div id="ep-ability-inputs" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:6px;max-width:320px;"></div>
+            <div id="ep-ability-inputs" style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px 12px;margin-top:6px;max-width:520px;"></div>
         </div>
 
         <div style="margin-bottom:10px;" id="ep-hp-section">
@@ -307,7 +307,7 @@
                     equipment:{armor:cp.ar||null, items:cp.it||[], startingAC:cp.ac||10, startingGold:cp.g||0, startingHD:'1d4'},
                     spellSlots:null, turnUndead:null,
                     showUndeadNames:!!cp.un, showQRCode:cp.qr!==0, abilityOrder:cp.ao??1,
-                    footer: (() => { const o = buildOptionsLine({ m: mode, p: cp.p||'O', l: 0, bl: cp.bl||0, hc: cp.hc||0 }); const modPfx = cp.mx ? 'Modified ' : ''; return `${modPfx}0-Level ${raceDisplay}` + (o ? `<br><small style="opacity:0.7;">${o}</small>` : ''); })(),
+                    footer: (() => { const o = buildOptionsLine(cp); const modPfx = cp.mx ? 'Modified ' : ''; return `${modPfx}0-Level ${raceDisplay}` + (o ? `<br><small style="opacity:0.7;">${o}</small>` : ''); })(),
                     printTitle:`OSE ${isAdvMode?'Advanced':'Basic'} - ${raceDisplay} - 0-Level - ${cp.bg||''} - ${cp.n||''}`,
                     autoPrint:!!cp.ap
                 };
@@ -464,27 +464,36 @@
             // ── Name ──────────────────────────────────────────────────────
             document.getElementById('ep-name').value = decoded.n || '';
 
-            // ── Ability score inputs ───────────────────────────────────────
-            const scores = decoded.s || [10,10,10,10,10,10];
+            // ── Ability score inputs (base + ±adj + computed final) ────────
+            const finalScores  = decoded.s  || [10,10,10,10,10,10];
+            const baseScoresArr = decoded.bs || finalScores;
             const abilityInputs = document.getElementById('ep-ability-inputs');
             ABILITIES.forEach((ab, i) => {
+                const base  = baseScoresArr[i];
+                const adj   = finalScores[i] - base;
+                const final = finalScores[i];
                 const div = document.createElement('div');
-                div.style.cssText = 'display:flex;align-items:center;gap:5px;';
+                div.style.cssText = 'display:flex;align-items:center;gap:4px;';
                 div.innerHTML = `
                     <label style="font-weight:bold;min-width:35px;font-size:11px;">${ab}</label>
-                    <input type="number" id="ep-${ab}" value="${scores[i]}" min="3" max="18"
-                        style="width:45px;padding:3px;text-align:center;font-size:12px;font-weight:bold;border:1px solid #ccc;border-radius:3px;">
-                    <button class="reroll-btn ep-stat-reroll" data-stat="${ab}" title="Reroll ${ab} (3d6)">🎲</button>`;
+                    <span id="ep-base-${ab}" data-base="${base}"
+                        style="width:42px;display:inline-block;text-align:center;font-size:12px;font-weight:bold;color:#333;background:#e8e8e8;border:1px solid #ccc;border-radius:3px;padding:3px 0;">${base}</span>
+                    <span style="font-size:10px;color:#888;">±adj</span>
+                    <input type="number" id="ep-adj-${ab}" value="${adj}" min="-10" max="10" step="1"
+                        style="width:36px;padding:3px;text-align:center;font-size:12px;color:#444;background:#fafafa;border:1px solid #b0b0b0;border-radius:3px;">
+                    <span style="font-size:11px;color:#555;font-weight:bold;">=</span>
+                    <span id="ep-final-${ab}" style="font-size:13px;font-weight:bold;color:#111;min-width:20px;">${final}</span>`;
                 abilityInputs.appendChild(div);
-            });
-            abilityInputs.querySelectorAll('.ep-stat-reroll').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const roll = (Math.floor(Math.random()*6)+1)
-                               + (Math.floor(Math.random()*6)+1)
-                               + (Math.floor(Math.random()*6)+1);
-                    const inp = document.getElementById('ep-' + btn.dataset.stat);
-                    if (inp) inp.value = Math.min(18, Math.max(3, roll));
-                });
+                // Live-update the final display when the adj input changes
+                const baseEl  = div.querySelector(`#ep-base-${ab}`);
+                const adjInp  = div.querySelector(`#ep-adj-${ab}`);
+                const finalEl = div.querySelector(`#ep-final-${ab}`);
+                const updateFinal = () => {
+                    const b = parseInt(baseEl?.dataset.base) || 3;
+                    const a = parseInt(adjInp?.value)  || 0;
+                    if (finalEl) finalEl.textContent = b + a;
+                };
+                adjInp?.addEventListener('input', updateFinal);
             });
 
             // ── HP — per-level rows if hr data available, else single total ──
@@ -516,7 +525,7 @@
                     rb.addEventListener('click', () => {
                         const idx   = parseInt(rb.dataset.index);
                         const sides = parseInt(rb.dataset.sides);
-                        const conScore = parseInt(document.getElementById('ep-CON')?.value) || conScoreInit;
+                        const conScore = parseInt(document.getElementById('ep-base-CON')?.dataset.base) || conScoreInit;
                         const hpVal = Math.max(1, Math.floor(Math.random() * sides) + 1 + getConMod(conScore));
                         const inp = hpSec.querySelector(`.ep-edit-hp[data-index='${idx}']`);
                         if (inp) inp.value = hpVal;
@@ -532,7 +541,7 @@
                 hpSec.querySelector('#ep-reroll-hp').addEventListener('click', () => {
                     const sides = CLASS_HD[decoded.c] || 6;
                     const lvl = decoded.l || 1;
-                    const conScore = parseInt(document.getElementById('ep-CON')?.value) || conScoreInit;
+                    const conScore = parseInt(document.getElementById('ep-base-CON')?.dataset.base) || conScoreInit;
                     const conMod = getConMod(conScore);
                     let total = 0;
                     for (let i = 0; i < lvl; i++) total += Math.max(1, Math.floor(Math.random() * sides) + 1 + conMod);
@@ -556,11 +565,17 @@
                 // Progression mode (now in Modify Character panel)
                 const newProg = document.querySelector('input[name="ep-prog"]:checked')?.value || CODE_TO_PROG[decoded.p] || 'ose';
 
-                // Ability scores
-                const newScores = ABILITIES.map(a => {
-                    const v = parseInt(document.getElementById('ep-' + a)?.value);
+                // Ability scores — read base + adj, compute final
+                const newBaseScores = ABILITIES.map(a => {
+                    const v = parseInt(document.getElementById('ep-base-' + a)?.dataset.base);
                     return isNaN(v) ? 10 : Math.min(18, Math.max(3, v));
                 });
+                const newAdjVals = ABILITIES.map(a => {
+                    const v = parseInt(document.getElementById('ep-adj-' + a)?.value);
+                    return isNaN(v) ? 0 : Math.max(-10, Math.min(10, v));
+                });
+                const newScores = ABILITIES.map((a, i) => Math.max(3, Math.min(18, newBaseScores[i] + newAdjVals[i])));
+                const hasAnyAdj = newAdjVals.some(v => v !== 0);
 
                 // HP — per-level rolls (if hr was present) or single total
                 const hpRollInputs = document.querySelectorAll('#ep-hp-section .ep-edit-hp');
@@ -583,9 +598,11 @@
                     mx: 1,   // ← marks character as manually modified
                     ap: 0,
                 };
-                if (newCp.bs) {
-                    const scoreChanged = newScores.some((v,i) => v !== (decoded.s?.[i] ?? 10));
-                    if (scoreChanged) delete newCp.bs;
+                // Store base scores in cp.bs when any adjustment is non-zero (enables strikethrough display)
+                if (hasAnyAdj) {
+                    newCp.bs = newBaseScores;
+                } else {
+                    delete newCp.bs;
                 }
 
                 const encoded = encodeCompactParams(newCp);

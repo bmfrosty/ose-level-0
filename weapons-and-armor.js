@@ -185,6 +185,11 @@ export const ARMOR = {
     ac: { descending: -1, ascending: 1 },
     cost: 10,
     weight: 100
+  },
+  "Helmet": {
+    ac: { descending: 0, ascending: 0 },
+    cost: 10,
+    weight: 50
   }
 };
 

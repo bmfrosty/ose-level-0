@@ -170,6 +170,7 @@
         }
         .checkbox-option input[type="checkbox"] { width: 14px; height: 14px; cursor: pointer; }
         .radio-option { margin: 8px 0; }
+        #acDisplayContainer .radio-option { margin: 1px 0; }
         .radio-option label {
             cursor: pointer;
             display: flex;
@@ -394,7 +395,7 @@
 
             <div style="margin-top: 12px; border-top: 1px solid #ddd; padding-top: 10px;">
                 <strong>Armor Class Display:</strong>
-                <div style="display:flex; flex-direction:column; gap:2px; margin-top:4px;">
+                <div id="acDisplayContainer" style="display:flex; flex-direction:column; margin-top:4px;">
                     <div class="radio-option">
                         <label>
                             <input type="radio" name="acDisplayMode" value="aac" checked>
@@ -439,7 +440,7 @@
                 <div class="checkbox-option">
                     <label>
                         <input type="checkbox" id="useFixedScores">
-                        <span><strong>Use the name and ability scores specified in Steps 4 and 5</strong> (unchecked = generate random name and roll abilities with minimums)</span>
+                        <span><strong>Use the ability scores specified in Step 4</strong> (unchecked = roll abilities with minimums)</span>
                     </label>
                 </div>
                 <div class="checkbox-option">
@@ -481,7 +482,6 @@
             <h3>4. Character Name</h3>
             <div style="display: flex; gap: 10px; align-items: center;">
                 <input type="text" id="characterName" placeholder="Enter character name..." style="flex: 1; padding: 8px; font-size: 14px; border: 2px solid #ccc; border-radius: 3px;">
-                <button class="roll-button" id="randomNameButton" style="margin-top: 0;">Random Name</button>
             </div>
         </div>
 

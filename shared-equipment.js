@@ -112,7 +112,13 @@ export function purchaseEquipment(className, startingGold, dexModifier, backgrou
     if (cost <= gold) { result.items.push(name); gold -= cost; }
   }
 
-  // 6. Compute AC
+  // 6. Helmet — purchased last, after all other gear
+  if (ARMOR["Helmet"] && ARMOR["Helmet"].cost <= gold) {
+    result.items.push("Helmet");
+    gold -= ARMOR["Helmet"].cost;
+  }
+
+  // 7. Compute AC
   const armorAC  = result.armor ? ARMOR[result.armor].ac.ascending : 10;
   const shieldAC = result.shield ? 1 : 0;
   result.startingAC    = armorAC + dexModifier + shieldAC;

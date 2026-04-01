@@ -102,24 +102,44 @@ export async function generateZeroLevelCharacter(opts = {}) {
         healthyChars = false,
         fixedScores = null,
         fixedName = '',
+        fixedAdjustments = null,  // { STR,DEX,CON,INT,WIS,CHA } overrides racial adjustments (edit panel)
     } = opts;
 
     let adj, race, hp;
 
+    let attempts = 1;
+
     if (fixedScores) {
         // Fixed scores mode — skip reroll loop, use exact values from inputs
         race = pickRace(forcedRace);
-        adj = ABILITIES.map(a => ({
+        const raw = ABILITIES.map(a => ({
             ability: a,
             roll: fixedScores[a] ?? 10,
             modifier: calculateModifier(fixedScores[a] ?? 10)
         }));
+        if (fixedAdjustments && Object.values(fixedAdjustments).some(v => v !== 0)) {
+            // Apply custom adjustments from the edit panel, preserving originalRoll for strikethrough display
+            adj = raw.map(r => {
+                const delta = fixedAdjustments[r.ability] || 0;
+                const adjustedRoll = Math.max(3, Math.min(18, r.roll + delta));
+                return {
+                    ability: r.ability,
+                    roll: adjustedRoll,
+                    originalRoll: delta !== 0 ? r.roll : undefined,
+                    modifier: calculateModifier(adjustedRoll)
+                };
+            });
+        } else {
+            adj = applyRaceAdjustments(raw, race, isAdvanced, humanRacialAbilities);
+        }
         const conMod = adj.find(r => r.ability === 'CON').modifier;
         hp = calcHitPoints(conMod, race, isAdvanced);
         if (hp.total < 1) hp = { roll: 1, total: 1 }; // floor at 1 HP
     } else {
         // Reroll loop — exit when all filters pass
+        attempts = 0;
         for (;;) {
+            attempts++;
             const raw = rollAbilityScores();
             race = pickRace(forcedRace);
             adj  = await applyRaceAdjustments(raw, race, isAdvanced, humanRacialAbilities);
@@ -159,5 +179,6 @@ export async function generateZeroLevelCharacter(opts = {}) {
         total: adj.reduce((s, r) => s + r.modifier, 0),
         attackBonus,
         savingThrows,
+        attempts,               // number of roll attempts before filters passed
     };
 }

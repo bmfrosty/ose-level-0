@@ -86,8 +86,8 @@ export function buildSheetSpec(sd, opts) {
         title:    sd.title,
         subtitle: sd.subtitle,
         header: { columns: [
-            { label:'Character Name', value: sd.name||'Unknown', flex:3 },
-            { label:'Occupation',     value: sd.occupation||'—', flex:2 },
+            { label:'Character Name', value: sd.name||'Unknown', flex:2.8 },
+            { label:'Occupation',     value: sd.occupation||'—', flex:2.2 },
             { label:'Race/Class',     value: sd.raceClass,       flex:2 },
             { label:'Level',          value: sd.level, flex:1, center:true },
             { label:'HD',             value: sd.hd,    flex:1, center:true },

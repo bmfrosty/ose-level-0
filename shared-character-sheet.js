@@ -32,6 +32,7 @@
  */
 
 import { encodeCompactParams } from './shared-compact-codes.js';
+import { WEAPONS } from './weapons-and-armor.js';
 
 // CSS helpers (shared across all renders)
 const CSS = {
@@ -121,16 +122,33 @@ export function renderCharacterSheetHTML(sheet) {
     const hasShield = !!_eq.shield;
     // Armor for the box (skip "Unarmored" entries)
     const armorForBox = (_eq.armor && !/unarmored/i.test(_eq.armor)) ? _eq.armor : null;
+    // Helmet — shown in Weapons box, not in ITEMS column
+    const hasHelmet = (_eq.items || []).includes('Helmet');
     // Set of weapon items that belong in Weapons/Armor/Skills (not in ITEMS column)
     const _weaponSet = new Set(allWeapons);
-    // Filtered items for ITEMS column: exclude weapons, armor (and its background variant), and "Unarmored"
+    // Filtered items for ITEMS column: exclude weapons, armor (and its background variant), "Unarmored", and Helmet
     const _armorLower = _eq.armor ? _eq.armor.toLowerCase() : null;
     const filteredItems = (_eq.items || []).filter(item => {
         if (_weaponSet.has(item)) return false;                // weapons
         if (/unarmored/i.test(item)) return false;             // "Unarmored (background)"
         if (_armorLower && item.toLowerCase().includes(_armorLower)) return false; // armor + "(background)" variant
+        if (item === 'Helmet') return false;                   // shown in Weapons/Armor box
         return true;
     });
+
+    // ── Weapon lines (always 3 slots, no underlines for empty) ──────────────
+    const _weaponSlots = [...allWeapons];
+    while (_weaponSlots.length < 3) _weaponSlots.push(null);
+    const weaponLinesHTML = _weaponSlots.map((w, i) => {
+        const margin = i > 0 ? " style='margin-top: 2px;'" : '';
+        if (w === null) return `<div${margin}><strong>Weapon:</strong></div>`;
+        const hasDmgInName = /\(\d+d\d+/.test(w);
+        if (hasDmgInName) return `<div${margin}><strong>Weapon:</strong> ${w}</div>`;
+        const baseName = w.replace(/\s*\(background\)\s*$/i, '').trim();
+        const dmg = WEAPONS[baseName]?.damage;
+        const display = dmg ? `${w} (${dmg})` : w;
+        return `<div${margin}><strong>Weapon:</strong> ${display}</div>`;
+    }).join('');
 
     // ── Abilities section ────────────────────────────────────────────────────
     const sec = sheet.abilitiesSection;
@@ -330,14 +348,15 @@ export function renderCharacterSheetHTML(sheet) {
             <div style='break-inside: avoid; margin-bottom: 8px;'>
                 <div style='${sectionHeader}'>WEAPONS, ARMOR, AND SKILLS</div>
                 <div style='${box}'>
-                    ${allWeapons.length > 0 ? `<div><strong>Weapon${allWeapons.length > 1 ? 's' : ''}:</strong> ${allWeapons.join(', ')}</div>` : ''}
-                    ${armorForBox ? `<div style='margin-top: 4px;'><strong>Armor:</strong> ${armorForBox}</div>` : ''}
+                    ${weaponLinesHTML}
+                    <div style='margin-top: 2px;'><strong>Armor:</strong>${armorForBox ? ` ${armorForBox}` : ''}</div>
                     ${hasShield ? `<div style='margin-top: 2px;'><strong>Shield:</strong> Yes (+1 AC)</div>` : ''}
+                    <div style='margin-top: 2px;'><strong>Helmet:</strong>${hasHelmet ? ' Yes' : ''}</div>
                     ${isDACMode
-                        ? `<div style='margin-top: 4px;'><strong>THAC0:</strong> ${thac0} <span style='color:#666;font-size:0.9em;'>(${thac0} [${fmt(-ws.classAttackBonus)}])</span></div>`
+                        ? `<div style='margin-top: 2px;'><strong>THAC0:</strong> ${thac0} <span style='color:#666;font-size:0.9em;'>(${thac0} [${fmt(-ws.classAttackBonus)}])</span></div>`
                         : isDualMode
-                            ? `<div style='margin-top: 4px;'><strong>Class Attack Bonus:</strong> ${fmt(ws.classAttackBonus)} &nbsp;/&nbsp; <strong>THAC0:</strong> ${thac0} <span style='color:#666;font-size:0.9em;'>(${thac0} [${fmt(-ws.classAttackBonus)}])</span></div>`
-                            : `<div style='margin-top: 4px;'><strong>Class Attack Bonus:</strong> ${fmt(ws.classAttackBonus)} <span style='color:#666;font-size:0.9em;'>(${thac0} [${fmt(-ws.classAttackBonus)}])</span></div>`}
+                            ? `<div style='margin-top: 2px;'><strong>Class Attack Bonus:</strong> ${fmt(ws.classAttackBonus)} &nbsp;/&nbsp; <strong>THAC0:</strong> ${thac0} <span style='color:#666;font-size:0.9em;'>(${thac0} [${fmt(-ws.classAttackBonus)}])</span></div>`
+                            : `<div style='margin-top: 2px;'><strong>Class Attack Bonus:</strong> ${fmt(ws.classAttackBonus)} <span style='color:#666;font-size:0.9em;'>(${thac0} [${fmt(-ws.classAttackBonus)}])</span></div>`}
                     <div style='margin-top: 2px;'><strong>Melee Modifier (STR):</strong> ${fmt(ws.meleeMod)}</div>
                     <div style='margin-top: 2px;'><strong>Ranged Modifier (DEX):</strong> ${fmt(ws.rangedMod)}</div>
                     ${thiefSkillsHTML}
@@ -362,17 +381,32 @@ export function renderCharacterSheetHTML(sheet) {
 
         <!-- Footer lives on page 1 -->
         <hr style='margin-top: 0; border-color: #ccc;'>
-        <div style='display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap;'>
-            <div style='flex: 1;'>
-                <p style='font-size: 0.8em; color: #666; margin: 4px 0;'>${sheet.footer}</p>
-                ${sheet.abilityScores.some(a => a.originalScore !== null && a.originalScore !== undefined && a.originalScore !== a.score)
-                    ? `<div style='font-size:0.72em;color:#aaa;font-style:italic;margin-top:2px;'><span style='text-decoration:line-through;color:#ccc;'>00</span> = ability score before racial adjustment</div>`
-                    : ''}
+        <div style='display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start;'>
+            <!-- Left column: footer text + legend -->
+            <div style='font-size: 0.8em; color: #666;'>
+                <p style='margin: 0 0 4px;'>${sheet.footer}</p>
+                <div style='font-size:0.72em;color:#aaa;font-style:italic;'><span style='text-decoration:line-through;color:#ccc;'>00</span> = ability score before racial adjustment</div>
             </div>
-            <div style='font-size: 0.8em; color: #444; white-space: nowrap; display: flex; gap: 16px;'>
-                ${startingACDisplay !== null && startingACDisplay !== undefined ? `<span><strong>Starting AC:</strong> ${startingACDisplay}</span>` : ''}
-                ${eq.startingHD ? `<span><strong>Starting HD:</strong> ${eq.startingHD}</span>` : ''}
-                ${startingGold !== null ? `<span><strong>Starting Gold:</strong> ${startingGold} gp</span>` : ''}
+            <!-- Right column: starting stats + HP rolls -->
+            <div style='font-size:0.8em;color:#444;text-align:right;'>
+                ${(startingACDisplay !== null && startingACDisplay !== undefined) || eq.startingHD || startingGold !== null ? `
+                <div style='white-space:nowrap;margin-bottom:3px;display:flex;gap:12px;justify-content:flex-end;flex-wrap:wrap;'>
+                    ${startingACDisplay !== null && startingACDisplay !== undefined ? `<span><strong>Starting AC:</strong> ${startingACDisplay}</span>` : ''}
+                    ${eq.startingHD ? `<span><strong>Starting HD:</strong> ${eq.startingHD}</span>` : ''}
+                    ${startingGold !== null ? `<span><strong>Starting Gold:</strong> ${startingGold} gp</span>` : ''}
+                </div>` : ''}
+                ${(() => {
+                    const _hpRolls = sheet.editState?.hpRolls || [];
+                    const _conMod  = sheet.editState?.conModifier ?? 0;
+                    if (_hpRolls.length === 0) return '';
+                    const conStr = `CON ${_conMod >= 0 ? '+' : ''}${_conMod}`;
+                    const items = _hpRolls.map((hp, i) => {
+                        const label = i === 0 ? 'L0' : `L${i}`;
+                        return `<span style='white-space:nowrap;'><strong>${label}:</strong>&nbsp;${hp}</span>`;
+                    }).join('');
+                    return `<div style='font-weight:bold;font-size:0.75em;color:#666;text-transform:uppercase;margin-bottom:1px;'>HP Rolls <span style='font-weight:normal;font-style:italic;'>${conStr}</span></div>
+                    <div style='display:flex;flex-wrap:wrap;justify-content:flex-end;gap:2px 10px;'>${items}</div>`;
+                })()}
             </div>
         </div>
         </div><!-- end ose-page1 -->
@@ -494,14 +528,22 @@ function renderEditPanel(editState) {
     ].map(m => `<label style='display:flex;align-items:center;gap:4px;cursor:pointer;white-space:nowrap;'>` +
         `<input type='radio' name='editProgression' value='${m.value}'${editState.progressionMode === m.value ? ' checked' : ''}> ${m.label}</label>`).join('');
 
-    const abilities = ['STR', 'INT', 'WIS', 'DEX', 'CON', 'CHA'].map(a => `
-        <div style='display:flex;align-items:center;gap:6px;'>
+    const abilities = ['STR', 'INT', 'WIS', 'DEX', 'CON', 'CHA'].map(a => {
+        const base  = editState[a] || 3;
+        const adj   = editState[`adj${a}`] !== undefined ? editState[`adj${a}`] : 0;
+        const final = base + adj;
+        return `
+        <div style='display:flex;align-items:center;gap:4px;'>
             <label style='font-weight:bold;min-width:35px;font-size:11px;'>${a}</label>
-            <input type='number' id='oseEdit${a}' value='${editState[a] || 3}' min='3' max='18'
-                style='width:45px;padding:3px;text-align:center;border:1px solid #ccc;border-radius:3px;font-size:12px;font-weight:bold;'>
-            <button class='ose-stat-reroll' data-stat='${a}' title='Reroll ${a} (3d6)'
-                style='padding:2px 5px;font-size:11px;border:1px solid #ccc;border-radius:3px;cursor:pointer;background:white;line-height:1;'>🎲</button>
-        </div>`).join('');
+            <input type='number' id='oseEdit${a}' value='${base}' min='3' max='18'
+                style='width:42px;padding:3px;text-align:center;border:1px solid #ccc;border-radius:3px;font-size:12px;font-weight:bold;'>
+            <span style='font-size:10px;color:#888;'>±adj</span>
+            <input type='number' id='oseEditAdj${a}' value='${adj}' min='-10' max='10' step='1'
+                style='width:36px;padding:3px;text-align:center;border:1px solid #b0b0b0;border-radius:3px;font-size:12px;color:#444;background:#fafafa;'>
+            <span style='font-size:11px;color:#555;font-weight:bold;'>=</span>
+            <span id='oseEditFinal${a}' style='font-size:13px;font-weight:bold;color:#111;min-width:20px;'>${final}</span>
+        </div>`;
+    }).join('');
 
     const extraHTML = (editState.extraSections || []).map(section => {
         const opts = section.options.map(opt => `
@@ -602,6 +644,14 @@ function readEditPanelValues(panel, editState) {
     const DEX = clamp(parseInt(panel.querySelector('#oseEditDEX')?.value), editState.DEX);
     const CON = clamp(parseInt(panel.querySelector('#oseEditCON')?.value), editState.CON);
     const CHA = clamp(parseInt(panel.querySelector('#oseEditCHA')?.value), editState.CHA);
+    // Ability score adjustments
+    const adjClamp = v => isNaN(v) ? 0 : Math.max(-10, Math.min(10, v));
+    const adjSTR = adjClamp(parseInt(panel.querySelector('#oseEditAdjSTR')?.value));
+    const adjINT = adjClamp(parseInt(panel.querySelector('#oseEditAdjINT')?.value));
+    const adjWIS = adjClamp(parseInt(panel.querySelector('#oseEditAdjWIS')?.value));
+    const adjDEX = adjClamp(parseInt(panel.querySelector('#oseEditAdjDEX')?.value));
+    const adjCON = adjClamp(parseInt(panel.querySelector('#oseEditAdjCON')?.value));
+    const adjCHA = adjClamp(parseInt(panel.querySelector('#oseEditAdjCHA')?.value));
     // HP per level
     const hpInputs = panel.querySelectorAll('.ose-edit-hp');
     const hpRolls = hpInputs.length > 0
@@ -620,6 +670,7 @@ function readEditPanelValues(panel, editState) {
         if (checked) extra[section.name] = checked.value;
     });
     return { level, progressionMode, name, STR, INT, WIS, DEX, CON, CHA,
+             adjSTR, adjINT, adjWIS, adjDEX, adjCON, adjCHA,
              hpRolls, startingGold, includeLevel0HP, showUndeadNames, showQRCode, ...extra };
 }
 
@@ -781,16 +832,18 @@ export function displayCharacterSheet(sheet, targetInfo, targetDisplay) {
                     });
                 });
 
-                // 🎲 Ability score reroll buttons — roll 3d6 and update the input
-                editPanel.querySelectorAll('.ose-stat-reroll').forEach(rb => {
-                    rb.addEventListener('click', () => {
-                        const stat = rb.dataset.stat;
-                        const roll = (Math.floor(Math.random()*6)+1)
-                                   + (Math.floor(Math.random()*6)+1)
-                                   + (Math.floor(Math.random()*6)+1);
-                        const inp = editPanel.querySelector(`#oseEdit${stat}`);
-                        if (inp) inp.value = Math.min(18, Math.max(3, roll));
-                    });
+                // Live-update final score display when base score or adjustment changes
+                ['STR','INT','WIS','DEX','CON','CHA'].forEach(a => {
+                    const baseInp = editPanel.querySelector(`#oseEdit${a}`);
+                    const adjInp  = editPanel.querySelector(`#oseEditAdj${a}`);
+                    const finalEl = editPanel.querySelector(`#oseEditFinal${a}`);
+                    const update  = () => {
+                        const base = parseInt(baseInp?.value) || 3;
+                        const adj  = parseInt(adjInp?.value)  || 0;
+                        if (finalEl) finalEl.textContent = base + adj;
+                    };
+                    baseInp?.addEventListener('input', update);
+                    adjInp?.addEventListener('input',  update);
                 });
 
                 // 🎲 HP per-level reroll buttons — roll 1dX + CON modifier, min 1

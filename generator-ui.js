@@ -85,6 +85,7 @@ let autoGenerateOnClassChange = false;
 let autoGenerateOnLoad = false;
 let fixedHPRolls = null;
 let fixedStartingGold = null;
+let fixedAdjustments = null; // { STR,INT,WIS,DEX,CON,CHA } racial/custom adjustments from edit panel
 let openTabInBackground = false;
 let selectedRaceForZero = '';
 let acDisplayMode = 'aac'; // 'aac' | 'dac-matrix' | 'dual' | 'dual-matrix'
@@ -437,6 +438,8 @@ async function generateZeroLevelChar() {
     const fixedScores = useFixedScores ? readScoresFromInputs() : null;
     const fixedName   = document.getElementById('characterName')?.value.trim() || '';
     const selectedOccupation = document.getElementById('zeroOccupation')?.value || '';
+    const _fixedAdj = fixedAdjustments;
+    fixedAdjustments = null;
     const opts = {
         race:                selectedRaceForZero,
         isAdvanced:          mode === 'advanced',
@@ -448,9 +451,11 @@ async function generateZeroLevelChar() {
         fixedScores,
         fixedName,
         fixedOccupation:     selectedOccupation || null,
+        fixedAdjustments:    _fixedAdj,
     };
     console.log('[generateZeroLevelChar] Called with opts:', opts);
     const char = await generateZeroLevelCharacter(opts);
+    _scoreRollAttempts = char.attempts || 1;
     console.log('[generateZeroLevelChar] Character generated:', char);
     const racialAbilities = getAdvancedModeRacialAbilities(char.race);
     console.log('[generateZeroLevelChar] Racial abilities:', racialAbilities);
@@ -485,6 +490,16 @@ function generateBasicCharacter() {
         characterName = getRandomName(classToRace[selectedClass] || 'Human');
     }
 
+    // Apply custom adjustments from edit panel (preserves base scores for strikethrough display)
+    let _preAdjScores = null;
+    if (fixedAdjustments && Object.values(fixedAdjustments).some(v => v !== 0)) {
+        _preAdjScores = { ...abilityScores };
+        for (const a of ['STR','INT','WIS','DEX','CON','CHA']) {
+            abilityScores[a] = Math.max(3, Math.min(18, abilityScores[a] + (fixedAdjustments[a] || 0)));
+        }
+    }
+    fixedAdjustments = null;
+
     const displayMode = progressionMode === 'smooth' ? 'Smoothified' : progressionMode === 'll' ? 'Labyrinth Lord' : 'OSE Standard';
     const classData = getClassDataForMode(progressionMode);
     const conMod = calculateModifier(abilityScores.CON);
@@ -511,6 +526,7 @@ function generateBasicCharacter() {
     character.hpDice  = hpResult.dice;
     character.startingGold = startingGold;
     character.blessed = hasBlessed;
+    if (_preAdjScores) character.originalScores = _preAdjScores;
 
     // Append human racial abilities to class abilities for basic human classes
     // Must be {name, description} objects to match the classAbilities renderer in shared-character-sheet.js
@@ -592,7 +608,7 @@ function displayBasicCharacter(character, purchased) {
                 bl: character.blessed?1:0, dl: getEffectiveDemihumanLimits()==='extended'?1:0,
                 hc: healthyCharacters?1:0, il: includeLevel0HP?1:0,
                 prm: primeRequisiteMode==='user'?0:parseInt(primeRequisiteMode), wp: wealthPct,
-                rr: _scoreRollAttempts, sm });
+                rr: _scoreRollAttempts, sm, fs: useFixedScores?1:0 });
             return `Level ${character.level} ${displayClass} &nbsp;·&nbsp; ${character.mode} Mode` +
                    (o ? `<br><small style="opacity:0.7;">${o}</small>` : '');
         })(),
@@ -602,8 +618,18 @@ function displayBasicCharacter(character, purchased) {
     const spec = buildSheetSpec(sd, sheetOpts());
     spec.editState = {
         level: character.level, progressionMode, name: character.name||'',
-        STR: character.abilityScores.STR, INT: character.abilityScores.INT, WIS: character.abilityScores.WIS,
-        DEX: character.abilityScores.DEX, CON: character.abilityScores.CON, CHA: character.abilityScores.CHA,
+        STR: character.originalScores?.STR ?? character.abilityScores.STR,
+        INT: character.originalScores?.INT ?? character.abilityScores.INT,
+        WIS: character.originalScores?.WIS ?? character.abilityScores.WIS,
+        DEX: character.originalScores?.DEX ?? character.abilityScores.DEX,
+        CON: character.originalScores?.CON ?? character.abilityScores.CON,
+        CHA: character.originalScores?.CHA ?? character.abilityScores.CHA,
+        adjSTR: character.originalScores?.STR != null ? character.abilityScores.STR - character.originalScores.STR : 0,
+        adjINT: character.originalScores?.INT != null ? character.abilityScores.INT - character.originalScores.INT : 0,
+        adjWIS: character.originalScores?.WIS != null ? character.abilityScores.WIS - character.originalScores.WIS : 0,
+        adjDEX: character.originalScores?.DEX != null ? character.abilityScores.DEX - character.originalScores.DEX : 0,
+        adjCON: character.originalScores?.CON != null ? character.abilityScores.CON - character.originalScores.CON : 0,
+        adjCHA: character.originalScores?.CHA != null ? character.abilityScores.CHA - character.originalScores.CHA : 0,
         hpRolls: character.hpRolls||[], hpDice: character.hpDice||[], startingGold: character.startingGold||0,
         includeLevel0HP, showUndeadNames, showQRCode, conModifier: calculateModifier(character.abilityScores.CON),
         extraSections: [
@@ -622,6 +648,8 @@ function displayBasicCharacter(character, purchased) {
     spec.onEditUpdate = (values) => {
         selectedLevel = values.level; progressionMode = values.progressionMode; characterName = values.name;
         abilityScores = { STR:values.STR, INT:values.INT, WIS:values.WIS, DEX:values.DEX, CON:values.CON, CHA:values.CHA };
+        const _adjVals = { STR:values.adjSTR||0, INT:values.adjINT||0, WIS:values.adjWIS||0, DEX:values.adjDEX||0, CON:values.adjCON||0, CHA:values.adjCHA||0 };
+        fixedAdjustments = Object.values(_adjVals).some(v => v !== 0) ? _adjVals : null;
         if (values.editDemihumanLimits) demihumanLimits = values.editDemihumanLimits;
         if (values.editACDisplayMode) { acDisplayMode = values.editACDisplayMode; document.querySelectorAll('input[name="acDisplayMode"]').forEach(r => { r.checked = r.value===acDisplayMode; }); }
         includeLevel0HP = values.includeLevel0HP||false; showUndeadNames = values.showUndeadNames||false; showQRCode = values.showQRCode??true;
@@ -654,7 +682,14 @@ function generateAdvancedCharacter() {
             document.getElementById('characterName').value = characterName;
         }
         baseScores = readScoresFromInputs();
-        adjustedScores = applyRacialAdjustments(baseScores, selectedRace);
+        if (fixedAdjustments) {
+            adjustedScores = {};
+            for (const a of ['STR','INT','WIS','DEX','CON','CHA']) {
+                adjustedScores[a] = baseScores[a] + (fixedAdjustments[a] || 0);
+            }
+        } else {
+            adjustedScores = applyRacialAdjustments(baseScores, selectedRace);
+        }
     } else {
         characterName = getRandomName(selectedRace.replace('_RACE',''));
         const userMins = readScoresFromInputs();
@@ -689,7 +724,7 @@ function generateAdvancedCharacter() {
     const character = createCharacterAdvanced({ level: selectedLevel, race: selectedRace, className: selectedClass,
         baseScores, adjustedScores, hp: hpResult.max, classData, ClassDataShared, progressionMode, raceClassMode, name: characterName, background });
     character.hpRolls = hpResult.rolls; character.hpDice = hpResult.dice; character.startingGold = startingGold;
-    fixedHPRolls = null; fixedStartingGold = null;
+    fixedHPRolls = null; fixedStartingGold = null; fixedAdjustments = null;
 
     displayAdvancedCharacter(character, purchased);
 }
@@ -746,7 +781,7 @@ function displayAdvancedCharacter(character, purchased) {
             const o = buildOptionsLine({ m:'A', p:PROG_CODE[progressionMode]||'S', l:character.level,
                 rcm:RCM_CODE[raceClassMode]||'SH', hc:healthyCharacters?1:0, il:includeLevel0HP?1:0,
                 prm:primeRequisiteMode==='user'?0:parseInt(primeRequisiteMode), wp:wealthPct,
-                rr: _scoreRollAttempts, sm });
+                rr: _scoreRollAttempts, sm, fs: useFixedScores?1:0 });
             return `Level ${character.level} ${raceDisplay} ${classDisplay} &nbsp;·&nbsp; ${modeLabel} Mode` +
                    (o ? `<br><small style="opacity:0.7;">${o}</small>` : '');
         })(),
@@ -758,6 +793,12 @@ function displayAdvancedCharacter(character, purchased) {
         level:character.level, progressionMode, name:character.name||'',
         STR:character.baseScores.STR, INT:character.baseScores.INT, WIS:character.baseScores.WIS,
         DEX:character.baseScores.DEX, CON:character.baseScores.CON, CHA:character.baseScores.CHA,
+        adjSTR:character.adjustedScores.STR-character.baseScores.STR,
+        adjINT:character.adjustedScores.INT-character.baseScores.INT,
+        adjWIS:character.adjustedScores.WIS-character.baseScores.WIS,
+        adjDEX:character.adjustedScores.DEX-character.baseScores.DEX,
+        adjCON:character.adjustedScores.CON-character.baseScores.CON,
+        adjCHA:character.adjustedScores.CHA-character.baseScores.CHA,
         hpRolls:character.hpRolls||[], hpDice:character.hpDice||[], startingGold:character.startingGold||0,
         includeLevel0HP, showUndeadNames, showQRCode, conModifier:calculateModifier(character.adjustedScores.CON),
         extraSections:[
@@ -778,6 +819,8 @@ function displayAdvancedCharacter(character, purchased) {
     spec.onEditUpdate = (values) => {
         selectedLevel=values.level; progressionMode=values.progressionMode; characterName=values.name;
         abilityScores={STR:values.STR,INT:values.INT,WIS:values.WIS,DEX:values.DEX,CON:values.CON,CHA:values.CHA};
+        const _adjValsAdv = { STR:values.adjSTR||0, INT:values.adjINT||0, WIS:values.adjWIS||0, DEX:values.adjDEX||0, CON:values.adjCON||0, CHA:values.adjCHA||0 };
+        fixedAdjustments = Object.values(_adjValsAdv).some(v => v !== 0) ? _adjValsAdv : null;
         if(values.editRaceClassMode) raceClassMode=values.editRaceClassMode;
         if(values.editACDisplayMode) { acDisplayMode=values.editACDisplayMode; document.querySelectorAll('input[name="acDisplayMode"]').forEach(r=>{r.checked=r.value===acDisplayMode;}); }
         includeLevel0HP=values.includeLevel0HP||false; showUndeadNames=values.showUndeadNames||false; showQRCode=values.showQRCode??true;
@@ -802,9 +845,11 @@ function displayZeroLevelCharacter(char) {
     const modeLabel   = mode==='advanced' ? (progressionMode==='smooth'?'Smoothified':progressionMode==='ll'?'Labyrinth Lord':'OSE Standard') : '';
     const sv = char.savingThrows;
     const ABILITIES = ['STR','DEX','CON','INT','WIS','CHA'];
-    const adjArr = ABILITIES.map(a=>char.results.find(r=>r.ability===a).roll);
-    const svArr  = [sv.Death,sv.Wands,sv.Paralysis,sv.Breath,sv.Spells];
-    const isAdv  = mode==='advanced';
+    const adjArr  = ABILITIES.map(a=>char.results.find(r=>r.ability===a).roll);
+    const baseArr = ABILITIES.map(a=>{ const r=char.results.find(x=>x.ability===a); return r.originalRoll ?? r.roll; });
+    const hasAdj  = adjArr.some((v,i)=>v!==baseArr[i]);
+    const svArr   = [sv.Death,sv.Wands,sv.Paralysis,sv.Breath,sv.Spells];
+    const isAdv   = mode==='advanced';
 
     const sd = {
         title:    isAdv ? 'OLD-SCHOOL ESSENTIALS ADVANCED' : 'OLD-SCHOOL ESSENTIALS',
@@ -812,7 +857,7 @@ function displayZeroLevelCharacter(char) {
         name: char.name, occupation: char.background.profession,
         raceClass: '', level: '0', hd: '', xpBonus: '',
         maxHP: char.hitPoints.total, initMod: char.results.find(r=>r.ability==='DEX').modifier,
-        abilityScores: ABILITIES.map(a=>{const r=char.results.find(x=>x.ability===a);return{name:a,score:r.roll,originalScore:null,effects:getModifierEffects(a,r.modifier,r.roll)};}),
+        abilityScores: ABILITIES.map(a=>{const r=char.results.find(x=>x.ability===a);return{name:a,score:r.roll,originalScore:(r.originalRoll!==undefined&&r.originalRoll!==r.roll)?r.originalRoll:null,effects:getModifierEffects(a,r.modifier,r.roll)};}),
         weapon: char.background.weapon, classAttackBonus: char.attackBonus||0,
         meleeMod: char.results.find(r=>r.ability==='STR').modifier,
         rangedMod: char.results.find(r=>r.ability==='DEX').modifier,
@@ -825,22 +870,55 @@ function displayZeroLevelCharacter(char) {
             startingAC:char.armorClass,startingGold:char.startingGold,startingHD:'1d4'},
         spellSlots: null, turnUndead: null,
         cp: { v:2, m:isAdv?'A':'B', l:0, r:char.raceCode, p:(PROG_CODE[progressionMode]||'O'),
-            s:adjArr, sv:svArr, h:char.hitPoints.total, hr:[char.hitPoints.total], hd:[4],
+            s:adjArr, ...(hasAdj?{bs:baseArr}:{}), sv:svArr, h:char.hitPoints.total, hr:[char.hitPoints.total], hd:[4],
             n:char.name, bg:char.background.profession, ar:char.background.armor||null,
             w:char.background.weapon||null, it:char.background.item||[], g:char.startingGold, ac:char.armorClass,
             bl:raceClassMode!=='strict'?1:0, hc:healthyCharacters?1:0,
-            ...(isAdv?{rcm:(RCM_CODE[raceClassMode]||'ST')}:{}),
-            un:showUndeadNames?1:0, qr:showQRCode?1:0, ao:basicAbilityOrdering?1:0 },
+            ...(isAdv?{rcm:(RCM_CODE[raceClassMode]||'ST')}:{dl:getEffectiveDemihumanLimits()==='extended'?1:0}),
+            prm:primeRequisiteMode==='user'?0:parseInt(primeRequisiteMode),
+            rr:_scoreRollAttempts, sm:['STR','DEX','CON','INT','WIS','CHA'].map(a=>readScoresFromInputs()[a]||3),
+            un:showUndeadNames?1:0, qr:showQRCode?1:0, ap:document.getElementById('autoPrintInNewTab')?.checked?1:0, ao:basicAbilityOrdering?1:0,
+            ...({'dac-matrix':1,'dual':2,'dual-matrix':3}[acDisplayMode] != null ? {adm:{'dac-matrix':1,'dual':2,'dual-matrix':3}[acDisplayMode]} : {}) },
         footer: (() => {
+            const sm = ['STR','DEX','CON','INT','WIS','CHA'].map(a => readScoresFromInputs()[a] || 3);
             const o = buildOptionsLine({ m:isAdv?'A':'B', p:PROG_CODE[progressionMode]||'O', l:0,
-                bl:raceClassMode!=='strict'?1:0, hc:healthyCharacters?1:0 });
+                ...(isAdv?{rcm:RCM_CODE[raceClassMode]||'ST'}:{bl:raceClassMode!=='strict'?1:0, dl:getEffectiveDemihumanLimits()==='extended'?1:0}),
+                hc:healthyCharacters?1:0,
+                prm:primeRequisiteMode==='user'?0:parseInt(primeRequisiteMode),
+                rr:_scoreRollAttempts, sm, fs:useFixedScores?1:0 });
             return `0-Level ${raceDisplay}${isAdv?` &nbsp;·&nbsp; ${modeLabel} Mode`:''}` +
                    (o ? `<br><small style="opacity:0.7;">${o}</small>` : '');
         })(),
         printTitle: `OSE ${isAdv?'Advanced':'Basic'} - ${sanitize(raceDisplay)} - 0-Level - ${sanitize(char.background.profession)} - ${sanitize(char.name)}`,
     };
 
+    // Build base/adj maps for editState
+    const _0lvlBase = {}, _0lvlAdj = {};
+    ABILITIES.forEach((a, i) => { _0lvlBase[a] = baseArr[i]; _0lvlAdj[`adj${a}`] = adjArr[i] - baseArr[i]; });
+
     const spec = buildSheetSpec(sd, sheetOpts());
+    spec.editState = {
+        level: 0, progressionMode, name: char.name||'',
+        STR:_0lvlBase.STR, INT:_0lvlBase.INT, WIS:_0lvlBase.WIS,
+        DEX:_0lvlBase.DEX, CON:_0lvlBase.CON, CHA:_0lvlBase.CHA,
+        ..._0lvlAdj,
+        hpRolls:[], hpDice:[],  // no HP editing for 0-level
+        startingGold: char.startingGold||0,
+        conModifier: char.results.find(r=>r.ability==='CON').modifier,
+        showUndeadNames, showQRCode,
+        includeLevel0HP: false,
+    };
+    spec.onEditUpdate = (values) => {
+        characterName = values.name;
+        abilityScores = { STR:values.STR, INT:values.INT, WIS:values.WIS, DEX:values.DEX, CON:values.CON, CHA:values.CHA };
+        const _adjVals0 = { STR:values.adjSTR||0, INT:values.adjINT||0, WIS:values.adjWIS||0, DEX:values.adjDEX||0, CON:values.adjCON||0, CHA:values.adjCHA||0 };
+        fixedAdjustments = Object.values(_adjVals0).some(v => v !== 0) ? _adjVals0 : null;
+        showUndeadNames = values.showUndeadNames||false; showQRCode = values.showQRCode??true;
+        ['STR','INT','WIS','DEX','CON','CHA'].forEach(a => { const el=document.getElementById(`score${a}`); if(el) el.value=values[a]; });
+        const nameEl = document.getElementById('characterName'); if(nameEl) nameEl.value = characterName;
+        useFixedScores = true; const fixEl=document.getElementById('useFixedScores'); if(fixEl) fixEl.checked=true;
+        generateZeroLevelChar().catch(e => console.error('0-level edit gen error:', e));
+    };
     displayCharacterSheet(spec, document.getElementById('characterInfo'), document.getElementById('characterDisplay'));
 }
 
