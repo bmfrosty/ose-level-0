@@ -5,7 +5,7 @@
  */
 import { calculateModifier, rollDice } from './shared-ability-scores.js';
 import { getRandomName } from './shared-names.js';
-import { getRandomBackground } from './shared-backgrounds.js';
+import { getRandomBackground, getBackgroundByProfession } from './shared-backgrounds.js';
 import {
     calculateSavingThrows,
     calculateAttackBonus
@@ -139,7 +139,9 @@ export async function generateZeroLevelCharacter(opts = {}) {
     const raceCap  = raceStem.charAt(0).toUpperCase() + raceStem.slice(1).toLowerCase();
 
     const name         = fixedName || getRandomName(raceCap);
-    const background   = getRandomBackground(hp.total);
+    const background   = opts.fixedOccupation
+        ? (getBackgroundByProfession(opts.fixedOccupation) || getRandomBackground(hp.total))
+        : getRandomBackground(hp.total);
     const armorClass   = calcAC(background.armor, dexMod);
     const startingGold = rollDice(3, 6);
     const savingThrows = calculateSavingThrows(0, race, conScore, isAdvanced, isGygar);

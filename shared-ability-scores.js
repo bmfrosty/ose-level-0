@@ -110,29 +110,14 @@ export function rollDice(numDice, sides) {
 }
 
 /**
- * Roll a single ability score (3d6) with detailed logging
- * @param {number} minimum - Minimum score to accept
+ * Roll a single ability score (3d6) — one roll, no retry.
+ * Minimum enforcement is done by the caller (rollAbilities) for the full set.
  * @param {string} abilityName - Name of ability for logging
- * @returns {number} Ability score
+ * @returns {number} Ability score (3–18)
  */
-export function rollAbilityScore(minimum, abilityName) {
-    let score, rolls;
-    let attempts = 0;
-    
-    do {
-        attempts++;
-        rolls = [];
-        score = 0;
-        for (let i = 0; i < 3; i++) {
-            const die = rollSingleDie(6);
-            rolls.push(die);
-            score += die;
-        }
-        if (score < minimum) {
-            console.log(`  ${abilityName}: [${rolls.join(', ')}] = ${score} (below minimum ${minimum}, rerolling...)`);
-        }
-    } while (score < minimum);
-    
+export function rollAbilityScore(abilityName) {
+    const rolls = [rollSingleDie(6), rollSingleDie(6), rollSingleDie(6)];
+    const score = rolls[0] + rolls[1] + rolls[2];
     console.log(`  ${abilityName}: [${rolls.join(', ')}] = ${score}`);
     return score;
 }
@@ -175,13 +160,21 @@ export function rollAbilities(minimumScores, toughCharacters, className = null, 
         }
         
         scores = {
-            STR: rollAbilityScore(minimumScores.STR, 'STR'),
-            INT: rollAbilityScore(minimumScores.INT, 'INT'),
-            WIS: rollAbilityScore(minimumScores.WIS, 'WIS'),
-            DEX: rollAbilityScore(minimumScores.DEX, 'DEX'),
-            CON: rollAbilityScore(minimumScores.CON, 'CON'),
-            CHA: rollAbilityScore(minimumScores.CHA, 'CHA')
+            STR: rollAbilityScore('STR'),
+            INT: rollAbilityScore('INT'),
+            WIS: rollAbilityScore('WIS'),
+            DEX: rollAbilityScore('DEX'),
+            CON: rollAbilityScore('CON'),
+            CHA: rollAbilityScore('CHA')
         };
+
+        // Check individual minimums — if any fail, reroll the entire set
+        const _ABILITIES = ['STR','INT','WIS','DEX','CON','CHA'];
+        const _failedMins = _ABILITIES.filter(a => scores[a] < (minimumScores[a] || 3));
+        if (_failedMins.length > 0) {
+            console.log(`❌ Failed individual minimums: ${_failedMins.map(a => `${a}=${scores[a]}<${minimumScores[a]}`).join(', ')}`);
+            continue;
+        }
         
         // Check Tough Characters requirement
         if (toughCharacters && !meetsToughCharactersRequirements(scores)) {
@@ -218,5 +211,5 @@ export function rollAbilities(minimumScores, toughCharacters, className = null, 
     console.log(`CHA: ${scores.CHA} (${formatModifier(calculateModifier(scores.CHA))})`);
     console.log('==============================\n');
     
-    return scores;
+    return { scores, attempts: setAttempts };
 }

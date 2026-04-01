@@ -121,5 +121,6 @@ export function buildSheetSpec(sd, opts) {
         openInNewTab:    opts.openInNewTab,
         autoPrint:       opts.autoPrint,
         backgroundTab:   opts.backgroundTab,
+        acDisplayMode:   opts.acDisplayMode || 'aac',
     };
 }

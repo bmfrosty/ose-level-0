@@ -89,7 +89,8 @@
         }
         @media print {
             #print-controls  { display: none !important; }
-            #edit-panel      { display: none !important; }
+            #modify-panel    { display: none !important; }
+            #sheet-opts-panel { display: none !important; }
             #level-up-panel  { display: none !important; }
             body { margin: 0; padding: 0; }
             @page { size: letter; margin: 0.5in; }
@@ -100,7 +101,8 @@
 <body>
     <div id="print-controls">
         <button class="btn-print" onclick="window.print()">🖨 Print / Save as PDF</button>
-        <button class="btn-edit"    id="toggleEditBtn"    style="display:none">✏️ Edit Character</button>
+        <button class="btn-edit"    id="toggleModifyBtn"    style="display:none">🔧 Modify Character</button>
+        <button class="btn-edit"    id="toggleSheetOptsBtn" style="display:none">⚙️ Edit Sheet Options</button>
         <button class="btn-levelup" id="toggleLevelUpBtn" style="display:none">⬆ Level Up</button>
         <button class="btn-close" onclick="window.close()">✕ Close</button>
         <span class="print-hint">Tip: In the print dialog, choose "Save as PDF" and set margins to None or Minimum</span>
@@ -129,34 +131,54 @@
         </div>
     </div>
 
-    <!-- Edit panel — character details (no level change) -->
-    <div id="edit-panel">
-        <h3>✏️ Edit Character</h3>
+    <!-- Modify Character panel — progression mode, ability scores, HP (marks character as modified) -->
+    <div id="modify-panel" style="display:none;background:#e3f2fd;border:2px solid #2196F3;border-radius:5px;padding:14px;margin-bottom:16px;font-size:12px;">
+        <h3 style="margin:0 0 12px;color:#1565C0;font-size:1.1em;">🔧 Modify Character</h3>
 
-        <div class="ep-section" id="ep-prog-section">
+        <div style="margin-bottom:10px;" id="ep-prog-section">
             <strong>Progression Mode:</strong>
             <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:4px;">
                 <label style="display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="radio" name="ep-prog" value="ose"> OSE Standard</label>
-                <label style="display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="radio" name="ep-prog" value="smooth" checked> Smoothified</label>
+                <label style="display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="radio" name="ep-prog" value="smooth"> Smoothified</label>
                 <label style="display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="radio" name="ep-prog" value="ll"> Labyrinth Lord</label>
             </div>
         </div>
 
-        <div class="ep-section">
-            <strong>Name:</strong>
-            <input type="text" id="ep-name" style="margin-left:8px;width:200px;font-size:12px;">
-        </div>
-
-        <div class="ep-section">
+        <div style="margin-bottom:10px;">
             <strong>Ability Scores:</strong>
             <div id="ep-ability-inputs" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:6px;max-width:320px;"></div>
         </div>
 
-        <div class="ep-section" id="ep-hp-section">
+        <div style="margin-bottom:10px;" id="ep-hp-section">
             <!-- populated by JS: per-level HP rows (if hr data available) or single total HP -->
         </div>
 
-        <div class="ep-section">
+        <div style="display:flex;gap:8px;margin-top:12px;">
+            <button id="ep-apply-btn" style="padding:7px 16px;font-size:12px;font-weight:bold;background:#1976D2;color:white;border:none;border-radius:3px;cursor:pointer;">Apply Changes</button>
+            <button id="ep-cancel-btn" style="padding:7px 16px;font-size:12px;font-weight:bold;background:#ccc;color:#333;border:none;border-radius:3px;cursor:pointer;">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Edit Sheet Options panel — name, display options (does NOT mark as modified) -->
+    <div id="sheet-opts-panel" style="display:none;background:#e8f5e9;border:2px solid #388E3C;border-radius:5px;padding:14px;margin-bottom:16px;font-size:12px;">
+        <h3 style="margin:0 0 12px;color:#1B5E20;font-size:1.1em;">⚙️ Edit Sheet Options</h3>
+
+        <div style="margin-bottom:10px;">
+            <strong>Name:</strong>
+            <input type="text" id="ep-name" style="margin-left:8px;width:200px;font-size:12px;padding:3px 5px;border:1px solid #ccc;border-radius:3px;">
+        </div>
+
+        <div style="margin-bottom:10px;">
+            <strong>Armor Class Display:</strong>
+            <div style="display:flex;flex-direction:column;gap:5px;margin-top:6px;">
+                <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;"><input type="radio" name="ep-adm" value="0" checked> <strong>Ascending Armor Class</strong> — AAC, shows Class Attack Bonus</label>
+                <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;"><input type="radio" name="ep-adm" value="1"> <strong>Descending Armor Class with Attack Matrix</strong> — DAC, shows THAC0 + attack matrix</label>
+                <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;"><input type="radio" name="ep-adm" value="2"> <strong>Dual Format Notation</strong> — shows both AAC and DAC, Attack Bonus / THAC0</label>
+                <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;"><input type="radio" name="ep-adm" value="3"> <strong>Dual Format Notation with Attack Matrix</strong> — both formats plus attack matrix</label>
+            </div>
+        </div>
+
+        <div style="margin-bottom:10px;">
             <strong>Options:</strong>
             <div style="display:flex;flex-wrap:wrap;gap:14px;margin-top:4px;">
                 <label style="display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="checkbox" id="ep-undead"> Show Undead Monster Names</label>
@@ -165,8 +187,8 @@
         </div>
 
         <div style="display:flex;gap:8px;margin-top:12px;">
-            <button id="ep-apply-btn" style="padding:7px 16px;font-size:12px;font-weight:bold;background:#1976D2;color:white;border:none;border-radius:3px;cursor:pointer;">Apply Changes</button>
-            <button id="ep-cancel-btn" style="padding:7px 16px;font-size:12px;font-weight:bold;background:#ccc;color:#333;border:none;border-radius:3px;cursor:pointer;">Cancel</button>
+            <button id="so-apply-btn" style="padding:7px 16px;font-size:12px;font-weight:bold;background:#388E3C;color:white;border:none;border-radius:3px;cursor:pointer;">Apply Options</button>
+            <button id="so-cancel-btn" style="padding:7px 16px;font-size:12px;font-weight:bold;background:#ccc;color:#333;border:none;border-radius:3px;cursor:pointer;">Cancel</button>
         </div>
     </div>
 
@@ -278,14 +300,14 @@
                     ]},
                     combat:{maxHP:cp.h||1, initMod:mods.DEX},
                     abilityScores: abilityScoresSheet,
-                    weaponsAndSkills:{weapon:cp.w||null, classAttackBonus:0, meleeMod:mods.STR, rangedMod:mods.DEX, thiefSkills:null},
+                    weaponsAndSkills:{weapon:cp.w||null, classAttackBonus: prog==='smooth' ? 0 : -1, meleeMod:mods.STR, rangedMod:mods.DEX, thiefSkills:null},
                     abilitiesSection:{header:'RACIAL ABILITIES', racial:racialAbilities||[], class:[]},
                     savingThrows:{death:sv[0], wands:sv[1], paralysis:sv[2], breath:sv[3], spells:sv[4]},
                     experience:null,
                     equipment:{armor:cp.ar||null, items:cp.it||[], startingAC:cp.ac||10, startingGold:cp.g||0, startingHD:'1d4'},
                     spellSlots:null, turnUndead:null,
                     showUndeadNames:!!cp.un, showQRCode:cp.qr!==0, abilityOrder:cp.ao??1,
-                    footer: (() => { const o = buildOptionsLine({ m: mode, p: cp.p||'O', l: 0, bl: cp.bl||0, hc: cp.hc||0 }); return `0-Level ${raceDisplay}` + (o ? `<br><small style="opacity:0.7;">${o}</small>` : ''); })(),
+                    footer: (() => { const o = buildOptionsLine({ m: mode, p: cp.p||'O', l: 0, bl: cp.bl||0, hc: cp.hc||0 }); const modPfx = cp.mx ? 'Modified ' : ''; return `${modPfx}0-Level ${raceDisplay}` + (o ? `<br><small style="opacity:0.7;">${o}</small>` : ''); })(),
                     printTitle:`OSE ${isAdvMode?'Advanced':'Basic'} - ${raceDisplay} - 0-Level - ${cp.bg||''} - ${cp.n||''}`,
                     autoPrint:!!cp.ap
                 };
@@ -361,16 +383,19 @@
                 footer: (() => {
                     const o   = buildOptionsLine(cp);
                     const who = isAdv ? `${raceDisplay} ${clsDisplay}` : clsDisplay;
-                    return `Level ${level} ${who} &nbsp;·&nbsp; ${modeStr} Mode` +
+                    const modPfx = cp.mx ? 'Modified ' : '';
+                    return `${modPfx}Level ${level} ${who} &nbsp;·&nbsp; ${modeStr} Mode` +
                            (o ? `<br><small style="opacity:0.7;">${o}</small>` : '');
                 })(),
                 printTitle: isAdv
                     ? `OSE Advanced - ${raceDisplay} - ${clsDisplay} - Level ${level} - ${cp.bg||''} - ${cp.n||''}`
                     : `OSE Basic - ${clsDisplay} - Level ${level} - ${cp.bg||''} - ${cp.n||''}`,
             };
+            const ADM_MAP = {0:'aac', 1:'dac-matrix', 2:'dual', 3:'dual-matrix'};
             const opts = {
                 showUndeadNames: !!cp.un, showQRCode: cp.qr!==0, abilityOrder: cp.ao??1,
-                openInNewTab: false, autoPrint: !!cp.ap, backgroundTab: false
+                openInNewTab: false, autoPrint: !!cp.ap, backgroundTab: false,
+                acDisplayMode: ADM_MAP[cp.adm] || 'aac',
             };
             return buildSheetSpec(sd, opts);
         }
@@ -383,45 +408,55 @@
             const isZeroLevel = decoded.l === 0;
 
             // ── Wire toggle buttons ────────────────────────────────────────
-            const editBtn    = document.getElementById('toggleEditBtn');
-            const levelUpBtn = document.getElementById('toggleLevelUpBtn');
-            const editPanel  = document.getElementById('edit-panel');
-            const lupPanel   = document.getElementById('level-up-panel');
+            const modifyBtn   = document.getElementById('toggleModifyBtn');
+            const sheetOptBtn = document.getElementById('toggleSheetOptsBtn');
+            const levelUpBtn  = document.getElementById('toggleLevelUpBtn');
+            const modifyPanel = document.getElementById('modify-panel');
+            const sheetPanel  = document.getElementById('sheet-opts-panel');
+            const lupPanel    = document.getElementById('level-up-panel');
 
-            editBtn.style.display = '';
-            editBtn.addEventListener('click', () => {
-                const wasOpen = editPanel.style.display === 'block';
-                lupPanel.style.display = 'none';   // close other panel
-                editPanel.style.display = wasOpen ? 'none' : 'block';
-                if (!wasOpen) editPanel.scrollIntoView({ behavior: 'smooth' });
+            const closeAll = () => {
+                modifyPanel.style.display = 'none';
+                sheetPanel.style.display  = 'none';
+                lupPanel.style.display    = 'none';
+            };
+
+            modifyBtn.style.display = '';
+            modifyBtn.addEventListener('click', () => {
+                const wasOpen = modifyPanel.style.display === 'block';
+                closeAll();
+                if (!wasOpen) { modifyPanel.style.display = 'block'; modifyPanel.scrollIntoView({ behavior: 'smooth' }); }
+            });
+
+            sheetOptBtn.style.display = '';
+            sheetOptBtn.addEventListener('click', () => {
+                const wasOpen = sheetPanel.style.display === 'block';
+                closeAll();
+                if (!wasOpen) { sheetPanel.style.display = 'block'; sheetPanel.scrollIntoView({ behavior: 'smooth' }); }
             });
 
             // Level Up button — always shown (level 0 chars can level up to level 1)
             levelUpBtn.style.display = '';
             levelUpBtn.addEventListener('click', () => {
                 const wasOpen = lupPanel.style.display === 'block';
-                editPanel.style.display = 'none';  // close other panel
-                lupPanel.style.display = wasOpen ? 'none' : 'block';
-                if (!wasOpen) lupPanel.scrollIntoView({ behavior: 'smooth' });
+                closeAll();
+                if (!wasOpen) { lupPanel.style.display = 'block'; lupPanel.scrollIntoView({ behavior: 'smooth' }); }
             });
 
             // ── Cancel buttons ─────────────────────────────────────────────
-            document.getElementById('ep-cancel-btn').addEventListener('click', () => {
-                editPanel.style.display = 'none';
-            });
-            document.getElementById('lup-cancel-btn').addEventListener('click', () => {
-                lupPanel.style.display = 'none';
-            });
+            document.getElementById('ep-cancel-btn').addEventListener('click', () => { modifyPanel.style.display = 'none'; });
+            document.getElementById('so-cancel-btn').addEventListener('click', () => { sheetPanel.style.display  = 'none'; });
+            document.getElementById('lup-cancel-btn').addEventListener('click', () => { lupPanel.style.display   = 'none'; });
 
             // ══════════════════════════════════════════════════════════════
-            // EDIT PANEL — progression, name, ability scores, HP, options
+            // SHEET OPTIONS PANEL — progression mode + display options
             // ══════════════════════════════════════════════════════════════
 
             // Hide progression mode for 0-level chars
             if (isZeroLevel) {
                 document.getElementById('ep-prog-section').style.display = 'none';
             } else {
-                const curProg = CODE_TO_PROG[decoded.p] || 'smooth';
+                const curProg = CODE_TO_PROG[decoded.p] || 'ose';
                 const progRadio = document.querySelector(`input[name="ep-prog"][value="${curProg}"]`);
                 if (progRadio) progRadio.checked = true;
             }
@@ -505,16 +540,21 @@
                 });
             }
 
+            // ── AC Display Mode ──────────────────────────────────────────
+            const admVal = decoded.adm || 0;
+            const admRadio = document.querySelector(`input[name="ep-adm"][value="${admVal}"]`);
+            if (admRadio) admRadio.checked = true;
+
             // ── Options ───────────────────────────────────────────────────
             document.getElementById('ep-undead').checked = !!decoded.un;
             document.getElementById('ep-qr').checked    = decoded.qr !== 0;
 
-            // ── Apply Changes (Edit panel — keeps current level) ───────────
+            // ── Apply Changes (Modify Character — marks as modified) ───────
             document.getElementById('ep-apply-btn').addEventListener('click', async () => {
                 const { encodeCompactParams } = await import('./shared-compact-codes.js');
 
-                // Progression
-                const newProg = document.querySelector('input[name="ep-prog"]:checked')?.value || 'smooth';
+                // Progression mode (now in Modify Character panel)
+                const newProg = document.querySelector('input[name="ep-prog"]:checked')?.value || CODE_TO_PROG[decoded.p] || 'ose';
 
                 // Ability scores
                 const newScores = ABILITIES.map(a => {
@@ -527,32 +567,44 @@
                 let newHp, newHpRolls;
                 if (hpRollInputs.length > 0) {
                     newHpRolls = Array.from(hpRollInputs).map(inp => Math.max(1, parseInt(inp.value) || 1));
-                    // L0 (index 0) only counts toward total when il=1 (includeLevel0HP)
                     newHp = newHpRolls.reduce((a, b, i) => (i === 0 && !decoded.il) ? a : a + b, 0);
                 } else {
                     newHp = Math.max(1, parseInt(document.querySelector('#ep-hp-section #ep-hp')?.value) || decoded.h || 1);
                     newHpRolls = decoded.hr || [];
                 }
 
-                // Build new cp — keep current level unchanged
+                // Build new cp — update progression + stats; preserve name/options; set mx:1 (modified)
                 const newCp = {
                     ...decoded,
                     p:  PROG_TO_CODE[newProg],
-                    n:  document.getElementById('ep-name').value || decoded.n,
                     s:  newScores,
                     h:  newHp,
                     hr: newHpRolls,
-                    un: document.getElementById('ep-undead').checked ? 1 : 0,
-                    qr: document.getElementById('ep-qr').checked ? 1 : 0,
+                    mx: 1,   // ← marks character as manually modified
                     ap: 0,
                 };
-                // If base scores (bs) existed and we changed s, drop bs
-                // (we don't re-apply racial adjustments here)
                 if (newCp.bs) {
                     const scoreChanged = newScores.some((v,i) => v !== (decoded.s?.[i] ?? 10));
                     if (scoreChanged) delete newCp.bs;
                 }
 
+                const encoded = encodeCompactParams(newCp);
+                const b64url  = await compressToBase64Url(JSON.stringify(encoded));
+                window.location.href = `charactersheet.html?d=${b64url}`;
+            });
+
+            // ── Apply Options (Sheet Options panel — does NOT mark as modified) ──
+            document.getElementById('so-apply-btn').addEventListener('click', async () => {
+                const { encodeCompactParams } = await import('./shared-compact-codes.js');
+                const newAdm = parseInt(document.querySelector('input[name="ep-adm"]:checked')?.value || '0');
+                const newCp = {
+                    ...decoded,
+                    n:  document.getElementById('ep-name').value || decoded.n,
+                    un: document.getElementById('ep-undead').checked ? 1 : 0,
+                    qr: document.getElementById('ep-qr').checked ? 1 : 0,
+                    ap: 0,
+                };
+                if (newAdm) newCp.adm = newAdm; else delete newCp.adm;
                 const encoded = encodeCompactParams(newCp);
                 const b64url  = await compressToBase64Url(JSON.stringify(encoded));
                 window.location.href = `charactersheet.html?d=${b64url}`;
@@ -655,7 +707,7 @@
                     const newMode = isAdv ? 'A' : 'B';
                     const newCp = {
                         v:2, m: newMode,
-                        p: 'S',                          // Smoothified default
+                        p: decoded.p || 'O',             // preserve original progression mode
                         r: decoded.r || 'HU',
                         c: selectedClassCode,
                         l: 1,

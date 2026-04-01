@@ -366,28 +366,42 @@ export function decodeCompactParams(cp) {
  */
 export function buildOptionsLine(cp) {
     const parts = [];
+    const lvl = cp.l ?? 0;
 
     // Progression mode — always show
     const progLabel = { O: 'OSE Standard', S: 'Smoothified', L: 'Labyrinth Lord' };
-    if (cp.p && progLabel[cp.p]) parts.push(progLabel[cp.p]);
+    parts.push(progLabel[cp.p] || 'OSE Standard');
 
+    // Race/class restrictions or human racial abilities — always show
     if (cp.m === 'A') {
-        // Advanced mode: race/class restrictions (skip 'strict' which is the plain default)
-        const rcmLabel = { SH: 'Human Racial Abilities', TE: 'Extended Levels + Human Racial Abilities', AL: 'Allow All Classes' };
-        if (cp.rcm && rcmLabel[cp.rcm]) parts.push(rcmLabel[cp.rcm]);
+        const rcmLabel = { ST:'Strict OSE', SH:'Human Racial Abilities', TE:'Extended Levels + Human Abilities', AL:'Allow All Classes' };
+        parts.push(rcmLabel[cp.rcm] || 'Strict OSE');
     } else if (cp.m === 'B') {
-        // Basic mode: human racial abilities flag and demihuman limits
-        if (cp.bl) parts.push('Human Racial Abilities');
-        if (cp.dl) parts.push('Extended Demihuman Levels');
+        parts.push(cp.bl ? 'Human Racial Abilities' : 'Strict OSE');
+        parts.push(cp.dl ? 'Extended Levels' : 'Standard Level Limits');
     }
 
-    // Shared toggles
-    if (cp.hc) parts.push('Healthy Characters');
-    if (cp.il) parts.push('Include L0 HP');
-    if (cp.prm) parts.push(`Min Prime Req \u2265${cp.prm}`);
+    // HP-affecting options — always show
+    parts.push(cp.hc ? 'Healthy Characters' : 'Standard HP');
 
-    // Starting wealth (only meaningful at level 2+)
-    if ((cp.l || 0) >= 2 && cp.wp != null) parts.push(`Wealth: ${cp.wp}%`);
+    // L0 HP inclusion — always show for level 1+ characters
+    if (lvl >= 1) parts.push(cp.il ? 'L0 HP: Yes' : 'L0 HP: No');
+
+    // Prime Requisite mode — always show for level 1+ (class is known)
+    if (lvl >= 1) parts.push(cp.prm ? `Prime Req \u2265${cp.prm}` : 'User Min Scores');
+
+    // Starting wealth — only meaningful at level 2+
+    if (lvl >= 2 && cp.wp != null) parts.push(`Wealth: ${cp.wp}%`);
+
+    // Score minimums — show non-default (>3) values, e.g. "Min: STR≥10 INT≥12"
+    if (Array.isArray(cp.sm) && lvl >= 1) {
+        const ORDER = ['STR','DEX','CON','INT','WIS','CHA'];
+        const minParts = ORDER.map((a, i) => (cp.sm[i] || 3) > 3 ? `${a}\u2265${cp.sm[i]}` : null).filter(Boolean);
+        if (minParts.length > 0) parts.push(`Min: ${minParts.join(' ')}`);
+    }
+
+    // Roll attempts — always show for level 1+ so the player knows how lucky they were
+    if (cp.rr != null && lvl >= 1) parts.push(`${cp.rr} roll${cp.rr === 1 ? '' : 's'}`);
 
     return parts.join(' &nbsp;·&nbsp; ');
 }

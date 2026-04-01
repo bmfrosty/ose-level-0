@@ -392,6 +392,36 @@
                 </label>
             </div>
 
+            <div style="margin-top: 12px; border-top: 1px solid #ddd; padding-top: 10px;">
+                <strong>Armor Class Display:</strong>
+                <div style="display:flex; flex-direction:column; gap:2px; margin-top:4px;">
+                    <div class="radio-option">
+                        <label>
+                            <input type="radio" name="acDisplayMode" value="aac" checked>
+                            <span><strong>Ascending Armor Class</strong> — Higher AC is better (AAC); shows Class Attack Bonus</span>
+                        </label>
+                    </div>
+                    <div class="radio-option">
+                        <label>
+                            <input type="radio" name="acDisplayMode" value="dac-matrix">
+                            <span><strong>Descending Armor Class with Attack Matrix</strong> — Lower AC is better (DAC); shows THAC0 and attack matrix</span>
+                        </label>
+                    </div>
+                    <div class="radio-option">
+                        <label>
+                            <input type="radio" name="acDisplayMode" value="dual">
+                            <span><strong>Dual Format Notation</strong> — Shows both AAC and DAC values; shows Attack Bonus / THAC0</span>
+                        </label>
+                    </div>
+                    <div class="radio-option">
+                        <label>
+                            <input type="radio" name="acDisplayMode" value="dual-matrix">
+                            <span><strong>Dual Format Notation with Attack Matrix</strong> — Both formats plus attack matrix</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
             <div id="startingWealthSection" style="margin-top: 12px; border-top: 1px solid #ddd; padding-top: 10px;">
                 <strong>Starting Wealth (level 2+):</strong>
                 <span style="color:#555; font-size:0.95em;"> — % of minimum XP for level, in gp</span>
@@ -584,6 +614,12 @@
                     <button class="grid-button zero-race-btn" style="width:auto;padding:5px 9px;" data-race="Elf_RACE">Elf</button>
                     <button class="grid-button zero-race-btn" style="width:auto;padding:5px 9px;" data-race="Gnome_RACE">Gnome</button>
                     <button class="grid-button zero-race-btn" style="width:auto;padding:5px 9px;" data-race="Halfling_RACE">Halfling</button>
+                </div>
+                <div style="margin-top:10px;">
+                    <label for="zeroOccupation"><strong>Occupation:</strong></label>
+                    <select id="zeroOccupation" style="margin-left:8px; padding:3px 6px; font-size:0.9em;">
+                        <option value="">Random</option>
+                    </select>
                 </div>
             </div>
 

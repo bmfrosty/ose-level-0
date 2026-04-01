@@ -92,6 +92,14 @@ export function renderCharacterSheetHTML(sheet) {
 
     // ── Weapons & skills ─────────────────────────────────────────────────────
     const ws = sheet.weaponsAndSkills;
+
+    // ── AC display mode ───────────────────────────────────────────────────────
+    const acDisplayMode = sheet.acDisplayMode || 'aac';
+    const isDACMode  = acDisplayMode === 'dac-matrix';
+    const isDualMode = acDisplayMode === 'dual' || acDisplayMode === 'dual-matrix';
+    const showMatrix = acDisplayMode === 'dac-matrix' || acDisplayMode === 'dual-matrix';
+    const thac0      = 19 - (ws.classAttackBonus ?? 0);
+
     const thiefSkillsHTML = ws.thiefSkills ? `
         <div style='margin-top: 8px; border-top: 1px solid #ccc; padding-top: 4px;'>
             ${Object.entries(ws.thiefSkills).map(([skill, value]) => {
@@ -145,18 +153,6 @@ export function renderCharacterSheetHTML(sheet) {
     // ── Saving throws ─────────────────────────────────────────────────────────
     const sv = sheet.savingThrows;
 
-    // ── Experience ────────────────────────────────────────────────────────────
-    const experienceHTML = sheet.experience ? `
-                <!-- EXPERIENCE -->
-                <div style='${sectionHeader}'>EXPERIENCE</div>
-                <div style='${box} margin-bottom: 8px; font-size: 0.85em;'>
-                    <div style='display: grid; grid-template-columns: 1fr 1fr; gap: 2px;'>
-                        <div><strong>Current XP:</strong> ${sheet.experience.current}</div>
-                        <div><strong>XP Bonus:</strong> ${sheet.experience.bonus}</div>
-                        <div><strong>Lvl ${sheet.experience.forLevel} XP:</strong> ${sheet.experience.forLevelXP}</div>
-                        <div><strong>Next Lvl XP:</strong> ${sheet.experience.forNext || 'Max!'}</div>
-                    </div>
-                </div>` : '';
 
     // ── Equipment ─────────────────────────────────────────────────────────────
     const eq = sheet.equipment;
@@ -171,6 +167,11 @@ export function renderCharacterSheetHTML(sheet) {
         : `<span style='color:#666; font-size:0.85em;'>No additional items</span>`;
     // Starting AC + gold for the footer
     const startingAC = eq.startingAC;
+    const startingACDisplay = (startingAC !== null && startingAC !== undefined)
+        ? isDACMode  ? `${19 - startingAC}`
+        : isDualMode ? `${19 - startingAC} [${startingAC}]`
+        : `${startingAC}`
+        : null;
     const startingGold = eq.startingGold !== null && eq.startingGold !== undefined
         ? eq.startingGold
         : null;
@@ -210,6 +211,34 @@ export function renderCharacterSheetHTML(sheet) {
                         <td style='background-color: #000; color: #fff; padding: 3px 8px; font-weight: bold; width: 40px;'>${coin}</td>
                         <td style='border: 1px solid #000; border-left: none; padding: 3px;'>&nbsp;</td>
                     </tr>`).join('');
+
+    // ── Attack matrix box (for dac-matrix and dual-matrix modes) ──────────────
+    const attackMatrixBoxHTML = (() => {
+        if (!showMatrix) return '';
+        const DAC_RANGE = [-3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+        const rolls = DAC_RANGE.map(ac => Math.max(2, Math.min(20, thac0 - ac)));
+        const hdrCells = DAC_RANGE.map((ac, i) => {
+            const bl = i > 0 ? 'border-left:none;' : '';
+            return `<div style='border:1px solid #000;${bl}border-bottom:none;padding:2px 3px;text-align:center;font-weight:bold;font-size:0.75em;background:#eee;'>${ac}</div>`;
+        }).join('');
+        const rollCells = DAC_RANGE.map((ac, i) => {
+            const bl = i > 0 ? 'border-left:none;' : '';
+            return `<div style='border:1px solid #000;${bl}border-top:none;padding:4px 3px;text-align:center;font-size:0.85em;font-weight:bold;'>${rolls[i]}</div>`;
+        }).join('');
+        return `<div style='margin-bottom:6px;'>
+            <div style='${sectionHeader}'>ATTACK MATRIX <span style='font-weight:normal;font-size:0.9em;opacity:0.8;'>(d20 roll needed to hit Descending AC)</span></div>
+            <div style='display:flex;'>
+                <div style='min-width:60px;flex-shrink:0;'>
+                    <div style='border:1px solid #000;border-bottom:none;padding:2px 4px;font-weight:bold;font-size:0.75em;background:#eee;text-align:center;'>THAC0: ${thac0}</div>
+                    <div style='border:1px solid #000;border-top:none;padding:4px;text-align:center;font-size:0.75em;font-weight:bold;color:#555;'>D20 Roll</div>
+                </div>
+                <div style='flex:1;overflow:hidden;'>
+                    <div style='display:grid;grid-template-columns:repeat(13,1fr);'>${hdrCells}</div>
+                    <div style='display:grid;grid-template-columns:repeat(13,1fr);'>${rollCells}</div>
+                </div>
+            </div>
+        </div>`;
+    })();
 
     // ── Page-2 mini-header (character name + class reminder) ──────────────────
     const nameVal  = sheet.header.columns[0]?.value || '';
@@ -304,7 +333,11 @@ export function renderCharacterSheetHTML(sheet) {
                     ${allWeapons.length > 0 ? `<div><strong>Weapon${allWeapons.length > 1 ? 's' : ''}:</strong> ${allWeapons.join(', ')}</div>` : ''}
                     ${armorForBox ? `<div style='margin-top: 4px;'><strong>Armor:</strong> ${armorForBox}</div>` : ''}
                     ${hasShield ? `<div style='margin-top: 2px;'><strong>Shield:</strong> Yes (+1 AC)</div>` : ''}
-                    <div style='margin-top: 4px;'><strong>Class Attack Bonus:</strong> ${fmt(ws.classAttackBonus)}</div>
+                    ${isDACMode
+                        ? `<div style='margin-top: 4px;'><strong>THAC0:</strong> ${thac0} <span style='color:#666;font-size:0.9em;'>(${thac0} [${fmt(-ws.classAttackBonus)}])</span></div>`
+                        : isDualMode
+                            ? `<div style='margin-top: 4px;'><strong>Class Attack Bonus:</strong> ${fmt(ws.classAttackBonus)} &nbsp;/&nbsp; <strong>THAC0:</strong> ${thac0} <span style='color:#666;font-size:0.9em;'>(${thac0} [${fmt(-ws.classAttackBonus)}])</span></div>`
+                            : `<div style='margin-top: 4px;'><strong>Class Attack Bonus:</strong> ${fmt(ws.classAttackBonus)} <span style='color:#666;font-size:0.9em;'>(${thac0} [${fmt(-ws.classAttackBonus)}])</span></div>`}
                     <div style='margin-top: 2px;'><strong>Melee Modifier (STR):</strong> ${fmt(ws.meleeMod)}</div>
                     <div style='margin-top: 2px;'><strong>Ranged Modifier (DEX):</strong> ${fmt(ws.rangedMod)}</div>
                     ${thiefSkillsHTML}
@@ -317,8 +350,6 @@ export function renderCharacterSheetHTML(sheet) {
                 <div style='${box}'>${abilitiesHTML}</div>
             </div>
 
-            ${experienceHTML ? `<div style='break-inside: avoid; margin-bottom: 8px;'>${experienceHTML}</div>` : ''}
-
             ${spellSlotsHTML ? `<div style='break-inside: avoid; margin-bottom: 8px;'>${spellSlotsHTML}</div>` : ''}
             ${turnUndeadHTML ? `<div style='break-inside: avoid; margin-bottom: 8px;'>${turnUndeadHTML}</div>` : ''}
 
@@ -327,12 +358,19 @@ export function renderCharacterSheetHTML(sheet) {
         <!-- Spacer: pushes footer to bottom of page 1 -->
         <div class='ose-page1-spacer'></div>
 
+        ${attackMatrixBoxHTML}
+
         <!-- Footer lives on page 1 -->
         <hr style='margin-top: 0; border-color: #ccc;'>
         <div style='display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap;'>
-            <p style='font-size: 0.8em; color: #666; margin: 4px 0; flex: 1;'>${sheet.footer}</p>
+            <div style='flex: 1;'>
+                <p style='font-size: 0.8em; color: #666; margin: 4px 0;'>${sheet.footer}</p>
+                ${sheet.abilityScores.some(a => a.originalScore !== null && a.originalScore !== undefined && a.originalScore !== a.score)
+                    ? `<div style='font-size:0.72em;color:#aaa;font-style:italic;margin-top:2px;'><span style='text-decoration:line-through;color:#ccc;'>00</span> = ability score before racial adjustment</div>`
+                    : ''}
+            </div>
             <div style='font-size: 0.8em; color: #444; white-space: nowrap; display: flex; gap: 16px;'>
-                ${startingAC !== null && startingAC !== undefined ? `<span><strong>Starting AC:</strong> ${startingAC}</span>` : ''}
+                ${startingACDisplay !== null && startingACDisplay !== undefined ? `<span><strong>Starting AC:</strong> ${startingACDisplay}</span>` : ''}
                 ${eq.startingHD ? `<span><strong>Starting HD:</strong> ${eq.startingHD}</span>` : ''}
                 ${startingGold !== null ? `<span><strong>Starting Gold:</strong> ${startingGold} gp</span>` : ''}
             </div>
@@ -408,16 +446,10 @@ export function renderCharacterSheetHTML(sheet) {
                     <div style='${sectionHeader}'>EXPERIENCE</div>
                     ${sheet.experience ? `
                     <div style='border: 1px solid #000; padding: 6px; font-size: 0.85em; flex: 1;'>
-                        <div style='display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-bottom: 6px;'>
+                        <div style='display: grid; grid-template-columns: 1fr 1fr; gap: 4px;'>
                             <div><strong>Lvl ${sheet.experience.forLevel} XP:</strong> ${sheet.experience.forLevelXP}</div>
                             <div><strong>Next Lvl:</strong> ${sheet.experience.forNext || 'Max!'}</div>
                             <div><strong>XP Bonus:</strong> ${sheet.experience.bonus}</div>
-                        </div>
-                        <div style='border-top: 1px solid #ccc; padding-top: 4px;'>
-                            <div style='font-weight: bold; font-size: 0.8em; color: #666; margin-bottom: 4px;'>CURRENT XP</div>
-                            <div style='border: 1px solid #000; padding: 4px; line-height: 2.1em;'>
-                                &nbsp;<br>&nbsp;<br>&nbsp;<br>&nbsp;
-                            </div>
                         </div>
                     </div>` : `
                     <div style='border: 1px solid #000; padding: 6px; font-size: 0.85em; line-height: 2.1em; flex: 1;'>

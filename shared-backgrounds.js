@@ -139,3 +139,16 @@ export function getBackgroundTable(hitPoints) {
 export function getAllBackgroundTables() {
     return backgroundTables;
 }
+
+/**
+ * Find a background by profession name, searching all HP tables.
+ * @param {string} profession - The profession name to look up
+ * @returns {Object|null} Background object { profession, item, weapon, armor } or null
+ */
+export function getBackgroundByProfession(profession) {
+    for (const hp of [1, 2, 3, 4]) {
+        const found = backgroundTables[hp].find(bg => bg.profession === profession);
+        if (found) return found;
+    }
+    return null;
+}

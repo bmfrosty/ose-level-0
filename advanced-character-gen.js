@@ -60,31 +60,24 @@ export {
  * @returns {Object} Object with baseScores and adjustedScores
  */
 export function rollAbilitiesAdvanced(minimumScores, race, className, toughCharacters, primeRequisite13) {
-    // Roll base ability scores
-    const baseScores = rollAbilities(minimumScores, toughCharacters, className, primeRequisite13);
-    
-    // Check if base scores meet racial minimums
-    if (!meetsRacialMinimums(baseScores, race)) {
-        // Re-roll if racial minimums not met
-        return rollAbilitiesAdvanced(minimumScores, race, className, toughCharacters, primeRequisite13);
-    }
-    
-    // Apply racial adjustments
-    const adjustedScores = applyRacialAdjustments(baseScores, race);
-    
-    // Check if adjusted scores meet class requirements
-    const classReqs = getClassRequirements(className);
-    for (const ability in classReqs) {
-        if (adjustedScores[ability] < classReqs[ability]) {
-            // Re-roll if class requirements not met after adjustments
-            return rollAbilitiesAdvanced(minimumScores, race, className, toughCharacters, primeRequisite13);
+    let totalAttempts = 0;
+    while (true) {
+        const { scores: baseScores, attempts } = rollAbilities(minimumScores, toughCharacters, className, primeRequisite13);
+        totalAttempts += attempts;
+
+        if (!meetsRacialMinimums(baseScores, race)) continue;
+
+        const adjustedScores = applyRacialAdjustments(baseScores, race);
+
+        const classReqs = getClassRequirements(className);
+        let classOk = true;
+        for (const ability in classReqs) {
+            if (adjustedScores[ability] < classReqs[ability]) { classOk = false; break; }
         }
+        if (!classOk) continue;
+
+        return { baseScores, adjustedScores, attempts: totalAttempts };
     }
-    
-    return {
-        baseScores,
-        adjustedScores
-    };
 }
 
 /**

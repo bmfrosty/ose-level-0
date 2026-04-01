@@ -53,7 +53,7 @@ import {
 import { rollStartingGold, calcStartingGold }    from './shared-character.js';
 import { purchaseEquipment }                      from './shared-equipment.js';
 import { getRandomName }                          from './shared-names.js';
-import { getRandomBackground }                    from './shared-backgrounds.js';
+import { getRandomBackground, getAllBackgroundTables } from './shared-backgrounds.js';
 import { getModifierEffects }                     from './shared-modifier-effects.js';
 import { displayCharacterSheet }                  from './shared-character-sheet.js';
 import { getMaxLevel, getAdvancedModeRacialAbilities } from './shared-racial-abilities.js';
@@ -87,7 +87,9 @@ let fixedHPRolls = null;
 let fixedStartingGold = null;
 let openTabInBackground = false;
 let selectedRaceForZero = '';
+let acDisplayMode = 'aac'; // 'aac' | 'dac-matrix' | 'dual' | 'dual-matrix'
 let abilityScores = { STR:3, INT:3, WIS:3, DEX:3, CON:3, CHA:3 };
+let _scoreRollAttempts = 1;  // set each time rollAbilities / rollAbilitiesAdvanced is called
 
 // Basic-only state
 let demihumanLimits = 'standard';
@@ -262,6 +264,24 @@ function initializeZeroLevelRaceSelection() {
             if (autoGenerateOnClassChange) generateCharacter();
         });
     });
+
+    // Populate occupation dropdown with all professions sorted alphabetically
+    const sel = document.getElementById('zeroOccupation');
+    if (sel) {
+        const tables = getAllBackgroundTables();
+        // Gather all professions with their HP tier
+        const all = [];
+        for (const [hp, list] of Object.entries(tables)) {
+            list.forEach(bg => all.push({ profession: bg.profession, hp: parseInt(hp) }));
+        }
+        all.sort((a, b) => a.profession.localeCompare(b.profession));
+        all.forEach(({ profession }) => {
+            const opt = document.createElement('option');
+            opt.value = profession;
+            opt.textContent = profession;
+            sel.appendChild(opt);
+        });
+    }
 }
 
 // ── updateUI ──────────────────────────────────────────────────────────────────
@@ -377,15 +397,17 @@ function handleRollAbilities(silent = false) {
     }
 
     if (mode === 'basic') {
-        const scores = rollAbilities(effMins, false, selectedClass, primeRequisiteMode !== 'user' ? parseInt(primeRequisiteMode) : false);
+        const { scores, attempts } = rollAbilities(effMins, false, selectedClass, primeRequisiteMode !== 'user' ? parseInt(primeRequisiteMode) : false);
         abilityScores = scores;
+        _scoreRollAttempts = attempts;
         if (!silent) {
             ['STR','INT','WIS','DEX','CON','CHA'].forEach(a => { document.getElementById(`score${a}`).value = scores[a]; });
             updateModifiers();
         }
     } else {
-        const { baseScores, adjustedScores } = rollAbilitiesAdvanced(effMins, selectedRace, selectedClass, false, false);
+        const { baseScores, adjustedScores, attempts } = rollAbilitiesAdvanced(effMins, selectedRace, selectedClass, false, false);
         abilityScores = adjustedScores;
+        _scoreRollAttempts = attempts;
         if (!silent) {
             ['STR','INT','WIS','DEX','CON','CHA'].forEach(a => { document.getElementById(`score${a}`).value = baseScores[a]; });
             updateModifiers();
@@ -414,7 +436,8 @@ function handleRandomName() {
 async function generateZeroLevelChar() {
     const fixedScores = useFixedScores ? readScoresFromInputs() : null;
     const fixedName   = document.getElementById('characterName')?.value.trim() || '';
-    const char = await generateZeroLevelCharacter({
+    const selectedOccupation = document.getElementById('zeroOccupation')?.value || '';
+    const opts = {
         race:                selectedRaceForZero,
         isAdvanced:          mode === 'advanced',
         humanRacialAbilities: true,
@@ -424,7 +447,13 @@ async function generateZeroLevelChar() {
         healthyChars:        healthyCharacters,
         fixedScores,
         fixedName,
-    });
+        fixedOccupation:     selectedOccupation || null,
+    };
+    console.log('[generateZeroLevelChar] Called with opts:', opts);
+    const char = await generateZeroLevelCharacter(opts);
+    console.log('[generateZeroLevelChar] Character generated:', char);
+    const racialAbilities = getAdvancedModeRacialAbilities(char.race);
+    console.log('[generateZeroLevelChar] Racial abilities:', racialAbilities);
     displayZeroLevelCharacter(char);
 }
 
@@ -509,6 +538,7 @@ function sheetOpts() {
         openInNewTab:  document.getElementById('openInNewTab')?.checked||false,
         autoPrint:     document.getElementById('autoPrintInNewTab')?.checked||false,
         backgroundTab: openTabInBackground,
+        acDisplayMode,
     };
 }
 
@@ -553,12 +583,16 @@ function displayBasicCharacter(character, purchased) {
             bl: character.blessed ? 1 : 0,
             un: showUndeadNames?1:0, qr: showQRCode?1:0, ap: document.getElementById('autoPrintInNewTab')?.checked?1:0,
             hc: healthyCharacters?1:0, wp: wealthPct, prm: primeRequisiteMode==='user'?0:parseInt(primeRequisiteMode),
-            ao: basicAbilityOrdering?1:0 },
+            ao: basicAbilityOrdering?1:0,
+            rr: _scoreRollAttempts, sm: ['STR','DEX','CON','INT','WIS','CHA'].map(a => readScoresFromInputs()[a] || 3),
+            ...({'dac-matrix':1,'dual':2,'dual-matrix':3}[acDisplayMode] != null ? {adm:{'dac-matrix':1,'dual':2,'dual-matrix':3}[acDisplayMode]} : {}) },
         footer: (() => {
+            const sm = ['STR','DEX','CON','INT','WIS','CHA'].map(a => readScoresFromInputs()[a] || 3);
             const o = buildOptionsLine({ m:'B', p: PROG_CODE[progressionMode]||'S', l: character.level,
                 bl: character.blessed?1:0, dl: getEffectiveDemihumanLimits()==='extended'?1:0,
                 hc: healthyCharacters?1:0, il: includeLevel0HP?1:0,
-                prm: primeRequisiteMode==='user'?0:parseInt(primeRequisiteMode), wp: wealthPct });
+                prm: primeRequisiteMode==='user'?0:parseInt(primeRequisiteMode), wp: wealthPct,
+                rr: _scoreRollAttempts, sm });
             return `Level ${character.level} ${displayClass} &nbsp;·&nbsp; ${character.mode} Mode` +
                    (o ? `<br><small style="opacity:0.7;">${o}</small>` : '');
         })(),
@@ -572,15 +606,24 @@ function displayBasicCharacter(character, purchased) {
         DEX: character.abilityScores.DEX, CON: character.abilityScores.CON, CHA: character.abilityScores.CHA,
         hpRolls: character.hpRolls||[], hpDice: character.hpDice||[], startingGold: character.startingGold||0,
         includeLevel0HP, showUndeadNames, showQRCode, conModifier: calculateModifier(character.abilityScores.CON),
-        extraSections: [{ label:'6. Demihuman Level Limits', name:'editDemihumanLimits', options:[
-            { value:'standard', label:'Standard Limits', checked: demihumanLimits==='standard' },
-            { value:'extended', label:'Extended to Level 14', checked: demihumanLimits==='extended' }
-        ]}]
+        extraSections: [
+            { label:'6. Demihuman Level Limits', name:'editDemihumanLimits', options:[
+                { value:'standard', label:'Standard Limits', checked: demihumanLimits==='standard' },
+                { value:'extended', label:'Extended to Level 14', checked: demihumanLimits==='extended' }
+            ]},
+            { label:'7. AC Display Mode', name:'editACDisplayMode', options:[
+                { value:'aac', label:'Ascending Armor Class (AAC)', checked: acDisplayMode==='aac' },
+                { value:'dac-matrix', label:'Descending AC with Attack Matrix', checked: acDisplayMode==='dac-matrix' },
+                { value:'dual', label:'Dual Format (AAC and DAC)', checked: acDisplayMode==='dual' },
+                { value:'dual-matrix', label:'Dual Format with Attack Matrix', checked: acDisplayMode==='dual-matrix' },
+            ]},
+        ]
     };
     spec.onEditUpdate = (values) => {
         selectedLevel = values.level; progressionMode = values.progressionMode; characterName = values.name;
         abilityScores = { STR:values.STR, INT:values.INT, WIS:values.WIS, DEX:values.DEX, CON:values.CON, CHA:values.CHA };
         if (values.editDemihumanLimits) demihumanLimits = values.editDemihumanLimits;
+        if (values.editACDisplayMode) { acDisplayMode = values.editACDisplayMode; document.querySelectorAll('input[name="acDisplayMode"]').forEach(r => { r.checked = r.value===acDisplayMode; }); }
         includeLevel0HP = values.includeLevel0HP||false; showUndeadNames = values.showUndeadNames||false; showQRCode = values.showQRCode??true;
         fixedHPRolls = values.hpRolls?.length ? [...values.hpRolls] : null;
         fixedStartingGold = (values.startingGold!=null) ? parseInt(values.startingGold) : null;
@@ -624,6 +667,7 @@ function generateAdvancedCharacter() {
         }
         const result = rollAbilitiesAdvanced(effMins, selectedRace, selectedClass, false, false);
         baseScores = result.baseScores; adjustedScores = result.adjustedScores;
+        _scoreRollAttempts = result.attempts || 1;
     }
 
     const abilityModifiers = {};
@@ -694,11 +738,15 @@ function displayAdvancedCharacter(character, purchased) {
             g:purchased.goldRemaining||0, ac:purchased.startingAC||10, rcm:RCM_CODE[raceClassMode]||'SH',
             un:showUndeadNames?1:0, qr:showQRCode?1:0, ap:document.getElementById('autoPrintInNewTab')?.checked?1:0,
             hc:healthyCharacters?1:0, wp:wealthPct, prm:primeRequisiteMode==='user'?0:parseInt(primeRequisiteMode), ao:basicAbilityOrdering?1:0,
-            ...(hideHumanRace?{hhr:1}:{}) },
+            ...(hideHumanRace?{hhr:1}:{}),
+            rr: _scoreRollAttempts, sm: ['STR','DEX','CON','INT','WIS','CHA'].map(a => readScoresFromInputs()[a] || 3),
+            ...({'dac-matrix':1,'dual':2,'dual-matrix':3}[acDisplayMode] != null ? {adm:{'dac-matrix':1,'dual':2,'dual-matrix':3}[acDisplayMode]} : {}) },
         footer: (() => {
+            const sm = ['STR','DEX','CON','INT','WIS','CHA'].map(a => readScoresFromInputs()[a] || 3);
             const o = buildOptionsLine({ m:'A', p:PROG_CODE[progressionMode]||'S', l:character.level,
                 rcm:RCM_CODE[raceClassMode]||'SH', hc:healthyCharacters?1:0, il:includeLevel0HP?1:0,
-                prm:primeRequisiteMode==='user'?0:parseInt(primeRequisiteMode), wp:wealthPct });
+                prm:primeRequisiteMode==='user'?0:parseInt(primeRequisiteMode), wp:wealthPct,
+                rr: _scoreRollAttempts, sm });
             return `Level ${character.level} ${raceDisplay} ${classDisplay} &nbsp;·&nbsp; ${modeLabel} Mode` +
                    (o ? `<br><small style="opacity:0.7;">${o}</small>` : '');
         })(),
@@ -712,17 +760,26 @@ function displayAdvancedCharacter(character, purchased) {
         DEX:character.baseScores.DEX, CON:character.baseScores.CON, CHA:character.baseScores.CHA,
         hpRolls:character.hpRolls||[], hpDice:character.hpDice||[], startingGold:character.startingGold||0,
         includeLevel0HP, showUndeadNames, showQRCode, conModifier:calculateModifier(character.adjustedScores.CON),
-        extraSections:[{label:'6. Race/Class Restrictions',name:'editRaceClassMode',options:[
-            {value:'strict',label:'Strict OSE',checked:raceClassMode==='strict'},
-            {value:'strict-human',label:'Strict + Human Abilities',checked:raceClassMode==='strict-human'},
-            {value:'traditional-extended',label:'Traditional Extended',checked:raceClassMode==='traditional-extended'},
-            {value:'allow-all',label:'Allow All',checked:raceClassMode==='allow-all'}
-        ]}]
+        extraSections:[
+            {label:'6. Race/Class Restrictions',name:'editRaceClassMode',options:[
+                {value:'strict',label:'Strict OSE',checked:raceClassMode==='strict'},
+                {value:'strict-human',label:'Strict + Human Abilities',checked:raceClassMode==='strict-human'},
+                {value:'traditional-extended',label:'Traditional Extended',checked:raceClassMode==='traditional-extended'},
+                {value:'allow-all',label:'Allow All',checked:raceClassMode==='allow-all'}
+            ]},
+            {label:'7. AC Display Mode',name:'editACDisplayMode',options:[
+                {value:'aac',label:'Ascending Armor Class (AAC)',checked:acDisplayMode==='aac'},
+                {value:'dac-matrix',label:'Descending AC with Attack Matrix',checked:acDisplayMode==='dac-matrix'},
+                {value:'dual',label:'Dual Format (AAC and DAC)',checked:acDisplayMode==='dual'},
+                {value:'dual-matrix',label:'Dual Format with Attack Matrix',checked:acDisplayMode==='dual-matrix'},
+            ]},
+        ]
     };
     spec.onEditUpdate = (values) => {
         selectedLevel=values.level; progressionMode=values.progressionMode; characterName=values.name;
         abilityScores={STR:values.STR,INT:values.INT,WIS:values.WIS,DEX:values.DEX,CON:values.CON,CHA:values.CHA};
         if(values.editRaceClassMode) raceClassMode=values.editRaceClassMode;
+        if(values.editACDisplayMode) { acDisplayMode=values.editACDisplayMode; document.querySelectorAll('input[name="acDisplayMode"]').forEach(r=>{r.checked=r.value===acDisplayMode;}); }
         includeLevel0HP=values.includeLevel0HP||false; showUndeadNames=values.showUndeadNames||false; showQRCode=values.showQRCode??true;
         fixedHPRolls=values.hpRolls?.length?[...values.hpRolls]:null;
         fixedStartingGold=(values.startingGold!=null)?parseInt(values.startingGold):null;
@@ -790,7 +847,7 @@ function displayZeroLevelCharacter(char) {
 // ── Settings Persistence ──────────────────────────────────────────────────────
 function saveCurrentSettings() {
     saveSettings(getSettingsKey(), {
-        mode,
+        mode, acDisplayMode,
         progressionMode, primeRequisiteMode, healthyCharacters, includeLevel0HP,
         useFixedScores, showUndeadNames, hideHumanRace, basicAbilityOrdering, wealthPct,
         autoGenerateOnLevelChange, autoGenerateOnClassChange, autoGenerateOnLoad,
@@ -921,6 +978,7 @@ function applySettings(s) {
     if (s.useFixedScores!==undefined)            { useFixedScores=s.useFixedScores;                       setBool('useFixedScores','useFixedScores'); }
     if (s.showUndeadNames!==undefined)           { showUndeadNames=s.showUndeadNames;                     setBool('showUndeadNames','showUndeadNames'); }
     if (s.hideHumanRace!==undefined)             { hideHumanRace=s.hideHumanRace;                       setBool('hideHumanRace','hideHumanRace'); }
+    if (s.acDisplayMode!==undefined) { acDisplayMode=s.acDisplayMode; document.querySelectorAll('input[name="acDisplayMode"]').forEach(r=>{r.checked=r.value===s.acDisplayMode;}); }
     if (s.basicAbilityOrdering!==undefined)      { basicAbilityOrdering=s.basicAbilityOrdering;           setBool('basicAbilityOrdering','basicAbilityOrdering'); }
     if (s.autoGenerateOnLevelChange!==undefined) { autoGenerateOnLevelChange=s.autoGenerateOnLevelChange; setBool('autoGenerateOnLevelChange','autoGenerateOnLevelChange'); }
     if (s.autoGenerateOnClassChange!==undefined) { autoGenerateOnClassChange=s.autoGenerateOnClassChange; setBool('autoGenerateOnClassChange','autoGenerateOnClassChange'); }
@@ -952,7 +1010,8 @@ function handleResetSettings() {
     clearSettings(getSettingsKey());
     progressionMode='ose'; primeRequisiteMode='user'; demihumanLimits='standard'; raceClassMode='strict';
     healthyCharacters=false; includeLevel0HP=false; useFixedScores=false; showUndeadNames=false; hideHumanRace=false;
-    basicAbilityOrdering=true; wealthPct=50;
+    basicAbilityOrdering=true; wealthPct=50; acDisplayMode='aac';
+    document.querySelectorAll('input[name="acDisplayMode"]').forEach(r=>{r.checked=r.value==='aac';});
     autoGenerateOnLevelChange=false; autoGenerateOnClassChange=false; autoGenerateOnLoad=false;
     document.querySelectorAll('input[name="progressionMode"]').forEach(r=>{r.checked=r.value==='ose';});
     document.querySelectorAll('input[name="demihumanLimits"]').forEach(r=>{r.checked=r.value==='standard';});
@@ -1026,6 +1085,10 @@ export function initializeEventListeners() {
     // Wealth %
     document.querySelectorAll('input[name="wealthPct"]').forEach(r=>{
         r.addEventListener('change',(e)=>{ wealthPct=parseInt(e.target.value); updateUI(); saveCurrentSettings(); });
+    });
+    // AC Display Mode
+    document.querySelectorAll('input[name="acDisplayMode"]').forEach(r=>{
+        r.addEventListener('change',(e)=>{ acDisplayMode=e.target.value; saveCurrentSettings(); });
     });
     // Checkboxes
     const boolListeners = [
