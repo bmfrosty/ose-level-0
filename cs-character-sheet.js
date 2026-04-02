@@ -1,8 +1,10 @@
 
 
 /**
- * shared-character-sheet.js
- * Shared HTML character sheet renderer for all three generators (0-level, Basic, Advanced)
+ * cs-character-sheet.js
+ * HTML character sheet renderer — used by cs-charactersheet.js and (for the inline
+ * preview) gen-ui.js.  Both exports are character-sheet rendering concerns; neither
+ * is independently needed by the generator without the preview feature.
  * ES6 Module
  *
  * Usage: build a normalized sheet object, then call displayCharacterSheet(sheet, targetElement)

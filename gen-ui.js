@@ -51,10 +51,23 @@ import { rollStartingGold, calcStartingGold }    from './shared-character.js';
 import { purchaseEquipment }                      from './gen-equipment.js';
 import { getRandomName }                          from './gen-names.js';
 import { getRandomBackground, getAllBackgroundTables } from './gen-backgrounds.js';
-import { displayCharacterSheet }                  from './shared-character-sheet.js';
+import { displayCharacterSheet }                  from './cs-character-sheet.js';
 import { getMaxLevel, getAdvancedModeRacialAbilities } from './shared-racial-abilities.js';
 import { generateZeroLevelCharacter }             from './gen-0level-gen.js';
-import { saveSettings, loadSettings, clearSettings } from './gen-settings.js';
+// ── Settings helpers (inlined from gen-settings.js — single-parent leaf) ──────
+const _SETTINGS_PREFIX = 'ose_settings_';
+function saveSettings(pageKey, values) {
+    try { localStorage.setItem(_SETTINGS_PREFIX + pageKey, JSON.stringify(values)); }
+    catch (e) { console.warn('OSE: could not save settings:', e); }
+}
+function loadSettings(pageKey) {
+    try { const raw = localStorage.getItem(_SETTINGS_PREFIX + pageKey); return raw ? JSON.parse(raw) : null; }
+    catch (e) { console.warn('OSE: could not load settings:', e); return null; }
+}
+function clearSettings(pageKey) {
+    try { localStorage.removeItem(_SETTINGS_PREFIX + pageKey); }
+    catch (e) { console.warn('OSE: could not clear settings:', e); }
+}
 import { expandCompactV2 } from './cs-charactersheet.js';
 import { PROG_CODE, CLS_CODE, RACE_CODE, RCM_CODE, progModeLabel } from './shared-sheet-builder.js';
 
@@ -525,7 +538,7 @@ async function generateBasicCharacter() {
     if (_preAdjScores) character.originalScores = _preAdjScores;
 
     // Append human racial abilities to class abilities for basic human classes
-    // Must be {name, description} objects to match the classAbilities renderer in shared-character-sheet.js
+    // Must be {name, description} objects to match the classAbilities renderer in cs-character-sheet.js
     if (hasBlessed) {
         const humanAbilities = [
             { name: 'Blessed',       description: 'Roll HP twice, take best at each level (does not apply to level 0 HP roll)' },

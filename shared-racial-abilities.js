@@ -130,35 +130,6 @@ export function getMaxLevel(race, className, isSmootified = false) {
     return maxLevel !== undefined ? maxLevel : null;  // null = combination not allowed
 }
 
-/**
- * Check if a race can take a specific class
- * @param {string} race - The race name (with or without _RACE suffix)
- * @param {string} className - The class name
- * @param {boolean} allowNonTraditional - Whether to allow non-traditional combinations
- * @returns {boolean} True if the combination is allowed
- */
-export function canRaceTakeClass(race, className, allowNonTraditional = false) {
-    // If non-traditional combinations are allowed, any race can take any class
-    if (allowNonTraditional) {
-        return true;
-    }
-    
-    const normalizedRace = normalizeRaceName(race);
-    
-    // Humans can take any class
-    if (normalizedRace === "Human_RACE") {
-        return true;
-    }
-    
-    // Check if race has this class in their level limits
-    const raceLimits = RACIAL_CLASS_LEVEL_LIMITS[normalizedRace];
-    if (!raceLimits) {
-        return false;  // Unknown race
-    }
-    
-    return raceLimits[className] !== undefined;
-}
-
 // ============================================================================
 // RACIAL ABILITIES DATA
 // ============================================================================

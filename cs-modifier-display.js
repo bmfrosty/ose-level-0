@@ -1,26 +1,12 @@
 /**
- * shared-modifier-effects.js
- * 
- * Shared ability score modifier effects for all character generators.
- * Provides detailed descriptions of how ability scores affect gameplay.
- * 
- * Based on OSE (Old-School Essentials) rules.
+ * cs-modifier-display.js
+ *
+ * Character-sheet-only ability score modifier display text.
+ * Used exclusively by cs-charactersheet.js (dynamic import).
+ *
+ * getModifier() was previously here but is identical to calculateModifier()
+ * in shared-ability-scores.js — gen-race-adjustments.js now imports from there.
  */
-
-/**
- * Calculate ability score modifier (-3 to +3)
- * @param {number} score - Ability score (3-18)
- * @returns {number} Modifier value (-3 to +3)
- */
-export function getModifier(score) {
-    if (score <= 3) return -3;
-    if (score <= 5) return -2;
-    if (score <= 8) return -1;
-    if (score <= 12) return 0;
-    if (score <= 15) return 1;
-    if (score <= 17) return 2;
-    return 3;
-}
 
 /**
  * Get detailed modifier effects based on OSE rules
@@ -40,13 +26,13 @@ export function getModifierEffects(ability, modifier, score) {
             else if (score <= 17) doorChance = "4-in-6";
             else doorChance = "5-in-6";
             return `Melee: ${modifier >= 0 ? '+' : ''}${modifier} (Attack & Damage), Open Doors: ${doorChance}`;
-        
+
         case "DEX":
             return `AC: ${modifier >= 0 ? '+' : ''}${modifier}, Missile: ${modifier >= 0 ? '+' : ''}${modifier} (Just Attacks), Initiative: ${modifier >= 0 ? '+' : ''}${modifier}`;
-        
+
         case "CON":
             return `Hit Points: ${modifier >= 0 ? '+' : ''}${modifier} at each level`;
-        
+
         case "INT":
             let languages, literacy;
             if (score <= 3) { languages = "Native (broken)"; literacy = "Illiterate"; }
@@ -57,10 +43,10 @@ export function getModifierEffects(ability, modifier, score) {
             else if (score <= 17) { languages = "Native + 2"; literacy = "Literate"; }
             else { languages = "Native + 3"; literacy = "Literate"; }
             return `Languages: ${languages}, Literacy: ${literacy}`;
-        
+
         case "WIS":
             return `Magic Saves: ${modifier >= 0 ? '+' : ''}${modifier}`;
-        
+
         case "CHA":
             let npcReaction = modifier >= 0 ? `+${modifier}` : `${modifier}`;
             let maxRetainers, loyalty;
@@ -72,7 +58,7 @@ export function getModifierEffects(ability, modifier, score) {
             else if (score <= 17) { maxRetainers = 6; loyalty = 9; }
             else { maxRetainers = 7; loyalty = 10; }
             return `NPC Reactions: ${npcReaction}, Max Retainers: ${maxRetainers}, Loyalty: ${loyalty}`;
-        
+
         default:
             return "";
     }

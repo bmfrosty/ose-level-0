@@ -7,12 +7,71 @@
  * charactersheet.html).
  */
 
-import { renderCharacterSheetHTML } from './shared-character-sheet.js';
+import { renderCharacterSheetHTML } from './cs-character-sheet.js';
 import { buildOptionsLine }         from './cs-compact-codes.js';
-import { buildSheetSpec, CLASS_HD_CODES as CLASS_HD, CODE_TO_PROG, progModeLabel } from './shared-sheet-builder.js';
+import { progModeLabel }            from './shared-sheet-builder.js';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 const PROG_TO_CODE = { ose:'O', smooth:'S', ll:'L' };
+
+// ── Inlined from cs-sheet-builder.js (single-parent leaf — no separate file needed) ──
+
+/** Sides of the hit die, keyed by full class name */
+const CLASS_HD = {
+    Fighter_CLASS:8, Cleric_CLASS:6, 'Magic-User_CLASS':4, Thief_CLASS:4,
+    Spellblade_CLASS:6, Dwarf_CLASS:8, Elf_CLASS:6, Halfling_CLASS:6, Gnome_CLASS:4
+};
+
+/** Compact code → progression mode name (e.g. 'O' → 'ose') */
+const CODE_TO_PROG = { O:'ose', S:'smooth', L:'ll' };
+
+/**
+ * Build the spec object passed to `renderFromCompactParams` / `displayCharacterSheet`
+ * from a normalised sheet-data (sd) object and an options (opts) bag.
+ */
+function buildSheetSpec(sd, opts) {
+    return {
+        title:    sd.title,
+        subtitle: sd.subtitle,
+        header: { columns: [
+            { label:'Character Name', value: sd.name||'Unknown', flex:2.8 },
+            { label:'Occupation',     value: sd.occupation||'—', flex:2.2 },
+            { label:'Race/Class',     value: sd.raceClass,       flex:2 },
+            { label:'Level',          value: sd.level, flex:1, center:true },
+            { label:'HD',             value: sd.hd,    flex:1, center:true },
+            { label:'XP Bonus',       value: sd.xpBonus, flex:1, center:true },
+        ]},
+        combat:          { maxHP: sd.maxHP, initMod: sd.initMod },
+        abilityScores:   sd.abilityScores,
+        weaponsAndSkills: {
+            weapon:          sd.weapon||null,
+            classAttackBonus:sd.classAttackBonus,
+            meleeMod:        sd.meleeMod,
+            rangedMod:       sd.rangedMod,
+            thiefSkills:     sd.thiefSkills||null,
+        },
+        abilitiesSection: {
+            header: sd.abilitiesHeader,
+            racial: sd.racialAbilities||[],
+            class:  sd.classAbilities||[],
+        },
+        savingThrows: sd.savingThrows,
+        experience:   sd.experience,
+        equipment:    sd.equipment,
+        spellSlots:   sd.spellSlots||null,
+        turnUndead:   sd.turnUndead||null,
+        showUndeadNames: opts.showUndeadNames,
+        showQRCode:      opts.showQRCode,
+        abilityOrder:    opts.abilityOrder,
+        cp:              sd.cp,
+        footer:          sd.footer,
+        printTitle:      sd.printTitle,
+        openInNewTab:    opts.openInNewTab,
+        autoPrint:       opts.autoPrint,
+        backgroundTab:   opts.backgroundTab,
+        acDisplayMode:   opts.acDisplayMode || 'aac',
+    };
+}
 const ABILITIES    = ['STR','DEX','CON','INT','WIS','CHA'];
 const ADM_MAP      = { 0:'aac', 1:'dac-matrix', 2:'dual', 3:'dual-matrix' };
 
@@ -77,7 +136,7 @@ export async function expandCompactV2(cp) {
     ABILITIES.forEach((a, i) => { adj[a] = adjArr[i]; base[a] = baseArr[i]; });
 
     const { calculateModifier } = await import('./shared-ability-scores.js');
-    const { getModifierEffects } = await import('./shared-modifier-effects.js');
+    const { getModifierEffects } = await import('./cs-modifier-display.js');
     const mods = {};
     ABILITIES.forEach(a => mods[a] = calculateModifier(adj[a]));
 

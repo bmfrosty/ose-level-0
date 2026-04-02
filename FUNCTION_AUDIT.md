@@ -15,24 +15,25 @@ Static imports are noted where relevant; C's dynamic imports are marked **(dyn)*
 | `calculateModifier` | | ✓ | | C **(dyn)** — G gets it via re-export from `shared-basic-utils.js` |
 | `formatModifier` | | | | *(re-exported by shared-basic-utils; not imported by either controller directly)* |
 | `rollAbilityScore` | | | | *(re-exported by basic/advanced-character-gen; not imported directly)* |
-| `rollAbilities` | | | | *(re-exported by shared-basic-character-gen; not imported directly)* |
+| `rollAbilities` | | | | *(re-exported by both shared-basic-character-gen and shared-advanced-character-gen; G imports it via shared-basic-character-gen)* |
 | `rollSingleDie` | | | | *(re-exported by shared-hit-points; not imported directly)* |
 | `rollDice` | | | | *(used internally by gen-0level-gen)* |
 | `getPrimeRequisites` | | | | *(re-exported by shared-basic-utils and shared-advanced-utils; not imported directly)* |
-| `calculateXPBonus` | | | | *(re-exported by shared-class-data-shared; not imported directly)* |
+| `calculateXPBonus` | | | | *(re-exported by shared-basic-utils and shared-advanced-utils; C imports via those; note: shared-class-data-shared has its own separate implementation)* |
 | `meetsToughCharactersRequirements` | | | | *(re-exported by shared-basic-utils; not imported directly)* |
 | `meetsPrimeRequisiteRequirements` | | | | *(re-exported by shared-basic-utils; not imported directly)* |
 
 ---
 
-## shared-modifier-effects.js
+## cs-modifier-display.js
+
+CS-only leaf module (no imports of its own). Dynamically imported by `cs-charactersheet.js`.
 
 | Export | G | C | Both | Notes |
 |--------|:-:|:-:|:----:|-------|
-| `getModifierEffects` | | ✓ | | C **(dyn)** — builds ability score effects for the sheet |
-| `getModifier` | | | | *(used internally by gen-race-adjustments.js)* |
+| `getModifierEffects` | | ✓ | | C **(dyn)** — builds ability score effects text for the sheet |
 
-G does not import from `shared-modifier-effects.js` directly.
+> `getModifier` was removed; `gen-race-adjustments.js` now imports the identical `calculateModifier` from `shared-ability-scores.js` directly.
 
 ---
 
@@ -64,6 +65,10 @@ G does not import from `shared-modifier-effects.js` directly.
 | `applyRacialAdjustments` | ✓ | | | G static; applied during generation (advanced mode) |
 | `calculateXPBonus` | | ✓ | | C **(dyn)** when `isAdv` |
 | `getPrimeRequisites` | | ✓ | | C **(dyn)** when `isAdv`; G uses the same-named fn from shared-basic-utils |
+| `calculateModifier` | | | | *(re-exported from shared-ability-scores; not imported by either controller from this module)* |
+| `formatModifier` | | | | *(re-exported from shared-ability-scores; not imported by either controller from this module)* |
+| `meetsToughCharactersRequirements` | | | | *(re-exported from shared-ability-scores; not imported by either controller from this module)* |
+| `meetsPrimeRequisiteRequirements` | | | | *(re-exported from shared-ability-scores; not imported by either controller from this module)* |
 | `getRacialAdjustments` | | | | *(used internally by `applyRacialAdjustments`)* |
 | `getRacialMinimums` | | | | *(used internally by `meetsRacialMinimums`)* |
 | `meetsRacialMinimums` | | | | *(used internally by `shared-advanced-character-gen.js`)* |
@@ -102,19 +107,22 @@ G does not import from `shared-modifier-effects.js` directly.
 | `rollAbilityScore` | | | | *(re-exported from shared-ability-scores; not imported directly)* |
 | `rollSingleDie` | | | | *(re-exported from shared-hit-points; not imported directly)* |
 | `parseHitDice` | | | | *(re-exported from shared-hit-points; not imported directly)* |
+| `rollAbilities` | | | | *(re-exported from shared-ability-scores; G imports it via shared-basic-character-gen instead)* |
 | `applyRacialAdjustments` | | | | *(re-exported from shared-advanced-utils; not imported directly)* |
 | `meetsRacialMinimums` | | | | *(re-exported from shared-advanced-utils; not imported directly)* |
 
 ---
 
-## shared-character-sheet.js
+## cs-character-sheet.js
+
+CS-only module (cs-* prefix). Both controllers use it but for different purposes.
 
 | Export | G | C | Both | Notes |
 |--------|:-:|:-:|:----:|-------|
 | `displayCharacterSheet` | ✓ | | | G static — injects rendered HTML into DOM for inline preview |
 | `renderCharacterSheetHTML` | | ✓ | | C static — returns HTML string; used inside `renderFromCompactParams` |
 
-Each controller uses a completely different function from this module.
+Each controller uses a completely different function from this module. Named `cs-*` because the full sheet rendering is character-sheet-page logic; gen-ui.js only imports it for the inline preview feature.
 
 ---
 
@@ -125,7 +133,12 @@ Each controller uses a completely different function from this module.
 | `buildOptionsLine` | | ✓ | | C static — builds options footer line in the sheet |
 | `encodeCompactParams` | | ✓ | | C **(dyn)** — modify panel and sheet-options panel apply buttons |
 | `decodeCompactParams` | | ✓ | | C **(dyn)** — `initCharacterSheet` decodes URL data |
-| all lookup tables / helpers | | | | *(internal implementation details)* |
+| `WEAPON_TO_CODE` / `CODE_TO_WEAPON` | | | | *(lookup tables used internally by `encodeCompactParams` / `decodeCompactParams`)* |
+| `ARMOR_TO_CODE` / `CODE_TO_ARMOR` | | | | *(lookup tables used internally)* |
+| `BG_TO_CODE` / `CODE_TO_BG` | | | | *(lookup tables used internally)* |
+| `ITEM_TO_CODE` / `CODE_TO_ITEM` | | | | *(lookup tables used internally)* |
+| `encodeStr` / `decodeStr` | | | | *(utility helpers used internally by encode/decode functions)* |
+| `encodeItems` / `decodeItems` | | | | *(utility helpers used internally by encode/decode functions)* |
 
 G does not import from `cs-compact-codes.js` directly.
 
@@ -133,13 +146,11 @@ G does not import from `cs-compact-codes.js` directly.
 
 ## shared-sheet-builder.js
 
+Encoding constants used by **both** controllers. Sheet-spec assembly and hit-die tables (`buildSheetSpec`, `CLASS_HD`, `CODE_TO_PROG`) were single-parent and have been **inlined directly into `cs-charactersheet.js`**.
+
 | Export | G | C | Both | Notes |
 |--------|:-:|:-:|:----:|-------|
-| `progModeLabel` | ✓ | ✓ | ✓ | G static (used in `generateBasicCharacter` for `createCharacter` `mode:` arg); C static (subtitle/footer) |
-| `buildSheetSpec` | | ✓ | | C static — assembles final sheet spec; G calls it indirectly via `expandCompactV2` |
-| `CLASS_HD_CODES` (imported as `CLASS_HD`) | | ✓ | | C static — HD sides lookup for level-up reroll |
-| `CLASS_HD` | | ✓ | | C static — same data, second export name |
-| `CODE_TO_PROG` | | ✓ | | C static — decodes prog code back to key |
+| `progModeLabel` | ✓ | ✓ | ✓ | G static (mode label in generator UI); C static (subtitle/footer) |
 | `PROG_CODE` | ✓ | | | G static — encodes prog key → code for cp object |
 | `CLS_CODE` | ✓ | | | G static — encodes class name → code for cp object |
 | `RACE_CODE` | ✓ | | | G static — encodes race name → code for cp object |
@@ -155,12 +166,11 @@ G does not import from `cs-compact-codes.js` directly.
 |--------|:-:|:-:|:----:|-------|
 | `getAdvancedModeRacialAbilities` | ✓ | ✓ | ✓ | G static (0-level display); C **(dyn)** (level-0 sheet path) |
 | `getMaxLevel` | ✓ | | | G static — caps level selector for race/class combos |
-| `calculateSavingThrows` | | | | *(used internally by character gen)* |
-| `calculateAttackBonus` | | | | *(used internally by character gen)* |
-| `RACIAL_CLASS_LEVEL_LIMITS` | | | | *(used internally)* |
-| `canRaceTakeClass` | | | | *(used internally by gen-0level-gen)* |
-| `savingThrowsLevel0` / `attackBonusLevel0` | | | | *(used internally by gen-0level-gen)* |
-| `getDwarfResilienceBonus` / etc. | | | | *(used internally)* |
+| `calculateSavingThrows` | | | | *(imported by gen-0level-gen to compute 0-level saving throws)* |
+| `calculateAttackBonus` | | | | *(imported by gen-0level-gen to compute 0-level attack bonuses)* |
+| `RACIAL_CLASS_LEVEL_LIMITS` | | | | *(used internally by `getMaxLevel`)* |
+| `savingThrowsLevel0` / `attackBonusLevel0` | | | | *(used internally by `calculateSavingThrows` / `calculateAttackBonus`)* |
+| `getDwarfResilienceBonus` / `getGnomeMagicResistanceBonus` / `getHalflingResilienceBonus` | | | | *(used internally by `calculateSavingThrows`)* |
 
 > `getCommonDemihumanAbilities` moved to **legacy-utils.js**.
 
@@ -201,12 +211,23 @@ Both controllers use whichever progression module matches the user's selected mo
 
 ## shared-class-data-shared.js
 
-| Who | How | What |
-|-----|-----|-------|
-| G | `import * as ClassDataShared` (static) | Passed to `getClassFeatures(…, ClassDataShared)` |
-| C | `await import('./shared-class-data-shared.js')` **(dyn)** | Passed to `createCharacter` / `createCharacterAdvanced`; also `HIT_DICE_PROGRESSIONS` + `HIT_DICE_SCALE` in level-up panel |
+Both G (static `import * as ClassDataShared`) and C (dynamic `import`) use this module. The whole module is passed to `getClassFeatures`, `createCharacter`, and `createCharacterAdvanced`. C's level-up panel also destructures two exports directly. Individual exports and their consumers:
 
-Both controllers use the shared class tables. The level-up panel in C also directly uses `HIT_DICE_PROGRESSIONS` and `HIT_DICE_SCALE` to determine hit dice for rolled HP.
+| Export | Notes |
+|--------|-------|
+| `CLASS_INFO` | Used by `gen-equipment.js` (imports directly to look up starting equipment) and by `shared-class-progression.js` |
+| `CLASS_ABILITIES` | Used internally by `shared-class-progression.js` |
+| `XP_BONUS` | Data table; used internally by `shared-class-progression.js` |
+| `getClassInfo` | Used internally by `shared-class-progression.js` |
+| `getClassAbilities` | Used internally by `shared-class-progression.js` |
+| `getAbilitiesAtLevel` | Used internally by `shared-class-progression.js` |
+| `calculateXPBonus` | Used internally by `shared-class-progression.js` (note: separate implementation from the one in `shared-ability-scores.js`) |
+| `canRaceTakeClass` | Used internally only — the duplicate in `shared-racial-abilities.js` (different signature) was deleted as a dead export |
+| `meetsRequirements` | Used internally |
+| `HIT_DICE_PROGRESSIONS` | Used by `shared-class-progression.js`; also destructured directly by C's level-up panel |
+| `HIT_DICE_SCALE` | Used by `shared-class-progression.js`; also destructured directly by C's level-up panel |
+| `ARCANE_SPELL_SLOTS` / `DIVINE_SPELL_SLOTS` / `SPELL_SLOT_SCALE` | Used internally by `shared-class-progression.js` |
+| `THIEF_SKILLS` / `TURN_UNDEAD` / `XP_REQUIREMENTS` | Used internally by `shared-class-data-ose.js` and `shared-class-data-gygar.js` |
 
 ---
 
@@ -255,7 +276,7 @@ Generator-only module. Imports from `shared-weapons-and-armor.js` and `shared-cl
 | Export | G | C | Both | Notes |
 |--------|:-:|:-:|:----:|-------|
 | `purchaseEquipment` | ✓ | | | G static — buys starting gear for the generated character |
-| `DUNGEONEERING_BUNDLE` | | | | *(not imported by either controller; used internally)* |
+| `DUNGEONEERING_BUNDLE` | | | | *(used internally; not imported by G or C)* |
 | `CLASS_SPECIFIC_GEAR` | | | | *(not imported by either controller; used internally)* |
 | `WEAPON_PRIORITY` | | | | *(not imported by either controller; used internally)* |
 | `ARMOR_PRIORITY` | | | | *(not imported by either controller; used internally)* |
@@ -291,25 +312,13 @@ Generator-only module. Used internally by gen-0level-gen.js; neither controller 
 
 ---
 
-## gen-settings.js
-
-Generator-only module. Wraps `localStorage`.
-
-| Export | G | C | Both | Notes |
-|--------|:-:|:-:|:----:|-------|
-| `saveSettings` | ✓ | | | G static |
-| `loadSettings` | ✓ | | | G static |
-| `clearSettings` | ✓ | | | G static |
-
----
-
 ## shared-weapons-and-armor.js
 
 Leaf module (no imports of its own). Neither controller imports it directly.
 
 | Export | G | C | Both | Notes |
 |--------|:-:|:-:|:----:|-------|
-| `WEAPONS` | | | | *(imported by gen-equipment.js and shared-character-sheet.js internally)* |
+| `WEAPONS` | | | | *(imported by gen-equipment.js and cs-character-sheet.js internally)* |
 | `ARMOR` | | | | *(imported by gen-equipment.js internally)* |
 | `ADVENTURING_GEAR` | | | | *(imported by gen-equipment.js internally)* |
 | `AMMUNITION` | | | | *(data table; not currently imported by any controller or gen-* module)* |
@@ -360,9 +369,12 @@ Archive of orphaned exports — nothing currently imports from this module. Pres
 
 | Finding | Notes |
 |---------|-------|
-| `shared-character-sheet.js` — two separate render functions, each used by only one controller | Clean separation: `displayCharacterSheet` = G (inline preview), `renderCharacterSheetHTML` = C (full page) |
+| `cs-character-sheet.js` — two separate render functions, each used by only one controller | Clean separation: `displayCharacterSheet` = G (inline preview), `renderCharacterSheetHTML` = C (full page) |
 | All dice-rolling (`rollAbilities`, `rollAbilitiesAdvanced`, `rollHitPoints`) is G-only | C never rolls dice — it only renders from already-saved compact params |
-| Encoding constants (`PROG_CODE`, `CLS_CODE`, `RACE_CODE`, `RCM_CODE`) are G-only; decoding (`CODE_TO_PROG`) is C-only | Intentional: G builds cp objects for the URL, C decodes them from the URL |
+| Encoding constants (`PROG_CODE`, `CLS_CODE`, `RACE_CODE`, `RCM_CODE`) are G-only (in shared-sheet-builder.js); decoding (`CODE_TO_PROG`) is C-only (inlined in cs-charactersheet.js) | Intentional: G builds cp objects for the URL, C decodes them from the URL |
+| `buildSheetSpec`, `CLASS_HD`, `CODE_TO_PROG` inlined directly into cs-charactersheet.js (single-parent — only C ever used them) | Eliminated cs-sheet-builder.js as a separate file |
+| `saveSettings`/`loadSettings`/`clearSettings` inlined into gen-ui.js (single-parent) | Eliminated gen-settings.js as a separate file |
+| `getModifier` removed from cs-modifier-display.js | gen-race-adjustments.js now imports `calculateModifier` (identical logic) from shared-ability-scores.js |
 | `encodeCompactParams` / `decodeCompactParams` are C-only | G builds raw cp objects and passes them through `expandCompactV2`; no re-encoding needed |
 | DOM-reading helpers (`readAbilityScores`, `getClassRequirements`, `getDemihumanLimits`) are G-only | C has no form inputs — it reads entirely from compact URL params |
 | C imports `calculateModifier` and `getModifierEffects` directly, bypassing the utils wrappers | These are leaf modules; C skips the re-export chain for clarity |

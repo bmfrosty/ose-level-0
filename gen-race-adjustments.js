@@ -6,7 +6,7 @@
  */
 
 import { LEGACY_RACE_NAMES, normalizeRaceName } from './shared-race-names.js';
-import { getModifier } from './shared-modifier-effects.js';
+import { calculateModifier as getModifier } from './shared-ability-scores.js';
 
 // ============================================================================
 // RACE DATA
