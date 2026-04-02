@@ -80,7 +80,7 @@ let selectedLevel = null;
 let selectedClass = null;
 let progressionMode = 'ose';
 let primeRequisiteMode = 'user';
-let healthyCharacters = false;
+let hpRollingMode = 'normal'; // 'normal' | 'healthy' | 'blessed' | '5e'
 let includeLevel0HP = false;
 let useFixedScores = false;
 let showUndeadNames = false;
@@ -462,7 +462,7 @@ async function generateZeroLevelChar() {
         isGygar:             progressionMode === 'gygar',
         minimums:            readScoresFromInputs(),
         primeReqMode:        primeRequisiteMode,
-        healthyChars:        healthyCharacters,
+        hpMode:              hpRollingMode === 'healthy' ? 3 : hpRollingMode === 'blessed' ? 1 : 0,
         fixedScores,
         fixedName,
         fixedOccupation:     selectedOccupation || null,
@@ -521,7 +521,8 @@ async function generateBasicCharacter() {
 
     const DEMIHUMAN_CLASSES = ['Dwarf_CLASS','Elf_CLASS','Halfling_CLASS','Gnome_CLASS'];
     const hasBlessed = !DEMIHUMAN_CLASSES.includes(selectedClass) && raceClassMode !== 'strict';
-    const hpResult = rollHPBasic(selectedClass, selectedLevel, conMod, classData, includeLevel0HP, healthyCharacters, hasBlessed, fixedHPRolls);
+    const hpMode = hpRollingMode === '5e' ? 2 : (hpRollingMode === 'blessed' || hasBlessed) ? 1 : hpRollingMode === 'healthy' ? 3 : 0;
+    const hpResult = rollHPBasic(selectedClass, selectedLevel, conMod, classData, includeLevel0HP, hpMode, fixedHPRolls);
     const progressionData = getProgBasic(selectedClass, selectedLevel, abilityScores, classData);
     const features = getClassFeatures(selectedClass, selectedLevel, classData, ClassDataShared);
     const racialAbilities = getRacialBasic(selectedClass);
@@ -541,6 +542,7 @@ async function generateBasicCharacter() {
     character.hpDice  = hpResult.dice;
     character.startingGold = startingGold;
     character.blessed = hasBlessed;
+    character.hpMode  = hpMode;
     if (_preAdjScores) character.originalScores = _preAdjScores;
 
     // Append human racial abilities to class abilities for basic human classes
@@ -572,6 +574,7 @@ function sheetOpts() {
 }
 
 async function displayBasicCharacter(character, purchased) {
+    const hpMode = character.hpMode || 0;
     const SCORES = ['STR','DEX','CON','INT','WIS','CHA'];
     const adjArr  = SCORES.map(a => character.abilityScores[a]);
     const baseArr = character.originalScores ? SCORES.map(a => character.originalScores[a]) : adjArr;
@@ -584,8 +587,9 @@ async function displayBasicCharacter(character, purchased) {
         ar:purchased.armor||null, sh:purchased.shield?1:0, w:purchased.weapon||null,
         it:purchased.items||[], g:purchased.goldRemaining||0, ac:purchased.startingAC||10,
         dl:getEffectiveDemihumanLimits()==='extended'?1:0, bl:character.blessed?1:0,
+        ...(hpMode>0?{hm:hpMode}:{}),
         un:showUndeadNames?1:0, qr:showQRCode?1:0, ap:document.getElementById('autoPrintInNewTab')?.checked?1:0,
-        hc:healthyCharacters?1:0, wp:wealthPct, prm:primeRequisiteMode==='user'?0:parseInt(primeRequisiteMode),
+        wp:wealthPct, prm:primeRequisiteMode==='user'?0:parseInt(primeRequisiteMode),
         ao:basicAbilityOrdering?1:0,
         rr:_scoreRollAttempts, sm:SCORES.map(a=>readScoresFromInputs()[a]||3),
         ...({'dac-matrix':1,'dual':2,'dual-matrix':3}[acDisplayMode]!=null?{adm:{'dac-matrix':1,'dual':2,'dual-matrix':3}[acDisplayMode]}:{})
@@ -687,8 +691,9 @@ async function generateAdvancedCharacter() {
 
     const racialAbilitiesForBlessed = getRacialAdvanced(selectedRace, raceClassMode);
     const hasBlessed = racialAbilitiesForBlessed.some(ab => ab.includes('Blessed'));
+    const hpMode = hpRollingMode === '5e' ? 2 : (hpRollingMode === 'blessed' || hasBlessed) ? 1 : hpRollingMode === 'healthy' ? 3 : 0;
 
-    const hpResult = rollHPAdvanced(selectedClass, selectedLevel, abilityModifiers.CON, classData, includeLevel0HP, false, hasBlessed, fixedHPRolls);
+    const hpResult = rollHPAdvanced(selectedClass, selectedLevel, abilityModifiers.CON, classData, includeLevel0HP, hpMode, fixedHPRolls);
     const background = getRandomBackground(hpResult.backgroundHP);
     const progressionData = getProgAdvanced(selectedClass, selectedLevel, adjustedScores, classData);
 
@@ -701,12 +706,14 @@ async function generateAdvancedCharacter() {
     const character = createCharacterAdvanced({ level: selectedLevel, race: selectedRace, className: selectedClass,
         baseScores, adjustedScores, hp: hpResult.max, classData, ClassDataShared, progressionMode, raceClassMode, name: characterName, background });
     character.hpRolls = hpResult.rolls; character.hpDice = hpResult.dice; character.startingGold = startingGold;
+    character.hpMode = hpMode;
     fixedHPRolls = null; fixedStartingGold = null; fixedAdjustments = null;
 
     await displayAdvancedCharacter(character, purchased);
 }
 
 async function displayAdvancedCharacter(character, purchased) {
+    const hpMode = character.hpMode || 0;
     const raceDisplay  = getRaceDisplayName(character.race);
     const classDisplay = getClassDisplayName(character.class);
     const adjArr = ['STR','DEX','CON','INT','WIS','CHA'].map(a=>character.adjustedScores[a]);
@@ -720,8 +727,8 @@ async function displayAdvancedCharacter(character, purchased) {
         ar:purchased.armor||null, sh:purchased.shield?1:0, w:purchased.weapon||null, it:purchased.items||[],
         g:purchased.goldRemaining||0, ac:purchased.startingAC||10, rcm:RCM_CODE[raceClassMode]||'SH',
         un:showUndeadNames?1:0, qr:showQRCode?1:0, ap:document.getElementById('autoPrintInNewTab')?.checked?1:0,
-        hc:healthyCharacters?1:0, wp:wealthPct, prm:primeRequisiteMode==='user'?0:parseInt(primeRequisiteMode), ao:basicAbilityOrdering?1:0,
-        ...(hideHumanRace?{hhr:1}:{}),
+        wp:wealthPct, prm:primeRequisiteMode==='user'?0:parseInt(primeRequisiteMode), ao:basicAbilityOrdering?1:0,
+        ...(hideHumanRace?{hhr:1}:{}), ...(hpMode>0?{hm:hpMode}:{}),
         rr:_scoreRollAttempts, sm:['STR','DEX','CON','INT','WIS','CHA'].map(a=>readScoresFromInputs()[a]||3),
         ...({'dac-matrix':1,'dual':2,'dual-matrix':3}[acDisplayMode]!=null?{adm:{'dac-matrix':1,'dual':2,'dual-matrix':3}[acDisplayMode]}:{})
     };
@@ -792,7 +799,7 @@ async function displayZeroLevelCharacter(char) {
         s:adjArr, ...(hasAdj?{bs:baseArr}:{}), sv:svArr, h:char.hitPoints.total, hr:[char.hitPoints.total], hd:[4],
         n:char.name, bg:char.background.profession, ar:char.background.armor||null,
         w:char.background.weapon||null, it:char.background.item||[], g:char.startingGold, ac:char.armorClass,
-        bl:raceClassMode!=='strict'?1:0, hc:healthyCharacters?1:0,
+        bl:raceClassMode!=='strict'?1:0,
         ...(isAdv?{rcm:(RCM_CODE[raceClassMode]||'ST')}:{dl:getEffectiveDemihumanLimits()==='extended'?1:0}),
         prm:primeRequisiteMode==='user'?0:parseInt(primeRequisiteMode),
         rr:_scoreRollAttempts, sm:ABILITIES.map(a=>readScoresFromInputs()[a]||3),
@@ -834,7 +841,7 @@ async function displayZeroLevelCharacter(char) {
 function saveCurrentSettings() {
     saveSettings(getSettingsKey(), {
         mode, acDisplayMode,
-        progressionMode, primeRequisiteMode, healthyCharacters, includeLevel0HP,
+        progressionMode, primeRequisiteMode, hpRollingMode, includeLevel0HP,
         useFixedScores, showUndeadNames, hideHumanRace, basicAbilityOrdering, wealthPct,
         wealthRollAsLevel1, noLevel0Equipment,
         autoGenerateOnLevelChange, autoGenerateOnClassChange, autoGenerateOnLoad,
@@ -862,7 +869,7 @@ function syncURLParams() {
     if (mode === 'basic' && demihumanLimits !== 'standard')        p.set('dl', demihumanLimits);
     if (mode === 'advanced' && raceClassMode !== 'strict')         p.set('rcm', raceClassMode);
     if (primeRequisiteMode !== 'user')                             p.set('prm', primeRequisiteMode);
-    if (healthyCharacters)                                         p.set('hc', '1');
+    if (hpRollingMode !== 'normal')                                p.set('hpm', hpRollingMode);
     if (includeLevel0HP)                                           p.set('il', '1');
     if (showUndeadNames)                                           p.set('un', '1');
     if (hideHumanRace && mode === 'advanced')                      p.set('hhr', '1');
@@ -962,7 +969,7 @@ function applySettings(s) {
     }
     if (s.primeRequisiteMode!==undefined) { primeRequisiteMode=s.primeRequisiteMode; document.querySelectorAll('input[name="primeRequisiteMode"]').forEach(r=>{r.checked=r.value===s.primeRequisiteMode;}); }
     const setBool = (k, id) => { if(s[k]!==undefined){ const el=document.getElementById(id); if(el) el.checked=s[k]; }};
-    if (s.healthyCharacters!==undefined)         { healthyCharacters=s.healthyCharacters;                 setBool('healthyCharacters','healthyCharacters'); }
+    if (s.hpRollingMode!==undefined) { hpRollingMode=s.hpRollingMode; document.querySelectorAll('input[name="hpRollingMode"]').forEach(r=>{r.checked=r.value===s.hpRollingMode;}); }
     if (s.includeLevel0HP!==undefined)           { includeLevel0HP=s.includeLevel0HP;                     setBool('includeLevel0HP','includeLevel0HP'); }
     if (s.useFixedScores!==undefined)            { useFixedScores=s.useFixedScores;                       setBool('useFixedScores','useFixedScores'); }
     if (s.showUndeadNames!==undefined)           { showUndeadNames=s.showUndeadNames;                     setBool('showUndeadNames','showUndeadNames'); }
@@ -1000,8 +1007,9 @@ function applySettings(s) {
 function handleResetSettings() {
     clearSettings(getSettingsKey());
     progressionMode='ose'; primeRequisiteMode='user'; demihumanLimits='standard'; raceClassMode='strict';
-    healthyCharacters=false; includeLevel0HP=false; useFixedScores=false; showUndeadNames=false; hideHumanRace=false;
+    hpRollingMode='normal'; includeLevel0HP=false; useFixedScores=false; showUndeadNames=false; hideHumanRace=false;
     basicAbilityOrdering=true; wealthPct=50; acDisplayMode='aac';
+    document.querySelectorAll('input[name="hpRollingMode"]').forEach(r=>{r.checked=r.value==='normal';});
     document.querySelectorAll('input[name="acDisplayMode"]').forEach(r=>{r.checked=r.value==='aac';});
     autoGenerateOnLevelChange=false; autoGenerateOnClassChange=false; autoGenerateOnLoad=false;
     document.querySelectorAll('input[name="progressionMode"]').forEach(r=>{r.checked=r.value==='ose';});
@@ -1013,7 +1021,7 @@ function handleResetSettings() {
     document.querySelectorAll('input[name="primeRequisiteMode"]').forEach(r=>{r.checked=r.value==='user';});
     document.querySelectorAll('input[name="wealthPct"]').forEach(r=>{r.checked=parseInt(r.value)===50;});
     wealthRollAsLevel1=false; noLevel0Equipment=false;
-    ['healthyCharacters','useFixedScores','showUndeadNames','hideHumanRace','openInNewTab','autoPrintInNewTab','wealthRollAsLevel1','noLevel0Equipment'].forEach(id=>{const el=document.getElementById(id);if(el)el.checked=false;});
+    ['useFixedScores','showUndeadNames','hideHumanRace','openInNewTab','autoPrintInNewTab','wealthRollAsLevel1','noLevel0Equipment'].forEach(id=>{const el=document.getElementById(id);if(el)el.checked=false;});
     ['autoGenerateOnLevelChange','autoGenerateOnClassChange','autoGenerateOnLoad'].forEach(id=>{const el=document.getElementById(id);if(el)el.checked=false;});
     const aoEl=document.getElementById('basicAbilityOrdering'); if(aoEl) aoEl.checked=true;
     ['STR','INT','WIS','DEX','CON','CHA'].forEach(a=>{const el=document.getElementById(`score${a}`);if(el)el.value=(a==='CON'?6:3);});
@@ -1035,7 +1043,7 @@ function readURLParams() {
     if (p.has('dl'))    s.demihumanLimits = p.get('dl');
     if (p.has('rcm'))   s.raceClassMode = p.get('rcm');
     if (p.has('prm'))   { const v=p.get('prm'); s.primeRequisiteMode = v==='0'?'user':v; }
-    if (p.has('hc'))    s.healthyCharacters = p.get('hc')==='1';
+    if (p.has('hpm'))   s.hpRollingMode = p.get('hpm');
     if (p.has('il'))    s.includeLevel0HP = p.get('il')==='1';
     if (p.has('un'))    s.showUndeadNames = p.get('un')==='1';
     if (p.has('hhr'))   s.hideHumanRace = p.get('hhr')==='1';
@@ -1084,9 +1092,12 @@ export function initializeEventListeners() {
     document.querySelectorAll('input[name="acDisplayMode"]').forEach(r=>{
         r.addEventListener('change',(e)=>{ acDisplayMode=e.target.value; saveCurrentSettings(); });
     });
+    // HP Rolling Mode
+    document.querySelectorAll('input[name="hpRollingMode"]').forEach(r=>{
+        r.addEventListener('change',(e)=>{ hpRollingMode=e.target.value; saveCurrentSettings(); });
+    });
     // Checkboxes
     const boolListeners = [
-        ['healthyCharacters',        v=>{ healthyCharacters=v;          }],
         ['includeLevel0HP',          v=>{ includeLevel0HP=v;            }],
         ['noLevel0Equipment',        v=>{ noLevel0Equipment=v;          }],
         ['useFixedScores',           v=>{ useFixedScores=v;             }],

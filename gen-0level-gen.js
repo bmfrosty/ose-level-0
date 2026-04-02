@@ -40,9 +40,17 @@ function pickRace(forcedRace) {
  * Roll 0-level HP: 1d4 + CON modifier (total may be < 1; caller re-rolls).
  * Humans in Advanced mode use Blessed (roll twice, take best d4).
  */
-function calcHitPoints(conModifier, race, isAdvanced) {
+function calcHitPoints(conModifier, race, isAdvanced, hpMode = 0) {
     const d4 = () => Math.floor(Math.random() * 4) + 1;
-    const roll = (race === 'Human_RACE' && isAdvanced) ? Math.max(d4(), d4()) : d4();
+    const blessed = hpMode === 1 || (race === 'Human_RACE' && isAdvanced); // hpMode=1 = Everyone Blessed
+    let roll;
+    if (blessed) {
+        roll = Math.max(d4(), d4()); // Roll twice, take best
+    } else if (hpMode === 3) {
+        do { roll = d4(); } while (roll <= 2); // Re-roll 1s and 2s
+    } else {
+        roll = d4();
+    }
     return { roll, total: roll + conModifier };
 }
 
@@ -58,7 +66,7 @@ function rollAbilityScores() {
     });
 }
 
-function passesFilters(adj, hp, { minimums, primeReqMode, healthyChars }) {
+function passesFilters(adj, hp, { minimums, primeReqMode }) {
     const s = {};
     adj.forEach(r => { s[r.ability] = r.roll; });
 
@@ -72,7 +80,6 @@ function passesFilters(adj, hp, { minimums, primeReqMode, healthyChars }) {
         if (!['STR', 'DEX', 'INT', 'WIS'].some(a => (s[a] ?? 3) >= t)) return false;
     }
 
-    if (healthyChars && hp.total < 2) return false;
     return true;
 }
 
@@ -86,7 +93,6 @@ function passesFilters(adj, hp, { minimums, primeReqMode, healthyChars }) {
  * @param {boolean} [opts.isGygar=true]             Smoothified attack-bonus style
  * @param {Object}  [opts.minimums]                 { STR,DEX,CON,INT,WIS,CHA } minimum scores
  * @param {string}  [opts.primeReqMode='user']      'user' | '9' | '13'
- * @param {boolean} [opts.healthyChars=false]       Require HP ≥ 2
  * @param {Object}  [opts.fixedScores=null]         If set, use exact scores instead of rolling
  * @param {string}  [opts.fixedName='']             If non-empty, use this name instead of a random one
  * @returns {Promise<Object>} Character data
@@ -99,7 +105,7 @@ export async function generateZeroLevelCharacter(opts = {}) {
         isGygar = true,
         minimums = { STR:3, DEX:3, CON:3, INT:3, WIS:3, CHA:3 },
         primeReqMode = 'user',
-        healthyChars = false,
+        hpMode = 0,
         fixedScores = null,
         fixedName = '',
         fixedAdjustments = null,  // { STR,DEX,CON,INT,WIS,CHA } overrides racial adjustments (edit panel)
@@ -133,7 +139,7 @@ export async function generateZeroLevelCharacter(opts = {}) {
             adj = applyRaceAdjustments(raw, race, isAdvanced, humanRacialAbilities);
         }
         const conMod = adj.find(r => r.ability === 'CON').modifier;
-        hp = calcHitPoints(conMod, race, isAdvanced);
+        hp = calcHitPoints(conMod, race, isAdvanced, hpMode);
         if (hp.total < 1) hp = { roll: 1, total: 1 }; // floor at 1 HP
     } else {
         // Reroll loop — exit when all filters pass
@@ -146,10 +152,10 @@ export async function generateZeroLevelCharacter(opts = {}) {
             if (!meetsRaceMinimums(adj, race, isAdvanced)) continue;
 
             const conMod = adj.find(r => r.ability === 'CON').modifier;
-            hp = calcHitPoints(conMod, race, isAdvanced);
+            hp = calcHitPoints(conMod, race, isAdvanced, hpMode);
             if (hp.total < 1) continue;
 
-            if (passesFilters(adj, hp, { minimums, primeReqMode, healthyChars })) break;
+            if (passesFilters(adj, hp, { minimums, primeReqMode })) break;
         }
     }
 

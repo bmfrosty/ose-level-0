@@ -40,6 +40,8 @@
  *                     regardless of il.  hr[1]=L1 HP, hr[2]=L2 HP, etc.
  * hd      number[]    Die sides per entry (matches hr[]).  hd[0]=4 (1d4 for L0).
  * il      0|1         includeLevel0HP — if 1, hr[0] is counted in h; if 0, not counted
+ * hm      0|1|2       HP rolling mode: omit/0=normal random, 1=blessed (roll twice take
+ *                     best), 2=5e style (max at L1, average die at L2+), 3=re-roll 1s and 2s.
  *
  * ── Equipment ─────────────────────────────────────────────────────────────────
  * ar      string|null Armor name             (lookup-table compressed)
@@ -52,7 +54,8 @@
  * ── Generation options (preserved for level-up / regeneration) ────────────────
  * rcm     2-char code Race/class mode (Advanced only): ST SH TE AL
  *                       ST=strict, SH=strict+human, TE=traditional-extended, AL=allow-all
- * hc      0|1         healthyCharacters — re-roll HP results that would be < 2 (level 1)
+ * bl      0|1         Basic mode: character has human racial abilities (Blessed, Decisiveness,
+ *                     Leadership displayed on sheet).  Does NOT encode HP rolling mode (see hm).
  * wp      number      wealthPct — starting gold % of XP-for-level for level 2+ chars (0–100)
  * prm     0|9|13      primeRequisiteMode — 0=user choice, 9=require ≥9, 13=require ≥13
  * un      0|1         showUndeadNames — show monster names in Turn Undead table
@@ -381,8 +384,11 @@ export function buildOptionsLine(cp) {
         parts.push(cp.dl ? 'Extended Levels' : 'Standard Level Limits');
     }
 
-    // HP-affecting options — always show
-    parts.push(cp.hc ? 'Healthy Characters' : 'Standard HP');
+    // HP rolling mode
+    if (cp.hm === 2)      parts.push('5e HP (max L1 / avg L2+)');
+    else if (cp.hm === 1) parts.push('Blessed HP');
+    if (cp.hm === 3)      parts.push('Re-roll 1s and 2s');
+
 
     // L0 HP inclusion — always show for level 1+ characters
     if (lvl >= 1) parts.push(cp.il ? 'L0 HP: Yes' : 'L0 HP: No');

@@ -59,8 +59,8 @@ export function parseHitDice(hitDiceString) {
  * @param {number} options.conModifier - CON modifier
  * @param {Object} options.classData - Class data module (OSE or Gygar)
  * @param {boolean} [options.includeLevel0HP=false] - Whether to include level 0 HP
- * @param {boolean} [options.healthyCharacters=false] - Whether Healthy Characters is enabled
- * @param {boolean} [options.blessed=false] - Whether character has Blessed ability (roll twice, take best)
+ * @param {number} [options.hpMode=0] - HP rolling mode: 0=normal, 1=blessed, 2=5e, 3=re-roll 1s and 2s (all levels)
+ * @param {number} [options.hpMode=0] - HP rolling mode: 0=normal, 1=blessed (roll twice take best), 2=5e (max at L1, average at L2+)
  * @param {number[]|null} [options.fixedRolls=null] - If provided, use these per-entry HP values instead of rolling
  * @returns {{ max: number, rolls: number[], dice: number[] }} HP result with per-level breakdown
  */
@@ -71,16 +71,20 @@ export function rollHitPoints(options) {
         conModifier,
         classData,
         includeLevel0HP = false,
-        healthyCharacters = false,
-        blessed = false,
+        hpMode = 0,         // 0=normal, 1=blessed, 2=5e, 3=re-roll 1s and 2s
         fixedRolls = null   // array of per-entry HP; if set, skip random rolling
     } = options;
 
-    if (blessed) console.log('[HP Roll] ✨ Blessed: rolling each die TWICE, taking the best result');
+    const mode = hpMode;
 
-    // Helper: roll one die, logging both values when blessed
+    const modeLabel = ['normal', 'blessed', '5e', 'reroll12'][mode] || 'normal';
+    console.log(`[HP Roll] mode=${modeLabel}`);
+    if (mode === 1) console.log('[HP Roll] ✨ Blessed: rolling each die TWICE, taking the best result');
+    if (mode === 2) console.log('[HP Roll] 🎲 5e: max at level 1, average at level 2+');
+
+    // Helper: roll one die (used for normal and blessed modes only; 5e is deterministic)
     const rollDie = (sides, label) => {
-        if (blessed) {
+        if (mode === 1) {
             const a = rollSingleDie(sides);
             const b = rollSingleDie(sides);
             const best = Math.max(a, b);
@@ -108,12 +112,13 @@ export function rollHitPoints(options) {
             console.log(`  L0${includeLevel0HP ? '' : ' (bg only)'}: fixed → ${l0HP}`);
         } else {
             // L0 is NEVER blessed — it determines background occupation
+            let l0Die;
             do {
-                const die = rollSingleDie(4);
+                l0Die = rollSingleDie(4);
                 const lbl = includeLevel0HP ? 'L0' : 'L0 (bg only)';
-                console.log(`  ${lbl}: 1d4 → ${die} (unblessed — background selection roll)`);
-                l0HP = Math.max(1, die + conModifier);
-            } while (healthyCharacters && includeLevel0HP && l0HP < 2);
+                console.log(`  ${lbl}: 1d4 → ${l0Die} (unblessed — background selection roll)`);
+                l0HP = Math.max(1, l0Die + conModifier);
+            } while (mode === 3 && includeLevel0HP && l0Die <= 2);
         }
         rolls.push(l0HP);                       // always at index 0
         if (includeLevel0HP) totalHP += l0HP;   // only counts when requested
@@ -134,30 +139,32 @@ export function rollHitPoints(options) {
         if (fixedRolls && fixedRolls[rollsIndex] !== undefined) {
             levelHP = fixedRolls[rollsIndex];
             console.log(`  L${lvl}: fixed → ${levelHP}`);
+        } else if (hitDice.noConModifier) {
+            // Past max HD: fixed increment — compute delta vs previous level's bonus.
+            // e.g. "9d8+8*" (L13) minus "9d8+6*" (L12) = +2 HP, no die roll, no CON mod.
+            const prevHd = parseHitDice(classData.getHitDice(className, lvl - 1));
+            levelHP = Math.max(1, hitDice.bonus - prevHd.bonus);
+        } else if (mode === 2) {
+            // 5e mode: max die at level 1, average (floor(sides/2)+1) at level 2+
+            // Formula: d4→3, d6→4, d8→5, d10→6, d12→7 (matches 5e fixed HP values exactly)
+            const dieVal = lvl === 1 ? hitDice.sides : Math.floor(hitDice.sides / 2) + 1;
+            levelHP = Math.max(1, hitDice.bonus + dieVal + conModifier);
+            console.log(`  L${lvl}: 5e ${lvl===1?'max':'avg'} 1d${hitDice.sides} → ${dieVal} + conMod(${conModifier}) = ${levelHP}`);
         } else {
+            // Normal or blessed: random rolling with do-while for L1 floor + re-roll 1s and 2s
+            let dieRoll;
             do {
-                let dieRoll, hpBonus;
-                if (hitDice.noConModifier) {
-                    // Past max HD: fixed increment — compute delta vs previous level's bonus.
-                    // e.g. "9d8+8*" (L13) minus "9d8+6*" (L12) = +2 HP, no die roll, no CON mod.
-                    dieRoll = 0;
-                    const prevHd = parseHitDice(classData.getHitDice(className, lvl - 1));
-                    hpBonus = hitDice.bonus - prevHd.bonus;
-                } else {
-                    dieRoll = hitDice.sides > 0 ? rollDie(hitDice.sides, `L${lvl}`) : 0;
-                    hpBonus = hitDice.bonus;
-                }
-                levelHP = hpBonus + dieRoll;
-                if (!hitDice.noConModifier) levelHP += conModifier;
+                dieRoll = hitDice.sides > 0 ? rollDie(hitDice.sides, `L${lvl}`) : 0;
+                levelHP = hitDice.bonus + dieRoll + conModifier;
                 if (levelHP < 1) levelHP = 1;
             // L1 floor: when L0 HP is NOT included in the total, the character's
             // level-1 HP IS their total HP — it must be at least as high as their
             // level-0 HP so they can't lose HP on gaining their first class level.
-            // Also reroll for Healthy Characters (min 2 HP at L1).
-            } while (lvl === 1 && !includeLevel0HP && (
-                levelHP < backgroundHP ||
-                (healthyCharacters && levelHP < 2)
-            ));
+            // Re-roll 1s and 2s: if the raw die roll was 1 or 2, re-roll (all levels).
+            } while (
+                (lvl === 1 && !includeLevel0HP && levelHP < backgroundHP) ||
+                (mode === 3 && dieRoll <= 2)
+            );
         }
 
         rolls.push(levelHP);
@@ -165,6 +172,6 @@ export function rollHitPoints(options) {
     }
 
     const label = rolls.map((r,i) => `[${i===0 ? 'L0' : 'L'+i}:${r}]`).join(' ');
-    console.log(`HP total: ${label} = ${totalHP}  (bg L0 hp=${backgroundHP}${blessed?' ✨blessed':''})`);
+    console.log(`HP total: ${label} = ${totalHP}  (bg L0 hp=${backgroundHP}${mode===1?' ✨blessed':mode===2?' 🎲5e':''})`);
     return { max: totalHP, rolls, dice, backgroundHP };
 }

@@ -330,7 +330,6 @@ function buildGeneratorURL(cp) {
     if (cp.prm) p.set('prm', String(cp.prm));
 
     // Boolean generator options
-    if (cp.hc)        p.set('hc', '1');
     if (cp.il)        p.set('il', '1');
     if (cp.un)        p.set('un', '1');
     if (isAdv && cp.hhr) p.set('hhr', '1');
@@ -340,6 +339,11 @@ function buildGeneratorURL(cp) {
 
     // Wealth percent (default 50 → omit)
     if (cp.wp != null && cp.wp !== 50) p.set('wp', String(cp.wp));
+
+    // HP mode → hpm generator URL param (0=normal=omit, 1=blessed, 2=5e, 3=reroll12)
+    if (cp.hm === 1) p.set('hpm', 'blessed');
+    else if (cp.hm === 2) p.set('hpm', '5e');
+    else if (cp.hm === 3) p.set('hpm', 'healthy');
 
     // Character name (pre-fills the name field)
     if (cp.n) p.set('n', cp.n);
@@ -718,7 +722,9 @@ function initEditPanel(decoded) {
             let newHpDice  = [...(decoded.hd || [])];
 
             if (newLevel > curLevel) {
-                const l0HP = newHpRolls[0] || 1;
+                const l0HP  = newHpRolls[0] || 1;
+                // hm: 0=normal, 1=blessed, 2=5e, 3=re-roll 1s and 2s
+                const hpMode = decoded.hm || 0;
                 for (let lvl = curLevel + 1; lvl <= newLevel; lvl++) {
                     const hdStr = getHdStr(className, lvl);
                     const hd    = parseHitDice(hdStr);
@@ -728,13 +734,26 @@ function initEditPanel(decoded) {
                         lvlHP = Math.max(1, hd.bonus - prevHd.bonus);
                     } else {
                         const minHP = (lvl === 1 && !decoded.il) ? l0HP : 1;
-                        if (decoded.bl) {
+                        if (hpMode === 2) {
+                            // 5e: max die at L1, average (floor(sides/2)+1) at L2+
+                            const dieVal = (lvl === 1) ? hd.sides : Math.floor(hd.sides / 2) + 1;
+                            lvlHP = Math.max(minHP, dieVal + conMod);
+                        } else if (hpMode === 1) {
+                            // Blessed: roll twice, take best
                             do {
                                 const r1 = Math.max(1, Math.floor(Math.random() * hd.sides) + 1 + conMod);
                                 const r2 = Math.max(1, Math.floor(Math.random() * hd.sides) + 1 + conMod);
                                 lvlHP = Math.max(r1, r2);
                             } while (lvlHP < minHP);
+                        } else if (hpMode === 3) {
+                            // Re-roll 1s and 2s: re-roll die if it shows 1 or 2
+                            let dieRoll;
+                            do {
+                                dieRoll = Math.floor(Math.random() * hd.sides) + 1;
+                            } while (dieRoll <= 2);
+                            lvlHP = Math.max(minHP, dieRoll + conMod);
                         } else {
+                            // Normal: single roll
                             do {
                                 lvlHP = Math.max(1, Math.floor(Math.random() * hd.sides) + 1 + conMod);
                             } while (lvlHP < minHP);

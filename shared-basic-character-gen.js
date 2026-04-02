@@ -43,10 +43,9 @@ export {
  * @param {number} conModifier - CON modifier
  * @param {Object} classData - Class data module (OSE or Gygar)
  * @param {boolean} includeLevel0HP - Whether to include level 0 HP
- * @param {boolean} healthyCharacters - Whether Healthy Characters is enabled
  * @returns {number} Total HP
  */
-export function rollHitPoints(className, level, conModifier, classData, includeLevel0HP, healthyCharacters, blessed = false, fixedRolls = null) {
+export function rollHitPoints(className, level, conModifier, classData, includeLevel0HP, hpMode = 0, fixedRolls = null) {
     return sharedRollHitPoints({
         fixedRolls,
         className,
@@ -54,8 +53,7 @@ export function rollHitPoints(className, level, conModifier, classData, includeL
         conModifier,
         classData,
         includeLevel0HP,
-        healthyCharacters,
-        blessed
+        hpMode
     });
 }
 

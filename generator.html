@@ -362,11 +362,32 @@
                     </span>
                 </label>
             </div>
-            <div class="checkbox-option">
-                <label>
-                    <input type="checkbox" id="healthyCharacters">
-                    <span><strong>Healthy Characters</strong> - Re-roll level 1 HP results of 1 (minimum 2 HP at level 1)</span>
-                </label>
+            <div style="margin-top: 8px; margin-bottom: 8px;">
+                <strong>HP Rolling Style:</strong>
+                <div class="radio-option">
+                    <label>
+                        <input type="radio" name="hpRollingMode" value="normal" checked>
+                        <span><strong>Normal</strong> &mdash; random rolls per level</span>
+                    </label>
+                </div>
+                <div class="radio-option">
+                    <label>
+                        <input type="radio" name="hpRollingMode" value="healthy">
+                        <span><strong>Re-roll 1s and 2s</strong> &mdash; random rolls; re-roll any die that shows 1 or 2 (all levels)</span>
+                    </label>
+                </div>
+                <div class="radio-option">
+                    <label>
+                        <input type="radio" name="hpRollingMode" value="blessed">
+                        <span><strong>Everyone is Blessed</strong> &mdash; roll HP twice each level, take the best result</span>
+                    </label>
+                </div>
+                <div class="radio-option">
+                    <label>
+                        <input type="radio" name="hpRollingMode" value="5e">
+                        <span><strong>5e HP Style</strong> &mdash; max die at level 1 (d6=6, d8=8&hellip;), average die at level 2+ (d6=4, d8=5&hellip;)</span>
+                    </label>
+                </div>
             </div>
             <div class="checkbox-option">
                 <label>
