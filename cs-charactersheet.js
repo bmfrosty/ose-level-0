@@ -573,6 +573,19 @@ function initEditPanel(decoded) {
             qr: document.getElementById('ep-qr').checked    ? 1 : 0,
             ap: 0 };
         if (newAdm) newCp.adm = newAdm; else delete newCp.adm;
+
+        // Clear equipment: null out weapon, armor, shield, items, and gold;
+        // reset AC to 10 (unarmored). Attack bonus, melee/ranged modifiers, and
+        // thief skills are computed from class/level/scores and remain untouched.
+        if (document.getElementById('ep-clear-equipment')?.checked) {
+            newCp.w  = null;   // weapon
+            newCp.ar = null;   // armor
+            newCp.sh = 0;      // shield
+            newCp.it = [];     // items (includes helmet, gear, etc.)
+            newCp.g  = 0;      // gold remaining
+            newCp.ac = 10;     // reset AC to unarmored base
+        }
+
         const encoded = encodeCompactParams(newCp);
         const b64url  = await compressToBase64Url(JSON.stringify(encoded));
         window.location.href = `charactersheet.html?d=${b64url}`;
