@@ -1,79 +1,137 @@
-# Module Dependency Flowchart
+# Module Dependency Flowcharts
 
-HTML pages on the left, their JS dependencies flowing right.  
 Solid arrows = static `import`. Dashed arrows = dynamic `await import(...)`.
+
+**Color key:**
+- 🟩 Green = used by **both** charactersheet.js and generator-ui.js
+- 🟥 Red = used **only** by generator-ui.js
+- 🟨 Yellow = `charactersheet.js` node in the generator diagram (not expanded there)
+- No color = the root entry-point module
+
+> Note: every module that `charactersheet.js` uses is *also* directly imported by `generator-ui.js`,
+> so there are no charactersheet-only (yellow) leaf modules.
+
+---
+
+## charactersheet.js
 
 ```mermaid
 flowchart LR
-    %% ── HTML Entry Points ────────────────────────────────────────────────────
-    subgraph HTML ["HTML Pages"]
-        direction TB
-        index["index.html\n(no scripts)"]
-        generator_html["generator.html"]
-        charsheet_html["charactersheet.html"]
-        classes_html["classes.html"]
-    end
+    classDef shared fill:#90EE90,stroke:#228B22,color:#000
 
-    %% ── Primary Controllers ──────────────────────────────────────────────────
-    subgraph Controllers ["Primary Controllers"]
-        genui["generator-ui.js"]
-        csjs["charactersheet.js"]
-    end
+    csjs["charactersheet.js"]
 
-    %% ── Character Generation ─────────────────────────────────────────────────
-    subgraph CharGen ["Character Generation"]
-        basicgen["basic-character-gen.js"]
-        advgen["advanced-character-gen.js"]
-        zgen["shared-0level-gen.js"]
-    end
+    charsheetjs["shared-character-sheet.js"]
+    sheetbuilder["shared-sheet-builder.js"]
+    compact["shared-compact-codes.js"]
+    wa["weapons-and-armor.js"]
+    abilsc["shared-ability-scores.js"]
+    modeff["shared-modifier-effects.js"]
+    cdshared["class-data-shared.js"]
+    cdose["class-data-ose.js"]
+    cdgygar["class-data-gygar.js"]
+    cdll["class-data-ll.js"]
+    racial["shared-racial-abilities.js"]
+    racenames["shared-race-names.js"]
+    advutils["advanced-utils.js"]
+    advgen["advanced-character-gen.js"]
+    basicgen["basic-character-gen.js"]
+    basicutils["basic-utils.js"]
+    hp["shared-hit-points.js"]
+    clsprog["shared-class-progression.js"]
+    char["shared-character.js"]
 
-    %% ── Utilities ────────────────────────────────────────────────────────────
-    subgraph Utils ["Utilities"]
-        basicutils["basic-utils.js"]
-        advutils["advanced-utils.js"]
-        clsprog["shared-class-progression.js"]
-        char["shared-character.js"]
-        hp["shared-hit-points.js"]
-        racadj["shared-race-adjustments.js"]
-        racial["shared-racial-abilities.js"]
-        racenames["shared-race-names.js"]
-        eq["shared-equipment.js"]
-        settings["shared-settings.js"]
-        names["shared-names.js"]
-        bg["shared-backgrounds.js"]
-        modeff["shared-modifier-effects.js"]
-        abilsc["shared-ability-scores.js"]
-    end
+    class charsheetjs,sheetbuilder,compact,wa,abilsc,modeff,cdshared,cdose,cdgygar,cdll,racial,racenames,advutils,advgen,basicgen,basicutils,hp,clsprog,char shared
 
-    %% ── Sheet Rendering ──────────────────────────────────────────────────────
-    subgraph SheetRender ["Sheet Rendering"]
-        sheetbuilder["shared-sheet-builder.js"]
-        charsheetjs["shared-character-sheet.js"]
-        compact["shared-compact-codes.js"]
-        wa["weapons-and-armor.js"]
-    end
+    %% static imports
+    csjs --> charsheetjs
+    csjs --> compact
+    csjs --> sheetbuilder
 
-    %% ── Class Data ───────────────────────────────────────────────────────────
-    subgraph ClassData ["Class Data"]
-        cdshared["class-data-shared.js"]
-        cdose["class-data-ose.js"]
-        cdgygar["class-data-gygar.js"]
-        cdll["class-data-ll.js"]
-    end
+    %% dynamic imports
+    csjs -.->|dyn| abilsc
+    csjs -.->|dyn| modeff
+    csjs -.->|dyn| cdshared
+    csjs -.->|dyn one-of| cdose
+    csjs -.->|dyn one-of| cdgygar
+    csjs -.->|dyn one-of| cdll
+    csjs -.->|dyn| racial
+    csjs -.->|dyn| advutils
+    csjs -.->|dyn| advgen
+    csjs -.->|dyn| basicgen
+    csjs -.->|dyn| basicutils
+    csjs -.->|dyn| hp
 
-    %% ── Dead Code ────────────────────────────────────────────────────────────
-    subgraph Dead ["⚠️ Dead Code — not reachable from any HTML"]
-        raceadj_dead["race-adjustments.js\n(never imported by anything)"]
-        testgygar["test-gygar-data.js\n(no HTML entry point)"]
-    end
+    charsheetjs --> compact
+    charsheetjs --> wa
 
-    %% ── HTML → first-level JS ────────────────────────────────────────────────
-    generator_html --> genui
-    charsheet_html --> csjs
-    classes_html   --> cdgygar
-    classes_html   --> cdshared
+    cdose   --> cdshared
+    cdgygar --> cdshared
 
-    %% ── generator-ui.js static imports ──────────────────────────────────────
+    racial --> racenames
+
+    advgen --> abilsc
+    advgen --> hp
+    advgen --> clsprog
+    advgen --> racial
+    advgen --> char
+    advgen --> advutils
+
+    basicgen --> abilsc
+    basicgen --> hp
+    basicgen --> clsprog
+    basicgen --> char
+
+    advutils  --> abilsc
+    basicutils --> abilsc
+    clsprog   --> abilsc
+    char      --> abilsc
+    hp        --> abilsc
+```
+
+---
+
+## generator-ui.js
+
+```mermaid
+flowchart LR
+    classDef shared  fill:#90EE90,stroke:#228B22,color:#000
+    classDef genOnly fill:#ff6b6b,stroke:#c00,color:#fff
+
+    genui["generator-ui.js"]
+
+    csjs["charactersheet.js"]
+    basicgen["basic-character-gen.js"]
+    advgen["advanced-character-gen.js"]
+    zgen["shared-0level-gen.js"]
+    basicutils["basic-utils.js"]
+    advutils["advanced-utils.js"]
+    clsprog["shared-class-progression.js"]
+    char["shared-character.js"]
+    hp["shared-hit-points.js"]
+    racadj["shared-race-adjustments.js"]
+    racial["shared-racial-abilities.js"]
+    racenames["shared-race-names.js"]
+    eq["shared-equipment.js"]
+    settings["shared-settings.js"]
+    names["shared-names.js"]
+    bg["shared-backgrounds.js"]
+    modeff["shared-modifier-effects.js"]
+    abilsc["shared-ability-scores.js"]
+    sheetbuilder["shared-sheet-builder.js"]
+    charsheetjs["shared-character-sheet.js"]
+    compact["shared-compact-codes.js"]
+    wa["weapons-and-armor.js"]
+    cdshared["class-data-shared.js"]
+    cdose["class-data-ose.js"]
+    cdgygar["class-data-gygar.js"]
+    cdll["class-data-ll.js"]
+
+    class basicgen,advgen,basicutils,advutils,clsprog,char,hp,racial,racenames,modeff,abilsc,sheetbuilder,charsheetjs,compact,wa,cdshared,cdose,cdgygar,cdll shared
+    class zgen,racadj,eq,settings,names,bg genOnly
+    style csjs fill:#ffe066,stroke:#b8860b,color:#333
+
+    %% generator-ui.js static imports
     genui --> cdose
     genui --> cdgygar
     genui --> cdll
@@ -95,33 +153,18 @@ flowchart LR
     genui --> csjs
     genui --> sheetbuilder
 
-    %% ── charactersheet.js static imports ────────────────────────────────────
-    csjs --> charsheetjs
-    csjs --> compact
-    csjs --> sheetbuilder
+    %% charactersheet.js — not expanded here, see diagram above
+    charsheetjs --> compact
+    charsheetjs --> wa
 
-    %% ── charactersheet.js dynamic imports ───────────────────────────────────
-    csjs -.->|dyn| abilsc
-    csjs -.->|dyn| modeff
-    csjs -.->|dyn| cdshared
-    csjs -.->|dyn one-of| cdose
-    csjs -.->|dyn one-of| cdgygar
-    csjs -.->|dyn one-of| cdll
-    csjs -.->|dyn| racial
-    csjs -.->|dyn| advutils
-    csjs -.->|dyn| advgen
-    csjs -.->|dyn| basicgen
-    csjs -.->|dyn| basicutils
-    csjs -.->|dyn| hp
-    csjs -.->|dyn| compact
+    cdose   --> cdshared
+    cdgygar --> cdshared
 
-    %% ── basic-character-gen.js ───────────────────────────────────────────────
     basicgen --> abilsc
     basicgen --> hp
     basicgen --> clsprog
     basicgen --> char
 
-    %% ── advanced-character-gen.js ────────────────────────────────────────────
     advgen --> abilsc
     advgen --> hp
     advgen --> clsprog
@@ -129,65 +172,38 @@ flowchart LR
     advgen --> char
     advgen --> advutils
 
-    %% ── shared-0level-gen.js ─────────────────────────────────────────────────
     zgen --> abilsc
     zgen --> names
     zgen --> bg
     zgen --> racial
     zgen --> racadj
 
-    %% ── basic-utils.js / advanced-utils.js ───────────────────────────────────
     basicutils --> abilsc
     advutils   --> abilsc
+    clsprog    --> abilsc
+    char       --> abilsc
+    hp         --> abilsc
 
-    %% ── shared-class-progression.js ──────────────────────────────────────────
-    clsprog --> abilsc
-
-    %% ── shared-character.js ──────────────────────────────────────────────────
-    char --> abilsc
-
-    %% ── shared-hit-points.js ─────────────────────────────────────────────────
-    hp --> abilsc
-
-    %% ── shared-race-adjustments.js ───────────────────────────────────────────
     racadj --> racenames
     racadj --> modeff
-
-    %% ── shared-racial-abilities.js ───────────────────────────────────────────
     racial --> racenames
 
-    %% ── shared-equipment.js ──────────────────────────────────────────────────
     eq --> wa
     eq --> cdshared
-
-    %% ── shared-character-sheet.js ────────────────────────────────────────────
-    charsheetjs --> compact
-    charsheetjs --> wa
-
-    %% ── class-data-gygar.js / class-data-ose.js ──────────────────────────────
-    cdgygar --> cdshared
-    cdose   --> cdshared
-
-    %% ── Dead code internal imports (shown dashed) ────────────────────────────
-    testgygar -.-> cdgygar
-    testgygar -.-> cdshared
 ```
 
 ---
 
-## Dead Code Analysis
+## Dead Code (deleted)
 
-| File | Status | Reason |
-|------|--------|--------|
-| `race-adjustments.js` | ⚠️ **Dead** | Never imported by any JS or HTML file. `shared-race-adjustments.js` is the active version; this appears to be an old/renamed predecessor. |
-| `test-gygar-data.js` | ⚠️ **Unreachable** | Has no HTML entry point. It's a developer test script only — never loaded by a browser. Could be deleted or moved to a `test/` folder. |
-| `index.html` | ℹ️ **No scripts** | Pure static HTML landing page. Links to `generator.html` via `<a>` tags. No JS dependencies. |
+| File | Was | Action |
+|------|-----|--------|
+| `race-adjustments.js` | Never imported by any JS or HTML file — old predecessor to `shared-race-adjustments.js` | 🗑️ Deleted |
+| `test-gygar-data.js` | Developer test script with no HTML entry point | 🗑️ Deleted |
 
 ---
 
 ## Leaf Modules (no imports of their own)
-
-These are pure data/utility modules that nothing imports *from* — they only export:
 
 | File | Role |
 |------|------|
@@ -196,18 +212,9 @@ These are pure data/utility modules that nothing imports *from* — they only ex
 | `shared-modifier-effects.js` | Modifier text descriptions |
 | `shared-compact-codes.js` | URL encoding/decoding of compact params |
 | `weapons-and-armor.js` | Weapon and armor data tables |
-| `class-data-shared.js` | XP tables, HD progressions, spell slots — imported by all three class-data files |
-| `class-data-ll.js` | LL-specific class data (no imports — self-contained) |
+| `class-data-shared.js` | XP tables, HD progressions, spell slots |
+| `class-data-ll.js` | LL-specific class data (self-contained) |
 | `shared-names.js` | Random name tables |
 | `shared-backgrounds.js` | Background/occupation tables |
 | `shared-settings.js` | localStorage settings helpers |
-| `shared-sheet-builder.js` | Sheet spec builder — imported by both controllers |
-
----
-
-## Single Entry → Both Controllers
-
-`generator.html` → `generator-ui.js` → `charactersheet.js`  
-`charactersheet.html` → `charactersheet.js`
-
-Both pages ultimately use `charactersheet.js → expandCompactV2()` as the single sheet-rendering path. The generator just adds character generation and UI on top.
+| `shared-sheet-builder.js` | Sheet spec builder |
