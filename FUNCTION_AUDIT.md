@@ -210,6 +210,137 @@ Both controllers use the shared class tables. The level-up panel in C also direc
 
 ---
 
+## cs-charactersheet.js
+
+`cs-charactersheet.js` is imported by `gen-ui.js` (G) for one function, and is the entry-point module for `charactersheet.html`. It is also the module being audited as "C" throughout this document.
+
+| Export | G | C | Both | Notes |
+|--------|:-:|:-:|:----:|-------|
+| `expandCompactV2` | ✓ | | | G static — converts a cp object into a full sheet spec; G uses this instead of calling `buildSheetSpec` directly |
+| `compressToBase64Url` | | | | *(used internally by the edit/level-up panels inside cs-charactersheet.js)* |
+| `renderFromCompactParams` | | | | *(entry point used by charactersheet.html; not imported by gen-ui.js)* |
+| `initCharacterSheet` | | | | *(called by the `<script>` in charactersheet.html; not imported by gen-ui.js)* |
+
+---
+
+## gen-0level-gen.js
+
+Generator-only module (prefix `gen-`). Neither cs-charactersheet.js nor any shared-* module imports from it.
+
+| Export | G | C | Both | Notes |
+|--------|:-:|:-:|:----:|-------|
+| `generateZeroLevelCharacter` | ✓ | | | G static — async 0-level character generation |
+| `RACE_TO_CODE` | | | | *(used internally; not imported by either controller)* |
+
+---
+
+## gen-backgrounds.js
+
+Generator-only module. Used by gen-ui.js and internally by gen-0level-gen.js.
+
+| Export | G | C | Both | Notes |
+|--------|:-:|:-:|:----:|-------|
+| `getRandomBackground` | ✓ | | | G static — picks a random background for generated characters |
+| `getAllBackgroundTables` | ✓ | | | G static — populates the 0-level occupation dropdown |
+| `getBackgroundByProfession` | | | | *(used internally by gen-0level-gen)* |
+| `getBackgroundByIndex` | | | | *(not imported by either controller)* |
+| `getBackgroundTable` | | | | *(not imported by either controller)* |
+
+---
+
+## gen-equipment.js
+
+Generator-only module. Imports from `shared-weapons-and-armor.js` and `shared-class-data-shared.js`.
+
+| Export | G | C | Both | Notes |
+|--------|:-:|:-:|:----:|-------|
+| `purchaseEquipment` | ✓ | | | G static — buys starting gear for the generated character |
+| `DUNGEONEERING_BUNDLE` | | | | *(not imported by either controller; used internally)* |
+| `CLASS_SPECIFIC_GEAR` | | | | *(not imported by either controller; used internally)* |
+| `WEAPON_PRIORITY` | | | | *(not imported by either controller; used internally)* |
+| `ARMOR_PRIORITY` | | | | *(not imported by either controller; used internally)* |
+
+---
+
+## gen-names.js
+
+Generator-only module.
+
+| Export | G | C | Both | Notes |
+|--------|:-:|:-:|:----:|-------|
+| `getRandomName` | ✓ | | | G static — picks a random name for the character and the random-name button |
+| `getNameTable` | | | | *(not imported by either controller)* |
+| `getAvailableRaces` | | | | *(not imported by either controller)* |
+
+`getRandomName` is also used internally by gen-0level-gen.js.
+
+---
+
+## gen-race-adjustments.js
+
+Generator-only module. Used internally by gen-0level-gen.js; neither controller imports it directly.
+
+| Export | G | C | Both | Notes |
+|--------|:-:|:-:|:----:|-------|
+| `applyRaceAdjustments` | | | | *(used internally by gen-0level-gen)* |
+| `meetsRaceMinimums` | | | | *(used internally by gen-0level-gen)* |
+| `getRaceAdjustments` | | | | *(used internally by gen-0level-gen)* |
+| `getRaceMinimums` | | | | *(used internally by gen-0level-gen)* |
+| `RACE_ADJUSTMENTS` | | | | *(data table; not imported by either controller)* |
+| `RACE_MINIMUMS` | | | | *(data table; not imported by either controller)* |
+
+---
+
+## gen-settings.js
+
+Generator-only module. Wraps `localStorage`.
+
+| Export | G | C | Both | Notes |
+|--------|:-:|:-:|:----:|-------|
+| `saveSettings` | ✓ | | | G static |
+| `loadSettings` | ✓ | | | G static |
+| `clearSettings` | ✓ | | | G static |
+
+---
+
+## shared-weapons-and-armor.js
+
+Leaf module (no imports of its own). Neither controller imports it directly.
+
+| Export | G | C | Both | Notes |
+|--------|:-:|:-:|:----:|-------|
+| `WEAPONS` | | | | *(imported by gen-equipment.js and shared-character-sheet.js internally)* |
+| `ARMOR` | | | | *(imported by gen-equipment.js internally)* |
+| `ADVENTURING_GEAR` | | | | *(imported by gen-equipment.js internally)* |
+| `AMMUNITION` | | | | *(data table; not currently imported by any controller or gen-* module)* |
+| `WEAPON_QUALITIES` | | | | *(data table; not currently imported by any controller or gen-* module)* |
+| `getAllWeaponNames` / `getAllArmorNames` / etc. | | | | *(utility fns; not currently imported by any controller)* |
+
+---
+
+## shared-class-progression.js
+
+Internal module. Neither controller imports from it directly — it is used inside `shared-basic-character-gen.js` and `shared-advanced-character-gen.js`.
+
+| Export | G | C | Both | Notes |
+|--------|:-:|:-:|:----:|-------|
+| `getClassProgressionData` | | | | *(used internally by basic/advanced-character-gen; controllers call those wrappers instead)* |
+| `getClassFeatures` | | | | *(used internally by basic/advanced-character-gen)* |
+| `getBasicModeRacialAbilities` | | | | *(used internally by shared-basic-character-gen)* |
+
+---
+
+## shared-race-names.js
+
+Leaf module (no imports of its own). Neither controller imports it directly.
+
+| Export | G | C | Both | Notes |
+|--------|:-:|:-:|:----:|-------|
+| `LEGACY_RACE_NAMES` | | | | *(used internally by shared-racial-abilities.js and gen-race-adjustments.js)* |
+| `normalizeRaceName` | | | | *(used internally by shared-racial-abilities.js and gen-race-adjustments.js)* |
+
+---
+
 ## legacy-utils.js
 
 Archive of orphaned exports — nothing currently imports from this module. Preserved for potential future use or external consumers.
