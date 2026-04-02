@@ -794,11 +794,26 @@ export async function renderFromCompactParams(cp, contentEl, opts = {}) {
     if (sheet.showQRCode !== false) {
         const qrImg  = document.getElementById('ose-qr-img');
         const qrLink = document.getElementById('ose-qr-link');
-        if (qrLink) qrLink.href = window.location.href;
+
+        // The QR code is meant for sharing / scanning on another device, so it
+        // must never trigger auto-print.  If the current URL has ap:1 embedded,
+        // re-encode a copy with ap:0 so the scanned URL just shows the sheet.
+        let shareUrl = window.location.href;
+        if (cp && cp.ap) {
+            try {
+                const { encodeCompactParams } = await import('./cs-compact-codes.js');
+                const shareCp = { ...cp, ap: 0 };
+                const encoded = encodeCompactParams(shareCp);
+                const b64url  = await compressToBase64Url(JSON.stringify(encoded));
+                shareUrl = `${window.location.origin}${window.location.pathname}?d=${b64url}`;
+            } catch (e) { /* fall back to current URL on any error */ }
+        }
+
+        if (qrLink) qrLink.href = shareUrl;
         if (qrImg) {
             try {
                 const { default: QRCode } = await import('https://cdn.jsdelivr.net/npm/qrcode@1.5.3/+esm');
-                const dataUrl = await QRCode.toDataURL(window.location.href, {
+                const dataUrl = await QRCode.toDataURL(shareUrl, {
                     margin: 1, color: { dark:'#000000ff', light:'#ffffffff' }
                 });
                 qrImg.src = dataUrl;
