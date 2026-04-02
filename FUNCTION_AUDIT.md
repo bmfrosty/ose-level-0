@@ -1,8 +1,8 @@
 # Function-Level Import Audit
 
-Which exports from each shared module are used by `gen-ui.js` vs `cs-charactersheet.js`.
+Which exports from each shared module are used by `gen-ui.js` vs `cs-sheet-page.js`.
 
-Legend: **G** = gen-ui.js only · **C** = cs-charactersheet.js only · **Both** = used by both · *(internal)* = not imported by either controller directly
+Legend: **G** = gen-ui.js only · **C** = cs-sheet-page.js only · **Both** = used by both · *(internal)* = not imported by either controller directly
 
 Static imports are noted where relevant; C's dynamic imports are marked **(dyn)**.
 
@@ -27,7 +27,7 @@ Static imports are noted where relevant; C's dynamic imports are marked **(dyn)*
 
 ## cs-modifier-display.js
 
-CS-only leaf module (no imports of its own). Dynamically imported by `cs-charactersheet.js`.
+CS-only leaf module (no imports of its own). Dynamically imported by `cs-sheet-page.js`.
 
 | Export | G | C | Both | Notes |
 |--------|:-:|:-:|:----:|-------|
@@ -113,9 +113,9 @@ CS-only leaf module (no imports of its own). Dynamically imported by `cs-charact
 
 ---
 
-## cs-character-sheet.js
+## cs-sheet-renderer.js
 
-CS-only module (cs-* prefix). Both controllers use it but for different purposes.
+CS-only leaf module (cs-* prefix). Both controllers use it but for different purposes.
 
 | Export | G | C | Both | Notes |
 |--------|:-:|:-:|:----:|-------|
@@ -123,6 +123,19 @@ CS-only module (cs-* prefix). Both controllers use it but for different purposes
 | `renderCharacterSheetHTML` | | ✓ | | C static — returns HTML string; used inside `renderFromCompactParams` |
 
 Each controller uses a completely different function from this module. Named `cs-*` because the full sheet rendering is character-sheet-page logic; gen-ui.js only imports it for the inline preview feature.
+
+---
+
+## cs-url-codec.js
+
+CS-only leaf module (no imports of its own). Imported statically by both `cs-sheet-page.js` and `cs-sheet-renderer.js`.
+
+| Export | G | C | Both | Notes |
+|--------|:-:|:-:|:----:|-------|
+| `compressToBase64Url` | | ✓ | | C static — encodes sheet state into a URL-safe Base64 string |
+| `decompressFromBase64Url` | | ✓ | | C static — decodes URL-safe Base64 back to sheet state |
+
+G does not import from `cs-url-codec.js` directly.
 
 ---
 
@@ -146,7 +159,7 @@ G does not import from `cs-compact-codes.js` directly.
 
 ## shared-sheet-builder.js
 
-Encoding constants used by **both** controllers. Sheet-spec assembly and hit-die tables (`buildSheetSpec`, `CLASS_HD`, `CODE_TO_PROG`) were single-parent and have been **inlined directly into `cs-charactersheet.js`**.
+Encoding constants used by **both** controllers. Sheet-spec assembly and hit-die tables (`buildSheetSpec`, `CLASS_HD`, `CODE_TO_PROG`) were single-parent and have been **inlined directly into `cs-sheet-page.js`**.
 
 | Export | G | C | Both | Notes |
 |--------|:-:|:-:|:----:|-------|
@@ -205,7 +218,7 @@ G does not directly import from `shared-hit-points.js` — HP rolling goes throu
 | G | `import * as ClassDataOSE` / `ClassDataGygar` / `ClassDataLL` (static, all three) | Entire module passed as `classData` arg to char gen functions |
 | C | `await import(prog === 'll' ? … : prog === 'ose' ? … : …)` **(dyn, one-of)** | Same — entire module passed to `createCharacter` / `createCharacterAdvanced` |
 
-Both controllers use whichever progression module matches the user's selected mode. Gen-ui.js loads all three at startup; cs-charactersheet.js loads only the one needed.
+Both controllers use whichever progression module matches the user's selected mode. Gen-ui.js loads all three at startup; cs-sheet-page.js loads only the one needed.
 
 ---
 
@@ -231,14 +244,14 @@ Both G (static `import * as ClassDataShared`) and C (dynamic `import`) use this 
 
 ---
 
-## cs-charactersheet.js
+## cs-sheet-page.js
 
-`cs-charactersheet.js` is imported by `gen-ui.js` (G) for one function, and is the entry-point module for `charactersheet.html`. It is also the module being audited as "C" throughout this document.
+`cs-sheet-page.js` is the entry-point module for `charactersheet.html`. It imports `expandCompactV2` which is used by gen-ui.js. It is the module being audited as "C" throughout this document.
 
 | Export | G | C | Both | Notes |
 |--------|:-:|:-:|:----:|-------|
 | `expandCompactV2` | ✓ | | | G static — converts a cp object into a full sheet spec; G uses this instead of calling `buildSheetSpec` directly |
-| `compressToBase64Url` | | | | *(used internally by the edit/level-up panels inside cs-charactersheet.js)* |
+| `compressToBase64Url` | | | | *(used internally by the edit/level-up panels inside cs-sheet-page.js)* |
 | `renderFromCompactParams` | | | | *(entry point used by charactersheet.html; not imported by gen-ui.js)* |
 | `initCharacterSheet` | | | | *(called by the `<script>` in charactersheet.html; not imported by gen-ui.js)* |
 
@@ -246,7 +259,7 @@ Both G (static `import * as ClassDataShared`) and C (dynamic `import`) use this 
 
 ## gen-0level-gen.js
 
-Generator-only module (prefix `gen-`). Neither cs-charactersheet.js nor any shared-* module imports from it.
+Generator-only module (prefix `gen-`). Neither cs-sheet-page.js nor any shared-* module imports from it.
 
 | Export | G | C | Both | Notes |
 |--------|:-:|:-:|:----:|-------|
@@ -318,7 +331,7 @@ Leaf module (no imports of its own). Neither controller imports it directly.
 
 | Export | G | C | Both | Notes |
 |--------|:-:|:-:|:----:|-------|
-| `WEAPONS` | | | | *(imported by gen-equipment.js and cs-character-sheet.js internally)* |
+| `WEAPONS` | | | | *(imported by gen-equipment.js and cs-sheet-renderer.js internally)* |
 | `ARMOR` | | | | *(imported by gen-equipment.js internally)* |
 | `ADVENTURING_GEAR` | | | | *(imported by gen-equipment.js internally)* |
 | `AMMUNITION` | | | | *(data table; not currently imported by any controller or gen-* module)* |
@@ -369,10 +382,10 @@ Archive of orphaned exports — nothing currently imports from this module. Pres
 
 | Finding | Notes |
 |---------|-------|
-| `cs-character-sheet.js` — two separate render functions, each used by only one controller | Clean separation: `displayCharacterSheet` = G (inline preview), `renderCharacterSheetHTML` = C (full page) |
+| `cs-sheet-renderer.js` — two separate render functions, each used by only one controller | Clean separation: `displayCharacterSheet` = G (inline preview), `renderCharacterSheetHTML` = C (full page) |
 | All dice-rolling (`rollAbilities`, `rollAbilitiesAdvanced`, `rollHitPoints`) is G-only | C never rolls dice — it only renders from already-saved compact params |
-| Encoding constants (`PROG_CODE`, `CLS_CODE`, `RACE_CODE`, `RCM_CODE`) are G-only (in shared-sheet-builder.js); decoding (`CODE_TO_PROG`) is C-only (inlined in cs-charactersheet.js) | Intentional: G builds cp objects for the URL, C decodes them from the URL |
-| `buildSheetSpec`, `CLASS_HD`, `CODE_TO_PROG` inlined directly into cs-charactersheet.js (single-parent — only C ever used them) | Eliminated cs-sheet-builder.js as a separate file |
+| Encoding constants (`PROG_CODE`, `CLS_CODE`, `RACE_CODE`, `RCM_CODE`) are G-only (in shared-sheet-builder.js); decoding (`CODE_TO_PROG`) is C-only (inlined in cs-sheet-page.js) | Intentional: G builds cp objects for the URL, C decodes them from the URL |
+| `buildSheetSpec`, `CLASS_HD`, `CODE_TO_PROG` inlined directly into cs-sheet-page.js (single-parent — only C ever used them) | Eliminated cs-sheet-builder.js as a separate file |
 | `saveSettings`/`loadSettings`/`clearSettings` inlined into gen-ui.js (single-parent) | Eliminated gen-settings.js as a separate file |
 | `getModifier` removed from cs-modifier-display.js | gen-race-adjustments.js now imports `calculateModifier` (identical logic) from shared-ability-scores.js |
 | `encodeCompactParams` / `decodeCompactParams` are C-only | G builds raw cp objects and passes them through `expandCompactV2`; no re-encoding needed |

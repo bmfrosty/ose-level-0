@@ -51,7 +51,7 @@ import { rollStartingGold, calcStartingGold }    from './shared-character.js';
 import { purchaseEquipment }                      from './gen-equipment.js';
 import { getRandomName }                          from './gen-names.js';
 import { getRandomBackground, getAllBackgroundTables } from './gen-backgrounds.js';
-import { displayCharacterSheet }                  from './cs-character-sheet.js';
+import { displayCharacterSheet }                  from './cs-sheet-renderer.js';
 import { getMaxLevel, getAdvancedModeRacialAbilities } from './shared-racial-abilities.js';
 import { generateZeroLevelCharacter }             from './gen-0level-gen.js';
 // ── Settings helpers (inlined from gen-settings.js — single-parent leaf) ──────
@@ -68,7 +68,7 @@ function clearSettings(pageKey) {
     try { localStorage.removeItem(_SETTINGS_PREFIX + pageKey); }
     catch (e) { console.warn('OSE: could not clear settings:', e); }
 }
-import { expandCompactV2 } from './cs-charactersheet.js';
+import { expandCompactV2 } from './cs-sheet-page.js';
 import { PROG_CODE, CLS_CODE, RACE_CODE, RCM_CODE, progModeLabel } from './shared-sheet-builder.js';
 
 // ── State ─────────────────────────────────────────────────────────────────────
@@ -89,6 +89,8 @@ let showQRCode = true;
 let basicAbilityOrdering = true;
 let characterName = '';
 let wealthPct = 50;
+let wealthRollAsLevel1 = false;
+let noLevel0Equipment = false;
 let autoGenerateOnLevelChange = false;
 let autoGenerateOnClassChange = false;
 let autoGenerateOnLoad = false;
@@ -374,9 +376,13 @@ export function updateUI() {
                 const classData = getClassDataForMode(progressionMode);
                 const progData  = getProgData(selectedClass, selectedLevel, { STR:10,INT:10,WIS:10,DEX:10,CON:10,CHA:10 }, classData);
                 const xpForLevel = progData?.xpForCurrentLevel || 0;
-                wealthPreview.textContent = (xpForLevel > 0 && wealthPct > 0)
-                    ? `= ${calcStartingGold(xpForLevel, wealthPct).toLocaleString()} gp (${wealthPct}% of ${xpForLevel.toLocaleString()} XP)`
-                    : (wealthPct === 0 ? '= 0 gp' : '');
+                if (wealthRollAsLevel1) {
+                    wealthPreview.textContent = `= 3d6\u00d710 gp (rolled at generation, like Level\u00a01)`;
+                } else {
+                    wealthPreview.textContent = (xpForLevel > 0 && wealthPct > 0)
+                        ? `= ${calcStartingGold(xpForLevel, wealthPct).toLocaleString()} gp (${wealthPct}% of ${xpForLevel.toLocaleString()} XP)`
+                        : (wealthPct === 0 ? '= 0 gp' : '');
+                }
             } catch { wealthPreview.textContent = ''; }
         } else {
             wealthPreview.textContent = '';
@@ -515,19 +521,19 @@ async function generateBasicCharacter() {
 
     const DEMIHUMAN_CLASSES = ['Dwarf_CLASS','Elf_CLASS','Halfling_CLASS','Gnome_CLASS'];
     const hasBlessed = !DEMIHUMAN_CLASSES.includes(selectedClass) && raceClassMode !== 'strict';
-    const hpResult = rollHPBasic(selectedClass, selectedLevel, conMod, classData, includeLevel0HP, healthyCharacters, fixedHPRolls, hasBlessed);
+    const hpResult = rollHPBasic(selectedClass, selectedLevel, conMod, classData, includeLevel0HP, healthyCharacters, hasBlessed, fixedHPRolls);
     const progressionData = getProgBasic(selectedClass, selectedLevel, abilityScores, classData);
     const features = getClassFeatures(selectedClass, selectedLevel, classData, ClassDataShared);
     const racialAbilities = getRacialBasic(selectedClass);
     const background = getRandomBackground(hpResult.backgroundHP);
 
     let startingGold;
-    if (fixedStartingGold !== null) { startingGold = fixedStartingGold; }
-    else if (selectedLevel === 1)   { startingGold = rollStartingGold(progressionMode); }
-    else                            { startingGold = calcStartingGold(progressionData.xpForCurrentLevel, wealthPct); }
+    if (fixedStartingGold !== null)                     { startingGold = fixedStartingGold; }
+    else if (selectedLevel === 1 || wealthRollAsLevel1) { startingGold = rollStartingGold(progressionMode); }
+    else                                                { startingGold = calcStartingGold(progressionData.xpForCurrentLevel, wealthPct); }
 
     const dexMod = calculateModifier(abilityScores.DEX);
-    const purchased = purchaseEquipment(selectedClass, startingGold, dexMod, background, progressionMode);
+    const purchased = purchaseEquipment(selectedClass, startingGold, dexMod, noLevel0Equipment ? null : background, progressionMode);
 
     const character = createCharacter({ level: selectedLevel, className: selectedClass, mode: displayMode,
         abilityScores, hp: hpResult.max, progressionData, features, racialAbilities, name: characterName, background, startingGold });
@@ -538,7 +544,7 @@ async function generateBasicCharacter() {
     if (_preAdjScores) character.originalScores = _preAdjScores;
 
     // Append human racial abilities to class abilities for basic human classes
-    // Must be {name, description} objects to match the classAbilities renderer in cs-character-sheet.js
+    // Must be {name, description} objects to match the classAbilities renderer in cs-sheet-renderer.js
     if (hasBlessed) {
         const humanAbilities = [
             { name: 'Blessed',       description: 'Roll HP twice, take best at each level (does not apply to level 0 HP roll)' },
@@ -687,11 +693,11 @@ async function generateAdvancedCharacter() {
     const progressionData = getProgAdvanced(selectedClass, selectedLevel, adjustedScores, classData);
 
     let startingGold;
-    if (fixedStartingGold !== null)  { startingGold = fixedStartingGold; }
-    else if (selectedLevel === 1)    { startingGold = rollStartingGold(progressionMode); }
-    else                             { startingGold = calcStartingGold(progressionData?.xpForCurrentLevel||0, wealthPct); }
+    if (fixedStartingGold !== null)                     { startingGold = fixedStartingGold; }
+    else if (selectedLevel === 1 || wealthRollAsLevel1) { startingGold = rollStartingGold(progressionMode); }
+    else                                                { startingGold = calcStartingGold(progressionData?.xpForCurrentLevel||0, wealthPct); }
 
-    const purchased = purchaseEquipment(selectedClass, startingGold, abilityModifiers.DEX, background, progressionMode);
+    const purchased = purchaseEquipment(selectedClass, startingGold, abilityModifiers.DEX, noLevel0Equipment ? null : background, progressionMode);
     const character = createCharacterAdvanced({ level: selectedLevel, race: selectedRace, className: selectedClass,
         baseScores, adjustedScores, hp: hpResult.max, classData, ClassDataShared, progressionMode, raceClassMode, name: characterName, background });
     character.hpRolls = hpResult.rolls; character.hpDice = hpResult.dice; character.startingGold = startingGold;
@@ -830,6 +836,7 @@ function saveCurrentSettings() {
         mode, acDisplayMode,
         progressionMode, primeRequisiteMode, healthyCharacters, includeLevel0HP,
         useFixedScores, showUndeadNames, hideHumanRace, basicAbilityOrdering, wealthPct,
+        wealthRollAsLevel1, noLevel0Equipment,
         autoGenerateOnLevelChange, autoGenerateOnClassChange, autoGenerateOnLoad,
         selectedLevel, selectedClass, characterName: document.getElementById('characterName')?.value||'',
         scoreSTR: parseInt(document.getElementById('scoreSTR')?.value)||3,
@@ -861,6 +868,8 @@ function syncURLParams() {
     if (hideHumanRace && mode === 'advanced')                      p.set('hhr', '1');
     if (!basicAbilityOrdering)                                     p.set('ao', '0');
     if (wealthPct !== 50)                                          p.set('wp', String(wealthPct));
+    if (wealthRollAsLevel1)                                        p.set('l1w', '1');
+    if (noLevel0Equipment)                                         p.set('nl0e', '1');
     if (autoGenerateOnLevelChange)                                 p.set('agl', '1');
     if (autoGenerateOnClassChange)                                 p.set('agc', '1');
     if (autoGenerateOnLoad)                                        p.set('ago', '1');
@@ -963,7 +972,9 @@ function applySettings(s) {
     if (s.autoGenerateOnLevelChange!==undefined) { autoGenerateOnLevelChange=s.autoGenerateOnLevelChange; setBool('autoGenerateOnLevelChange','autoGenerateOnLevelChange'); }
     if (s.autoGenerateOnClassChange!==undefined) { autoGenerateOnClassChange=s.autoGenerateOnClassChange; setBool('autoGenerateOnClassChange','autoGenerateOnClassChange'); }
     if (s.autoGenerateOnLoad!==undefined)        { autoGenerateOnLoad=s.autoGenerateOnLoad;               setBool('autoGenerateOnLoad','autoGenerateOnLoad'); }
-    if (s.wealthPct!==undefined) { wealthPct=s.wealthPct; document.querySelectorAll('input[name="wealthPct"]').forEach(r=>{r.checked=parseInt(r.value)===s.wealthPct;}); }
+    if (s.wealthPct!==undefined)          { wealthPct=s.wealthPct; document.querySelectorAll('input[name="wealthPct"]').forEach(r=>{r.checked=parseInt(r.value)===s.wealthPct;}); }
+    if (s.wealthRollAsLevel1!==undefined) { wealthRollAsLevel1=s.wealthRollAsLevel1; setBool('wealthRollAsLevel1','wealthRollAsLevel1'); }
+    if (s.noLevel0Equipment!==undefined)  { noLevel0Equipment=s.noLevel0Equipment;   setBool('noLevel0Equipment','noLevel0Equipment'); }
     if (s.selectedLevel!==undefined&&s.selectedLevel!==null) {
         selectedLevel=s.selectedLevel;
         document.querySelectorAll('.level-btn').forEach(b=>b.classList.toggle('selected',parseInt(b.dataset.level)===s.selectedLevel));
@@ -1001,7 +1012,8 @@ function handleResetSettings() {
     const _rcmEl = document.getElementById(_rcmId); if(_rcmEl) _rcmEl.checked=true;
     document.querySelectorAll('input[name="primeRequisiteMode"]').forEach(r=>{r.checked=r.value==='user';});
     document.querySelectorAll('input[name="wealthPct"]').forEach(r=>{r.checked=parseInt(r.value)===50;});
-    ['healthyCharacters','useFixedScores','showUndeadNames','hideHumanRace','openInNewTab','autoPrintInNewTab'].forEach(id=>{const el=document.getElementById(id);if(el)el.checked=false;});
+    wealthRollAsLevel1=false; noLevel0Equipment=false;
+    ['healthyCharacters','useFixedScores','showUndeadNames','hideHumanRace','openInNewTab','autoPrintInNewTab','wealthRollAsLevel1','noLevel0Equipment'].forEach(id=>{const el=document.getElementById(id);if(el)el.checked=false;});
     ['autoGenerateOnLevelChange','autoGenerateOnClassChange','autoGenerateOnLoad'].forEach(id=>{const el=document.getElementById(id);if(el)el.checked=false;});
     const aoEl=document.getElementById('basicAbilityOrdering'); if(aoEl) aoEl.checked=true;
     ['STR','INT','WIS','DEX','CON','CHA'].forEach(a=>{const el=document.getElementById(`score${a}`);if(el)el.value=(a==='CON'?6:3);});
@@ -1029,6 +1041,8 @@ function readURLParams() {
     if (p.has('hhr'))   s.hideHumanRace = p.get('hhr')==='1';
     if (p.has('ao'))    s.basicAbilityOrdering = p.get('ao')==='1';
     if (p.has('wp'))    s.wealthPct = parseInt(p.get('wp'));
+    if (p.has('l1w'))   s.wealthRollAsLevel1 = p.get('l1w') === '1';
+    if (p.has('nl0e'))  s.noLevel0Equipment  = p.get('nl0e') === '1';
     if (p.has('agl'))   s.autoGenerateOnLevelChange = p.get('agl')==='1';
     if (p.has('agc'))   s.autoGenerateOnClassChange = p.get('agc')==='1';
     if (p.has('ago'))   s.autoGenerateOnLoad = p.get('ago')==='1';
@@ -1072,12 +1086,14 @@ export function initializeEventListeners() {
     });
     // Checkboxes
     const boolListeners = [
-        ['healthyCharacters',       v=>{ healthyCharacters=v;           }],
-        ['includeLevel0HP',         v=>{ includeLevel0HP=v;             }],
-        ['useFixedScores',          v=>{ useFixedScores=v; }],
-        ['showUndeadNames',         v=>{ showUndeadNames=v;             }],
-        ['hideHumanRace',          v=>{ hideHumanRace=v;               }],
-        ['basicAbilityOrdering',    v=>{ basicAbilityOrdering=v;        }],
+        ['healthyCharacters',        v=>{ healthyCharacters=v;          }],
+        ['includeLevel0HP',          v=>{ includeLevel0HP=v;            }],
+        ['noLevel0Equipment',        v=>{ noLevel0Equipment=v;          }],
+        ['useFixedScores',           v=>{ useFixedScores=v;             }],
+        ['showUndeadNames',          v=>{ showUndeadNames=v;            }],
+        ['hideHumanRace',            v=>{ hideHumanRace=v;              }],
+        ['basicAbilityOrdering',     v=>{ basicAbilityOrdering=v;       }],
+        ['wealthRollAsLevel1',       v=>{ wealthRollAsLevel1=v; updateUI(); }],
         ['autoGenerateOnLevelChange',v=>{ autoGenerateOnLevelChange=v;  }],
         ['autoGenerateOnClassChange',v=>{ autoGenerateOnClassChange=v;  }],
         ['autoGenerateOnLoad',       v=>{ autoGenerateOnLoad=v;         }],

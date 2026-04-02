@@ -1,8 +1,8 @@
-
-
 /**
- * cs-character-sheet.js
- * HTML character sheet renderer — used by cs-charactersheet.js and (for the inline
+ * cs-sheet-renderer.js
+ * (formerly cs-character-sheet.js)
+ *
+ * HTML character sheet renderer — used by cs-sheet-page.js and (for the inline
  * preview) gen-ui.js.  Both exports are character-sheet rendering concerns; neither
  * is independently needed by the generator without the preview feature.
  * ES6 Module
@@ -34,6 +34,7 @@
  */
 
 import { encodeCompactParams } from './cs-compact-codes.js';
+import { compressToBase64Url }  from './cs-url-codec.js';
 import { WEAPONS } from './shared-weapons-and-armor.js';
 
 // CSS helpers (shared across all renders)
@@ -675,27 +676,6 @@ function readEditPanelValues(panel, editState) {
     return { level, progressionMode, name, STR, INT, WIS, DEX, CON, CHA,
              adjSTR, adjINT, adjWIS, adjDEX, adjCON, adjCHA,
              hpRolls, startingGold, includeLevel0HP, showUndeadNames, showQRCode, ...extra };
-}
-
-/**
- * Gzip-compress a string and return a URL-safe Base64 string (base64url, no padding).
- * Uses the browser's native CompressionStream API.
- * @param {string} str - UTF-8 string to compress
- * @returns {Promise<string>} base64url-encoded gzip data
- */
-async function compressToBase64Url(str) {
-    const bytes = new TextEncoder().encode(str);
-    const cs = new CompressionStream('gzip');
-    const writer = cs.writable.getWriter();
-    writer.write(bytes);
-    writer.close();
-    const compressed = await new Response(cs.readable).arrayBuffer();
-    // Build base64 without spread (avoids max-arg-count limits on large arrays)
-    const uint8 = new Uint8Array(compressed);
-    let binary = '';
-    for (const b of uint8) binary += String.fromCharCode(b);
-    // Convert to base64url (URL-safe, no '=' padding needed)
-    return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
 }
 
 /**

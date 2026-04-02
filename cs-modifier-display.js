@@ -2,7 +2,7 @@
  * cs-modifier-display.js
  *
  * Character-sheet-only ability score modifier display text.
- * Used exclusively by cs-charactersheet.js (dynamic import).
+ * Used exclusively by cs-sheet-page.js (dynamic import).
  *
  * getModifier() was previously here but is identical to calculateModifier()
  * in shared-ability-scores.js — gen-race-adjustments.js now imports from there.

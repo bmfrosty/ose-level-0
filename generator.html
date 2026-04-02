@@ -376,6 +376,12 @@
             </div>
             <div class="checkbox-option">
                 <label>
+                    <input type="checkbox" id="noLevel0Equipment">
+                    <span><strong>No Level 0 Equipment</strong> - Skip background weapon/armor/items (level 1+)</span>
+                </label>
+            </div>
+            <div class="checkbox-option">
+                <label>
                     <input type="checkbox" id="showUndeadNames">
                     <span><strong>Show Monster Names</strong> in Turn Undead table</span>
                 </label>
@@ -432,6 +438,12 @@
                     <label style="display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="radio" name="wealthPct" value="50" checked> 50%</label>
                     <label style="display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="radio" name="wealthPct" value="75"> 75%</label>
                     <label style="display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="radio" name="wealthPct" value="100"> 100%</label>
+                </div>
+                <div class="checkbox-option" style="margin-top:6px;">
+                    <label>
+                        <input type="checkbox" id="wealthRollAsLevel1">
+                        <span><strong>Roll as Level 1</strong> &mdash; 3d6&times;10 gp regardless of level</span>
+                    </label>
                 </div>
                 <div id="wealthPreview" style="margin-top:6px; color:#555; font-size:0.9em;"></div>
             </div>

@@ -2,7 +2,7 @@
  * legacy-utils.js
  *
  * Exported utilities that are not currently used by either top-level controller
- * (gen-ui.js or cs-charactersheet.js) but are preserved here for potential
+ * (gen-ui.js or cs-sheet-page.js) but are preserved here for potential
  * future use or external consumers.
  *
  * Sources:

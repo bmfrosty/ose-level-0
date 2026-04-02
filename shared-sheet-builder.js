@@ -2,10 +2,10 @@
  * shared-sheet-builder.js
  *
  * Encoding constants used by BOTH gen-ui.js (to build compact-params URLs)
- * and cs-charactersheet.js (progModeLabel for display).
+ * and cs-sheet-page.js (progModeLabel for display).
  *
  * Sheet spec assembly and hit-die tables that are only needed by
- * cs-charactersheet.js are inlined directly into cs-charactersheet.js.
+ * cs-sheet-page.js are inlined directly into cs-sheet-page.js.
  */
 
 // ── Progression mode encode map ────────────────────────────────────────────────
@@ -16,7 +16,7 @@ export const PROG_CODE = { ose:'O', smooth:'S', ll:'L' };
 /**
  * Return a human-readable label for a progression mode.
  * Accepts either a mode key ('ose', 'smooth', 'll') or a compact code ('O', 'S', 'L').
- * Used by both cs-charactersheet.js and gen-ui.js so the label lives in one place.
+ * Used by both cs-sheet-page.js and gen-ui.js so the label lives in one place.
  */
 export function progModeLabel(mode) {
     if (mode === 'ose'    || mode === 'O') return 'OSE Standard';

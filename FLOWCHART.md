@@ -3,30 +3,31 @@
 Solid arrows = static `import`. Dashed arrows = dynamic `await import(...)`.
 
 **Color key:**
-- 🟩 Green = used by **both** cs-charactersheet.js and gen-ui.js
+- 🟩 Green = used by **both** cs-sheet-page.js and gen-ui.js
 - 🟥 Red = used **only** by gen-ui.js (`gen-` prefix)
-- 🟦 Blue = used **only** by cs-charactersheet.js (`cs-` prefix)
-- � Yellow = `cs-charactersheet.js` node in the generator diagram (not expanded there)
+- 🟦 Blue = used **only** by cs-sheet-page.js (`cs-` prefix)
+- 🟨 Yellow = `cs-sheet-page.js` node in the generator diagram (not expanded there)
 - No color = the root entry-point module
 
 > `cs-compact-codes.js` is a cs-only file. It appears in the gen-ui.js diagram as a transitive
-> dependency (via `cs-character-sheet.js`) but gen-ui.js does not import it directly.
+> dependency (via `cs-sheet-renderer.js`) but gen-ui.js does not import it directly.
 >
 > `legacy-utils.js` is a standalone archive module — nothing currently imports from it.
 > It is not shown in the diagrams below.
 
 ---
 
-## cs-charactersheet.js
+## cs-sheet-page.js
 
 ```mermaid
 flowchart LR
     classDef shared fill:#90EE90,stroke:#228B22,color:#000
     classDef csOnly fill:#6bb5ff,stroke:#0066cc,color:#000
 
-    csjs["cs-charactersheet.js"]
+    csjs["cs-sheet-page.js"]
 
-    charsheetjs["cs-character-sheet.js"]
+    charsheetjs["cs-sheet-renderer.js"]
+    codec["cs-url-codec.js"]
     sheetbuilder["shared-sheet-builder.js"]
     compact["cs-compact-codes.js"]
     wa["shared-weapons-and-armor.js"]
@@ -47,10 +48,11 @@ flowchart LR
     char["shared-character.js"]
 
     class sheetbuilder,wa,abilsc,cdshared,cdose,cdgygar,cdll,racial,racenames,advutils,advgen,basicgen,basicutils,hp,clsprog,char shared
-    class charsheetjs,compact,modeff csOnly
+    class charsheetjs,codec,compact,modeff csOnly
 
     %% static imports
     csjs --> charsheetjs
+    csjs --> codec
     csjs --> compact
     csjs --> sheetbuilder
 
@@ -70,6 +72,7 @@ flowchart LR
 
     charsheetjs --> compact
     charsheetjs --> wa
+    charsheetjs --> codec
 
     cdose   --> cdshared
     cdgygar --> cdshared
@@ -107,7 +110,7 @@ flowchart LR
 
     genui["gen-ui.js"]
 
-    csjs["cs-charactersheet.js"]
+    csjs["cs-sheet-page.js"]
     basicgen["shared-basic-character-gen.js"]
     advgen["shared-advanced-character-gen.js"]
     zgen["gen-0level-gen.js"]
@@ -124,7 +127,7 @@ flowchart LR
     bg["gen-backgrounds.js"]
     abilsc["shared-ability-scores.js"]
     sheetbuilder["shared-sheet-builder.js"]
-    charsheetjs["cs-character-sheet.js"]
+    charsheetjs["cs-sheet-renderer.js"]
     compact["cs-compact-codes.js"]
     wa["shared-weapons-and-armor.js"]
     cdshared["shared-class-data-shared.js"]
@@ -156,9 +159,10 @@ flowchart LR
     genui --> csjs
     genui --> sheetbuilder
 
-    %% cs-character-sheet.js — not expanded here; gen-ui.js uses it for inline preview only
+    %% cs-sheet-renderer.js — not expanded here; gen-ui.js uses it for inline preview only
     charsheetjs --> compact
     charsheetjs --> wa
+    charsheetjs --> codec
 
     cdose   --> cdshared
     cdgygar --> cdshared
@@ -216,7 +220,8 @@ flowchart LR
 | `shared-class-data-shared.js` | shared | XP tables, HD progressions, spell slots |
 | `shared-class-data-ll.js` | shared | LL-specific class data (self-contained) |
 | `shared-sheet-builder.js` | shared | Compact-params encoding constants (`PROG_CODE`, `CLS_CODE`, `RACE_CODE`, `RCM_CODE`, `progModeLabel`) |
-| `cs-character-sheet.js` | cs | HTML character sheet renderer (`renderCharacterSheetHTML`, `displayCharacterSheet`) |
+| `cs-sheet-renderer.js` | cs | HTML character sheet renderer (`renderCharacterSheetHTML`, `displayCharacterSheet`) |
+| `cs-url-codec.js` | cs | Base64-URL encode/decode helpers (`compressToBase64Url`, `decompressFromBase64Url`) |
 | `cs-modifier-display.js` | cs | Ability score modifier display text (`getModifierEffects`) — lazy dynamic import |
 | `cs-compact-codes.js` | cs | URL encoding/decoding of compact params |
 | `gen-names.js` | gen | Random name tables |
@@ -224,4 +229,4 @@ flowchart LR
 | `legacy-utils.js` | — | Archive of orphaned exports — nothing currently imports from this module |
 
 > `cs-sheet-builder.js` and `gen-settings.js` were single-parent leaf modules and have been
-> **inlined** into their sole consumers (`cs-charactersheet.js` and `gen-ui.js` respectively).
+> **inlined** into their sole consumers (`cs-sheet-page.js` and `gen-ui.js` respectively).

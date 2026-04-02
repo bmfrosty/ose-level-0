@@ -1,15 +1,26 @@
 /**
- * cs-charactersheet.js
+ * cs-sheet-page.js
+ * (formerly cs-charactersheet.js)
  *
- * ES6 module extracted from the inline <script> in charactersheet.html.
- * Provides renderFromCompactParams() (used by both charactersheet.html and
- * eventually gen-ui.js) and initCharacterSheet() (entry point for
- * charactersheet.html).
+ * Page controller for charactersheet.html.
+ * Decodes the ?d= URL parameter, expands compact params, renders the sheet,
+ * and wires up the Modify / Edit Sheet Options / Level Up panels.
+ *
+ * Public API used by charactersheet.html:
+ *   initCharacterSheet()       — entry point
+ *
+ * Public API used by gen-ui.js:
+ *   expandCompactV2(cp)        — expand decoded compact params to a sheet spec
+ *   renderFromCompactParams()  — render into a DOM element (used by generator preview)
+ *   compressToBase64Url()      — re-exported for callers that need URL encoding
  */
 
-import { renderCharacterSheetHTML } from './cs-character-sheet.js';
+import { renderCharacterSheetHTML } from './cs-sheet-renderer.js';
 import { buildOptionsLine }         from './cs-compact-codes.js';
 import { progModeLabel }            from './shared-sheet-builder.js';
+import { compressToBase64Url, decompressFromBase64Url } from './cs-url-codec.js';
+
+export { compressToBase64Url } from './cs-url-codec.js';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 const PROG_TO_CODE = { ose:'O', smooth:'S', ll:'L' };
@@ -77,37 +88,6 @@ const ADM_MAP      = { 0:'aac', 1:'dac-matrix', 2:'dual', 3:'dual-matrix' };
 
 /** Shared CON modifier helper (matches shared-hit-points.js logic). */
 const getConMod = s => s >= 15 ? 1 : s >= 13 ? 1 : s <= 6 ? -1 : s <= 8 ? -1 : 0;
-
-// ── Compression helpers ────────────────────────────────────────────────────────
-
-/** Decompress a base64url-encoded gzip string back to a UTF-8 string. */
-async function decompressFromBase64Url(b64url) {
-    const b64 = b64url.replace(/-/g, '+').replace(/_/g, '/');
-    const padded = b64 + '='.repeat((4 - b64.length % 4) % 4);
-    const binary = atob(padded);
-    const bytes = new Uint8Array(binary.length);
-    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-    const ds = new DecompressionStream('gzip');
-    const writer = ds.writable.getWriter();
-    writer.write(bytes);
-    writer.close();
-    const decompressed = await new Response(ds.readable).arrayBuffer();
-    return new TextDecoder().decode(decompressed);
-}
-
-/** Compress a string and return a base64url string. */
-export async function compressToBase64Url(str) {
-    const bytes = new TextEncoder().encode(str);
-    const cs = new CompressionStream('gzip');
-    const writer = cs.writable.getWriter();
-    writer.write(bytes);
-    writer.close();
-    const compressed = await new Response(cs.readable).arrayBuffer();
-    const uint8 = new Uint8Array(compressed);
-    let binary = '';
-    for (const b of uint8) binary += String.fromCharCode(b);
-    return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
-}
 
 // ── expandCompactV2 ────────────────────────────────────────────────────────────
 
