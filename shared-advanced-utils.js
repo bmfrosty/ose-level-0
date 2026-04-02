@@ -1,5 +1,5 @@
 /**
- * advanced-utils.js
+ * shared-advanced-utils.js
  * Utility functions for Advanced Mode character generation
  */
 
@@ -135,80 +135,6 @@ export function meetsRacialMinimums(scores, race) {
     return true;
 }
 
-/**
- * Read ability scores from input fields
- * @returns {Object} Ability scores object
- */
-export function readAbilityScores() {
-    return {
-        STR: parseInt(document.getElementById('scoreSTR').value) || 3,
-        INT: parseInt(document.getElementById('scoreINT').value) || 3,
-        WIS: parseInt(document.getElementById('scoreWIS').value) || 3,
-        DEX: parseInt(document.getElementById('scoreDEX').value) || 3,
-        CON: parseInt(document.getElementById('scoreCON').value) || 3,
-        CHA: parseInt(document.getElementById('scoreCHA').value) || 3
-    };
-}
-
-/**
- * Get minimum scores for rolling from the DOM input fields in section 5.
- * @returns {Object} Minimum scores object
- */
-export function getMinimumScores() {
-    return {
-        STR: parseInt(document.getElementById('scoreSTR')?.value) || 3,
-        INT: parseInt(document.getElementById('scoreINT')?.value) || 3,
-        WIS: parseInt(document.getElementById('scoreWIS')?.value) || 3,
-        DEX: parseInt(document.getElementById('scoreDEX')?.value) || 3,
-        CON: parseInt(document.getElementById('scoreCON')?.value) || 3,
-        CHA: parseInt(document.getElementById('scoreCHA')?.value) || 3
-    };
-}
-
-/**
- * Get class ability requirements
- * @param {string} className - Class name (with or without _CLASS suffix)
- * @returns {Object} Requirements object (e.g., {STR: 9})
- */
-export function getClassRequirements(className) {
-    // Handle null/undefined className
-    if (!className) {
-        return {};
-    }
-    
-    // Normalize class name
-    const normalizedClass = className.endsWith('_CLASS') ? className : `${className}_CLASS`;
-    
-    const requirements = {
-        'Cleric_CLASS': {},
-        'Fighter_CLASS': {},
-        'Magic-User_CLASS': {},
-        'Thief_CLASS': {},
-        'Spellblade_CLASS': { STR: 9, INT: 9 }
-    };
-    
-    return requirements[normalizedClass] || {};
-}
-
-/**
- * Get hit dice size for a class
- * @param {string} className - Class name (with or without _CLASS suffix)
- * @returns {number} Hit dice size (4, 6, or 8)
- */
-export function getHitDiceSize(className) {
-    // Normalize class name
-    const normalizedClass = className.endsWith('_CLASS') ? className : `${className}_CLASS`;
-    
-    const hitDiceSizes = {
-        'Cleric_CLASS': 6,
-        'Fighter_CLASS': 8,
-        'Magic-User_CLASS': 4,
-        'Thief_CLASS': 4,
-        'Spellblade_CLASS': 6
-    };
-    
-    return hitDiceSizes[normalizedClass] || 8;
-}
 
 /**
  * Get available classes for a race
@@ -235,4 +161,23 @@ export function getAvailableClasses(race, allowNonTraditional = false) {
     };
     
     return traditionalCombinations[race] || [];
+}
+
+/**
+ * Get class ability requirements — advanced mode.
+ * Accepts class names with or without the `_CLASS` suffix.
+ * @param {string} className - Class name (with or without _CLASS suffix)
+ * @returns {Object} Requirements object (e.g., {STR: 9, INT: 9})
+ */
+export function getClassRequirements(className) {
+    if (!className) return {};
+    const normalizedClass = className.endsWith('_CLASS') ? className : `${className}_CLASS`;
+    const requirements = {
+        'Cleric_CLASS': {},
+        'Fighter_CLASS': {},
+        'Magic-User_CLASS': {},
+        'Thief_CLASS': {},
+        'Spellblade_CLASS': { STR: 9, INT: 9 }
+    };
+    return requirements[normalizedClass] || {};
 }

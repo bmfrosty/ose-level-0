@@ -235,14 +235,6 @@ export function getAdvancedModeRacialAbilities(race, options = {}) {
     return RACIAL_ABILITIES[normalizedRace] || [];
 }
 
-/**
- * Legacy function for backward compatibility
- * @returns {string} Common demihuman abilities description
- */
-export function getCommonDemihumanAbilities() {
-    return "All demihumans speak additional native languages and have a 2-in-6 chance of hearing noises when listening at a door.";
-}
-
 // ============================================================================
 // SAVING THROWS AND ATTACK BONUSES
 // ============================================================================

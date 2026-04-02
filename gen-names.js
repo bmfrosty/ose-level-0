@@ -1,5 +1,5 @@
 /**
- * shared-names.js
+ * gen-names.js
  * 
  * Shared name generation for all character generators.
  * Contains name tables for all races and provides random name generation.

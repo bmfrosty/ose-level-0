@@ -2,7 +2,7 @@
  * shared-sheet-builder.js
  *
  * Shared constants and the buildSheetSpec() function used by both
- * generator-ui.js (live generator) and charactersheet.html (saved sheet viewer).
+ * gen-ui.js (live generator) and charactersheet.html (saved sheet viewer).
  *
  * Centralising these ensures the two rendering paths can never silently diverge
  * in header structure, field names, or lookup tables.
@@ -10,7 +10,7 @@
 
 // ── Hit-dice lookup tables ─────────────────────────────────────────────────────
 
-/** Sides of the hit die, keyed by full class name — used by generator-ui.js */
+/** Sides of the hit die, keyed by full class name — used by gen-ui.js */
 export const CLASS_HD = {
     Fighter_CLASS:8, Cleric_CLASS:6, 'Magic-User_CLASS':4, Thief_CLASS:4,
     Spellblade_CLASS:6, Dwarf_CLASS:8, Elf_CLASS:6, Halfling_CLASS:6, Gnome_CLASS:4
@@ -30,7 +30,7 @@ export const CODE_TO_PROG = { O:'ose', S:'smooth', L:'ll' };
 /**
  * Return a human-readable label for a progression mode.
  * Accepts either a mode key ('ose', 'smooth', 'll') or a compact code ('O', 'S', 'L').
- * Used by both charactersheet.js and generator-ui.js so the label lives in one place.
+ * Used by both cs-charactersheet.js and gen-ui.js so the label lives in one place.
  */
 export function progModeLabel(mode) {
     if (mode === 'ose'    || mode === 'O') return 'OSE Standard';
@@ -60,7 +60,6 @@ export const RCM_CODE = {
 // ── Utility ────────────────────────────────────────────────────────────────────
 
 /** Strip characters that would make invalid filenames / URL segments */
-export const sanitize = s => (s||'').replace(/[/\\?%*:|"<>]/g,'-').trim();
 
 // ── Sheet spec builder ─────────────────────────────────────────────────────────
 /**

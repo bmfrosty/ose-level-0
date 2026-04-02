@@ -1,14 +1,14 @@
 /**
- * charactersheet.js
+ * cs-charactersheet.js
  *
  * ES6 module extracted from the inline <script> in charactersheet.html.
  * Provides renderFromCompactParams() (used by both charactersheet.html and
- * eventually generator-ui.js) and initCharacterSheet() (entry point for
+ * eventually gen-ui.js) and initCharacterSheet() (entry point for
  * charactersheet.html).
  */
 
 import { renderCharacterSheetHTML } from './shared-character-sheet.js';
-import { buildOptionsLine }         from './shared-compact-codes.js';
+import { buildOptionsLine }         from './cs-compact-codes.js';
 import { buildSheetSpec, CLASS_HD_CODES as CLASS_HD, CODE_TO_PROG, progModeLabel } from './shared-sheet-builder.js';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
@@ -82,10 +82,10 @@ export async function expandCompactV2(cp) {
     ABILITIES.forEach(a => mods[a] = calculateModifier(adj[a]));
 
     const classDataMod = await import(
-        prog === 'll' ? './class-data-ll.js' :
-        prog === 'ose' ? './class-data-ose.js' : './class-data-gygar.js'
+        prog === 'll' ? './shared-class-data-ll.js' :
+        prog === 'ose' ? './shared-class-data-ose.js' : './shared-class-data-gygar.js'
     );
-    const ClassDataShared = await import('./class-data-shared.js');
+    const ClassDataShared = await import('./shared-class-data-shared.js');
 
     const abilityScoresSheet = ABILITIES.map((a, i) => ({
         name: a, score: adjArr[i],
@@ -143,8 +143,8 @@ export async function expandCompactV2(cp) {
     let character, raceDisplay, clsDisplay, raceClassDisplay;
 
     if (isAdv) {
-        const { getRaceDisplayName, getClassDisplayName } = await import('./advanced-utils.js');
-        const { createCharacterAdvanced } = await import('./advanced-character-gen.js');
+        const { getRaceDisplayName, getClassDisplayName } = await import('./shared-advanced-utils.js');
+        const { createCharacterAdvanced } = await import('./shared-advanced-character-gen.js');
         character = createCharacterAdvanced({
             level, race, className: cls,
             baseScores: base, adjustedScores: adj,
@@ -158,7 +158,7 @@ export async function expandCompactV2(cp) {
             : (raceDisplay === clsDisplay ? raceDisplay : `${raceDisplay} ${clsDisplay}`);
     } else {
         const { getClassProgressionData, getClassFeatures,
-                getRacialAbilities, createCharacter } = await import('./basic-character-gen.js');
+                getRacialAbilities, createCharacter } = await import('./shared-basic-character-gen.js');
         const progData = getClassProgressionData(cls, level, adj, classDataMod);
         const features = getClassFeatures(cls, level, classDataMod, ClassDataShared);
         const racial   = getRacialAbilities(cls);
@@ -183,7 +183,7 @@ export async function expandCompactV2(cp) {
 
     // XP bonus — lowest prime requisite score wins
     const { calculateXPBonus, getPrimeRequisites } =
-        await import(isAdv ? './advanced-utils.js' : './basic-utils.js');
+        await import(isAdv ? './shared-advanced-utils.js' : './shared-basic-utils.js');
     const primeReqs = getPrimeRequisites(cls);
     let xpBonusNum = primeReqs.length > 0 ? 10 : 0;
     primeReqs.forEach(a => { xpBonusNum = Math.min(xpBonusNum, calculateXPBonus(adj[a] || 10)); });
@@ -376,7 +376,7 @@ function initEditPanel(decoded) {
 
     // ── Apply Changes (Modify Character) ──────────────────────────────────────
     document.getElementById('ep-apply-btn').addEventListener('click', async () => {
-        const { encodeCompactParams } = await import('./shared-compact-codes.js');
+        const { encodeCompactParams } = await import('./cs-compact-codes.js');
 
         const newProg = document.querySelector('input[name="ep-prog"]:checked')?.value
             || CODE_TO_PROG[decoded.p] || 'ose';
@@ -413,7 +413,7 @@ function initEditPanel(decoded) {
 
     // ── Apply Options (Sheet Options) ─────────────────────────────────────────
     document.getElementById('so-apply-btn').addEventListener('click', async () => {
-        const { encodeCompactParams } = await import('./shared-compact-codes.js');
+        const { encodeCompactParams } = await import('./cs-compact-codes.js');
         const newAdm = parseInt(document.querySelector('input[name="ep-adm"]:checked')?.value || '0');
         const newCp  = { ...decoded,
             n:  document.getElementById('ep-name').value || decoded.n,
@@ -479,9 +479,9 @@ function initEditPanel(decoded) {
         document.getElementById('lup-apply-btn').addEventListener('click', async () => {
             if (!selectedClassCode) { alert('Please select a class first!'); return; }
 
-            const { encodeCompactParams }               = await import('./shared-compact-codes.js');
+            const { encodeCompactParams }               = await import('./cs-compact-codes.js');
             const { parseHitDice }                      = await import('./shared-hit-points.js');
-            const { HIT_DICE_PROGRESSIONS, HIT_DICE_SCALE } = await import('./class-data-shared.js');
+            const { HIT_DICE_PROGRESSIONS, HIT_DICE_SCALE } = await import('./shared-class-data-shared.js');
 
             const CODE_TO_CLASS_LU = {
                 FI:'Fighter_CLASS', CL:'Cleric_CLASS', MU:'Magic-User_CLASS',
@@ -546,9 +546,9 @@ function initEditPanel(decoded) {
         document.getElementById('lup-qr').checked     = decoded.qr !== 0;
 
         document.getElementById('lup-apply-btn').addEventListener('click', async () => {
-            const { encodeCompactParams }               = await import('./shared-compact-codes.js');
+            const { encodeCompactParams }               = await import('./cs-compact-codes.js');
             const { parseHitDice }                      = await import('./shared-hit-points.js');
-            const { HIT_DICE_PROGRESSIONS, HIT_DICE_SCALE } = await import('./class-data-shared.js');
+            const { HIT_DICE_PROGRESSIONS, HIT_DICE_SCALE } = await import('./shared-class-data-shared.js');
 
             const CODE_TO_CLASS_LU = {
                 FI:'Fighter_CLASS', CL:'Cleric_CLASS', MU:'Magic-User_CLASS',
@@ -665,7 +665,7 @@ export async function initCharacterSheet() {
             console.log('[charactersheet] Decompressed URL data:\n' + JSON.stringify(parsed, null, 2));
 
             if (parsed.v === 2) {
-                const { decodeCompactParams } = await import('./shared-compact-codes.js');
+                const { decodeCompactParams } = await import('./cs-compact-codes.js');
                 decodedCp = decodeCompactParams(parsed);
                 console.log('[charactersheet] Decoded compact params:\n' + JSON.stringify(decodedCp, null, 2));
                 await renderFromCompactParams(decodedCp, contentEl,

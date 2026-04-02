@@ -1,5 +1,5 @@
 /**
- * advanced-character-gen.js
+ * shared-advanced-character-gen.js
  * Character generation functions for Advanced Mode
  */
 
@@ -38,7 +38,7 @@ import {
     meetsRacialMinimums,
     getClassRequirements,
     getRacialAdjustments
-} from './advanced-utils.js';
+} from './shared-advanced-utils.js';
 
 // Re-export for backward compatibility
 export {

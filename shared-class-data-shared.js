@@ -2,7 +2,7 @@
  * Shared Class Data
  * 
  * This module contains class data that is common to both OSE Standard and Smoothified Mode.
- * Mode-specific data (saving throws, attack bonuses, XP, etc.) is in class-data-ose.js and class-data-gygar.js.
+ * Mode-specific data (saving throws, attack bonuses, XP, etc.) is in shared-class-data-ose.js and shared-class-data-gygar.js.
  */
 
 // Class descriptions and basic info

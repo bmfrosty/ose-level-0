@@ -14,7 +14,7 @@
  * - Attack bonuses (ascending, levels 1-14)
  * - Saving throws (5 categories, levels 1-14)
  * 
- * Shared data (HD, spell slots, thief skills, turn undead) imported from class-data-shared.js
+ * Shared data (HD, spell slots, thief skills, turn undead) imported from shared-class-data-shared.js
  */
 
 import { 
@@ -27,7 +27,7 @@ import {
   THIEF_SKILLS,
   TURN_UNDEAD,
   SPELL_SLOT_SCALE
-} from './class-data-shared.js';
+} from './shared-class-data-shared.js';
 
 // XP_REQUIREMENTS and HIT_DICE_SCALE are now imported from shared data
 

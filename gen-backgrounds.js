@@ -1,5 +1,5 @@
 /**
- * shared-backgrounds.js
+ * gen-backgrounds.js
  * 
  * Shared background generation for all character generators.
  * Contains background tables organized by hit points (1-4 HP).

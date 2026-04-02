@@ -24,7 +24,7 @@ import {
   THIEF_SKILLS,
   TURN_UNDEAD,
   SPELL_SLOT_SCALE
-} from './class-data-shared.js';
+} from './shared-class-data-shared.js';
 
 // XP_REQUIREMENTS and HIT_DICE_SCALE are now imported from shared data
 

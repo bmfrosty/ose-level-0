@@ -124,16 +124,16 @@ All JavaScript is ES6 modules (`type="module"`). There is no bundler, transpiler
 | `shared-ability-scores.js` | Ability score rolling and modifier lookup |
 | `shared-character.js` | Base character object creation |
 | `shared-hit-points.js` | HP rolling (class-appropriate die, CON modifier, optional minimum) |
-| `shared-names.js` | Name generation |
-| `shared-backgrounds.js` | Background / occupation tables (0-level) |
+| `gen-names.js` | Name generation |
+| `gen-backgrounds.js` | Background / occupation tables (0-level) |
 | `shared-modifier-effects.js` | Ability modifier effect descriptions (shown in ABILITY SCORES table) |
 | `shared-race-names.js` | Race name normalisation constants |
-| `shared-race-adjustments.js` | Racial ability score adjustments (± values) |
+| `gen-race-adjustments.js` | Racial ability score adjustments (± values) |
 | `shared-racial-abilities.js` | Racial ability descriptions shown in ABILITIES section |
-| `class-data-ose.js` | OSE Standard class data: saving throws, attack bonuses, XP |
-| `class-data-gygar.js` | Smoothified (Gygar) class data: saving throws, attack bonuses |
-| `class-data-ll.js` | Labyrinth Lord class data: saving throws, attack bonuses |
-| `class-data-shared.js` | Shared class tables: XP, HD, spell slots, thief skills, turn undead, class abilities |
+| `shared-class-data-ose.js` | OSE Standard class data: saving throws, attack bonuses, XP |
+| `shared-class-data-gygar.js` | Smoothified (Gygar) class data: saving throws, attack bonuses |
+| `shared-class-data-ll.js` | Labyrinth Lord class data: saving throws, attack bonuses |
+| `shared-class-data-shared.js` | Shared class tables: XP, HD, spell slots, thief skills, turn undead, class abilities |
 
 ### 0-Level Generator (`0level.html`)
 
@@ -151,23 +151,23 @@ All JavaScript is ES6 modules (`type="module"`). There is no bundler, transpiler
 | File | Purpose |
 |------|---------|
 | `basic-ui.js` | UI logic and event handlers |
-| `basic-character-gen.js` | Character generation |
-| `basic-utils.js` | Utility functions |
+| `shared-basic-character-gen.js` | Character generation |
+| `shared-basic-utils.js` | Utility functions |
 
 ### Advanced Generator (`advanced.html`)
 
 | File | Purpose |
 |------|---------|
 | `advanced-ui.js` | UI logic and event handlers |
-| `advanced-character-gen.js` | Character generation |
-| `advanced-utils.js` | Utility functions |
+| `shared-advanced-character-gen.js` | Character generation |
+| `shared-advanced-utils.js` | Utility functions |
 
 ### Reference Files (not used by generators)
 
 | File | Purpose |
 |------|---------|
-| `race-adjustments.js` | Old global script — superseded by `shared-race-adjustments.js`, kept for reference |
-| `weapons-and-armor.js` | Weapon/armor reference data |
+| `race-adjustments.js` | Old global script — superseded by `gen-race-adjustments.js`, kept for reference |
+| `shared-weapons-and-armor.js` | Weapon/armor reference data |
 
 ### Removed Files (documented for history)
 

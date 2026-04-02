@@ -1,11 +1,11 @@
 /**
- * shared-0level-gen.js
+ * gen-0level-gen.js
  * DOM-independent 0-level character generation.
  * Used by basic-ui.js (adv:0) and advanced-ui.js (adv:1) when level 0 is selected.
  */
 import { calculateModifier, rollDice } from './shared-ability-scores.js';
-import { getRandomName } from './shared-names.js';
-import { getRandomBackground, getBackgroundByProfession } from './shared-backgrounds.js';
+import { getRandomName } from './gen-names.js';
+import { getRandomBackground, getBackgroundByProfession } from './gen-backgrounds.js';
 import {
     calculateSavingThrows,
     calculateAttackBonus
@@ -13,7 +13,7 @@ import {
 import {
     applyRaceAdjustments,
     meetsRaceMinimums
-} from './shared-race-adjustments.js';
+} from './gen-race-adjustments.js';
 
 const ABILITIES = ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'];
 const DEMIHUMANS = ['Dwarf_RACE', 'Elf_RACE', 'Gnome_RACE', 'Halfling_RACE'];

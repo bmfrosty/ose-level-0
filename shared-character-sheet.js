@@ -31,8 +31,8 @@
  * }
  */
 
-import { encodeCompactParams } from './shared-compact-codes.js';
-import { WEAPONS } from './weapons-and-armor.js';
+import { encodeCompactParams } from './cs-compact-codes.js';
+import { WEAPONS } from './shared-weapons-and-armor.js';
 
 // CSS helpers (shared across all renders)
 const CSS = {

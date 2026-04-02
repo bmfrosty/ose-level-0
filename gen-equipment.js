@@ -1,9 +1,9 @@
 /**
- * shared-equipment.js
+ * gen-equipment.js
  * Equipment purchasing logic for level 1+ characters (Basic and Advanced modes)
  */
-import { WEAPONS, ARMOR } from './weapons-and-armor.js';
-import { CLASS_INFO } from './class-data-shared.js';
+import { WEAPONS, ARMOR } from './shared-weapons-and-armor.js';
+import { CLASS_INFO } from './shared-class-data-shared.js';
 
 // Dungeoneering bundle — bought in this order if affordable
 export const DUNGEONEERING_BUNDLE = [

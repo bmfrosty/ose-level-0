@@ -1,5 +1,5 @@
 /**
- * shared-compact-codes.js
+ * cs-compact-codes.js
  * Lookup tables for compressing common strings in v2 compact character params.
  *
  * Each field uses its own independent table (bg, ar, w, it).
@@ -102,7 +102,7 @@ export const ARMOR_TO_CODE = {
 export const CODE_TO_ARMOR = Object.fromEntries(Object.entries(ARMOR_TO_CODE).map(([k,v])=>[v,k]));
 
 // ─── BACKGROUND / PROFESSION CODES (for the `bg` field) ──────────────────────
-// All 48 professions from shared-backgrounds.js background tables (HP 1–4 × 12 each).
+// All 48 professions from gen-backgrounds.js background tables (HP 1–4 × 12 each).
 export const BG_TO_CODE = {
     // HP 1
     'Acolyte':                  'AC',

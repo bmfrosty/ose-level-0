@@ -1,5 +1,5 @@
 /**
- * shared-race-adjustments.js
+ * gen-race-adjustments.js
  * Race ability adjustments and requirements for 0-Level and Advanced mode
  * ES6 Module - used by browser generators
  * 

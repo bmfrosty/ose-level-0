@@ -1,5 +1,5 @@
 /**
- * shared-settings.js
+ * gen-settings.js
  * Lightweight localStorage-based settings persistence.
  * Used by all three generator pages (0level, basic, advanced).
  */

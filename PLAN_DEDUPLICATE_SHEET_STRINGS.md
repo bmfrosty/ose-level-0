@@ -1,4 +1,4 @@
-# PLAN: Deduplicate sheet rendering — extract charactersheet.js
+# PLAN: Deduplicate sheet rendering — extract cs-charactersheet.js
 
 ## Current state (the problem)
 
@@ -6,7 +6,7 @@
 
 ```
 generator.html
-  └── generator-ui.js
+  └── gen-ui.js
         ├── generates character (rolls, choices)
         ├── builds sheet spec (subtitle, footer, etc.) ← duplicated logic
         ├── calls displayCharacterSheet() for inline preview
@@ -23,12 +23,12 @@ charactersheet.html
 
 The two rendering paths are independent. Any change to how the sheet title, subtitle,
 footer, or any display field is formatted must be made in **both** places — and currently
-also in the three `display*` functions inside `generator-ui.js` (one per generator type).
+also in the three `display*` functions inside `gen-ui.js` (one per generator type).
 
 ### Duplicated string-building (the immediate symptom)
 
 The progression mode label and the footer identity line are built independently in
-6+ places across `generator-ui.js` and `charactersheet.html`'s inline script.
+6+ places across `gen-ui.js` and `charactersheet.html`'s inline script.
 
 ---
 
@@ -36,27 +36,27 @@ The progression mode label and the footer identity line are built independently 
 
 ### The key insight
 
-`generator-ui.js` should only do two things:
+`gen-ui.js` should only do two things:
 1. Generate the character (random rolls, UI choices, equipment purchase)
 2. Produce compact params (`cp`) that fully encode that character
 
 Everything from "compact params → rendered sheet" should live in one shared module:
-**`charactersheet.js`**.
+**`cs-charactersheet.js`**.
 
 ```
 generator.html
-  └── generator-ui.js
+  └── gen-ui.js
         ├── generates character
         ├── produces compact params (cp)
-        └── calls charactersheet.js renderFromCompactParams(cp, targetEl)
+        └── calls cs-charactersheet.js renderFromCompactParams(cp, targetEl)
                                           ↑ same module
 charactersheet.html
-  └── charactersheet.js  (extracted from inline <script>)
+  └── cs-charactersheet.js  (extracted from inline <script>)
         ├── reads ?d= URL param
         └── calls renderFromCompactParams(cp, targetEl)
 ```
 
-### New module: `charactersheet.js`
+### New module: `cs-charactersheet.js`
 
 Extract the inline `<script>` from `charactersheet.html` into an ES6 module.
 
@@ -83,7 +83,7 @@ Inside `renderFromCompactParams`:
 - Build the full sheet spec via `buildSheetSpec()`
 - Render via `renderCharacterSheetHTML()`
 
-### Changes to `generator-ui.js`
+### Changes to `gen-ui.js`
 
 The three `display*` functions (`displayBasicCharacter`, `displayAdvancedCharacter`,
 `displayZeroLevelCharacter`) currently:
@@ -103,7 +103,7 @@ the character and hands it to the shared renderer.
 Replace the large inline `<script>` with:
 ```html
 <script type="module">
-    import { initCharacterSheet } from './charactersheet.js';
+    import { initCharacterSheet } from './cs-charactersheet.js';
     initCharacterSheet();
 </script>
 ```
@@ -114,7 +114,7 @@ Replace the large inline `<script>` with:
 
 | Now | After |
 |-----|-------|
-| Sheet spec built in 3+ places | Built in 1 place (`charactersheet.js`) |
+| Sheet spec built in 3+ places | Built in 1 place (`cs-charactersheet.js`) |
 | Subtitle/footer logic duplicated 6+ times | Defined once in `shared-sheet-builder.js` |
 | `charactersheet.html` has ~750 lines of inline JS | Replaced by a 3-line script tag |
 | Inline preview and print tab use different code paths | Same `renderFromCompactParams` for both |
@@ -126,10 +126,10 @@ Replace the large inline `<script>` with:
 
 | File | Change |
 |------|--------|
-| `charactersheet.js` | **New file** — extracted from `charactersheet.html` inline script |
+| `cs-charactersheet.js` | **New file** — extracted from `charactersheet.html` inline script |
 | `charactersheet.html` | Replace `<script>` block with `import { initCharacterSheet }` |
-| `generator-ui.js` | Replace 3 `display*` functions with compact-params → `renderFromCompactParams` calls |
-| `shared-sheet-builder.js` | Add `progModeLabel()` export (used by `charactersheet.js`) |
+| `gen-ui.js` | Replace 3 `display*` functions with compact-params → `renderFromCompactParams` calls |
+| `shared-sheet-builder.js` | Add `progModeLabel()` export (used by `cs-charactersheet.js`) |
 
 ---
 
@@ -137,7 +137,7 @@ Replace the large inline `<script>` with:
 
 - This does not change the URL format or compact params encoding
 - This does not merge the generator and character sheet pages
-- This does not change the edit / level-up / modify panel behavior (those stay in `charactersheet.js`)
+- This does not change the edit / level-up / modify panel behavior (those stay in `cs-charactersheet.js`)
 - The generator page still shows an inline preview (it just uses the shared renderer to do so)
 
 ---
@@ -153,17 +153,17 @@ true; any gaps should be identified during implementation.
 ## Status
 
 - [x] Add `progModeLabel()` to `shared-sheet-builder.js`
-- [x] Extract `charactersheet.html` inline script → `charactersheet.js`
+- [x] Extract `charactersheet.html` inline script → `cs-charactersheet.js`
   - [x] Export `renderFromCompactParams(cp, targetEl, opts)`
   - [x] Export `initCharacterSheet()` (reads URL, calls renderFromCompactParams)
 - [x] Update `charactersheet.html` to `import { initCharacterSheet }` (3-line script block)
-- [x] Update `generator-ui.js` — replace 4× mode-label ternary chains with `progModeLabel()`
+- [x] Update `gen-ui.js` — replace 4× mode-label ternary chains with `progModeLabel()`
 - [x] Verified inline preview (0-level Basic Gnome renders correctly)
 - [x] Verified `charactersheet.html` loads and calls `initCharacterSheet()` without errors
 
 ## Remaining duplication audit
 
-### The two subtitle/footer definitions in `charactersheet.js`
+### The two subtitle/footer definitions in `cs-charactersheet.js`
 
 Both live inside `expandCompactV2()` — one per branch of the level-0 / level-1+ `if`:
 
@@ -236,7 +236,7 @@ sd.footer = buildFooter(`Level ${level} ${who}`);
 
 This collapses 2 subtitle strings → 1 and 2 footer builder closures → 1 shared helper.
 
-**Status: ✅ DONE** — implemented in `charactersheet.js`.
+**Status: ✅ DONE** — implemented in `cs-charactersheet.js`.
 
 Result (`grep` audit):
 - Line 100: `subtitle` defined **once**
@@ -246,15 +246,15 @@ Result (`grep` audit):
 - Line 196: level-1+ branch spreads `title, subtitle`
 - Line 216: level-1+ branch calls `buildFooter('Level ${level} ${who}')`
 
-`generator-ui.js` has zero subtitle or footer string-building.
+`gen-ui.js` has zero subtitle or footer string-building.
 
 ---
 
 ## Completed work
 
-- [x] Update `generator-ui.js` `display*` functions to call `expandCompactV2` instead of
+- [x] Update `gen-ui.js` `display*` functions to call `expandCompactV2` instead of
       building the full sheet spec directly via `buildSheetSpec` — removes subtitle/footer
-      duplication between the generator inline preview and `charactersheet.js`
+      duplication between the generator inline preview and `cs-charactersheet.js`
 - [x] Fix HP rolls not appearing in 0-level footer:
   - `shared-character-sheet.js` now falls back to `cp.hr` when `editState.hpRolls` is absent
   - `expandCompactV2` level-0 path now includes `cp` in the returned spec

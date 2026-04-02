@@ -1,6 +1,6 @@
 # TODO — Active Planning Document
 
-> **Status:** All generators complete and working. 0-level generator deleted (2026-03-30) — Level 0 now integrated into basic.html and advanced.html. Generator merge complete (generator.html + generator-ui.js, 2026-03-31). Human racial abilities for Basic mode complete (2026-03-31). Unified sheet builder extracted (2026-03-31). Remaining: HTML sheet improvements, comprehensive testing, OSE license compliance.
+> **Status:** All generators complete and working. 0-level generator deleted (2026-03-30) — Level 0 now integrated into basic.html and advanced.html. Generator merge complete (generator.html + gen-ui.js, 2026-03-31). Human racial abilities for Basic mode complete (2026-03-31). Unified sheet builder extracted (2026-03-31). Remaining: HTML sheet improvements, comprehensive testing, OSE license compliance.
 
 > ⚠️ **IMPORTANT — ALWAYS UPDATE THIS FILE:** After completing any task, mark checklist items `[x]`, update the status line above with the date, and move "next up" markers accordingly. Do not leave this file stale.
 > **History:** See `PLANS_COMPLETED/` for all completed work.
@@ -38,7 +38,7 @@ README.md has been rewritten to document:
 ### Phase 2A — Class Abilities ✅
 ### Phase 2B — Starting Wealth ✅
 ### Phase 2C — Automatic Equipment Purchase ✅ (except 2C-7 deferred)
-- [ ] **2C-7** *(deferred)* Add `ADVENTURING_GEAR_LL` and `DUNGEONEERING_BUNDLE_LL` to `shared-equipment.js` when user provides LL prices; add `progression` branch to `purchaseEquipment()`
+- [ ] **2C-7** *(deferred)* Add `ADVENTURING_GEAR_LL` and `DUNGEONEERING_BUNDLE_LL` to `gen-equipment.js` when user provides LL prices; add `progression` branch to `purchaseEquipment()`
 
 ### Phase 2D — Racial Abilities in Advanced Mode ✅
 ### Phase 2E — Print Button + cp v2 Normalization ✅
@@ -54,9 +54,9 @@ Merged `basic.html` + `advanced.html` into a single `generator.html` with a top-
 | File | Purpose |
 |------|---------|
 | `generator.html` | Combined generator page (~800 lines) |
-| `generator-ui.js` | Combined UI logic (~1400 lines) |
-| `basic-utils.js` / `advanced-utils.js` | Kept — still imported by `generator-ui.js` |
-| `basic-character-gen.js` / `advanced-character-gen.js` | Kept — different logic per mode |
+| `gen-ui.js` | Combined UI logic (~1400 lines) |
+| `shared-basic-utils.js` / `shared-advanced-utils.js` | Kept — still imported by `gen-ui.js` |
+| `shared-basic-character-gen.js` / `shared-advanced-character-gen.js` | Kept — different logic per mode |
 
 Files deleted: `basic.html`, `advanced.html`, `basic-ui.js`, `advanced-ui.js`
 
@@ -71,7 +71,7 @@ Files deleted: `basic.html`, `advanced.html`, `basic-ui.js`, `advanced-ui.js`
 
 ### Implementation Phases — All Complete
 - [x] Phase 1 — Create `generator-utils.js` (SKIPPED — import directly from basic/advanced utils)
-- [x] Phase 2 — Create `generator-ui.js`
+- [x] Phase 2 — Create `gen-ui.js`
 - [x] Phase 3 — Create `generator.html`
 - [x] Phase 4 — Update nav links on all pages
 - [x] Phase 4b — URL sync + Share/QR button
@@ -108,7 +108,7 @@ Files deleted: `basic.html`, `advanced.html`, `basic-ui.js`, `advanced-ui.js`
 | `s` | `3,3,3,3,3,3` | minimum ability scores (STR,INT,WIS,DEX,CON,CHA) |
 
 #### B. Compact params (`?d=…`) — for QR codes / sharing a generated character
-The existing `cp` object scheme in `shared-compact-codes.js`, gzip+base64url encoded. Used by `charactersheet.html`.
+The existing `cp` object scheme in `cs-compact-codes.js`, gzip+base64url encoded. Used by `charactersheet.html`.
 
 ---
 
@@ -124,10 +124,10 @@ Wired up the Section 6 radio buttons in Basic mode so that selecting "Strict OSE
 
 All phases complete:
 - [x] Phase 1 — `shared-racial-abilities.js` — dropped `isAdvanced &&` gate
-- [x] Phase 2 — `generator-ui.js` — zero-level `humanRacialAbilities` flag
-- [x] Phase 3 — `generator-ui.js` — `getEffectiveDemihumanLimits()` helper + `cp.dl` fixed
+- [x] Phase 2 — `gen-ui.js` — zero-level `humanRacialAbilities` flag
+- [x] Phase 3 — `gen-ui.js` — `getEffectiveDemihumanLimits()` helper + `cp.dl` fixed
 - [x] Phase 4 — stale `demihumanLimits` radio listener (harmless no-op)
-- [x] Phase 5a — `basic-character-gen.js` + `generator-ui.js` — `hasBlessed` flag + `cp.bl`
+- [x] Phase 5a — `shared-basic-character-gen.js` + `gen-ui.js` — `hasBlessed` flag + `cp.bl`
 - [x] Phase 5b — `charactersheet.html` — level-up HP roller double-rolls when `decoded.bl` is set
 
 ---
@@ -162,7 +162,7 @@ Printing always goes through the new tab (`charactersheet.html`), which already 
 "OTHER NOTES" full-width section already exists on Page 2 of the sheet (Row 2).
 
 ### ~~4D. Ability Score Racial Adjustment Legend~~ — ✅ COMPLETE (2026-03-31)
-Added as a small legend line in the page 1 footer (below `sheet.footer` text), only shown when at least one ability score was racially adjusted. Implemented inline in `renderCharacterSheetHTML()` in `shared-character-sheet.js`. Also updated `buildOptionsLine()` in `shared-compact-codes.js` to always show all HP/ability-affecting options (not just non-defaults).
+Added as a small legend line in the page 1 footer (below `sheet.footer` text), only shown when at least one ability score was racially adjusted. Implemented inline in `renderCharacterSheetHTML()` in `shared-character-sheet.js`. Also updated `buildOptionsLine()` in `cs-compact-codes.js` to always show all HP/ability-affecting options (not just non-defaults).
 
 ### ~~4E. Equipment Section Polish~~ — ✅ OBSOLETE
 The equipment display was redesigned. Armor/weapons are in the Page 1 WEAPONS, ARMOR, AND SKILLS box; Starting AC and Starting Gold are in the page footer line; there are no `&nbsp;<br>` spacer blocks to remove.
@@ -269,7 +269,7 @@ The following occupations still need weapon assignments in the background tables
 ## 8. Optional Enhancements
 
 ### Combat Stats Display
-- [ ] `generator-ui.js` — display STR and DEX modifiers on attack/AC separately
+- [ ] `gen-ui.js` — display STR and DEX modifiers on attack/AC separately
 
 ### Advanced Mode Race/Class Grid
 - [ ] Show class requirements (ability minimums) on hover/click in the race/class grid
@@ -301,9 +301,9 @@ The following occupations still need weapon assignments in the background tables
 
 **Quick summary:**
 - `shared-*.js` — shared ES6 modules (ability scores, character creation, class data, sheet renderer, sheet builder, equipment)
-- `class-data-{ose,gygar,ll}.js` — mode-specific class progression data
-- `{basic,advanced}-{character-gen,utils}.js` — still imported by `generator-ui.js`
-- `generator.html` / `generator-ui.js` — the merged generator (replaces basic/advanced pages)
+- `shared-class-data-{ose,gygar,ll}.js` — mode-specific class progression data
+- `shared-{basic,advanced}-{character-gen,utils}.js` — still imported by `gen-ui.js`
+- `generator.html` / `gen-ui.js` — the merged generator (replaces basic/advanced pages)
 - `charactersheet.html` — print/edit tab for saved characters
 - `classes.html` / `index.html` — landing and class reference pages
 - `PLANS_COMPLETED/` — completed planning documents (historical reference)

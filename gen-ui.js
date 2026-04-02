@@ -1,14 +1,14 @@
 /**
- * generator-ui.js
+ * gen-ui.js
  * Combined UI logic for Basic + Advanced modes on generator.html
  * Replaces basic-ui.js + advanced-ui.js
  */
 
 // ── Imports ───────────────────────────────────────────────────────────────────
-import * as ClassDataOSE    from './class-data-ose.js';
-import * as ClassDataGygar  from './class-data-gygar.js';
-import * as ClassDataLL     from './class-data-ll.js';
-import * as ClassDataShared from './class-data-shared.js';
+import * as ClassDataOSE    from './shared-class-data-ose.js';
+import * as ClassDataGygar  from './shared-class-data-gygar.js';
+import * as ClassDataLL     from './shared-class-data-ll.js';
+import * as ClassDataShared from './shared-class-data-shared.js';
 
 // Shared utils (identical in both utils files — import from basic)
 import {
@@ -16,12 +16,9 @@ import {
     formatModifier,
     getPrimeRequisites,
     readAbilityScores as readScoresFromInputs,
-    getMinimumScores,
     getClassRequirements,
-    getHitDiceSize,
     getDemihumanLimits,
-    meetsClassPrimeRequisites
-} from './basic-utils.js';
+} from './shared-basic-utils.js';
 
 // Advanced-only utils
 import {
@@ -29,7 +26,7 @@ import {
     getClassDisplayName,
     getAvailableClasses,
     applyRacialAdjustments
-} from './advanced-utils.js';
+} from './shared-advanced-utils.js';
 
 // Basic character generation (aliased to avoid name collisions)
 import {
@@ -39,7 +36,7 @@ import {
     getClassFeatures,
     getRacialAbilities   as getRacialBasic,
     createCharacter
-} from './basic-character-gen.js';
+} from './shared-basic-character-gen.js';
 
 // Advanced character generation (aliased to avoid name collisions)
 import {
@@ -48,20 +45,18 @@ import {
     createCharacterAdvanced,
     rollHitPoints        as rollHPAdvanced,
     getClassProgressionData as getProgAdvanced
-} from './advanced-character-gen.js';
+} from './shared-advanced-character-gen.js';
 
 import { rollStartingGold, calcStartingGold }    from './shared-character.js';
-import { purchaseEquipment }                      from './shared-equipment.js';
-import { getRandomName }                          from './shared-names.js';
-import { getRandomBackground, getAllBackgroundTables } from './shared-backgrounds.js';
-import { getModifierEffects }                     from './shared-modifier-effects.js';
+import { purchaseEquipment }                      from './gen-equipment.js';
+import { getRandomName }                          from './gen-names.js';
+import { getRandomBackground, getAllBackgroundTables } from './gen-backgrounds.js';
 import { displayCharacterSheet }                  from './shared-character-sheet.js';
 import { getMaxLevel, getAdvancedModeRacialAbilities } from './shared-racial-abilities.js';
-import { generateZeroLevelCharacter }             from './shared-0level-gen.js';
-import { saveSettings, loadSettings, clearSettings } from './shared-settings.js';
-import { buildOptionsLine } from './shared-compact-codes.js';
-import { expandCompactV2 } from './charactersheet.js';
-import { buildSheetSpec, CLASS_HD, PROG_CODE, CLS_CODE, RACE_CODE, RCM_CODE, sanitize, progModeLabel } from './shared-sheet-builder.js';
+import { generateZeroLevelCharacter }             from './gen-0level-gen.js';
+import { saveSettings, loadSettings, clearSettings } from './gen-settings.js';
+import { expandCompactV2 } from './cs-charactersheet.js';
+import { PROG_CODE, CLS_CODE, RACE_CODE, RCM_CODE, progModeLabel } from './shared-sheet-builder.js';
 
 // ── State ─────────────────────────────────────────────────────────────────────
 // Top-level mode toggle
@@ -545,8 +540,6 @@ async function generateBasicCharacter() {
     await displayBasicCharacter(character, purchased);
 }
 
-// buildSheetSpec, CLASS_HD, PROG_CODE, CLS_CODE, RACE_CODE, RCM_CODE, sanitize
-// are imported from './shared-sheet-builder.js' (see Imports section above).
 
 /** Read current global display options (called once per displayXxx invocation). */
 function sheetOpts() {

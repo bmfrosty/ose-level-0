@@ -1,5 +1,5 @@
 /**
- * basic-character-gen.js
+ * shared-basic-character-gen.js
  * Character generation functions for Basic Mode
  */
 
