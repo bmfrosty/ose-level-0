@@ -364,10 +364,13 @@ export const CLASS_ABILITIES = {
     }
   ],
 
+  // ── Dwarf CLASS ABILITIES ──────────────────────────────────────────────────
+  // In Basic mode these are SUPPRESSED (shown via shared-class-progression.js instead).
+  // In Advanced mode these appear in the "Class Abilities" section (Dwarf class abilities).
   Dwarf: [
     {
       name: "Detect Construction Tricks",
-      description: "2-in-6 chance to detect traps, false walls, hidden construction, or sloping passages.",
+      description: "2-in-6 chance to detect new construction, sliding walls, or sloping passages when searching.",
       availableAt: 1
     },
     {
@@ -471,7 +474,7 @@ export const CLASS_ABILITIES = {
     },
     {
       name: "Detect Construction Tricks",
-      description: "2-in-6 chance to detect traps, false walls, hidden construction, or sloping passages.",
+      description: "2-in-6 chance to detect new construction, sliding walls, or sloping passages when searching.",
       availableAt: 1
     },
     {

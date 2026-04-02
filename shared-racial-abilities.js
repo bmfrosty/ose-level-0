@@ -1,5 +1,13 @@
-// Racial abilities and bonuses for OSE characters
-// Extracted from names-tables.js for better code organization
+// RACIAL ABILITIES — Advanced Mode only
+//
+// This file defines RACIAL abilities for the Advanced character generator.
+// In Advanced mode, race and class are separate — racial abilities come from
+// the character's RACE (this file), and class abilities come from shared-class-data-shared.js.
+//
+// In Basic mode (race = class), demihuman abilities come from
+// shared-class-progression.js getRacialAbilities() — NOT from this file.
+// Human racial abilities (Blessed, etc.) are generated inline in gen-ui.js / cs-sheet-page.js.
+//
 // ES6 Module
 
 // ============================================================================

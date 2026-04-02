@@ -101,10 +101,14 @@ export function createCharacter(options) {
  * @returns {Object} Features object
  */
 export function getClassFeatures(className, level, classData, ClassDataShared) {
-    return sharedGetClassFeatures({
-        className,
-        level,
-        classData,
-        ClassDataShared
-    });
+    // NOTE: This is the BASIC MODE wrapper around the shared getClassFeatures.
+    // In Basic mode, demihuman classes (Dwarf, Elf, Halfling, Gnome) are race-as-class.
+    // Their abilities are displayed via racialAbilities (getRacialAbilities below),
+    // so we clear classAbilities here to prevent them appearing twice on the sheet.
+    const features = sharedGetClassFeatures({ className, level, classData, ClassDataShared });
+    const BASIC_DEMIHUMAN_CLASSES = ['Dwarf_CLASS', 'Elf_CLASS', 'Halfling_CLASS', 'Gnome_CLASS'];
+    if (BASIC_DEMIHUMAN_CLASSES.includes(className)) {
+        features.classAbilities = []; // racial abilities shown via racialAbilities section
+    }
+    return features;
 }

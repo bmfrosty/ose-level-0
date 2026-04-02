@@ -171,8 +171,13 @@ export function getClassFeatures(options) {
 }
 
 /**
- * Get racial abilities for demihuman classes (Basic Mode only)
- * In Basic Mode, race = class (Dwarf class, Elf class, etc.)
+ * Get CLASS ABILITIES for Basic Mode demihuman classes (displayed as 'CLASS ABILITIES')
+ *
+ * In Basic Mode, race = class (Dwarf class, Elf class, etc.) — there is no separate race.
+ * These string-format abilities are shown in the single 'CLASS ABILITIES' section of the sheet.
+ * They are NOT the same as the Advanced mode racial abilities in shared-racial-abilities.js.
+ * The structured {name,description} objects in shared-class-data-shared.js are SUPPRESSED
+ * in Basic mode (see shared-basic-character-gen.js getClassFeatures) to avoid duplication.
  * @param {string} className - Class name (e.g., "Dwarf", "Elf")
  * @returns {Array} Array of racial ability strings, or empty array if not demihuman
  */
@@ -182,7 +187,10 @@ export function getBasicModeRacialAbilities(className) {
     
     const demihumanClasses = ['Dwarf', 'Elf', 'Halfling', 'Gnome'];
     
-    if (!demihumanClasses.includes(className)) {
+    // Strip _CLASS suffix so 'Dwarf_CLASS' -> 'Dwarf' matches the lookup table
+    const baseClass = className.replace('_CLASS', '');
+
+    if (!demihumanClasses.includes(baseClass)) {
         console.log('Not a demihuman class - no racial abilities');
         console.log('====================================\n');
         return [];
@@ -192,12 +200,12 @@ export function getBasicModeRacialAbilities(className) {
     // These are the same abilities from racial-abilities.js but formatted for display
     const racialAbilities = {
         'Dwarf': [
-            'Languages: Common, Dwarf, Gnome, Goblin, Kobold',
+            'Languages: Alignment, Common, Dwarvish, Gnomish, Goblin, Kobold',
             'Infravision: 60\'',
             'Listening at Doors: 2-in-6 chance',
-            'Detect Construction Tricks: 2-in-6 chance to detect traps, sliding walls, sloping passages',
-            'Resilience: Bonus to saves vs Death/Poison, Wands, and Spells/Rods/Staves based on CON (see saving throws)'
-        ],
+            'Detect Construction Tricks: 2-in-6 chance to detect new construction, sliding walls, or sloping passages when searching',
+            'Detect Room Traps: 2-in-6 chance to detect non-magical room traps when searching'
+        ],  // Note: Dwarf saving throw bonus from CON is built into the saving throw table, not a named ability
         'Elf': [
             'Languages: Common, Elf, Gnoll, Hobgoblin, Orc',
             'Infravision: 60\'',
@@ -217,14 +225,14 @@ export function getBasicModeRacialAbilities(className) {
             'Languages: Common, Gnome, Dwarf, Goblin, Kobold',
             'Infravision: 60\'',
             'Listening at Doors: 2-in-6 chance',
-            'Detect Construction Tricks: 2-in-6 chance to detect traps, sliding walls, sloping passages',
+            'Detect Construction Tricks: 2-in-6 chance to detect new construction, sliding walls, or sloping passages when searching',
             'Armor Class Bonus: -4 bonus to AC when attacked by creatures larger than ogre-sized',
             'Magic Resistance: Bonus to saves vs Wands and Spells/Rods/Staves based on CON (see saving throws)',
             'Hiding in Wilderness: 90% chance in undergrowth (must be motionless)'
         ]
     };
     
-    const abilities = racialAbilities[className] || [];
+    const abilities = racialAbilities[baseClass] || [];
     
     console.log('\nRacial Abilities:');
     abilities.forEach(ability => {

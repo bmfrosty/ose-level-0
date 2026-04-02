@@ -229,6 +229,10 @@ export async function expandCompactV2(cp) {
     const xpBonusStr = xpBonusNum >= 0 ? `+${xpBonusNum}%` : `${xpBonusNum}%`;
     const hasRacial  = (character.racialAbilities || []).length > 0;
     const hasClass   = (character.classAbilities  || []).length > 0;
+    // In Basic mode, demihuman classes are race-as-class.
+    // Their class abilities ARE their racial abilities, so label the section "CLASS ABILITIES".
+    const BASIC_DEMIHUMAN_CLASSES = ['Dwarf_CLASS','Elf_CLASS','Halfling_CLASS','Gnome_CLASS'];
+    const isBasicDemihuman = !isAdv && BASIC_DEMIHUMAN_CLASSES.includes(cls);
 
     const hdSides = CLASS_HD[cp.c] || 6;
     const sd = {
@@ -240,7 +244,7 @@ export async function expandCompactV2(cp) {
         weapon: cp.w, classAttackBonus: character.attackBonus || 0,
         meleeMod: mods.STR, rangedMod: mods.DEX, thiefSkills: character.thiefSkills || null,
         abilitiesHeader: (hasRacial && hasClass) ? 'RACIAL & CLASS ABILITIES'
-                         : hasRacial ? 'RACIAL ABILITIES' : 'CLASS ABILITIES',
+                         : hasRacial ? (isBasicDemihuman ? 'CLASS ABILITIES' : 'RACIAL ABILITIES') : 'CLASS ABILITIES',
         racialAbilities: character.racialAbilities || [],
         classAbilities:  character.classAbilities  || [],
         savingThrows: character.savingThrows,
