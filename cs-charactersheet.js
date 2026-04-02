@@ -286,6 +286,99 @@ export async function expandCompactV2(cp) {
     return buildSheetSpec(sd, opts);
 }
 
+// ── buildGeneratorURL ──────────────────────────────────────────────────────────
+
+/**
+ * Reconstruct a generator.html URL with the settings that were used to
+ * generate this character, so the user can go back and roll another.
+ *
+ * @param {Object} cp - Decoded compact params v2 object (post-decodeCompactParams)
+ * @returns {string} URL string like "generator.html?mode=basic&p=ose&l=1&c=Fighter…"
+ */
+function buildGeneratorURL(cp) {
+    const CODE_TO_PROG_KEY   = { O:'ose', S:'smooth', L:'ll' };
+    const CODE_TO_CLASS_NAME = {
+        FI:'Fighter', CL:'Cleric', MU:'Magic-User', TH:'Thief',
+        SB:'Spellblade', DW:'Dwarf', EL:'Elf', HA:'Halfling', GN:'Gnome'
+    };
+    const CODE_TO_RACE_NAME  = { HU:'Human', DW:'Dwarf', EL:'Elf', HA:'Halfling', GN:'Gnome' };
+    const CODE_TO_RCM        = { ST:'strict', SH:'strict-human', TE:'traditional-extended', AL:'allow-all' };
+
+    const isAdv = cp.m === 'A';
+    const p = new URLSearchParams();
+
+    // Mode
+    p.set('mode', isAdv ? 'advanced' : 'basic');
+
+    // Progression mode (omit if OSE — that's the default)
+    const progKey = CODE_TO_PROG_KEY[cp.p] || 'smooth';
+    if (progKey !== 'ose') p.set('p', progKey);
+
+    // Level
+    if (cp.l != null) p.set('l', String(cp.l));
+
+    // Class (not applicable at level 0 — no class has been chosen yet)
+    if (cp.l !== 0 && cp.c) {
+        const cn = CODE_TO_CLASS_NAME[cp.c];
+        if (cn) p.set('c', cn);
+    }
+
+    // Race (advanced mode, level 1+ only)
+    if (isAdv && cp.r && cp.l !== 0) {
+        const rn = CODE_TO_RACE_NAME[cp.r];
+        if (rn) p.set('r', rn);
+    }
+
+    // Zero-level race selection
+    if (cp.l === 0 && cp.r) {
+        const rn = CODE_TO_RACE_NAME[cp.r];
+        if (rn) p.set('zr', rn);
+    }
+
+    // Basic: demihuman limits
+    if (!isAdv && cp.dl) p.set('dl', 'extended');
+
+    // Advanced: race/class mode (omit if strict — that's the default)
+    if (isAdv && cp.rcm) {
+        const rcm = CODE_TO_RCM[cp.rcm];
+        if (rcm && rcm !== 'strict') p.set('rcm', rcm);
+    }
+    // Basic: blessed flag → infer strict-human raceClassMode
+    if (!isAdv && cp.bl) p.set('rcm', 'strict-human');
+
+    // Prime req mode (0 = 'user' = default → omit)
+    if (cp.prm) p.set('prm', String(cp.prm));
+
+    // Boolean generator options
+    if (cp.hc)        p.set('hc', '1');
+    if (cp.il)        p.set('il', '1');
+    if (cp.un)        p.set('un', '1');
+    if (isAdv && cp.hhr) p.set('hhr', '1');
+
+    // Ability ordering (default 1 = 1977 order → only emit when 0 = modern)
+    if (cp.ao === 0) p.set('ao', '0');
+
+    // Wealth percent (default 50 → omit)
+    if (cp.wp != null && cp.wp !== 50) p.set('wp', String(cp.wp));
+
+    // Character name (pre-fills the name field)
+    if (cp.n) p.set('n', cp.n);
+
+    // Score minimums: cp.sm is stored as [STR, DEX, CON, INT, WIS, CHA]
+    // but the generator URL s= param is in [STR, INT, WIS, DEX, CON, CHA] order
+    if (Array.isArray(cp.sm) && cp.sm.length === 6) {
+        const [str, dex, con, int_, wis, cha] = cp.sm;
+        // Generator defaults: STR=3,INT=3,WIS=3,DEX=3,CON=6,CHA=3
+        const defaults = [3, 3, 3, 3, 6, 3];
+        const reordered = [str, int_, wis, dex, con, cha];
+        if (reordered.some((v, i) => v !== defaults[i])) {
+            p.set('s', reordered.join(','));
+        }
+    }
+
+    return `generator.html?${p.toString()}`;
+}
+
 // ── initEditPanel ──────────────────────────────────────────────────────────────
 
 /**
@@ -729,6 +822,13 @@ export async function initCharacterSheet() {
                 console.log('[charactersheet] Decoded compact params:\n' + JSON.stringify(decodedCp, null, 2));
                 await renderFromCompactParams(decodedCp, contentEl,
                     { initEditPanels: true });
+
+                // Wire up "Back to Generator" link with settings from this character
+                const genBtn = document.getElementById('backToGeneratorBtn');
+                if (genBtn) {
+                    genBtn.href = buildGeneratorURL(decodedCp);
+                    genBtn.style.display = '';
+                }
             } else {
                 // Legacy v1 sheet object
                 document.title      = parsed.printTitle || 'Character Sheet';

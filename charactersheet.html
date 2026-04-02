@@ -38,6 +38,19 @@
         .btn-levelup:hover { background-color: #6A1B9A; }
         .btn-close  { background-color: #ccc; color: #333; }
         .btn-close:hover  { background-color: #bbb; }
+        .btn-generator {
+            display: inline-block;
+            padding: 8px 16px;
+            font-size: 14px;
+            font-weight: bold;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            text-decoration: none;
+            background-color: #E65100;
+            color: white;
+        }
+        .btn-generator:hover { background-color: #BF360C; }
         .print-hint { color: #666; font-size: 0.85em; font-style: italic; }
 
         /* Edit panel — blue theme */
@@ -104,6 +117,7 @@
         <button class="btn-edit"    id="toggleModifyBtn"    style="display:none">🔧 Modify Character</button>
         <button class="btn-edit"    id="toggleSheetOptsBtn" style="display:none">⚙️ Edit Sheet Options</button>
         <button class="btn-levelup" id="toggleLevelUpBtn" style="display:none">⬆ Level Up</button>
+        <a class="btn-generator" id="backToGeneratorBtn" href="generator.html" style="display:none">🎲 Back to Generator</a>
         <button class="btn-close" onclick="window.close()">✕ Close</button>
         <span class="print-hint">Tip: In the print dialog, choose "Save as PDF" and set margins to None or Minimum</span>
     </div>
