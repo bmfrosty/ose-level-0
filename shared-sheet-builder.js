@@ -27,6 +27,18 @@ export const PROG_CODE = { ose:'O', smooth:'S', ll:'L' };
 /** Compact code → progression mode name (e.g. 'O' → 'ose') */
 export const CODE_TO_PROG = { O:'ose', S:'smooth', L:'ll' };
 
+/**
+ * Return a human-readable label for a progression mode.
+ * Accepts either a mode key ('ose', 'smooth', 'll') or a compact code ('O', 'S', 'L').
+ * Used by both charactersheet.js and generator-ui.js so the label lives in one place.
+ */
+export function progModeLabel(mode) {
+    if (mode === 'ose'    || mode === 'O') return 'OSE Standard';
+    if (mode === 'smooth' || mode === 'S') return 'Smoothified';
+    if (mode === 'll'     || mode === 'L') return 'Labyrinth Lord';
+    return mode; // pass-through for unknown values
+}
+
 // ── Class / race / RCM code maps ───────────────────────────────────────────────
 
 /** Full class name → compact code (e.g. 'Fighter_CLASS' → 'FI') */

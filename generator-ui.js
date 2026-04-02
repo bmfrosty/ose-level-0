@@ -60,7 +60,8 @@ import { getMaxLevel, getAdvancedModeRacialAbilities } from './shared-racial-abi
 import { generateZeroLevelCharacter }             from './shared-0level-gen.js';
 import { saveSettings, loadSettings, clearSettings } from './shared-settings.js';
 import { buildOptionsLine } from './shared-compact-codes.js';
-import { buildSheetSpec, CLASS_HD, PROG_CODE, CLS_CODE, RACE_CODE, RCM_CODE, sanitize } from './shared-sheet-builder.js';
+import { expandCompactV2 } from './charactersheet.js';
+import { buildSheetSpec, CLASS_HD, PROG_CODE, CLS_CODE, RACE_CODE, RCM_CODE, sanitize, progModeLabel } from './shared-sheet-builder.js';
 
 // ── State ─────────────────────────────────────────────────────────────────────
 // Top-level mode toggle
@@ -459,7 +460,7 @@ async function generateZeroLevelChar() {
     console.log('[generateZeroLevelChar] Character generated:', char);
     const racialAbilities = getAdvancedModeRacialAbilities(char.race);
     console.log('[generateZeroLevelChar] Racial abilities:', racialAbilities);
-    displayZeroLevelCharacter(char);
+    await displayZeroLevelCharacter(char);
 }
 
 // ── Generate Character (dispatcher) ──────────────────────────────────────────
@@ -468,12 +469,12 @@ export function generateCharacter() {
         generateZeroLevelChar().catch(e => console.error('0-level gen error:', e));
         return;
     }
-    if (mode === 'basic') generateBasicCharacter();
-    else                  generateAdvancedCharacter();
+    if (mode === 'basic') generateBasicCharacter().catch(e => console.error('basic gen error:', e));
+    else                  generateAdvancedCharacter().catch(e => console.error('advanced gen error:', e));
 }
 
 // ── Basic: Generate Character ─────────────────────────────────────────────────
-function generateBasicCharacter() {
+async function generateBasicCharacter() {
     if (!selectedLevel || !selectedClass) { alert('Please select a level and class first!'); return; }
 
     if (useFixedScores) {
@@ -500,7 +501,7 @@ function generateBasicCharacter() {
     }
     fixedAdjustments = null;
 
-    const displayMode = progressionMode === 'smooth' ? 'Smoothified' : progressionMode === 'll' ? 'Labyrinth Lord' : 'OSE Standard';
+    const displayMode = progModeLabel(progressionMode);
     const classData = getClassDataForMode(progressionMode);
     const conMod = calculateModifier(abilityScores.CON);
 
@@ -541,7 +542,7 @@ function generateBasicCharacter() {
 
     fixedHPRolls = null; fixedStartingGold = null;
 
-    displayBasicCharacter(character, purchased);
+    await displayBasicCharacter(character, purchased);
 }
 
 // buildSheetSpec, CLASS_HD, PROG_CODE, CLS_CODE, RACE_CODE, RCM_CODE, sanitize
@@ -558,118 +559,82 @@ function sheetOpts() {
     };
 }
 
-function displayBasicCharacter(character, purchased) {
-    const displayClass = character.class.replace('_CLASS', '');
-    const xpBonus  = character.xp.bonus >= 0 ? `+${character.xp.bonus}%` : `${character.xp.bonus}%`;
-    const hasRacial = character.racialAbilities?.length > 0;
-    const hasClass  = character.classAbilities?.length  > 0;
-    const hdStr    = `1d${CLASS_HD[character.class]||6}`;
-
-    const sd = {
-        title:    'OLD-SCHOOL ESSENTIALS',
-        subtitle: `RETRO ADVENTURE GAME &nbsp;·&nbsp; ${character.mode} Mode`,
-        name: character.name, occupation: character.background?.profession,
-        raceClass: displayClass, level: character.level,
-        hd: hdStr, xpBonus,
-        maxHP: character.hp.max, initMod: character.abilityModifiers.DEX,
-        abilityScores: ['STR','DEX','CON','INT','WIS','CHA'].map(a => ({
-            name:a, score: character.abilityScores[a],
-            originalScore: (character.originalScores && character.originalScores[a] !== character.abilityScores[a])
-                ? character.originalScores[a] : null,
-            effects: getModifierEffects(a, character.abilityModifiers[a], character.abilityScores[a])
-        })),
-        weapon: purchased.weapon, classAttackBonus: character.attackBonus,
-        meleeMod: character.abilityModifiers.STR, rangedMod: character.abilityModifiers.DEX,
-        thiefSkills: character.thiefSkills,
-        abilitiesHeader: (hasRacial&&hasClass)?'RACIAL & CLASS ABILITIES':hasRacial?'RACIAL ABILITIES':'CLASS ABILITIES',
-        racialAbilities: character.racialAbilities, classAbilities: character.classAbilities,
-        savingThrows: character.savingThrows,
-        experience: { current: character.xp.current, forLevel: character.level,
-            forLevelXP: character.xp.forCurrentLevel, forNext: character.xp.forNextLevel, bonus: xpBonus },
-        equipment: { armor: purchased.armor||null, shield: purchased.shield||false, items: purchased.items,
-            startingAC: purchased.startingAC, startingGold: purchased.goldRemaining, startingHD: hdStr },
-        spellSlots: character.spellSlots, turnUndead: character.turnUndead,
-        cp: { v:2, m:'B', p: PROG_CODE[progressionMode]||'S', c: CLS_CODE[selectedClass]||'FI', l: character.level,
-            s: ['STR','DEX','CON','INT','WIS','CHA'].map(a => character.abilityScores[a]),
-            h: character.hp.max, hr: character.hpRolls||[], hd: character.hpDice||[],
-            il: includeLevel0HP?1:0, n: character.name||'', bg: character.background?.profession||'',
-            ar: purchased.armor||null, sh: purchased.shield?1:0, w: purchased.weapon||null,
-            it: purchased.items||[], g: purchased.goldRemaining||0, ac: purchased.startingAC||10,
-            dl: getEffectiveDemihumanLimits() === 'extended' ? 1 : 0,
-            bl: character.blessed ? 1 : 0,
-            un: showUndeadNames?1:0, qr: showQRCode?1:0, ap: document.getElementById('autoPrintInNewTab')?.checked?1:0,
-            hc: healthyCharacters?1:0, wp: wealthPct, prm: primeRequisiteMode==='user'?0:parseInt(primeRequisiteMode),
-            ao: basicAbilityOrdering?1:0,
-            rr: _scoreRollAttempts, sm: ['STR','DEX','CON','INT','WIS','CHA'].map(a => readScoresFromInputs()[a] || 3),
-            ...({'dac-matrix':1,'dual':2,'dual-matrix':3}[acDisplayMode] != null ? {adm:{'dac-matrix':1,'dual':2,'dual-matrix':3}[acDisplayMode]} : {}) },
-        footer: (() => {
-            const sm = ['STR','DEX','CON','INT','WIS','CHA'].map(a => readScoresFromInputs()[a] || 3);
-            const o = buildOptionsLine({ m:'B', p: PROG_CODE[progressionMode]||'S', l: character.level,
-                bl: character.blessed?1:0, dl: getEffectiveDemihumanLimits()==='extended'?1:0,
-                hc: healthyCharacters?1:0, il: includeLevel0HP?1:0,
-                prm: primeRequisiteMode==='user'?0:parseInt(primeRequisiteMode), wp: wealthPct,
-                rr: _scoreRollAttempts, sm, fs: useFixedScores?1:0 });
-            return `Level ${character.level} ${displayClass} &nbsp;·&nbsp; ${character.mode} Mode` +
-                   (o ? `<br><small style="opacity:0.7;">${o}</small>` : '');
-        })(),
-        printTitle: `OSE Basic - ${sanitize(displayClass)} - Level ${character.level} - ${sanitize(character.background?.profession||'')} - ${sanitize(character.name)}`,
+async function displayBasicCharacter(character, purchased) {
+    const SCORES = ['STR','DEX','CON','INT','WIS','CHA'];
+    const adjArr  = SCORES.map(a => character.abilityScores[a]);
+    const baseArr = character.originalScores ? SCORES.map(a => character.originalScores[a]) : adjArr;
+    const hasAdj  = adjArr.some((v,i) => v !== baseArr[i]);
+    const cp = {
+        v:2, m:'B', p:PROG_CODE[progressionMode]||'S', c:CLS_CODE[selectedClass]||'FI', l:character.level,
+        s:adjArr, ...(hasAdj?{bs:baseArr}:{}),
+        h:character.hp.max, hr:character.hpRolls||[], hd:character.hpDice||[],
+        il:includeLevel0HP?1:0, n:character.name||'', bg:character.background?.profession||'',
+        ar:purchased.armor||null, sh:purchased.shield?1:0, w:purchased.weapon||null,
+        it:purchased.items||[], g:purchased.goldRemaining||0, ac:purchased.startingAC||10,
+        dl:getEffectiveDemihumanLimits()==='extended'?1:0, bl:character.blessed?1:0,
+        un:showUndeadNames?1:0, qr:showQRCode?1:0, ap:document.getElementById('autoPrintInNewTab')?.checked?1:0,
+        hc:healthyCharacters?1:0, wp:wealthPct, prm:primeRequisiteMode==='user'?0:parseInt(primeRequisiteMode),
+        ao:basicAbilityOrdering?1:0,
+        rr:_scoreRollAttempts, sm:SCORES.map(a=>readScoresFromInputs()[a]||3),
+        ...({'dac-matrix':1,'dual':2,'dual-matrix':3}[acDisplayMode]!=null?{adm:{'dac-matrix':1,'dual':2,'dual-matrix':3}[acDisplayMode]}:{})
     };
-
-    const spec = buildSheetSpec(sd, sheetOpts());
+    const spec = await expandCompactV2(cp);
+    const opts = sheetOpts();
+    spec.openInNewTab  = opts.openInNewTab;
+    spec.backgroundTab = opts.backgroundTab;
     spec.editState = {
-        level: character.level, progressionMode, name: character.name||'',
-        STR: character.originalScores?.STR ?? character.abilityScores.STR,
-        INT: character.originalScores?.INT ?? character.abilityScores.INT,
-        WIS: character.originalScores?.WIS ?? character.abilityScores.WIS,
-        DEX: character.originalScores?.DEX ?? character.abilityScores.DEX,
-        CON: character.originalScores?.CON ?? character.abilityScores.CON,
-        CHA: character.originalScores?.CHA ?? character.abilityScores.CHA,
-        adjSTR: character.originalScores?.STR != null ? character.abilityScores.STR - character.originalScores.STR : 0,
-        adjINT: character.originalScores?.INT != null ? character.abilityScores.INT - character.originalScores.INT : 0,
-        adjWIS: character.originalScores?.WIS != null ? character.abilityScores.WIS - character.originalScores.WIS : 0,
-        adjDEX: character.originalScores?.DEX != null ? character.abilityScores.DEX - character.originalScores.DEX : 0,
-        adjCON: character.originalScores?.CON != null ? character.abilityScores.CON - character.originalScores.CON : 0,
-        adjCHA: character.originalScores?.CHA != null ? character.abilityScores.CHA - character.originalScores.CHA : 0,
-        hpRolls: character.hpRolls||[], hpDice: character.hpDice||[], startingGold: character.startingGold||0,
-        includeLevel0HP, showUndeadNames, showQRCode, conModifier: calculateModifier(character.abilityScores.CON),
-        extraSections: [
-            { label:'6. Demihuman Level Limits', name:'editDemihumanLimits', options:[
-                { value:'standard', label:'Standard Limits', checked: demihumanLimits==='standard' },
-                { value:'extended', label:'Extended to Level 14', checked: demihumanLimits==='extended' }
+        level:character.level, progressionMode, name:character.name||'',
+        STR:character.originalScores?.STR??character.abilityScores.STR,
+        INT:character.originalScores?.INT??character.abilityScores.INT,
+        WIS:character.originalScores?.WIS??character.abilityScores.WIS,
+        DEX:character.originalScores?.DEX??character.abilityScores.DEX,
+        CON:character.originalScores?.CON??character.abilityScores.CON,
+        CHA:character.originalScores?.CHA??character.abilityScores.CHA,
+        adjSTR:character.originalScores?.STR!=null?character.abilityScores.STR-character.originalScores.STR:0,
+        adjINT:character.originalScores?.INT!=null?character.abilityScores.INT-character.originalScores.INT:0,
+        adjWIS:character.originalScores?.WIS!=null?character.abilityScores.WIS-character.originalScores.WIS:0,
+        adjDEX:character.originalScores?.DEX!=null?character.abilityScores.DEX-character.originalScores.DEX:0,
+        adjCON:character.originalScores?.CON!=null?character.abilityScores.CON-character.originalScores.CON:0,
+        adjCHA:character.originalScores?.CHA!=null?character.abilityScores.CHA-character.originalScores.CHA:0,
+        hpRolls:character.hpRolls||[], hpDice:character.hpDice||[], startingGold:character.startingGold||0,
+        includeLevel0HP, showUndeadNames, showQRCode, conModifier:calculateModifier(character.abilityScores.CON),
+        extraSections:[
+            {label:'6. Demihuman Level Limits',name:'editDemihumanLimits',options:[
+                {value:'standard',label:'Standard Limits',checked:demihumanLimits==='standard'},
+                {value:'extended',label:'Extended to Level 14',checked:demihumanLimits==='extended'}
             ]},
-            { label:'7. AC Display Mode', name:'editACDisplayMode', options:[
-                { value:'aac', label:'Ascending Armor Class (AAC)', checked: acDisplayMode==='aac' },
-                { value:'dac-matrix', label:'Descending AC with Attack Matrix', checked: acDisplayMode==='dac-matrix' },
-                { value:'dual', label:'Dual Format (AAC and DAC)', checked: acDisplayMode==='dual' },
-                { value:'dual-matrix', label:'Dual Format with Attack Matrix', checked: acDisplayMode==='dual-matrix' },
+            {label:'7. AC Display Mode',name:'editACDisplayMode',options:[
+                {value:'aac',label:'Ascending Armor Class (AAC)',checked:acDisplayMode==='aac'},
+                {value:'dac-matrix',label:'Descending AC with Attack Matrix',checked:acDisplayMode==='dac-matrix'},
+                {value:'dual',label:'Dual Format (AAC and DAC)',checked:acDisplayMode==='dual'},
+                {value:'dual-matrix',label:'Dual Format with Attack Matrix',checked:acDisplayMode==='dual-matrix'},
             ]},
         ]
     };
     spec.onEditUpdate = (values) => {
-        selectedLevel = values.level; progressionMode = values.progressionMode; characterName = values.name;
-        abilityScores = { STR:values.STR, INT:values.INT, WIS:values.WIS, DEX:values.DEX, CON:values.CON, CHA:values.CHA };
-        const _adjVals = { STR:values.adjSTR||0, INT:values.adjINT||0, WIS:values.adjWIS||0, DEX:values.adjDEX||0, CON:values.adjCON||0, CHA:values.adjCHA||0 };
-        fixedAdjustments = Object.values(_adjVals).some(v => v !== 0) ? _adjVals : null;
-        if (values.editDemihumanLimits) demihumanLimits = values.editDemihumanLimits;
-        if (values.editACDisplayMode) { acDisplayMode = values.editACDisplayMode; document.querySelectorAll('input[name="acDisplayMode"]').forEach(r => { r.checked = r.value===acDisplayMode; }); }
-        includeLevel0HP = values.includeLevel0HP||false; showUndeadNames = values.showUndeadNames||false; showQRCode = values.showQRCode??true;
-        fixedHPRolls = values.hpRolls?.length ? [...values.hpRolls] : null;
-        fixedStartingGold = (values.startingGold!=null) ? parseInt(values.startingGold) : null;
-        ['STR','INT','WIS','DEX','CON','CHA'].forEach(a => { const el=document.getElementById(`score${a}`); if(el) el.value=values[a]; });
-        const nameEl = document.getElementById('characterName'); if(nameEl) nameEl.value = characterName;
-        document.querySelectorAll('.level-btn').forEach(b => b.classList.toggle('selected', parseInt(b.dataset.level)===selectedLevel));
-        document.querySelectorAll('input[name="progressionMode"]').forEach(r => { r.checked = r.value===progressionMode; });
-        document.querySelectorAll('input[name="demihumanLimits"]').forEach(r => { r.checked = r.value===demihumanLimits; });
-        const l0El=document.getElementById('includeLevel0HP'); if(l0El) l0El.checked=includeLevel0HP;
-        const unEl=document.getElementById('showUndeadNames');  if(unEl) unEl.checked=showUndeadNames;
-        useFixedScores=true; const fixEl=document.getElementById('useFixedScores'); if(fixEl) fixEl.checked=true;
+        selectedLevel=values.level; progressionMode=values.progressionMode; characterName=values.name;
+        abilityScores={STR:values.STR,INT:values.INT,WIS:values.WIS,DEX:values.DEX,CON:values.CON,CHA:values.CHA};
+        const _adjVals={STR:values.adjSTR||0,INT:values.adjINT||0,WIS:values.adjWIS||0,DEX:values.adjDEX||0,CON:values.adjCON||0,CHA:values.adjCHA||0};
+        fixedAdjustments=Object.values(_adjVals).some(v=>v!==0)?_adjVals:null;
+        if(values.editDemihumanLimits) demihumanLimits=values.editDemihumanLimits;
+        if(values.editACDisplayMode){acDisplayMode=values.editACDisplayMode;document.querySelectorAll('input[name="acDisplayMode"]').forEach(r=>{r.checked=r.value===acDisplayMode;});}
+        includeLevel0HP=values.includeLevel0HP||false; showUndeadNames=values.showUndeadNames||false; showQRCode=values.showQRCode??true;
+        fixedHPRolls=values.hpRolls?.length?[...values.hpRolls]:null;
+        fixedStartingGold=(values.startingGold!=null)?parseInt(values.startingGold):null;
+        ['STR','INT','WIS','DEX','CON','CHA'].forEach(a=>{const el=document.getElementById(`score${a}`);if(el)el.value=values[a];});
+        const nameEl=document.getElementById('characterName');if(nameEl)nameEl.value=characterName;
+        document.querySelectorAll('.level-btn').forEach(b=>b.classList.toggle('selected',parseInt(b.dataset.level)===selectedLevel));
+        document.querySelectorAll('input[name="progressionMode"]').forEach(r=>{r.checked=r.value===progressionMode;});
+        document.querySelectorAll('input[name="demihumanLimits"]').forEach(r=>{r.checked=r.value===demihumanLimits;});
+        const l0El=document.getElementById('includeLevel0HP');if(l0El)l0El.checked=includeLevel0HP;
+        const unEl=document.getElementById('showUndeadNames');if(unEl)unEl.checked=showUndeadNames;
+        useFixedScores=true;const fixEl=document.getElementById('useFixedScores');if(fixEl)fixEl.checked=true;
         generateCharacter();
     };
     displayCharacterSheet(spec, document.getElementById('characterInfo'), document.getElementById('characterDisplay'));
 }
-
 // ── Advanced: Generate Character ──────────────────────────────────────────────
-function generateAdvancedCharacter() {
+async function generateAdvancedCharacter() {
     if (!selectedLevel || !selectedRace || !selectedClass) { alert('Please select a level, race, and class first!'); return; }
 
     const classData = getClassDataForMode(progressionMode);
@@ -726,69 +691,32 @@ function generateAdvancedCharacter() {
     character.hpRolls = hpResult.rolls; character.hpDice = hpResult.dice; character.startingGold = startingGold;
     fixedHPRolls = null; fixedStartingGold = null; fixedAdjustments = null;
 
-    displayAdvancedCharacter(character, purchased);
+    await displayAdvancedCharacter(character, purchased);
 }
 
-function displayAdvancedCharacter(character, purchased) {
+async function displayAdvancedCharacter(character, purchased) {
     const raceDisplay  = getRaceDisplayName(character.race);
     const classDisplay = getClassDisplayName(character.class);
-    const modeLabel    = progressionMode==='smooth'?'Smoothified':progressionMode==='ll'?'Labyrinth Lord':'OSE Standard';
-    const xpBonus      = character.xp.bonus>=0?`+${character.xp.bonus}%`:`${character.xp.bonus}%`;
-    const hasRacial    = character.racialAbilities?.length>0, hasClass = character.classAbilities?.length>0;
     const adjArr = ['STR','DEX','CON','INT','WIS','CHA'].map(a=>character.adjustedScores[a]);
     const baseArr = ['STR','DEX','CON','INT','WIS','CHA'].map(a=>character.baseScores[a]);
     const hasAdj = adjArr.some((v,i)=>v!==baseArr[i]);
-    const raceClassDisplay = (hideHumanRace && raceDisplay==='Human')
-        ? classDisplay
-        : (raceDisplay===classDisplay ? raceDisplay : `${raceDisplay} ${classDisplay}`);
-    const hdStr = `1d${CLASS_HD[character.class]||6}`;
-
-    const sd = {
-        title:    'OLD-SCHOOL ESSENTIALS ADVANCED',
-        subtitle: `RETRO ADVENTURE GAME &nbsp;·&nbsp; ${modeLabel} Mode`,
-        name: character.name, occupation: character.background?.profession,
-        raceClass: raceClassDisplay, level: character.level,
-        hd: hdStr, xpBonus,
-        maxHP: character.hp.max, initMod: character.abilityModifiers.DEX,
-        abilityScores: ['STR','DEX','CON','INT','WIS','CHA'].map(a=>({
-            name:a, score:character.adjustedScores[a],
-            originalScore:(character.baseScores[a]!==character.adjustedScores[a])?character.baseScores[a]:null,
-            effects:getModifierEffects(a,character.abilityModifiers[a],character.adjustedScores[a])
-        })),
-        weapon: purchased.weapon, classAttackBonus: character.attackBonus,
-        meleeMod: character.abilityModifiers.STR, rangedMod: character.abilityModifiers.DEX,
-        thiefSkills: character.thiefSkills,
-        abilitiesHeader: (hasRacial&&hasClass)?'RACIAL & CLASS ABILITIES':hasRacial?'RACIAL ABILITIES':'CLASS ABILITIES',
-        racialAbilities: character.racialAbilities, classAbilities: character.classAbilities,
-        savingThrows: character.savingThrows,
-        experience: { current:character.xp.current, forLevel:character.level,
-            forLevelXP:character.xp.forCurrentLevel, forNext:character.xp.forNextLevel, bonus:xpBonus },
-        equipment: { armor:purchased.armor||null, shield:purchased.shield||false, items:purchased.items,
-            startingAC:purchased.startingAC, startingGold:purchased.goldRemaining, startingHD:hdStr },
-        spellSlots: character.spellSlots, turnUndead: character.turnUndead,
-        cp: { v:2, m:'A', p:PROG_CODE[progressionMode]||'S', r:RACE_CODE[selectedRace]||'HU', c:CLS_CODE[selectedClass]||'FI', l:character.level,
-            s:adjArr, ...(hasAdj?{bs:baseArr}:{}), h:character.hp.max, hr:character.hpRolls||[], hd:character.hpDice||[],
-            il:includeLevel0HP?1:0, n:character.name||'', bg:character.background?.profession||'',
-            ar:purchased.armor||null, sh:purchased.shield?1:0, w:purchased.weapon||null, it:purchased.items||[],
-            g:purchased.goldRemaining||0, ac:purchased.startingAC||10, rcm:RCM_CODE[raceClassMode]||'SH',
-            un:showUndeadNames?1:0, qr:showQRCode?1:0, ap:document.getElementById('autoPrintInNewTab')?.checked?1:0,
-            hc:healthyCharacters?1:0, wp:wealthPct, prm:primeRequisiteMode==='user'?0:parseInt(primeRequisiteMode), ao:basicAbilityOrdering?1:0,
-            ...(hideHumanRace?{hhr:1}:{}),
-            rr: _scoreRollAttempts, sm: ['STR','DEX','CON','INT','WIS','CHA'].map(a => readScoresFromInputs()[a] || 3),
-            ...({'dac-matrix':1,'dual':2,'dual-matrix':3}[acDisplayMode] != null ? {adm:{'dac-matrix':1,'dual':2,'dual-matrix':3}[acDisplayMode]} : {}) },
-        footer: (() => {
-            const sm = ['STR','DEX','CON','INT','WIS','CHA'].map(a => readScoresFromInputs()[a] || 3);
-            const o = buildOptionsLine({ m:'A', p:PROG_CODE[progressionMode]||'S', l:character.level,
-                rcm:RCM_CODE[raceClassMode]||'SH', hc:healthyCharacters?1:0, il:includeLevel0HP?1:0,
-                prm:primeRequisiteMode==='user'?0:parseInt(primeRequisiteMode), wp:wealthPct,
-                rr: _scoreRollAttempts, sm, fs: useFixedScores?1:0 });
-            return `Level ${character.level} ${raceDisplay} ${classDisplay} &nbsp;·&nbsp; ${modeLabel} Mode` +
-                   (o ? `<br><small style="opacity:0.7;">${o}</small>` : '');
-        })(),
-        printTitle: `OSE Advanced - ${sanitize(raceDisplay)} - ${sanitize(classDisplay)} - Level ${character.level} - ${sanitize(character.background?.profession||'')} - ${sanitize(character.name)}`,
+    const cp = {
+        v:2, m:'A', p:PROG_CODE[progressionMode]||'S', r:RACE_CODE[selectedRace]||'HU', c:CLS_CODE[selectedClass]||'FI', l:character.level,
+        s:adjArr, ...(hasAdj?{bs:baseArr}:{}),
+        h:character.hp.max, hr:character.hpRolls||[], hd:character.hpDice||[],
+        il:includeLevel0HP?1:0, n:character.name||'', bg:character.background?.profession||'',
+        ar:purchased.armor||null, sh:purchased.shield?1:0, w:purchased.weapon||null, it:purchased.items||[],
+        g:purchased.goldRemaining||0, ac:purchased.startingAC||10, rcm:RCM_CODE[raceClassMode]||'SH',
+        un:showUndeadNames?1:0, qr:showQRCode?1:0, ap:document.getElementById('autoPrintInNewTab')?.checked?1:0,
+        hc:healthyCharacters?1:0, wp:wealthPct, prm:primeRequisiteMode==='user'?0:parseInt(primeRequisiteMode), ao:basicAbilityOrdering?1:0,
+        ...(hideHumanRace?{hhr:1}:{}),
+        rr:_scoreRollAttempts, sm:['STR','DEX','CON','INT','WIS','CHA'].map(a=>readScoresFromInputs()[a]||3),
+        ...({'dac-matrix':1,'dual':2,'dual-matrix':3}[acDisplayMode]!=null?{adm:{'dac-matrix':1,'dual':2,'dual-matrix':3}[acDisplayMode]}:{})
     };
-
-    const spec = buildSheetSpec(sd, sheetOpts());
+    const spec = await expandCompactV2(cp);
+    const opts = sheetOpts();
+    spec.openInNewTab  = opts.openInNewTab;
+    spec.backgroundTab = opts.backgroundTab;
     spec.editState = {
         level:character.level, progressionMode, name:character.name||'',
         STR:character.baseScores.STR, INT:character.baseScores.INT, WIS:character.baseScores.WIS,
@@ -819,105 +747,73 @@ function displayAdvancedCharacter(character, purchased) {
     spec.onEditUpdate = (values) => {
         selectedLevel=values.level; progressionMode=values.progressionMode; characterName=values.name;
         abilityScores={STR:values.STR,INT:values.INT,WIS:values.WIS,DEX:values.DEX,CON:values.CON,CHA:values.CHA};
-        const _adjValsAdv = { STR:values.adjSTR||0, INT:values.adjINT||0, WIS:values.adjWIS||0, DEX:values.adjDEX||0, CON:values.adjCON||0, CHA:values.adjCHA||0 };
-        fixedAdjustments = Object.values(_adjValsAdv).some(v => v !== 0) ? _adjValsAdv : null;
+        const _adjValsAdv={STR:values.adjSTR||0,INT:values.adjINT||0,WIS:values.adjWIS||0,DEX:values.adjDEX||0,CON:values.adjCON||0,CHA:values.adjCHA||0};
+        fixedAdjustments=Object.values(_adjValsAdv).some(v=>v!==0)?_adjValsAdv:null;
         if(values.editRaceClassMode) raceClassMode=values.editRaceClassMode;
-        if(values.editACDisplayMode) { acDisplayMode=values.editACDisplayMode; document.querySelectorAll('input[name="acDisplayMode"]').forEach(r=>{r.checked=r.value===acDisplayMode;}); }
+        if(values.editACDisplayMode){acDisplayMode=values.editACDisplayMode;document.querySelectorAll('input[name="acDisplayMode"]').forEach(r=>{r.checked=r.value===acDisplayMode;});}
         includeLevel0HP=values.includeLevel0HP||false; showUndeadNames=values.showUndeadNames||false; showQRCode=values.showQRCode??true;
         fixedHPRolls=values.hpRolls?.length?[...values.hpRolls]:null;
         fixedStartingGold=(values.startingGold!=null)?parseInt(values.startingGold):null;
         ['STR','INT','WIS','DEX','CON','CHA'].forEach(a=>{const el=document.getElementById(`score${a}`);if(el)el.value=values[a];});
-        const nameEl=document.getElementById('characterName'); if(nameEl) nameEl.value=characterName;
+        const nameEl=document.getElementById('characterName');if(nameEl)nameEl.value=characterName;
         document.querySelectorAll('.level-btn').forEach(b=>b.classList.toggle('selected',parseInt(b.dataset.level)===selectedLevel));
         document.querySelectorAll('input[name="progressionMode"]').forEach(r=>{r.checked=r.value===progressionMode;});
         document.querySelectorAll('input[name="raceClassMode"]').forEach(r=>{r.checked=r.value===raceClassMode;});
-        const l0El=document.getElementById('includeLevel0HP'); if(l0El) l0El.checked=includeLevel0HP;
-        const unEl=document.getElementById('showUndeadNames');  if(unEl) unEl.checked=showUndeadNames;
-        useFixedScores=true; const fixEl=document.getElementById('useFixedScores'); if(fixEl) fixEl.checked=true;
+        const l0El=document.getElementById('includeLevel0HP');if(l0El)l0El.checked=includeLevel0HP;
+        const unEl=document.getElementById('showUndeadNames');if(unEl)unEl.checked=showUndeadNames;
+        useFixedScores=true;const fixEl=document.getElementById('useFixedScores');if(fixEl)fixEl.checked=true;
         generateCharacter();
     };
     displayCharacterSheet(spec, document.getElementById('characterInfo'), document.getElementById('characterDisplay'));
 }
 
-function displayZeroLevelCharacter(char) {
-    const racialAbilities = getAdvancedModeRacialAbilities(char.race);
-    const raceDisplay = char.race.replace('_RACE','');
-    const modeLabel   = mode==='advanced' ? (progressionMode==='smooth'?'Smoothified':progressionMode==='ll'?'Labyrinth Lord':'OSE Standard') : '';
-    const sv = char.savingThrows;
+async function displayZeroLevelCharacter(char) {
     const ABILITIES = ['STR','DEX','CON','INT','WIS','CHA'];
     const adjArr  = ABILITIES.map(a=>char.results.find(r=>r.ability===a).roll);
     const baseArr = ABILITIES.map(a=>{ const r=char.results.find(x=>x.ability===a); return r.originalRoll ?? r.roll; });
     const hasAdj  = adjArr.some((v,i)=>v!==baseArr[i]);
+    const sv      = char.savingThrows;
     const svArr   = [sv.Death,sv.Wands,sv.Paralysis,sv.Breath,sv.Spells];
     const isAdv   = mode==='advanced';
-
-    const sd = {
-        title:    isAdv ? 'OLD-SCHOOL ESSENTIALS ADVANCED' : 'OLD-SCHOOL ESSENTIALS',
-        subtitle: isAdv ? `RETRO ADVENTURE GAME &nbsp;·&nbsp; ${modeLabel} Mode` : 'RETRO ADVENTURE GAME',
-        name: char.name, occupation: char.background.profession,
-        raceClass: '', level: '0', hd: '', xpBonus: '',
-        maxHP: char.hitPoints.total, initMod: char.results.find(r=>r.ability==='DEX').modifier,
-        abilityScores: ABILITIES.map(a=>{const r=char.results.find(x=>x.ability===a);return{name:a,score:r.roll,originalScore:(r.originalRoll!==undefined&&r.originalRoll!==r.roll)?r.originalRoll:null,effects:getModifierEffects(a,r.modifier,r.roll)};}),
-        weapon: char.background.weapon, classAttackBonus: char.attackBonus||0,
-        meleeMod: char.results.find(r=>r.ability==='STR').modifier,
-        rangedMod: char.results.find(r=>r.ability==='DEX').modifier,
-        thiefSkills: null,
-        abilitiesHeader: 'RACIAL ABILITIES',
-        racialAbilities: racialAbilities||[], classAbilities: [],
-        savingThrows: {death:sv.Death,wands:sv.Wands,paralysis:sv.Paralysis,breath:sv.Breath,spells:sv.Spells},
-        experience: null,
-        equipment: {armor:char.background.armor||null,items:char.background.item||[],
-            startingAC:char.armorClass,startingGold:char.startingGold,startingHD:'1d4'},
-        spellSlots: null, turnUndead: null,
-        cp: { v:2, m:isAdv?'A':'B', l:0, r:char.raceCode, p:(PROG_CODE[progressionMode]||'O'),
-            s:adjArr, ...(hasAdj?{bs:baseArr}:{}), sv:svArr, h:char.hitPoints.total, hr:[char.hitPoints.total], hd:[4],
-            n:char.name, bg:char.background.profession, ar:char.background.armor||null,
-            w:char.background.weapon||null, it:char.background.item||[], g:char.startingGold, ac:char.armorClass,
-            bl:raceClassMode!=='strict'?1:0, hc:healthyCharacters?1:0,
-            ...(isAdv?{rcm:(RCM_CODE[raceClassMode]||'ST')}:{dl:getEffectiveDemihumanLimits()==='extended'?1:0}),
-            prm:primeRequisiteMode==='user'?0:parseInt(primeRequisiteMode),
-            rr:_scoreRollAttempts, sm:['STR','DEX','CON','INT','WIS','CHA'].map(a=>readScoresFromInputs()[a]||3),
-            un:showUndeadNames?1:0, qr:showQRCode?1:0, ap:document.getElementById('autoPrintInNewTab')?.checked?1:0, ao:basicAbilityOrdering?1:0,
-            ...({'dac-matrix':1,'dual':2,'dual-matrix':3}[acDisplayMode] != null ? {adm:{'dac-matrix':1,'dual':2,'dual-matrix':3}[acDisplayMode]} : {}) },
-        footer: (() => {
-            const sm = ['STR','DEX','CON','INT','WIS','CHA'].map(a => readScoresFromInputs()[a] || 3);
-            const o = buildOptionsLine({ m:isAdv?'A':'B', p:PROG_CODE[progressionMode]||'O', l:0,
-                ...(isAdv?{rcm:RCM_CODE[raceClassMode]||'ST'}:{bl:raceClassMode!=='strict'?1:0, dl:getEffectiveDemihumanLimits()==='extended'?1:0}),
-                hc:healthyCharacters?1:0,
-                prm:primeRequisiteMode==='user'?0:parseInt(primeRequisiteMode),
-                rr:_scoreRollAttempts, sm, fs:useFixedScores?1:0 });
-            return `0-Level ${raceDisplay}${isAdv?` &nbsp;·&nbsp; ${modeLabel} Mode`:''}` +
-                   (o ? `<br><small style="opacity:0.7;">${o}</small>` : '');
-        })(),
-        printTitle: `OSE ${isAdv?'Advanced':'Basic'} - ${sanitize(raceDisplay)} - 0-Level - ${sanitize(char.background.profession)} - ${sanitize(char.name)}`,
+    const cp = {
+        v:2, m:isAdv?'A':'B', l:0, r:char.raceCode, p:(PROG_CODE[progressionMode]||'O'),
+        s:adjArr, ...(hasAdj?{bs:baseArr}:{}), sv:svArr, h:char.hitPoints.total, hr:[char.hitPoints.total], hd:[4],
+        n:char.name, bg:char.background.profession, ar:char.background.armor||null,
+        w:char.background.weapon||null, it:char.background.item||[], g:char.startingGold, ac:char.armorClass,
+        bl:raceClassMode!=='strict'?1:0, hc:healthyCharacters?1:0,
+        ...(isAdv?{rcm:(RCM_CODE[raceClassMode]||'ST')}:{dl:getEffectiveDemihumanLimits()==='extended'?1:0}),
+        prm:primeRequisiteMode==='user'?0:parseInt(primeRequisiteMode),
+        rr:_scoreRollAttempts, sm:ABILITIES.map(a=>readScoresFromInputs()[a]||3),
+        un:showUndeadNames?1:0, qr:showQRCode?1:0, ap:document.getElementById('autoPrintInNewTab')?.checked?1:0, ao:basicAbilityOrdering?1:0,
+        ...({'dac-matrix':1,'dual':2,'dual-matrix':3}[acDisplayMode]!=null?{adm:{'dac-matrix':1,'dual':2,'dual-matrix':3}[acDisplayMode]}:{})
     };
-
-    // Build base/adj maps for editState
-    const _0lvlBase = {}, _0lvlAdj = {};
-    ABILITIES.forEach((a, i) => { _0lvlBase[a] = baseArr[i]; _0lvlAdj[`adj${a}`] = adjArr[i] - baseArr[i]; });
-
-    const spec = buildSheetSpec(sd, sheetOpts());
+    const spec = await expandCompactV2(cp);
+    const dispOpts = sheetOpts();
+    spec.openInNewTab  = dispOpts.openInNewTab;
+    spec.backgroundTab = dispOpts.backgroundTab;
+    const _0lvlBase={}, _0lvlAdj={};
+    ABILITIES.forEach((a,i)=>{ _0lvlBase[a]=baseArr[i]; _0lvlAdj[`adj${a}`]=adjArr[i]-baseArr[i]; });
     spec.editState = {
-        level: 0, progressionMode, name: char.name||'',
+        level:0, progressionMode, name:char.name||'',
         STR:_0lvlBase.STR, INT:_0lvlBase.INT, WIS:_0lvlBase.WIS,
         DEX:_0lvlBase.DEX, CON:_0lvlBase.CON, CHA:_0lvlBase.CHA,
         ..._0lvlAdj,
-        hpRolls:[], hpDice:[],  // no HP editing for 0-level
-        startingGold: char.startingGold||0,
-        conModifier: char.results.find(r=>r.ability==='CON').modifier,
+        hpRolls:[], hpDice:[],
+        startingGold:char.startingGold||0,
+        conModifier:char.results.find(r=>r.ability==='CON').modifier,
         showUndeadNames, showQRCode,
-        includeLevel0HP: false,
+        includeLevel0HP:false,
     };
     spec.onEditUpdate = (values) => {
-        characterName = values.name;
-        abilityScores = { STR:values.STR, INT:values.INT, WIS:values.WIS, DEX:values.DEX, CON:values.CON, CHA:values.CHA };
-        const _adjVals0 = { STR:values.adjSTR||0, INT:values.adjINT||0, WIS:values.adjWIS||0, DEX:values.adjDEX||0, CON:values.adjCON||0, CHA:values.adjCHA||0 };
-        fixedAdjustments = Object.values(_adjVals0).some(v => v !== 0) ? _adjVals0 : null;
-        showUndeadNames = values.showUndeadNames||false; showQRCode = values.showQRCode??true;
-        ['STR','INT','WIS','DEX','CON','CHA'].forEach(a => { const el=document.getElementById(`score${a}`); if(el) el.value=values[a]; });
-        const nameEl = document.getElementById('characterName'); if(nameEl) nameEl.value = characterName;
-        useFixedScores = true; const fixEl=document.getElementById('useFixedScores'); if(fixEl) fixEl.checked=true;
-        generateZeroLevelChar().catch(e => console.error('0-level edit gen error:', e));
+        characterName=values.name;
+        abilityScores={STR:values.STR,INT:values.INT,WIS:values.WIS,DEX:values.DEX,CON:values.CON,CHA:values.CHA};
+        const _adjVals0={STR:values.adjSTR||0,INT:values.adjINT||0,WIS:values.adjWIS||0,DEX:values.adjDEX||0,CON:values.adjCON||0,CHA:values.adjCHA||0};
+        fixedAdjustments=Object.values(_adjVals0).some(v=>v!==0)?_adjVals0:null;
+        showUndeadNames=values.showUndeadNames||false; showQRCode=values.showQRCode??true;
+        ['STR','INT','WIS','DEX','CON','CHA'].forEach(a=>{const el=document.getElementById(`score${a}`);if(el)el.value=values[a];});
+        const nameEl=document.getElementById('characterName');if(nameEl)nameEl.value=characterName;
+        useFixedScores=true;const fixEl=document.getElementById('useFixedScores');if(fixEl)fixEl.checked=true;
+        generateZeroLevelChar().catch(e=>console.error('0-level edit gen error:',e));
     };
     displayCharacterSheet(spec, document.getElementById('characterInfo'), document.getElementById('characterDisplay'));
 }

@@ -388,16 +388,17 @@ export function renderCharacterSheetHTML(sheet) {
                 <div style='font-size:0.72em;color:#aaa;font-style:italic;'><span style='text-decoration:line-through;color:#ccc;'>00</span> = ability score before racial adjustment</div>
             </div>
             <!-- Right column: starting stats + HP rolls -->
-            <div style='font-size:0.8em;color:#444;text-align:right;'>
+            <div style='font-size:0.7em;color:#444;text-align:right;'>
                 ${(startingACDisplay !== null && startingACDisplay !== undefined) || eq.startingHD || startingGold !== null ? `
-                <div style='white-space:nowrap;margin-bottom:3px;display:flex;gap:12px;justify-content:flex-end;flex-wrap:wrap;'>
+                <div style='margini-bottom:3px;display:flex;column-gap:12px;row-gap:0;justify-content:flex-end;flex-wrap:wrap;'>
                     ${startingACDisplay !== null && startingACDisplay !== undefined ? `<span><strong>Starting AC:</strong> ${startingACDisplay}</span>` : ''}
                     ${eq.startingHD ? `<span><strong>Starting HD:</strong> ${eq.startingHD}</span>` : ''}
                     ${startingGold !== null ? `<span><strong>Starting Gold:</strong> ${startingGold} gp</span>` : ''}
                 </div>` : ''}
                 ${(() => {
-                    const _hpRolls = sheet.editState?.hpRolls || [];
-                    const _conMod  = sheet.editState?.conModifier ?? 0;
+                    const _cpConMod = (() => { const s = sheet.cp?.s?.[2]; if (s == null) return 0; return s>=15?1:s>=13?1:s<=6?-1:s<=8?-1:0; })();
+                    const _hpRolls = (sheet.editState?.hpRolls?.length > 0 ? sheet.editState.hpRolls : null) || sheet.cp?.hr || [];
+                    const _conMod  = sheet.editState?.conModifier ?? _cpConMod;
                     if (_hpRolls.length === 0) return '';
                     const conStr = `CON ${_conMod >= 0 ? '+' : ''}${_conMod}`;
                     const items = _hpRolls.map((hp, i) => {
