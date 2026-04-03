@@ -77,3 +77,7 @@ jspm_packages/
 # Temporary files
 tmp/
 temp/
+
+PLAN_CLASS_ABILITIES_AUDIT.md
+PLAN_RACE_ABILITIES_AUDIT.md
+COPYRIGHTED-*
