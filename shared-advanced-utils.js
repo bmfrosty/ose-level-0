@@ -147,17 +147,14 @@ export function getAvailableClasses(race, allowNonTraditional = false) {
         return ['Cleric', 'Fighter', 'Magic-User', 'Thief', 'Spellblade'];
     }
     
+    // Keys are BARE race names (e.g. 'Elf', not 'Elf_RACE').
+    // The only caller (gen-ui.js) passes button.dataset.race which is always bare.
     const traditionalCombinations = {
-        'Human': ['Cleric', 'Fighter', 'Magic-User', 'Thief', 'Spellblade'],
-        'Human_RACE': ['Cleric', 'Fighter', 'Magic-User', 'Thief', 'Spellblade'],
-        'Dwarf': ['Cleric', 'Fighter'],
-        'Dwarf_RACE': ['Cleric', 'Fighter'],
-        'Elf': ['Fighter', 'Magic-User', 'Spellblade'],
-        'Elf_RACE': ['Fighter', 'Magic-User', 'Spellblade'],
-        'Gnome': ['Cleric', 'Fighter', 'Thief'],
-        'Gnome_RACE': ['Cleric', 'Fighter', 'Thief'],
-        'Halfling': ['Fighter', 'Thief'],
-        'Halfling_RACE': ['Fighter', 'Thief']
+        'Human':    ['Cleric', 'Fighter', 'Magic-User', 'Thief', 'Spellblade'],
+        'Dwarf':    ['Cleric', 'Fighter'],
+        'Elf':      ['Fighter', 'Magic-User', 'Spellblade'],
+        'Gnome':    ['Cleric', 'Fighter', 'Thief'],
+        'Halfling': ['Fighter', 'Thief']
     };
     
     return traditionalCombinations[race] || [];

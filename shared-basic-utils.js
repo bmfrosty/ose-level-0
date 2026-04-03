@@ -40,10 +40,12 @@ export function readAbilityScores() {
 
 /**
  * Get class ability requirements
- * @param {string} className - Class name
+ * @param {string} className - Class name (with or without _CLASS suffix)
  * @returns {Object} Requirements object (e.g., {CON: 9})
  */
 export function getClassRequirements(className) {
+    // Normalize: strip _CLASS suffix so both 'Dwarf' and 'Dwarf_CLASS' work
+    const base = (className || '').replace(/_CLASS$/, '');
     const requirements = {
         'Cleric': {},
         'Fighter': {},
@@ -55,7 +57,7 @@ export function getClassRequirements(className) {
         'Gnome': { INT: 9 },
         'Spellblade': { STR: 9, INT: 9 }
     };
-    return requirements[className] || {};
+    return requirements[base] || {};
 }
 
 /**
