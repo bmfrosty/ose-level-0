@@ -5,7 +5,7 @@
 // the character's RACE (this file), and class abilities come from shared-class-data-shared.js.
 //
 // In Basic mode (race = class), demihuman abilities come from
-// shared-class-progression.js getRacialAbilities() — NOT from this file.
+// shared-class-progression.js getBasicModeClassAbilities() — NOT from this file.
 // Human racial abilities (Blessed, etc.) are generated inline in gen-ui.js / cs-sheet-page.js.
 //
 // ES6 Module

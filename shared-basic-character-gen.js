@@ -20,7 +20,7 @@ import {
 import {
     getClassProgressionData as sharedGetClassProgressionData,
     getClassFeatures as sharedGetClassFeatures,
-    getBasicModeRacialAbilities
+    getBasicModeClassAbilities
 } from './shared-class-progression.js';
 
 // Import shared character utilities
@@ -75,12 +75,12 @@ export function getClassProgressionData(className, level, abilityScores, classDa
 }
 
 /**
- * Get racial abilities for demihuman classes (wrapper for shared function)
+ * Get class abilities for demihuman classes in Basic mode (wrapper for shared function)
  * @param {string} className - Class name
- * @returns {Array} Array of racial ability strings, or empty array if not demihuman
+ * @returns {Array} Array of class ability strings, or empty array if not demihuman
  */
-export function getRacialAbilities(className) {
-    return getBasicModeRacialAbilities(className);
+export function getClassAbilities(className) {
+    return getBasicModeClassAbilities(className);
 }
 
 /**
@@ -103,7 +103,7 @@ export function createCharacter(options) {
 export function getClassFeatures(className, level, classData, ClassDataShared) {
     // NOTE: This is the BASIC MODE wrapper around the shared getClassFeatures.
     // In Basic mode, demihuman classes (Dwarf, Elf, Halfling, Gnome) are race-as-class.
-    // Their abilities are displayed via racialAbilities (getRacialAbilities below),
+    // Their abilities are displayed via racialAbilities (getClassAbilities below),
     // so we clear classAbilities here to prevent them appearing twice on the sheet.
     const features = sharedGetClassFeatures({ className, level, classData, ClassDataShared });
     const BASIC_DEMIHUMAN_CLASSES = ['Dwarf_CLASS', 'Elf_CLASS', 'Halfling_CLASS', 'Gnome_CLASS'];

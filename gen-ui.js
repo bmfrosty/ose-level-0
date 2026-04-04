@@ -34,7 +34,7 @@ import {
     rollHitPoints        as rollHPBasic,
     getClassProgressionData as getProgBasic,
     getClassFeatures,
-    getRacialAbilities   as getRacialBasic,
+    getClassAbilities    as getRacialBasic,
     createCharacter
 } from './shared-basic-character-gen.js';
 

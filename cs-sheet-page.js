@@ -197,10 +197,10 @@ export async function expandCompactV2(cp) {
             : (raceDisplay === clsDisplay ? raceDisplay : `${raceDisplay} ${clsDisplay}`);
     } else {
         const { getClassProgressionData, getClassFeatures,
-                getRacialAbilities, createCharacter } = await import('./shared-basic-character-gen.js');
+                getClassAbilities, createCharacter } = await import('./shared-basic-character-gen.js');
         const progData = getClassProgressionData(cls, level, adj, classDataMod);
         const features = getClassFeatures(cls, level, classDataMod, ClassDataShared);
-        const racial   = getRacialAbilities(cls);
+        const racial   = getClassAbilities(cls);
         character = createCharacter({
             level, className: cls, mode: modeLabel,
             abilityScores: adj, hp: cp.h,

@@ -6,6 +6,7 @@
 
 // Import shared ability score utilities
 import { calculateXPBonus, getPrimeRequisites } from './shared-ability-scores.js';
+import { getAbilitiesAtLevel } from './shared-class-data-shared.js';
 
 /**
  * Get class progression data (saving throws, attack bonus, XP)
@@ -175,71 +176,38 @@ export function getClassFeatures(options) {
  *
  * In Basic Mode, race = class (Dwarf class, Elf class, etc.) — there is no separate race.
  * These string-format abilities are shown in the single 'CLASS ABILITIES' section of the sheet.
- * They are NOT the same as the Advanced mode racial abilities in shared-racial-abilities.js.
- * The structured {name,description} objects in shared-class-data-shared.js are SUPPRESSED
- * in Basic mode (see shared-basic-character-gen.js getClassFeatures) to avoid duplication.
- * @param {string} className - Class name (e.g., "Dwarf", "Elf")
- * @returns {Array} Array of racial ability strings, or empty array if not demihuman
+ * Reads from CLASS_ABILITIES in shared-class-data-shared.js (single source of truth).
+ * Abilities with basicMode: false are excluded (they exist for Advanced mode only).
+ * @param {string} className - Class name with or without _CLASS suffix (e.g., "Dwarf", "Dwarf_CLASS")
+ * @returns {Array} Array of formatted ability strings, or empty array if not a demihuman class
  */
-export function getBasicModeRacialAbilities(className) {
-    console.log('\n=== Getting Basic Mode Racial Abilities ===');
+export function getBasicModeClassAbilities(className) {
+    console.log('\n=== Getting Basic Mode Class Abilities ===');
     console.log(`Class: ${className}`);
-    
+
     const demihumanClasses = ['Dwarf', 'Elf', 'Halfling', 'Gnome'];
-    
-    // Strip _CLASS suffix so 'Dwarf_CLASS' -> 'Dwarf' matches the lookup table
+
+    // Strip _CLASS suffix so 'Dwarf_CLASS' -> 'Dwarf' matches CLASS_ABILITIES keys
     const baseClass = className.replace('_CLASS', '');
 
     if (!demihumanClasses.includes(baseClass)) {
-        console.log('Not a demihuman class - no racial abilities');
-        console.log('====================================\n');
+        console.log('Not a demihuman class - no class abilities');
+        console.log('==========================================\n');
         return [];
     }
-    
-    // In Basic Mode, demihuman classes have racial abilities built-in
-    // These are the same abilities from racial-abilities.js but formatted for display
-    const racialAbilities = {
-        'Dwarf': [
-            'Languages: Alignment, Common, Dwarvish, Gnomish, Goblin, Kobold',
-            'Infravision: 60\'',
-            'Listening at Doors: 2-in-6 chance',
-            'Detect Construction Tricks: 2-in-6 chance to detect new construction, sliding walls, or sloping passages when searching',
-            'Detect Room Traps: 2-in-6 chance to detect non-magical room traps when searching'
-        ],  // Note: Dwarf saving throw bonus from CON is built into the saving throw table, not a named ability
-        'Elf': [
-            'Languages: Common, Elf, Gnoll, Hobgoblin, Orc',
-            'Infravision: 60\'',
-            'Listening at Doors: 2-in-6 chance',
-            'Detect Secret Doors: 2-in-6 chance when searching, 1-in-6 chance when passing by',
-            'Immunity to Ghoul Paralysis'
-        ],
-        'Halfling': [
-            'Languages: Common, Halfling',
-            'Listening at Doors: 2-in-6 chance',
-            'Missile Attack Bonus: +1 to hit with all missile weapons',
-            'Armor Class Bonus: -2 bonus to AC when attacked by creatures larger than human-sized',
-            'Resilience: Bonus to saves vs Death/Poison, Wands, and Spells/Rods/Staves based on CON (see saving throws)',
-            'Hiding: 90% chance in wilderness, 2-in-6 in dungeons (must be motionless and alone or with other halflings)'
-        ],
-        'Gnome': [
-            'Languages: Common, Gnome, Dwarf, Goblin, Kobold',
-            'Infravision: 60\'',
-            'Listening at Doors: 2-in-6 chance',
-            'Detect Construction Tricks: 2-in-6 chance to detect new construction, sliding walls, or sloping passages when searching',
-            'Armor Class Bonus: -4 bonus to AC when attacked by creatures larger than ogre-sized',
-            'Magic Resistance: Bonus to saves vs Wands and Spells/Rods/Staves based on CON (see saving throws)',
-            'Hiding in Wilderness: 90% chance in undergrowth (must be motionless)'
-        ]
-    };
-    
-    const abilities = racialAbilities[baseClass] || [];
-    
-    console.log('\nRacial Abilities:');
+
+    // Level 1 covers all abilities available from character creation.
+    // Abilities with basicMode: false are for Advanced mode only.
+    const abilities = getAbilitiesAtLevel(baseClass, 1)
+        .filter(a => a.basicMode !== false)
+        .map(a => a.includeName ? `${a.name}: ${a.description}` : a.description);
+
+    console.log('\nClass Abilities:');
     abilities.forEach(ability => {
         console.log(`  - ${ability}`);
     });
-    
-    console.log('====================================\n');
-    
+
+    console.log('==========================================\n');
+
     return abilities;
 }
