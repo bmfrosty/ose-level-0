@@ -1,0 +1,116 @@
+{{cc
+ | req = None
+ | prime = INT
+ | hd = 1d4
+ | maxlvl = 14
+ | armour =  None
+ | weap = Dagger
+ | lang = Alignment, Common
+}}
+
+Magic-users are adventurers whose study of secret arcane lore has taught them how to cast spells and to wield powerful magic items. Magic-users begin play with knowledge of just a single spell, but gain access to extremely potent magic as they advance.
+
+== Arcane Magic ==
+
+See '''''[[Spells]]''''' for full details on arcane magic.
+
+'''Magical research:''' A magic-user of any level may spend time and money on [[Magical Research|magical research]]. This allows them to add new spells to their [[Spell Books|spell book]] and to research other magical effects. When a magic-user reaches 9th level, they are also able to [[Magical Research#Creating Magic Items|create magic items]].
+
+'''Spell casting:''' Magic-users own [[Spell Books|spell books]] containing the formulae for arcane spells. The level progression table (below) shows both the number of spells in the magic-user’s spell book and the number they may memorize, determined by the character’s [[Experience|experience level]]. Thus, a 1st level magic-user has one spell in their spell book, selected by the [[The Referee’s Role|referee]] (who may allow the player to choose). The list of spells available to magic-users is found in '''''[[Magic-User Spells]]'''''.
+
+'''Using magic items:''' As spell casters, magic-users are able to use magic scrolls of spells on their spell list. They can also use items that may only be used by arcane spell casters (e.g. magic wands).
+
+== Combat ==
+
+Magic-users can only use daggers and are unable to use shields or wear any kind of armour. This makes them very vulnerable in [[combat]].
+
+== After Reaching 11th Level ==
+
+A magic-user may construct a [[Strongholds|stronghold]] (usually in the form of a tower). 1d6 apprentices of levels 1–3 will then arrive to study under the magic-user.
+
+== Magic-User Level Progression ==
+
+{| class="mw-datatable wikitable" style="text-align: center;"
+|+ style="caption-side: top; text-align: center;" | Magic-User Level Progression
+| colspan="4" style="border-left:hidden; border-top:hidden;" |
+! scope="col" colspan="5" | Saving Throws
+! scope="col" colspan="6" style="border-left:solid 2px gray;" | Spells
+|-
+! scope="col" | Level
+! scope="col" | XP
+! scope="col" | HD
+! scope="col" | THAC0
+! scope="col" style="border-left:solid 2px gray;" | D
+! scope="col" | W
+! scope="col" | P
+! scope="col" | B
+! scope="col" | S
+! scope="col" style="border-left:solid 2px gray;" | 1
+! scope="col" | 2
+! scope="col" | 3
+! scope="col" | 4
+! scope="col" | 5
+! scope="col" | 6
+|-
+| 1 || 0 || 1d4 || 19 [0]
+| style="border-left:solid 2px gray;" | 13 || 14 || 13 || 16 || 15
+| style="border-left:solid 2px gray;" |  1 || &mdash; || &mdash; || &mdash; || &mdash; || &mdash;
+|-
+| 2 || 2,500 || 2d4 || 19 [0]
+| style="border-left:solid 2px gray;" | 13 || 14 || 13 || 16 || 15
+| style="border-left:solid 2px gray;" |  2 || &mdash; || &mdash; || &mdash; || &mdash; || &mdash;
+|-
+| 3 || 5,000 || 3d4 || 19 [0]
+| style="border-left:solid 2px gray;" | 13 || 14 || 13 || 16 || 15
+| style="border-left:solid 2px gray;" |  2 ||  1 || &mdash; || &mdash; || &mdash; || &mdash;
+|-
+| 4 || 10,000 || 4d4 || 19 [0]
+| style="border-left:solid 2px gray;" | 13 || 14 || 13 || 16 || 15
+| style="border-left:solid 2px gray;" |  2 ||  2 || &mdash; || &mdash; || &mdash; || &mdash;
+|-
+| 5 || 20,000 || 5d4 || 19 [0]
+| style="border-left:solid 2px gray;" | 13 || 14 || 13 || 16 || 15
+| style="border-left:solid 2px gray;" |  2 ||  2 ||  1 || &mdash; || &mdash; || &mdash;
+|-
+| 6 || 40,000 || 6d4 || 17 [+2]
+| style="border-left:solid 2px gray;" | 11 || 12 || 11 || 14 || 12
+| style="border-left:solid 2px gray;" |  2 ||  2 ||  2 || &mdash; || &mdash; || &mdash;
+|-
+| 7 || 80,000 || 7d4 || 17 [+2]
+| style="border-left:solid 2px gray;" | 11 || 12 || 11 || 14 || 12
+| style="border-left:solid 2px gray;" |  3 ||  2 ||  2 ||  1 || &mdash; || &mdash;
+|-
+| 8 || 150,000 || 8d4 || 17 [+2]
+| style="border-left:solid 2px gray;" | 11 || 12 || 11 || 14 || 12
+| style="border-left:solid 2px gray;" |  3 ||  3 ||  2 ||  2 || &mdash; || &mdash;
+|-
+| 9 || 300,000 || 9d4 || 17 [+2]
+| style="border-left:solid 2px gray;" | 11 || 12 || 11 || 14 || 12
+| style="border-left:solid 2px gray;" |  3 ||  3 ||  3 ||  2 ||  1 || &mdash;
+|-
+| 10 || 450,000 || 9d4+1* || 17 [+2]
+| style="border-left:solid 2px gray;" | 11 || 12 || 11 || 14 || 12
+| style="border-left:solid 2px gray;" |  3 ||  3 ||  3 ||  3 ||  2 || &mdash;
+|-
+| 11 || 600,000 || 9d4+2* || 14 [+5]
+| style="border-left:solid 2px gray;" |  8 ||  9 ||  8 || 11 ||  8
+| style="border-left:solid 2px gray;" |  4 ||  3 ||  3 ||  3 ||  2 || 1
+|-
+| 12 || 750,000 || 9d4+3* || 14 [+5]
+| style="border-left:solid 2px gray;" |  8 ||  9 ||  8 || 11 ||  8
+| style="border-left:solid 2px gray;" |  4 ||  4 ||  3 ||  3 ||  3 || 2
+|-
+| 13 || 900,000 || 9d4+4* || 14 [+5]
+| style="border-left:solid 2px gray;" |  8 ||  9 ||  8 || 11 ||  8
+| style="border-left:solid 2px gray;" |  4 ||  4 ||  4 ||  3 ||  3 || 3
+|-
+| 14 || 1,050,000 || 9d4+5* || 14 [+5]
+| style="border-left:solid 2px gray;" |  8 ||  9 ||  8 || 11 ||  8
+| style="border-left:solid 2px gray;" |  4 ||  4 ||  4 ||  4 ||  3 || 3
+|}
+
+<nowiki>*</nowiki> [[Ability Scores#Constitution (CON)|Modifiers from CON]] no longer apply.
+
+'''D:''' Death / poison; '''W:''' Wands; '''P:''' Paralysis / petrify; '''B:''' Breath attacks; '''S:''' Spells / rods / staves.
+
+[[Category:Character Classes]]

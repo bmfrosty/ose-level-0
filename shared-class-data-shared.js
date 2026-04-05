@@ -273,7 +273,7 @@ export const CLASS_ABILITIES = {
     },
     {
       name: "Holy Symbol",
-      description: "A cleric must carry a holy symbol (see Adventuring Gear).",
+      description: "A cleric must carry a holy symbol.",
       availableAt: 1,
       availableThrough: 14,
       // includeName: true,
@@ -294,7 +294,7 @@ export const CLASS_ABILITIES = {
       description: "Any level; create new spells or magical effects for the deity. At 9th level: also create magic items.",
       availableAt: 1,
       availableThrough: 14,
-      // includeName: true,
+      includeName: true,
       // SRD: "A cleric of any level may spend time and money on magical research. This allows them to create new spells or other magical effects associated with their deity. When a cleric reaches 9th level, they are also able to create magic items."
       // PROPOSED: "Any level; create new spells or magical effects for the deity. At 9th level: also create magic items."
     },
@@ -303,7 +303,7 @@ export const CLASS_ABILITIES = {
       description: "Invoke deity's power to repel undead encountered; roll 2d6 vs undead HD on turning table.",
       availableAt: 1,
       availableThrough: 14,
-      // includeName: true,
+      includeName: true,
       // SRD: "Clerics can invoke the power of their deity to repel undead monsters encountered. To turn the undead, the player rolls 2d6. The referee then consults the table below, comparing the roll against the HD of the type of undead monsters targeted."
       // PROPOSED: "Invoke deity's power to repel undead encountered; roll 2d6 vs undead HD on turning table."
     },
@@ -441,7 +441,7 @@ export const CLASS_ABILITIES = {
       description: "Climb sheer surfaces, find/remove traps, hear noise, hide in shadows, move silently, open locks, pick pockets.",
       availableAt: 1,
       availableThrough: 14,
-      // includeName: true,
+      includeName: true,
       // SRD: "Thieves can use the following skills, with the chance of success shown below:" (CS, TR, HN, HS, MS, OL, PP — individual descriptions in Thief Skills section)
       // PROPOSED: "Climb sheer surfaces, find/remove traps, hear noise, hide in shadows, move silently, open locks, pick pockets."
     },
@@ -606,13 +606,13 @@ export const CLASS_ABILITIES = {
       // PROPOSED: "Alignment, Common, Elvish, Gnoll, Hobgoblin, Orcish"
     },
     {
-      name: "Arcane Magic",
-      description: "Elves can cast arcane spells and use magic scrolls and arcane wands.",
+      name: "Combat",
+      description: "Elves can use all types of weapons and armour.",
       availableAt: 1,
       availableThrough: 14,
       // includeName: true,
-      // SRD: "Elves cast spells as magic-users; carry spell books; can use magic scrolls and arcane wands." (section heading with Magical Research, Spell Casting, Using Magic Items sub-entries)
-      // PROPOSED: "Elves can cast arcane spells and use magic scrolls and arcane wands."
+      // SRD: "Elves can use all types of weapons and armour."
+      // PROPOSED: "Elves can use all types of weapons and armour."
     },
     {
       name: "Detect Secret Doors",
@@ -652,13 +652,49 @@ export const CLASS_ABILITIES = {
       // PROPOSED: "2-in-6 chance of hearing noises."
     },
     {
-      name: "Stronghold",
-      description: "May construct a forest stronghold; forest animals within 5 miles become friendly.",
+      name: "Magical Research",
+      description: "An elf of any level may spend time and money on magical research, adding new spells to their spell book or researching other magical effects.",
+      availableAt: 1,
+      availableThrough: 14,
+      // includeName: true,
+      // SRD: "An elf of any level may spend time and money on magical research. This allows them to add new spells to their spell book and to research other magical effects. When an elf reaches 9th level, they are also able to create magic items."
+      // PROPOSED: "An elf of any level may spend time and money on magical research, adding new spells to their spell book or researching other magical effects."
+    },
+    {
+      name: "Magical Research (Magic Items)",
+      description: "May create magic items.",
       availableAt: 9,
       availableThrough: 14,
       // includeName: true,
-      // SRD: "An elf may construct a stronghold in the depths of the forest. Forest animals within a 5 mile radius will become friends with the elves. An elf ruler may only hire elven mercenaries."
-      // PROPOSED: "May construct a forest stronghold; forest animals within 5 miles become friendly. May only hire elven mercenaries."
+      // SRD: "When an elf reaches 9th level, they are also able to create magic items."
+      // PROPOSED: "May create magic items."
+    },
+    {
+      name: "Spell Casting",
+      description: "Elves carry spell books; a 1st level elf has one spell. Elves have the same spell selection as magic-users.",
+      availableAt: 1,
+      availableThrough: 14,
+      // includeName: true,
+      // SRD: "Elves carry spell books containing the formulae for arcane spells. The level progression table shows both the number of spells in the elf's spell book and the number they may memorize, determined by the character's experience level. Thus, a 1st level elf has one spell in their spell book, selected by the referee (who may allow the player to choose). The list of spells available to elves is found in Magic-User Spells (elves have the same spell selection as magic-users)."
+      // PROPOSED: "Elves carry spell books; a 1st level elf has one spell. Elves have the same spell selection as magic-users."
+    },
+    {
+      name: "Using Magic Items",
+      description: "As spell casters, elves can use magic scrolls and items usable only by arcane spell casters (e.g. magic wands).",
+      availableAt: 1,
+      availableThrough: 14,
+      // includeName: true,
+      // SRD: "As spell casters, elves are able to use magic scrolls of spells on their spell list. They can also use items that may only be used by arcane spell casters (e.g. magic wands)."
+      // PROPOSED: "As spell casters, elves can use magic scrolls and items usable only by arcane spell casters (e.g. magic wands)."
+    },
+    {
+      name: "Stronghold",
+      description: "May construct a forest stronghold; forest animals within 5 miles become friendly. Specialists and retainers of any race may be hired.",
+      availableAt: 9,
+      availableThrough: 14,
+      // includeName: true,
+      // SRD: "An elf may construct a stronghold in the depths of the forest. Forest animals within a 5 mile radius will become friends with the elves. An elf ruler may only hire elven mercenaries. Specialists and retainers of any race may be hired."
+      // PROPOSED: "May construct a forest stronghold; forest animals within 5 miles become friendly. Specialists and retainers of any race may be hired."
     }
   ],
 

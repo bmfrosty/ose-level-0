@@ -1,0 +1,194 @@
+{{cc
+ | req = None
+ | prime = WIS
+ | hd = 1d6
+ | maxlvl = 14
+ | armour = Any, including shields
+ | weap = Any blunt weapons
+ | lang = Alignment, Common
+}}
+
+Clerics are adventurers sworn to the service of a deity. They are trained for battle and channel the power of their deity.
+
+== Combat ==
+
+Clerics can use all types of armour. The edicts of their holy order forbid them from using weapons that have a sharp, cutting edge or stabbing point. They may use the following weapons: club, mace, sling, staff, war hammer.
+
+== Divine Magic ==
+
+See '''''[[Spells]]''''' for full details on divine magic.
+
+'''Holy symbol:''' A cleric must carry a holy symbol (see '''''[[Adventuring Gear]]''''').
+
+'''Deity disfavour:''' Clerics must be faithful to the tenets of their [[alignment]], clergy, and religion. Clerics who fall from favour with their deity may incur penalties.
+
+'''Magical research:''' A cleric of any level may spend time and money on [[Magical Research|magical research]]. This allows them to create new spells or other magical effects associated with their deity. When a cleric reaches 9th level, they are also able to [[Magical Research#Creating Magic Items|create magic items]].
+
+'''Spell casting:''' Once a cleric has proven their faith (from 2nd level), the character may pray to receive spells. The level progression table (below) shows the number of spells a cleric may memorize, based on their experience level. The list of spells available to clerics is found in '''''[[Cleric Spells]]'''''.
+
+'''Using magic items:''' As spell casters, clerics can use magic scrolls of spells on their spell list. They can also use items that may only be used by divine spell casters (e.g. some magic staves).
+
+== Turning the Undead ==
+
+Clerics can invoke the power of their deity to repel undead monsters encountered. To turn the undead, the player rolls 2d6. The [[The Referee’s Role|referee]] then consults the table below, comparing the roll against the HD of the type of undead monsters targeted.
+
+=== Successful Turning ===
+
+If the turning attempt succeeds, the player must roll 2d6 to determine the number of HD affected (turned or destroyed).
+
+'''Turned undead:''' Flee from the cleric’s presence if possible, and will not harm the cleric.
+
+'''Destroyed undead (result of D):''' Are instantly and permanently annihilated.
+
+'''Excess:''' Rolled Hit Dice that are not sufficient to affect a monster are wasted.
+
+'''Minimum effect:''' At least one undead monster will always be affected on a successful turning.
+
+'''Mixed groups:''' If turn undead is used against a mixed group of undead monsters of different types, those with the lowest HD are affected first.
+<!-- david marsh cleaned to here -->
+
+=== Turning the Undead ===
+
+{| class="mw-datatable wikitable" style="text-align: center;"
+|+ style="caption-side: top; text-align: center;" | Turning the Undead
+| style="border-left:hidden; border-top:hidden;" |
+! scope="col" colspan="8" | Hit Dice of Monster Type&dagger;
+|-
+! scope="col" | Level
+! scope="col" | 1
+! scope="col" | 2
+! scope="col" | 2*
+! scope="col" | 3
+! scope="col" | 4
+! scope="col" | 5
+! scope="col" | 6
+! scope="col" | 7-9
+|-
+| 1 || 7 || 9 || 11 || &mdash; || &mdash; || &mdash; || &mdash; || &mdash;
+|-
+| 2 || T || 7 || 9 || 11 || &mdash; || &mdash; || &mdash; || &mdash;
+|-
+| 3 || T || T || 7 || 9 || 11 || &mdash; || &mdash; || &mdash;
+|-
+| 4 || D || T || T || 7 || 9 || 11 || &mdash; || &mdash;
+|-
+| 5 || D || D || T || T || 7 || 9 || 11 || &mdash;
+|-
+| 6 || D || D || D || T || T || 7 || 9 || 11
+|-
+| 7 || D || D || D || D || T || T || 7 || 9
+|-
+| 8 || D || D || D || D || D || T || T || 7
+|-
+| 9 || D || D || D || D || D || D || T || T
+|-
+| 10 || D || D || D || D || D || D || D || T
+|-
+| 11+ || D || D || D || D || D || D || D || D
+|}
+
+<nowiki>*</nowiki> 2 HD monsters with a [[:Category:Special Abilities|special ability]] (i.e. with an asterisk next to their HD rating, in the monster description).
+
+&dagger; At the referee’s option, the table may be expanded to include more powerful types of undead monsters.
+
+== Turning Table Results ==
+
+'''&mdash;:''' The turning fails.
+
+'''Number:''' If the 2d6 turning roll is higher or equal, the turning attempt succeeds.
+
+'''T:''' The turning succeeds.
+
+'''D:''' The turning succeeds; the monsters are destroyed, not simply caused to flee.
+
+== After Reaching 9th Level ==
+
+A cleric may [[Construction|construct]] a [[Structures|stronghold]]. If the cleric is in favour with their deity, the construction costs are halved, due to divine aid.
+
+When the stronghold is complete, 5d6 × 10 fighters of level 1–2 will arrive to serve the cleric. These followers are completely devoted to the cleric, never checking [[Morale (Optional Rule)|morale]]. The referee decides which followers are 1st and 2nd level, as well their combat role (e.g. archers, infantry, etc.).
+
+== Cleric Level Progression ==
+
+{| class="mw-datatable wikitable" style="text-align: center;"
+|+ style="caption-side: top; text-align: center;" | Cleric Level Progression
+| colspan="4" style="border-left:hidden; border-top:hidden;" |
+! scope="col" colspan="5" | Saving Throws
+! scope="col" colspan="5" style="border-left:solid 2px gray;" | Spells
+|-
+! scope="col" | Level
+! scope="col" | XP
+! scope="col" | HD
+! scope="col" | THAC0
+! scope="col" style="border-left:solid 2px gray;" | D
+! scope="col" | W
+! scope="col" | P
+! scope="col" | B
+! scope="col" | S
+! scope="col" style="border-left:solid 2px gray;" | 1
+! scope="col" | 2
+! scope="col" | 3
+! scope="col" | 4
+! scope="col" | 5
+|-
+| 1 || 0 || 1d6 || 19 [0]
+| style="border-left:solid 2px gray;" | 11 || 12 || 14 || 16 || 15
+| style="border-left:solid 2px gray;" | &mdash; || &mdash; || &mdash; || &mdash; || &mdash;
+|-
+| 2 || 1,500 || 2d6 || 19 [0]
+| style="border-left:solid 2px gray;" | 11 || 12 || 14 || 16 || 15
+| style="border-left:solid 2px gray;" | 1 || &mdash; || &mdash; || &mdash; || &mdash;
+|-
+|  3 || 3,000 || 3d6 || 19 [0]
+| style="border-left:solid 2px gray;" | 11 || 12 || 14 || 16 || 15
+| style="border-left:solid 2px gray;" | 2 || &mdash; || &mdash; || &mdash; || &mdash;
+|-
+| 4 || 6,000 || 4d6 || 19 [0]
+| style="border-left:solid 2px gray;" | 11 || 12 || 14 || 16 || 15
+| style="border-left:solid 2px gray;" |  2 ||  1 || &mdash; || &mdash; || &mdash;
+|-
+| 5 || 12,000 || 5d6 || 17 [+2]
+| style="border-left:solid 2px gray;" | 9 || 10 || 12 || 14 || 12
+| style="border-left:solid 2px gray;" | 2 ||  2 || &mdash; || &mdash; || &mdash;
+|-
+| 6 || 25,000 || 6d6 || 17 [+2]
+| style="border-left:solid 2px gray;" | 9 || 10 || 12 || 14 || 12
+| style="border-left:solid 2px gray;" | 2 ||  2 ||  1 ||  1 || &mdash;
+|-
+| 7 || 50,000 || 7d6 || 17 [+2]
+| style="border-left:solid 2px gray;" | 9 || 10 || 12 || 14 || 12
+| style="border-left:solid 2px gray;" | 2 ||  2 ||  2 ||  1 ||  1
+|-
+| 8 || 100,000 || 8d6 || 17 [+2]
+| style="border-left:solid 2px gray;" | 9 || 10 || 12 || 14 || 12
+| style="border-left:solid 2px gray;" | 3 ||  3 ||  2 ||  2 ||  1
+|-
+| 9 || 200,000 || 9d6 || 14 [+5]
+| style="border-left:solid 2px gray" | 6 || 7 || 9 || 11 || 9
+| style="border-left:solid 2px gray" | 3 || 3 || 3 ||  2 || 2
+|-
+| 10 || 300,000 || 9d6+1* || 14 [+5]
+| style="border-left:solid 2px gray;" | 6 || 7 || 9 || 11 || 9
+| style="border-left:solid 2px gray;" | 4 || 4 || 3 ||  3 || 2
+|-
+| 11 || 400,000 || 9d6+2* || 14 [+5]
+| style="border-left:solid 2px gray;" | 6 || 7 || 9 || 11 || 9
+| style="border-left:solid 2px gray;" | 4 || 4 || 4 ||  3 || 3
+|-
+| 12 || 500,000 || 9d6+3* || 14 [+5]
+| style="border-left:solid 2px gray;" | 6 || 7 || 9 || 11 || 9
+| style="border-left:solid 2px gray;" | 5 || 5 || 4 ||  4 || 3
+|-
+| 13 || 600,000 || 9d6+4* || 12 [+7]
+| style="border-left:solid 2px gray;" | 3 || 5 || 7 || 8 || 7
+| style="border-left:solid 2px gray;" | 5 || 5 || 5 || 4 || 4
+|-
+| 14 || 700,000 || 9d6+5* || 12 [+7]
+| style="border-left:solid 2px gray;" | 3 || 5 || 7 || 8 || 7
+| style="border-left:solid 2px gray;" | 6 || 5 || 5 || 5 || 4
+|}
+
+<nowiki>*</nowiki> [[Ability Scores#Constitution (CON)|Modifiers from CON]] no longer apply.
+
+'''D:''' Death / poison; '''W:''' Wands; '''P:''' Paralysis / petrify; '''B:''' Breath attacks; '''S:''' Spells / rods / staves.
+
+[[Category:Character Classes]]
