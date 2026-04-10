@@ -5,55 +5,84 @@
  */
 
 // ── Imports ───────────────────────────────────────────────────────────────────
-import * as ClassDataOSE    from './shared-class-data-ose.js';
-import * as ClassDataGygar  from './shared-class-data-gygar.js';
-import * as ClassDataLL     from './shared-class-data-ll.js';
-import * as ClassDataShared from './shared-class-data-shared.js';
-
-// Shared utils (identical in both utils files — import from basic)
+// gen-core.js — all gen logic + re-exports everything from shared-core.js
 import {
-    calculateModifier,
-    formatModifier,
-    getPrimeRequisites,
-    readAbilityScores as readScoresFromInputs,
-    getClassRequirements,
-    getDemihumanLimits,
-} from './shared-basic-utils.js';
-
-// Advanced-only utils
-import {
+    PROGRESSION_TABLES,
     getRaceDisplayName,
     getClassDisplayName,
     getAvailableClasses,
-    applyRacialAdjustments
-} from './shared-advanced-utils.js';
-
-// Basic character generation (aliased to avoid name collisions)
-import {
-    rollAbilities,
-    rollHitPoints        as rollHPBasic,
     getClassProgressionData as getProgBasic,
+    getClassProgressionData as getProgAdvanced,
     getClassFeatures,
-    getClassAbilities    as getRacialBasic,
-    createCharacter
-} from './shared-basic-character-gen.js';
+    getBasicModeClassAbilities as getRacialBasic,
+    getAdvancedModeRacialAbilities,
+    applyRacialSaveModifiers,
+    getRaceInfo,
+    applyRacialAdjustments as _applyRacialAdj,
+    checkRacialMinimums   as _meetsRacialMins,
+    getClassRequirements  as _getClassReqs,
+    getMaxLevel,
+    calculateModifier, formatModifier, rollAbilities,
+    meetsToughCharactersRequirements, meetsPrimeRequisiteRequirements,
+    getPrimeRequisites,
+    rollHitPoints as rollHPBasic,
+    rollHitPoints as rollHPAdvanced,
+    createCharacter, rollStartingGold, calcStartingGold,
+    readAbilityScores as readScoresFromInputs,
+    getClassRequirements,
+    getDemihumanLimits,
+    purchaseEquipment,
+    getRandomName, getRandomBackground,
+    getAllBackgroundTables, generateZeroLevelCharacter,
+} from './gen-core.js';
+import { displayCharacterSheet }                  from './cs-sheet-page.js';
+// ── Advanced helpers (inlined from former shared-advanced-character-gen.js) ────
 
-// Advanced character generation (aliased to avoid name collisions)
-import {
-    rollAbilitiesAdvanced,
-    getRacialAbilities   as getRacialAdvanced,
-    createCharacterAdvanced,
-    rollHitPoints        as rollHPAdvanced,
-    getClassProgressionData as getProgAdvanced
-} from './shared-advanced-character-gen.js';
+function getRacialAdvanced(race, raceClassMode = 'strict') {
+    return getAdvancedModeRacialAbilities(race, {
+        isAdvanced: true,
+        humanRacialAbilities: raceClassMode !== 'strict',
+    });
+}
 
-import { rollStartingGold, calcStartingGold }    from './shared-character.js';
-import { purchaseEquipment }                      from './gen-equipment.js';
-import { getRandomName }                          from './gen-names.js';
-import { getRandomBackground, getAllBackgroundTables } from './gen-backgrounds.js';
-import { displayCharacterSheet }                  from './cs-sheet-renderer.js';
-import { getMaxLevel, getAdvancedModeRacialAbilities } from './shared-racial-abilities.js';
-import { generateZeroLevelCharacter }             from './gen-0level-gen.js';
+function rollAbilitiesAdvanced(minimumScores, race, className, toughCharacters, primeRequisite13) {
+    let totalAttempts = 0;
+    while (true) {
+        const { scores: baseScores, attempts } = rollAbilities(minimumScores, toughCharacters, className, primeRequisite13);
+        totalAttempts += attempts;
+        if (!_meetsRacialMins(baseScores, race)) continue;
+        const adjustedScores = _applyRacialAdj(baseScores, race);
+        const classReqs = _getClassReqs(className, race);
+        if (Object.entries(classReqs).some(([ab, min]) => adjustedScores[ab] < min)) continue;
+        return { baseScores, adjustedScores, attempts: totalAttempts };
+    }
+}
+
+function createCharacterAdvanced(options) {
+    const {
+        level, race, className, baseScores, adjustedScores, hp,
+        classData, PROGRESSION_TABLES.ose: _CDS = PROGRESSION_TABLES.ose,
+        progressionMode: _pm, raceClassMode = 'strict', name, background,
+    } = options;
+    const racialAdjustments = getRaceInfo(race)?.abilityModifiers ?? {};
+    const progression = getProgAdvanced(className, level, adjustedScores, classData);
+    const features    = getClassFeatures(className, level, classData, _CDS);
+    const humanAbilitiesEnabled = raceClassMode !== 'strict';
+    const racialAbilities = getAdvancedModeRacialAbilities(race, { isAdvanced: true, humanRacialAbilities: humanAbilitiesEnabled });
+    const character = createCharacter({
+        level, className,
+        mode: _pm === 'smooth' ? 'Smoothified' : 'Normal',
+        abilityScores: adjustedScores, hp,
+        progressionData: progression, features, racialAbilities, name, background,
+    });
+    character.race              = race;
+    character.baseScores        = baseScores;
+    character.adjustedScores    = adjustedScores;
+    character.racialAdjustments = racialAdjustments;
+    character.racialAbilities   = racialAbilities;
+    return character;
+}
+
 // ── Settings helpers (inlined from gen-settings.js — single-parent leaf) ──────
 const _SETTINGS_PREFIX = 'ose_settings_';
 function saveSettings(pageKey, values) {
@@ -69,7 +98,7 @@ function clearSettings(pageKey) {
     catch (e) { console.warn('OSE: could not clear settings:', e); }
 }
 import { expandCompactV2 } from './cs-sheet-page.js';
-import { PROG_CODE, CLS_CODE, RACE_CODE, RCM_CODE, progModeLabel } from './shared-sheet-builder.js';
+import { PROG_CODE, CLS_CODE, RACE_CODE, RCM_CODE, progModeLabel } from './gen-core.js';
 
 // ── State ─────────────────────────────────────────────────────────────────────
 // Top-level mode toggle
@@ -127,9 +156,7 @@ function getProgData(className, level, scores, classData) {
 }
 
 function getClassDataForMode(pm) {
-    if (pm === 'smooth') return ClassDataGygar;
-    if (pm === 'll')     return ClassDataLL;
-    return ClassDataOSE;
+    return PROGRESSION_TABLES[pm === 'smooth' ? 'gygar' : pm] ?? PROGRESSION_TABLES.ose;
 }
 
 function readAbilityScores() { abilityScores = readScoresFromInputs(); }
@@ -524,7 +551,7 @@ async function generateBasicCharacter() {
     const hpMode = hpRollingMode === '5e' ? 2 : (hpRollingMode === 'blessed' || hasBlessed) ? 1 : hpRollingMode === 'healthy' ? 3 : 0;
     const hpResult = rollHPBasic(selectedClass, selectedLevel, conMod, classData, includeLevel0HP, hpMode, fixedHPRolls);
     const progressionData = getProgBasic(selectedClass, selectedLevel, abilityScores, classData);
-    const features = getClassFeatures(selectedClass, selectedLevel, classData, ClassDataShared);
+    const features = getClassFeatures(selectedClass, selectedLevel, classData, PROGRESSION_TABLES.ose);
     const racialAbilities = getRacialBasic(selectedClass);
     const background = getRandomBackground(hpResult.backgroundHP);
 
@@ -669,7 +696,7 @@ async function generateAdvancedCharacter() {
                 adjustedScores[a] = baseScores[a] + (fixedAdjustments[a] || 0);
             }
         } else {
-            adjustedScores = applyRacialAdjustments(baseScores, selectedRace);
+            adjustedScores = _applyRacialAdj(baseScores, selectedRace);
         }
     } else {
         characterName = getRandomName(selectedRace.replace('_RACE',''));
@@ -704,7 +731,7 @@ async function generateAdvancedCharacter() {
 
     const purchased = purchaseEquipment(selectedClass, startingGold, abilityModifiers.DEX, noLevel0Equipment ? null : background, progressionMode);
     const character = createCharacterAdvanced({ level: selectedLevel, race: selectedRace, className: selectedClass,
-        baseScores, adjustedScores, hp: hpResult.max, classData, ClassDataShared, progressionMode, raceClassMode, name: characterName, background });
+        baseScores, adjustedScores, hp: hpResult.max, classData, PROGRESSION_TABLES.ose, progressionMode, raceClassMode, name: characterName, background });
     character.hpRolls = hpResult.rolls; character.hpDice = hpResult.dice; character.startingGold = startingGold;
     character.hpMode = hpMode;
     fixedHPRolls = null; fixedStartingGold = null; fixedAdjustments = null;

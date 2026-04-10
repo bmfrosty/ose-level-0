@@ -1,6 +1,6 @@
 # TODO — Active Planning Document
 
-> **Status:** All generators complete and working. 0-level generator deleted (2026-03-30) — Level 0 now integrated into basic.html and advanced.html. Generator merge complete (generator.html + gen-ui.js, 2026-03-31). Human racial abilities for Basic mode complete (2026-03-31). Unified sheet builder extracted (2026-03-31). Remaining: HTML sheet improvements, comprehensive testing, OSE license compliance.
+> **Status:** Generator merge complete (2026-04-05) — `shared-generator.js` unified, shim files deleted, `gen-ui.js` and `cs-sheet-page.js` updated to canonical imports. Remaining: class abilities user review (`includeName` decisions), comprehensive testing, OSE license compliance.
 
 > ⚠️ **IMPORTANT — ALWAYS UPDATE THIS FILE:** After completing any task, mark checklist items `[x]`, update the status line above with the date, and move "next up" markers accordingly. Do not leave this file stale.
 > **History:** See `PLANS_COMPLETED/` for all completed work.
@@ -11,19 +11,21 @@
 
 1. ~~**README.md update**~~ ✅ Complete (2026-03-19)
 2. ~~**0-level integration + deletion**~~ ✅ Complete (2026-03-30)
-3. ~~**Merge basic + advanced → generator.html**~~ ✅ Complete (2026-03-31) — see section 3 below
-4. ~~**HTML sheet improvements**~~ ✅ Complete (2026-03-31) — all items done, obsolete, or superseded
-5. **Comprehensive class/level testing** — saves, attacks, spell slots at levels 1/5/10/14 ← NEXT
-6. **OSE license compliance** — add logo, legal text, "Requires OSE" (see section 6 below)
-7. **Level 0 occupation weapon assignments** — ~17 occupations still need weapons
-8. **Optional enhancements** — combat stats display, UI polish, export improvements
+3. ~~**Merge basic + advanced → generator.html**~~ ✅ Complete (2026-03-31)
+4. ~~**HTML sheet improvements**~~ ✅ Complete (2026-03-31)
+5. ~~**Generator merge (shared-generator.js)**~~ ✅ Complete (2026-04-05) — see `PLANS_COMPLETED/`
+6. **Class abilities user review** — `includeName` decisions + Spellblade Stronghold ← NEXT
+7. **Comprehensive class/level testing** — saves, attacks, spell slots at levels 1/5/10/14
+8. **OSE license compliance** — add logo, legal text, "Requires OSE" (see section 6 below)
+9. **Level 0 occupation weapon assignments** — ~17 occupations still need weapons
+10. **Optional enhancements** — combat stats display, UI polish, export improvements
 
 ---
 
 ## 1. README Update — ✅ COMPLETE (needs refresh after generator merge)
 
 README.md has been rewritten to document:
-- ~~Three generators (0level.html, basic.html, advanced.html)~~ → now two: basic.html and advanced.html (Level 0 integrated); will become one after generator merge
+- ~~Three generators (0level.html, basic.html, advanced.html)~~ → now one: generator.html (Level 0 integrated, Basic + Advanced unified)
 - Quick start: `python3 -m http.server 8000`
 - PDF workflow: Open in New Tab → browser Print / Save as PDF
 - OSE Standard / Smoothified (Gygar) / Labyrinth Lord modes and class lists
@@ -48,17 +50,20 @@ README.md has been rewritten to document:
 
 ## 3. Generator Merge (basic + advanced → generator.html) — ✅ COMPLETE
 
-Merged `basic.html` + `advanced.html` into a single `generator.html` with a top-level mode toggle, eliminating ~42% of duplicate code across 6 files.
+Merged `basic.html` + `advanced.html` into a single `generator.html` with a top-level mode toggle. `shared-generator.js` now provides a single `generateCharacter(opts)` function for all modes and levels.
 
-### Files Produced
+### Files Produced / Current State
 | File | Purpose |
 |------|---------|
 | `generator.html` | Combined generator page (~800 lines) |
-| `gen-ui.js` | Combined UI logic (~1400 lines) |
-| `shared-basic-utils.js` / `shared-advanced-utils.js` | Kept — still imported by `gen-ui.js` |
-| `shared-basic-character-gen.js` / `shared-advanced-character-gen.js` | Kept — different logic per mode |
+| `gen-ui.js` | Combined UI logic — imports from canonical sources directly |
+| `shared-generator.js` | Single `generateCharacter(opts)` function, Basic + Advanced, levels 0–14 |
+| `shared-basic-utils.js` / `shared-advanced-utils.js` | Still imported by `gen-ui.js` for utility functions |
+| `shared-class-data-shared.js` | `CLASS_INFO` with `abilities:`, `maxLevel`, XP/HD tables — single source of truth |
+| `shared-racial-abilities.js` | `RACE_INFO` with `abilities:`, `abilityModifiers`, `classLevelLimits`, `availableClasses` — single source of truth |
+| `shared-class-progression.js` | `getClassProgressionData()`, `getClassFeatures()`, `getBasicModeClassAbilities()` |
 
-Files deleted: `basic.html`, `advanced.html`, `basic-ui.js`, `advanced-ui.js`
+Files deleted: `basic.html`, `advanced.html`, `basic-ui.js`, `advanced-ui.js`, `gen-0level-gen.js`, `shared-basic-character-gen.js`, `shared-advanced-character-gen.js`, `gen-race-adjustments.js`
 
 ### Key Design Decisions
 - **Mode toggle in Section 1** — Basic/Advanced radio buttons combined with level selection
@@ -67,7 +72,7 @@ Files deleted: `basic.html`, `advanced.html`, `basic-ui.js`, `advanced-ui.js`
 - **Share/QR button** — `showShareQR()` opens a modal with QR code + copy link
 - **CSS variables `--accent`/`--accent-bg`** — green for basic, purple for advanced (switches via `.mode-basic`/`.mode-advanced` class)
 - **`m:'B'`/`m:'A'` cp codes preserved** — `charactersheet.html` unchanged
-- **`#demihumanLimitSection` not greyed at level 0** — setting must remain accessible
+- **`generateCharacter(opts)`** — single function handles both modes via 4 narrow `isAdvanced` conditionals
 
 ### Implementation Phases — All Complete
 - [x] Phase 1 — Create `generator-utils.js` (SKIPPED — import directly from basic/advanced utils)
@@ -76,8 +81,9 @@ Files deleted: `basic.html`, `advanced.html`, `basic-ui.js`, `advanced-ui.js`
 - [x] Phase 4 — Update nav links on all pages
 - [x] Phase 4b — URL sync + Share/QR button
 - [x] Phase 5 — Delete old files
+- [x] Phase 6 — Write `shared-generator.js`; replace old generator files with shims; update `gen-ui.js` and `cs-sheet-page.js` to canonical imports; delete shims
 
-### Phase 6 — Test (PENDING)
+### Phase 7 — Test (PENDING — see section 5)
 - [ ] Basic mode: Level 0, 1–14, all classes, demihuman limits switch
 - [ ] Advanced mode: Level 0, 1–14, race/class grid, all race/class modes
 - [ ] Mode switch mid-session: settings save/restore correctly per mode
@@ -122,13 +128,7 @@ Wired up the Section 6 radio buttons in Basic mode so that selecting "Strict OSE
 | `strict-human` | Standard | ✅ Blessed, Decisiveness, Leadership |
 | `traditional-extended` | Extended (all 14) | ✅ Blessed, Decisiveness, Leadership |
 
-All phases complete:
-- [x] Phase 1 — `shared-racial-abilities.js` — dropped `isAdvanced &&` gate
-- [x] Phase 2 — `gen-ui.js` — zero-level `humanRacialAbilities` flag
-- [x] Phase 3 — `gen-ui.js` — `getEffectiveDemihumanLimits()` helper + `cp.dl` fixed
-- [x] Phase 4 — stale `demihumanLimits` radio listener (harmless no-op)
-- [x] Phase 5a — `shared-basic-character-gen.js` + `gen-ui.js` — `hasBlessed` flag + `cp.bl`
-- [x] Phase 5b — `charactersheet.html` — level-up HP roller double-rolls when `decoded.bl` is set
+All phases complete.
 
 ---
 
@@ -146,26 +146,51 @@ Key changes:
 
 ---
 
-## 4. HTML Sheet Improvements — PENDING ← NEXT
+## 4. HTML Sheet Improvements — ✅ COMPLETE
 
-Remaining improvements for `shared-character-sheet.js` and `generator.html`.
+> **Audited 2026-03-31:** 4A and 4E are obsolete due to the 2-page sheet redesign. 4C is already done. 4B is moot (printing always goes through charactersheet.html). 4D is complete.
 
-> **Audited 2026-03-31:** 4A and 4E are obsolete due to the 2-page sheet redesign (equipment/items now on Page 2, treasure in Page 2 Row 3, spacer blocks gone). 4C is already done (OTHER NOTES is on Page 2). Only 4B and 4D remain.
+All items done, obsolete, or superseded.
 
-### ~~4A. Equipment & Treasure Layout~~ — ✅ OBSOLETE
-The sheet was redesigned with a 2-page layout. Items are in Page 2 Row 1, OTHER NOTES in Row 2, MONEY AND TREASURE in Row 3. The original problem no longer exists.
+---
 
-### ~~4B. @media print CSS for Inline Display~~ — ✅ OBSOLETE
-Printing always goes through the new tab (`charactersheet.html`), which already has full `@media print` CSS. The inline display is just for preview; nobody prints directly from the generator page.
+## 3c. Class Abilities User Review — PENDING ← NEXT
 
-### ~~4C. Notes Section~~ — ✅ ALREADY DONE
-"OTHER NOTES" full-width section already exists on Page 2 of the sheet (Row 2).
+All code work is done (see `PLAN_CLASS_ABILITIES_AUDIT.md` for full history). The remaining work is **user decisions** — no coding until these are resolved.
 
-### ~~4D. Ability Score Racial Adjustment Legend~~ — ✅ COMPLETE (2026-03-31)
-Added as a small legend line in the page 1 footer (below `sheet.footer` text), only shown when at least one ability score was racially adjusted. Implemented inline in `renderCharacterSheetHTML()` in `shared-character-sheet.js`. Also updated `buildOptionsLine()` in `cs-compact-codes.js` to always show all HP/ability-affecting options (not just non-defaults).
+Open `shared-class-data-shared.js` and for each entry in `CLASS_INFO[className].abilities`:
 
-### ~~4E. Equipment Section Polish~~ — ✅ OBSOLETE
-The equipment display was redesigned. Armor/weapons are in the Page 1 WEAPONS, ARMOR, AND SKILLS box; Starting AC and Starting Gold are in the page footer line; there are no `&nbsp;<br>` spacer blocks to remove.
+1. **Wording**: compare `description:` against `// PROPOSED:` comment; update if desired
+2. **`includeName`**: uncomment `// includeName: true,` on any entry where you want the
+   ability rendered as `"Name: description"` rather than description alone
+
+Entries pending `includeName` decision:
+
+- **Cleric**: Combat, Holy Symbol, Deity Disfavour, Magical Research, Turn Undead, Spell Casting, Using Magic Items, Stronghold
+- **Fighter**: Combat, Stronghold, Baron Title
+- **Magic-User**: Spell Casting, Magical Research, Using Magic Items, Combat, Stronghold
+- **Thief**: Combat, Back-stab, Thief Skills, Read Languages, Hideout, Scroll Use
+- **Spellblade**: Combat, Spell Casting, Magical Research, Using Magic Items, Stronghold
+- **Dwarf**: Stronghold (others already `includeName: true`)
+- **Elf**: Combat, Immunity to Ghoul Paralysis, Magical Research, Magical Research (Magic Items), Spell Casting, Stronghold, Using Magic Items
+- **Halfling**: Combat, Defensive Bonus, Missile Attack Bonus, Stronghold
+- **Gnome**: Defensive Bonus, Stronghold
+
+Outstanding content decision:
+- **Spellblade Stronghold** `raceOverrides` — stronghold type and followers not yet defined for this house-rules class; all 5 race stubs are `/* PROPOSED: TBD */`
+
+---
+
+## 3d. File Merger (shared-abilities.js) — DEFERRED / OPTIONAL
+
+`PLAN_MERGE_CLASS_AND_RACE_DATA_FILES.md` Phases 3–5 and `PLAN_RACE_ABILITIES_AUDIT.md` Phase 3 describe merging `shared-class-data-shared.js`, `shared-class-progression.js`, and `shared-racial-abilities.js` into a single `shared-abilities.js`.
+
+This is low-priority now that:
+- All data is correctly structured in `CLASS_INFO` and `RACE_INFO`
+- All duplicate hardcoded tables have been removed from utility files
+- The generator already imports from canonical sources
+
+Proceed only if reducing the import surface area becomes worthwhile. No action needed now.
 
 ---
 
@@ -302,7 +327,10 @@ The following occupations still need weapon assignments in the background tables
 **Quick summary:**
 - `shared-*.js` — shared ES6 modules (ability scores, character creation, class data, sheet renderer, sheet builder, equipment)
 - `shared-class-data-{ose,gygar,ll}.js` — mode-specific class progression data
-- `shared-{basic,advanced}-{character-gen,utils}.js` — still imported by `gen-ui.js`
+- `shared-class-data-shared.js` — `CLASS_INFO` with `abilities:`, `maxLevel`; XP/HD/spell/thief/undead tables
+- `shared-racial-abilities.js` — `RACE_INFO` with `abilities:`, `abilityModifiers`, `classLevelLimits`, `availableClasses`; save/attack helpers
+- `shared-{basic,advanced}-utils.js` — still imported by `gen-ui.js`; now read from `CLASS_INFO`/`RACE_INFO`
+- `shared-generator.js` — single `generateCharacter(opts)` for Basic + Advanced, levels 0–14
 - `generator.html` / `gen-ui.js` — the merged generator (replaces basic/advanced pages)
 - `charactersheet.html` — print/edit tab for saved characters
 - `classes.html` / `index.html` — landing and class reference pages

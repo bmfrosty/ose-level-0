@@ -11,16 +11,16 @@
  *
  * Public API used by gen-ui.js:
  *   expandCompactV2(cp)        — expand decoded compact params to a sheet spec
- *   renderFromCompactParams()  — render into a DOM element (used by generator preview)
+ *   displayCharacterSheet()    — re-exported from cs-core.js
  *   compressToBase64Url()      — re-exported for callers that need URL encoding
  */
 
-import { renderCharacterSheetHTML } from './cs-sheet-renderer.js';
-import { buildOptionsLine }         from './cs-compact-codes.js';
-import { progModeLabel }            from './shared-sheet-builder.js';
-import { compressToBase64Url, decompressFromBase64Url } from './cs-url-codec.js';
+import { renderCharacterSheetHTML } from './cs-core.js';
+import { buildOptionsLine, compressToBase64Url, decompressFromBase64Url } from './cs-core.js';
+import { progModeLabel }            from './cs-core.js';
 
-export { compressToBase64Url } from './cs-url-codec.js';
+export { compressToBase64Url } from './cs-core.js';
+export { displayCharacterSheet } from './cs-core.js';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 const PROG_TO_CODE = { ose:'O', smooth:'S', ll:'L' };
@@ -115,16 +115,13 @@ export async function expandCompactV2(cp) {
     const adj = {}, base = {};
     ABILITIES.forEach((a, i) => { adj[a] = adjArr[i]; base[a] = baseArr[i]; });
 
-    const { calculateModifier } = await import('./shared-ability-scores.js');
-    const { getModifierEffects } = await import('./cs-modifier-display.js');
+    const classDataMod = await import('./cs-core.js');
+    const classData = classDataMod.PROGRESSION_TABLES[prog] ?? classDataMod.PROGRESSION_TABLES.gygar;
+    const ClassDataShared = classDataMod;
+    const { calculateModifier } = classDataMod;
+    const { getModifierEffects } = await import('./cs-core.js');
     const mods = {};
     ABILITIES.forEach(a => mods[a] = calculateModifier(adj[a]));
-
-    const classDataMod = await import(
-        prog === 'll' ? './shared-class-data-ll.js' :
-        prog === 'ose' ? './shared-class-data-ose.js' : './shared-class-data-gygar.js'
-    );
-    const ClassDataShared = await import('./shared-class-data-shared.js');
 
     const abilityScoresSheet = ABILITIES.map((a, i) => ({
         name: a, score: adjArr[i],
@@ -146,7 +143,7 @@ export async function expandCompactV2(cp) {
 
     // ── Level 0 ──────────────────────────────────────────────────────────────
     if (level === 0) {
-        const { getAdvancedModeRacialAbilities } = await import('./shared-racial-abilities.js');
+        const { getAdvancedModeRacialAbilities } = classDataMod;
         const racialAbilities = getAdvancedModeRacialAbilities(race);
         const raceDisplay = race.replace('_RACE', '');
         const sv = cp.sv || [14, 15, 16, 17, 18];
@@ -182,25 +179,36 @@ export async function expandCompactV2(cp) {
     let character, raceDisplay, clsDisplay, raceClassDisplay;
 
     if (isAdv) {
-        const { getRaceDisplayName, getClassDisplayName } = await import('./shared-advanced-utils.js');
-        const { createCharacterAdvanced } = await import('./shared-advanced-character-gen.js');
-        character = createCharacterAdvanced({
-            level, race, className: cls,
-            baseScores: base, adjustedScores: adj,
-            hp: cp.h, classData: classDataMod, ClassDataShared,
-            progressionMode: prog, raceClassMode: rcm,
-            name: cp.n, background: { profession: cp.bg }
+        const { getRaceDisplayName, getClassDisplayName,
+                getClassProgressionData, getClassFeatures,
+                getAdvancedModeRacialAbilities, getRaceInfo: _getRaceInfo } = classDataMod;
+        const { createCharacter: _cc }  = await import('./cs-core.js');
+        const progData   = getClassProgressionData({ className: cls, level, abilityScores: adj, classData: classData });
+        const features   = getClassFeatures({ className: cls, level, classData: classData, ClassDataShared });
+        const humanAbilitiesEnabled = rcm !== 'strict';
+        const racialAbilities = getAdvancedModeRacialAbilities(race, { isAdvanced: true, humanRacialAbilities: humanAbilitiesEnabled });
+        character = _cc({
+            level, className: cls, mode: prog === 'smooth' ? 'Smoothified' : 'Normal',
+            abilityScores: adj, hp: cp.h,
+            progressionData: progData, features, racialAbilities,
+            name: cp.n, background: { profession: cp.bg },
         });
+        character.race              = race;
+        character.baseScores        = base;
+        character.adjustedScores    = adj;
+        character.racialAdjustments = _getRaceInfo(race)?.abilityModifiers ?? {};
+        character.racialAbilities   = racialAbilities;
         raceDisplay = getRaceDisplayName(race);
         clsDisplay  = getClassDisplayName(cls);
         raceClassDisplay = (cp.hhr && raceDisplay === 'Human') ? clsDisplay
             : (raceDisplay === clsDisplay ? raceDisplay : `${raceDisplay} ${clsDisplay}`);
     } else {
         const { getClassProgressionData, getClassFeatures,
-                getClassAbilities, createCharacter } = await import('./shared-basic-character-gen.js');
-        const progData = getClassProgressionData(cls, level, adj, classDataMod);
-        const features = getClassFeatures(cls, level, classDataMod, ClassDataShared);
-        const racial   = getClassAbilities(cls);
+                getBasicModeClassAbilities } = classDataMod;
+        const { createCharacter }           = await import('./cs-core.js');
+        const progData = getClassProgressionData({ className: cls, level, abilityScores: adj, classData: classData });
+        const features = getClassFeatures({ className: cls, level, classData: classData, ClassDataShared });
+        const racial   = getBasicModeClassAbilities(cls);
         character = createCharacter({
             level, className: cls, mode: modeLabel,
             abilityScores: adj, hp: cp.h,
@@ -221,8 +229,7 @@ export async function expandCompactV2(cp) {
     }
 
     // XP bonus — lowest prime requisite score wins
-    const { calculateXPBonus, getPrimeRequisites } =
-        await import(isAdv ? './shared-advanced-utils.js' : './shared-basic-utils.js');
+    const { calculateXPBonus, getPrimeRequisites } = classDataMod;
     const primeReqs = getPrimeRequisites(cls);
     let xpBonusNum = primeReqs.length > 0 ? 10 : 0;
     primeReqs.forEach(a => { xpBonusNum = Math.min(xpBonusNum, calculateXPBonus(adj[a] || 10)); });
@@ -516,7 +523,7 @@ function initEditPanel(decoded) {
 
     // ── Apply Changes (Modify Character) ──────────────────────────────────────
     document.getElementById('ep-apply-btn').addEventListener('click', async () => {
-        const { encodeCompactParams } = await import('./cs-compact-codes.js');
+        const { encodeCompactParams } = await import('./cs-core.js');
 
         const newProg = document.querySelector('input[name="ep-prog"]:checked')?.value
             || CODE_TO_PROG[decoded.p] || 'ose';
@@ -553,7 +560,7 @@ function initEditPanel(decoded) {
 
     // ── Apply Options (Sheet Options) ─────────────────────────────────────────
     document.getElementById('so-apply-btn').addEventListener('click', async () => {
-        const { encodeCompactParams } = await import('./cs-compact-codes.js');
+        const { encodeCompactParams } = await import('./cs-core.js');
         const newAdm = parseInt(document.querySelector('input[name="ep-adm"]:checked')?.value || '0');
         const newCp  = { ...decoded,
             n:  document.getElementById('ep-name').value || decoded.n,
@@ -632,9 +639,11 @@ function initEditPanel(decoded) {
         document.getElementById('lup-apply-btn').addEventListener('click', async () => {
             if (!selectedClassCode) { alert('Please select a class first!'); return; }
 
-            const { encodeCompactParams }               = await import('./cs-compact-codes.js');
-            const { parseHitDice }                      = await import('./shared-hit-points.js');
-            const { HIT_DICE_PROGRESSIONS, HIT_DICE_SCALE } = await import('./shared-class-data-shared.js');
+            const { encodeCompactParams }               = await import('./cs-core.js');
+            const { parseHitDice }                      = await import('./cs-core.js');
+            const _lupProg = CODE_TO_PROG[decoded.p] || 'ose';
+            const _lupMod = await import('./cs-core.js');
+            const { HIT_DICE_PROGRESSIONS, HIT_DICE_SCALE } = _lupMod;
 
             const CODE_TO_CLASS_LU = {
                 FI:'Fighter_CLASS', CL:'Cleric_CLASS', MU:'Magic-User_CLASS',
@@ -699,9 +708,11 @@ function initEditPanel(decoded) {
         document.getElementById('lup-qr').checked     = decoded.qr !== 0;
 
         document.getElementById('lup-apply-btn').addEventListener('click', async () => {
-            const { encodeCompactParams }               = await import('./cs-compact-codes.js');
-            const { parseHitDice }                      = await import('./shared-hit-points.js');
-            const { HIT_DICE_PROGRESSIONS, HIT_DICE_SCALE } = await import('./shared-class-data-shared.js');
+            const { encodeCompactParams }               = await import('./cs-core.js');
+            const { parseHitDice }                      = await import('./cs-core.js');
+            const _lupProg = CODE_TO_PROG[decoded.p] || 'ose';
+            const _lupMod = await import('./cs-core.js');
+            const { HIT_DICE_PROGRESSIONS, HIT_DICE_SCALE } = _lupMod;
 
             const CODE_TO_CLASS_LU = {
                 FI:'Fighter_CLASS', CL:'Cleric_CLASS', MU:'Magic-User_CLASS',
@@ -804,7 +815,7 @@ export async function renderFromCompactParams(cp, contentEl, opts = {}) {
         let shareUrl = window.location.href;
         if (cp && cp.ap) {
             try {
-                const { encodeCompactParams } = await import('./cs-compact-codes.js');
+                const { encodeCompactParams } = await import('./cs-core.js');
                 const shareCp = { ...cp, ap: 0 };
                 const encoded = encodeCompactParams(shareCp);
                 const b64url  = await compressToBase64Url(JSON.stringify(encoded));
@@ -848,7 +859,7 @@ export async function initCharacterSheet() {
             console.log('[charactersheet] Decompressed URL data:\n' + JSON.stringify(parsed, null, 2));
 
             if (parsed.v === 2) {
-                const { decodeCompactParams } = await import('./cs-compact-codes.js');
+                const { decodeCompactParams } = await import('./cs-core.js');
                 decodedCp = decodeCompactParams(parsed);
                 console.log('[charactersheet] Decoded compact params:\n' + JSON.stringify(decodedCp, null, 2));
                 await renderFromCompactParams(decodedCp, contentEl,

@@ -3,15 +3,12 @@
 Solid arrows = static `import`. Dashed arrows = dynamic `await import(...)`.
 
 **Color key:**
-- 🟩 Green = used by **both** cs-sheet-page.js and gen-ui.js
-- 🟥 Red = used **only** by gen-ui.js (`gen-` prefix)
-- 🟦 Blue = used **only** by cs-sheet-page.js (`cs-` prefix)
+- 🟩 Green = `shared-core.js` (single source of truth, reached via gen-core.js or cs-core.js)
+- 🟥 Red = gen-ui.js flow only
+- 🟦 Blue = cs-sheet-page.js flow only
 - 🟨 Yellow = `cs-sheet-page.js` node in the generator diagram (not expanded there)
 - No color = the root entry-point module
 
-> `cs-compact-codes.js` is a cs-only file. It appears in the gen-ui.js diagram as a transitive
-> dependency (via `cs-sheet-renderer.js`) but gen-ui.js does not import it directly.
->
 > `legacy-utils.js` is a standalone archive module — nothing currently imports from it.
 > It is not shown in the diagrams below.
 
@@ -26,76 +23,22 @@ flowchart LR
 
     csjs["cs-sheet-page.js"]
 
-    charsheetjs["cs-sheet-renderer.js"]
-    codec["cs-url-codec.js"]
-    sheetbuilder["shared-sheet-builder.js"]
-    compact["cs-compact-codes.js"]
-    wa["shared-weapons-and-armor.js"]
-    abilsc["shared-ability-scores.js"]
-    modeff["cs-modifier-display.js"]
-    cdshared["shared-class-data-shared.js"]
-    cdose["shared-class-data-ose.js"]
-    cdgygar["shared-class-data-gygar.js"]
-    cdll["shared-class-data-ll.js"]
-    racial["shared-racial-abilities.js"]
-    racenames["shared-race-names.js"]
-    advutils["shared-advanced-utils.js"]
-    advgen["shared-advanced-character-gen.js"]
-    basicgen["shared-basic-character-gen.js"]
-    basicutils["shared-basic-utils.js"]
-    hp["shared-hit-points.js"]
-    clsprog["shared-class-progression.js"]
-    char["shared-character.js"]
+    %% green — shared-core.js (reached via cs-core.js)
+    core["shared-core.js"]
 
-    class sheetbuilder,wa,abilsc,cdshared,cdose,cdgygar,cdll,racial,racenames,advutils,advgen,basicgen,basicutils,hp,clsprog,char shared
-    class charsheetjs,codec,compact,modeff csOnly
+    %% blue — cs-sheet-page.js flow only
+    cscore["cs-core.js"]
+
+    class core shared
+    class cscore csOnly
 
     %% static imports
-    csjs --> charsheetjs
-    csjs --> codec
-    csjs --> compact
-    csjs --> sheetbuilder
+    csjs --> cscore
 
     %% dynamic imports
-    csjs -.->|dyn| abilsc
-    csjs -.->|dyn| modeff
-    csjs -.->|dyn| cdshared
-    csjs -.->|dyn one-of| cdose
-    csjs -.->|dyn one-of| cdgygar
-    csjs -.->|dyn one-of| cdll
-    csjs -.->|dyn| racial
-    csjs -.->|dyn| advutils
-    csjs -.->|dyn| advgen
-    csjs -.->|dyn| basicgen
-    csjs -.->|dyn| basicutils
-    csjs -.->|dyn| hp
+    csjs -.->|dyn| cscore
 
-    charsheetjs --> compact
-    charsheetjs --> wa
-    charsheetjs --> codec
-
-    cdose   --> cdshared
-    cdgygar --> cdshared
-
-    racial --> racenames
-
-    advgen --> abilsc
-    advgen --> hp
-    advgen --> clsprog
-    advgen --> racial
-    advgen --> char
-    advgen --> advutils
-
-    basicgen --> abilsc
-    basicgen --> hp
-    basicgen --> clsprog
-    basicgen --> char
-
-    advutils  --> abilsc
-    basicutils --> abilsc
-    clsprog   --> abilsc
-    char      --> abilsc
-    hp        --> abilsc
+    cscore --> core
 ```
 
 ---
@@ -110,93 +53,24 @@ flowchart LR
 
     genui["gen-ui.js"]
 
-    csjs["cs-sheet-page.js"]
-    basicgen["shared-basic-character-gen.js"]
-    advgen["shared-advanced-character-gen.js"]
-    zgen["gen-0level-gen.js"]
-    basicutils["shared-basic-utils.js"]
-    advutils["shared-advanced-utils.js"]
-    clsprog["shared-class-progression.js"]
-    char["shared-character.js"]
-    hp["shared-hit-points.js"]
-    racadj["gen-race-adjustments.js"]
-    racial["shared-racial-abilities.js"]
-    racenames["shared-race-names.js"]
-    eq["gen-equipment.js"]
-    names["gen-names.js"]
-    bg["gen-backgrounds.js"]
-    abilsc["shared-ability-scores.js"]
-    sheetbuilder["shared-sheet-builder.js"]
-    charsheetjs["cs-sheet-renderer.js"]
-    compact["cs-compact-codes.js"]
-    wa["shared-weapons-and-armor.js"]
-    cdshared["shared-class-data-shared.js"]
-    cdose["shared-class-data-ose.js"]
-    cdgygar["shared-class-data-gygar.js"]
-    cdll["shared-class-data-ll.js"]
+    %% green — shared-core.js (reached via gen-core.js)
+    core["shared-core.js"]
 
-    class basicgen,advgen,basicutils,advutils,clsprog,char,hp,racial,racenames,abilsc,sheetbuilder,wa,cdshared,cdose,cdgygar,cdll shared
-    class zgen,racadj,eq,names,bg genOnly
-    class charsheetjs,compact csOnly
+    %% red — gen-ui.js flow only
+    gencore["gen-core.js"]
+
+    %% yellow — present but not expanded (root of other diagram)
+    csjs["cs-sheet-page.js"]
+
+    class core shared
+    class gencore genOnly
     style csjs fill:#ffe066,stroke:#b8860b,color:#333
 
     %% gen-ui.js static imports
-    genui --> cdose
-    genui --> cdgygar
-    genui --> cdll
-    genui --> cdshared
-    genui --> basicutils
-    genui --> advutils
-    genui --> basicgen
-    genui --> advgen
-    genui --> char
-    genui --> eq
-    genui --> names
-    genui --> bg
-    genui --> charsheetjs
-    genui --> racial
-    genui --> zgen
+    genui --> gencore
     genui --> csjs
-    genui --> sheetbuilder
 
-    %% cs-sheet-renderer.js — not expanded here; gen-ui.js uses it for inline preview only
-    charsheetjs --> compact
-    charsheetjs --> wa
-    charsheetjs --> codec
-
-    cdose   --> cdshared
-    cdgygar --> cdshared
-
-    basicgen --> abilsc
-    basicgen --> hp
-    basicgen --> clsprog
-    basicgen --> char
-
-    advgen --> abilsc
-    advgen --> hp
-    advgen --> clsprog
-    advgen --> racial
-    advgen --> char
-    advgen --> advutils
-
-    zgen --> abilsc
-    zgen --> names
-    zgen --> bg
-    zgen --> racial
-    zgen --> racadj
-
-    basicutils --> abilsc
-    advutils   --> abilsc
-    clsprog    --> abilsc
-    char       --> abilsc
-    hp         --> abilsc
-
-    racadj --> racenames
-    racadj --> abilsc
-    racial --> racenames
-
-    eq --> wa
-    eq --> cdshared
+    gencore --> core
 ```
 
 ---
@@ -205,8 +79,37 @@ flowchart LR
 
 | File | Was | Action |
 |------|-----|--------|
-| `race-adjustments.js` | Never imported by any JS or HTML file — old predecessor to `gen-race-adjustments.js` | 🗑️ Deleted |
+| `race-adjustments.js` | Old predecessor to `gen-race-adjustments.js` — never imported | 🗑️ Deleted |
 | `test-gygar-data.js` | Developer test script with no HTML entry point | 🗑️ Deleted |
+| `gen-race-adjustments.js` | Racial adjustment data — folded into `RACE_INFO.abilityModifiers` in `shared-core.js` | 🗑️ Deleted |
+| `gen-0level-gen.js` | Level-0 generator — merged into `gen-core.js` | 🗑️ Deleted |
+| `shared-basic-character-gen.js` | Basic mode gen wrappers — replaced by canonical imports | 🗑️ Deleted |
+| `shared-advanced-character-gen.js` | Advanced mode gen wrappers — replaced by canonical imports | 🗑️ Deleted |
+| `shared-advanced-utils.js` | Advanced utility re-exports + helpers — all functions moved into `shared-core.js` | 🗑️ Deleted |
+| `shared-basic-utils.js` | Renamed to `gen-utils.js` (gen-only prefix) | 🗑️ Deleted |
+| `shared-generator.js` | Renamed to `gen-core.js`; `gen-names.js` and `gen-backgrounds.js` merged in | 🗑️ Deleted |
+| `gen-names.js` | Merged into `gen-core.js` | 🗑️ Deleted |
+| `gen-backgrounds.js` | Merged into `gen-core.js` | 🗑️ Deleted |
+| `gen-utils.js` | Ability score utility re-exports + DOM helpers — merged into `gen-core.js` | 🗑️ Deleted |
+| `gen-equipment.js` | Equipment purchasing logic — merged into `gen-core.js` | 🗑️ Deleted |
+| `shared-class-data-shared.js` | CLASS_INFO and table data — inlined into `shared-core.js` | 🗑️ Deleted |
+| `shared-class-progression.js` | Class progression helpers — inlined into `shared-core.js` | 🗑️ Deleted |
+| `shared-racial-abilities.js` | RACE_INFO and racial helpers — inlined into `shared-core.js` | 🗑️ Deleted |
+| `shared-race-names.js` | `LEGACY_RACE_NAMES` / `normalizeRaceName` — inlined into `shared-core.js` | 🗑️ Deleted |
+| `shared-abilities.js` | Class/race data + helpers — merged into `shared-core.js` | 🗑️ Deleted |
+| `shared-ability-scores.js` | Ability score math — merged into `shared-core.js` | 🗑️ Deleted |
+| `shared-hit-points.js` | HP rolling and parsing — merged into `shared-core.js` | 🗑️ Deleted |
+| `shared-character.js` | Character creation utilities — merged into `shared-core.js` | 🗑️ Deleted |
+| `shared-class-data-ose.js` | OSE-specific class progressions — merged into `shared-core.js` | 🗑️ Deleted |
+| `shared-class-data-gygar.js` | Smoothified class progressions — merged into `shared-core.js` | 🗑️ Deleted |
+| `shared-class-data-ll.js` | Labyrinth Lord progressions — merged into `shared-core.js` | 🗑️ Deleted |
+| `shared-class-data.js` | PROGRESSION_TABLES + re-exports — inlined into `shared-core.js` | 🗑️ Deleted |
+| `shared-sheet-builder.js` | Compact-params encoding constants — inlined into `shared-core.js` | 🗑️ Deleted |
+| `shared-weapons-and-armor.js` | Weapon and armor data tables — inlined into `shared-core.js` | 🗑️ Deleted |
+| `cs-compact-codes.js` | Compact params codec tables and helpers — merged into `cs-core.js` | 🗑️ Deleted |
+| `cs-url-codec.js` | Base64-URL gzip encode/decode — merged into `cs-core.js` | 🗑️ Deleted |
+| `cs-sheet-renderer.js` | HTML character sheet renderer — merged into `cs-core.js` | 🗑️ Deleted |
+| `cs-modifier-display.js` | Ability score modifier display text — merged into `cs-core.js` | 🗑️ Deleted |
 
 ---
 
@@ -214,19 +117,7 @@ flowchart LR
 
 | File | Prefix | Role |
 |------|--------|------|
-| `shared-ability-scores.js` | shared | Ability score math (modifiers, XP bonus, roll helpers) |
-| `shared-race-names.js` | shared | Race name normalization constants |
-| `shared-weapons-and-armor.js` | shared | Weapon and armor data tables |
-| `shared-class-data-shared.js` | shared | XP tables, HD progressions, spell slots |
-| `shared-class-data-ll.js` | shared | LL-specific class data (self-contained) |
-| `shared-sheet-builder.js` | shared | Compact-params encoding constants (`PROG_CODE`, `CLS_CODE`, `RACE_CODE`, `RCM_CODE`, `progModeLabel`) |
-| `cs-sheet-renderer.js` | cs | HTML character sheet renderer (`renderCharacterSheetHTML`, `displayCharacterSheet`) |
-| `cs-url-codec.js` | cs | Base64-URL encode/decode helpers (`compressToBase64Url`, `decompressFromBase64Url`) |
-| `cs-modifier-display.js` | cs | Ability score modifier display text (`getModifierEffects`) — lazy dynamic import |
-| `cs-compact-codes.js` | cs | URL encoding/decoding of compact params |
-| `gen-names.js` | gen | Random name tables |
-| `gen-backgrounds.js` | gen | Background/occupation tables |
+| `shared-core.js` | shared | Everything shared: ability score math, class/race data (CLASS_INFO, RACE_INFO), progression helpers, HP rolling, character creation, weapons/armor data, compact-params encoding constants (PROG_CODE, CLS_CODE, RACE_CODE, RCM_CODE, progModeLabel), and all three mode's progression tables (PROGRESSION_TABLES) |
+| `cs-core.js` | cs | All cs-only logic: HTML character sheet renderer, compact params codec, URL codec (gzip/base64), and ability score modifier display (`getModifierEffects`). Re-exports `shared-core.js` so `cs-sheet-page.js` has a single import point. |
+| `gen-core.js` | gen | All gen-only logic: DOM helpers, equipment purchasing, name/bg tables, character generator (Basic + Advanced, levels 0–14). Re-exports `shared-core.js` so `gen-ui.js` has a single import point. |
 | `legacy-utils.js` | — | Archive of orphaned exports — nothing currently imports from this module |
-
-> `cs-sheet-builder.js` and `gen-settings.js` were single-parent leaf modules and have been
-> **inlined** into their sole consumers (`cs-sheet-page.js` and `gen-ui.js` respectively).
