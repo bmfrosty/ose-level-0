@@ -34,10 +34,6 @@ flowchart LR
 
     %% static imports
     csjs --> cscore
-
-    %% dynamic imports
-    csjs -.->|dyn| cscore
-
     cscore --> core
 ```
 

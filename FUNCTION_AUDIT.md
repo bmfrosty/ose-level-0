@@ -4,7 +4,7 @@ Which exports from each shared module are used by `gen-ui.js` vs `cs-sheet-page.
 
 Legend: **G** = gen-ui.js only · **C** = cs-sheet-page.js only · **Both** = used by both · *(internal)* = not imported by either controller directly
 
-Static imports are noted; C's dynamic imports are marked **(dyn)**.
+All imports are static.
 
 **Import routing:** Neither controller imports `shared-core.js` directly.
 - `gen-ui.js` imports everything from `gen-core.js` (which re-exports `shared-core.js` via `export *`)
@@ -21,9 +21,9 @@ modules and data files. Neither controller imports this module directly.
 
 | Export | G | C | Notes |
 |--------|:-:|:-:|-------|
-| `calculateModifier` | ✓ | ✓ | G via `gen-core.js`; C **(dyn)** via `cs-core.js` |
+| `calculateModifier` | ✓ | ✓ | G via `gen-core.js`; C via `cs-core.js` |
 | `formatModifier` | ✓ | | G via `gen-core.js` |
-| `calculateXPBonus` | ✓ | ✓ | G via `gen-core.js`; C **(dyn)** via `cs-core.js` |
+| `calculateXPBonus` | ✓ | ✓ | G via `gen-core.js`; C via `cs-core.js` |
 | `meetsToughCharactersRequirements` | ✓ | | G via `gen-core.js` |
 | `meetsPrimeRequisiteRequirements` | ✓ | | G via `gen-core.js` |
 | `rollSingleDie` | | | *(internal)* |
@@ -35,20 +35,20 @@ modules and data files. Neither controller imports this module directly.
 
 | Export | G | C | Notes |
 |--------|:-:|:-:|-------|
-| `CLASS_INFO` | ✓ | ✓ | G via `gen-core.js`; C **(dyn)** via `cs-core.js` |
+| `CLASS_INFO` | ✓ | ✓ | G via `gen-core.js`; C via `cs-core.js` |
 | `getClassInfo` | | | *(internal)* |
-| `getPrimeRequisites` | ✓ | ✓ | G via `gen-core.js`; C **(dyn)** — derived from `CLASS_INFO[base].primeRequisite` |
+| `getPrimeRequisites` | ✓ | ✓ | G via `gen-core.js`; C via `cs-core.js` |
 | `getClassAbilities` | | | *(internal)* |
 | `getAbilitiesAtLevel` | | | *(internal)* |
 | `canRaceTakeClass` | | | *(internal)* |
 | `meetsRequirements` | | | *(internal)* |
-| `HIT_DICE_PROGRESSIONS` | | ✓ | C **(dyn)** — level-up HP roller |
-| `HIT_DICE_SCALE` | | ✓ | C **(dyn)** — level-up HP roller |
+| `HIT_DICE_PROGRESSIONS` | | ✓ | C — level-up HP roller |
+| `HIT_DICE_SCALE` | | ✓ | C — level-up HP roller |
 | `ARCANE_SPELL_SLOTS` / `DIVINE_SPELL_SLOTS` / `SPELL_SLOT_SCALE` | | | *(internal — progression tables)* |
 | `THIEF_SKILLS` / `TURN_UNDEAD` / `XP_REQUIREMENTS` | | | *(internal — progression tables)* |
-| `getClassProgressionData` | ✓ | ✓ | G via `gen-core.js` (imported twice as `getProgBasic` / `getProgAdvanced`); C **(dyn)** |
-| `getClassFeatures` | ✓ | ✓ | G via `gen-core.js`; C **(dyn)** |
-| `getBasicModeClassAbilities` | ✓ | ✓ | G via `gen-core.js` (as `getRacialBasic`); C **(dyn)** |
+| `getClassProgressionData` | ✓ | ✓ | G via `gen-core.js` (imported twice as `getProgBasic` / `getProgAdvanced`); C via `cs-core.js` |
+| `getClassFeatures` | ✓ | ✓ | G via `gen-core.js`; C via `cs-core.js` |
+| `getBasicModeClassAbilities` | ✓ | ✓ | G via `gen-core.js` (as `getRacialBasic`); C via `cs-core.js` |
 | `getMaxLevel` | ✓ | | G via `gen-core.js` |
 
 ### Race data
@@ -56,9 +56,9 @@ modules and data files. Neither controller imports this module directly.
 | Export | G | C | Notes |
 |--------|:-:|:-:|-------|
 | `RACE_INFO` | | | *(internal)* |
-| `getRaceInfo` | ✓ | ✓ | G via `gen-core.js`; C **(dyn)** |
+| `getRaceInfo` | ✓ | ✓ | G via `gen-core.js`; C via `cs-core.js` |
 | `getRaceAbilitiesAtLevel` | | | *(internal — gen-core.js)* |
-| `getAdvancedModeRacialAbilities` | ✓ | ✓ | G via `gen-core.js`; C **(dyn)** |
+| `getAdvancedModeRacialAbilities` | ✓ | ✓ | G via `gen-core.js`; C via `cs-core.js` |
 | `applyRacialSaveModifiers` | ✓ | | G via `gen-core.js` |
 | `applyRacialAbilityModifiers` | | | *(internal — gen-core.js, results-array form)* |
 | `meetsRacialMinimums` | | | *(internal — gen-core.js)* |
@@ -66,8 +66,8 @@ modules and data files. Neither controller imports this module directly.
 | `calculateAttackBonus` | | | *(internal — gen-core.js)* |
 | `savingThrowsLevel0` / `attackBonusLevel0` | | | *(internal)* |
 | `resolveFormula` | | | *(internal)* |
-| `getRaceDisplayName` | ✓ | ✓ | G via `gen-core.js`; C **(dyn)** |
-| `getClassDisplayName` | ✓ | ✓ | G via `gen-core.js`; C **(dyn)** |
+| `getRaceDisplayName` | ✓ | ✓ | G via `gen-core.js`; C via `cs-core.js` |
+| `getClassDisplayName` | ✓ | ✓ | G via `gen-core.js`; C via `cs-core.js` |
 | `applyRacialAdjustments` | ✓ | | G via `gen-core.js` (as `_applyRacialAdj`) |
 | `checkRacialMinimums` | ✓ | | G via `gen-core.js` (as `_meetsRacialMins`) |
 | `getAvailableClasses` | ✓ | | G via `gen-core.js` |
@@ -77,11 +77,11 @@ modules and data files. Neither controller imports this module directly.
 
 | Export | G | C | Notes |
 |--------|:-:|:-:|-------|
-| `parseHitDice` | | ✓ | C **(dyn)** — level-up HP rolling panel |
+| `parseHitDice` | | ✓ | C — level-up HP rolling panel |
 | `rollHitPoints` | ✓ | | G via `gen-core.js` (imported twice as `rollHPBasic` / `rollHPAdvanced`) |
 | `rollStartingGold` | ✓ | | G via `gen-core.js` — gen-only |
 | `calcStartingGold` | ✓ | | G via `gen-core.js` — gen-only |
-| `createCharacter` | ✓ | ✓ | G via `gen-core.js`; C **(dyn)** |
+| `createCharacter` | ✓ | ✓ | G via `gen-core.js`; C via `cs-core.js` |
 
 ### Weapons and armor
 
@@ -106,7 +106,7 @@ modules and data files. Neither controller imports this module directly.
 
 | Export | G | C | Notes |
 |--------|:-:|:-:|-------|
-| `PROGRESSION_TABLES` | ✓ | ✓ | G via `gen-core.js`; C **(dyn)** via `cs-core.js` — `classData = PROGRESSION_TABLES[prog]` |
+| `PROGRESSION_TABLES` | ✓ | ✓ | G via `gen-core.js`; C via `cs-core.js` — `classData = PROGRESSION_TABLES[prog]` |
 | `getXPRequired` / `getHitDice` / `getThiefSkills` / `getTurnUndead` / `getLevelFromXP` / `getXPToNextLevel` | | | *(internal — consumed via PROGRESSION_TABLES)* |
 
 `PROGRESSION_TABLES[mode]` members (accessed via `classData = PROGRESSION_TABLES[prog]`):
@@ -117,8 +117,8 @@ modules and data files. Neither controller imports this module directly.
 | `getSavingThrows` | ✓ | ✓ | Mode-specific factory fn |
 | `getSpellSlots` | ✓ | ✓ | Mode-specific; Gygar has no level cap; OSE/LL cap Spellblade at 10 |
 | `getHitDice` / `getXPRequired` / `getThiefSkills` / `getTurnUndead` / `getLevelFromXP` / `getXPToNextLevel` | ✓ | ✓ | Shared fns, bound per mode |
-| `ATTACK_BONUS_PROGRESSIONS` / `ATTACK_BONUS_SCALE` | | ✓ | C **(dyn)** — level-up panel |
-| `SAVING_THROWS` | | ✓ | C **(dyn)** — level-up panel |
+| `ATTACK_BONUS_PROGRESSIONS` / `ATTACK_BONUS_SCALE` | | ✓ | C — level-up panel |
+| `SAVING_THROWS` | | ✓ | C — level-up panel |
 
 ---
 
@@ -132,12 +132,12 @@ and `cs-modifier-display.js`.
 |--------|:-:|:-:|-------|
 | `compressToBase64Url` | | ✓ | C static — URL encoding |
 | `decompressFromBase64Url` | | ✓ | C static — URL decoding |
-| `encodeCompactParams` | | ✓ | C **(dyn)** — modify panel, sheet-options panel, level-up panel |
-| `decodeCompactParams` | | ✓ | C **(dyn)** — `initCharacterSheet` decodes URL data |
+| `encodeCompactParams` | | ✓ | C — modify panel, sheet-options panel, level-up panel |
+| `decodeCompactParams` | | ✓ | C — `initCharacterSheet` decodes URL data |
 | `buildOptionsLine` | | ✓ | C static — builds the options compact string |
 | `renderCharacterSheetHTML` | | ✓ | C static — returns HTML string for full character sheet page |
 | `displayCharacterSheet` | | ✓ | C static re-export → re-exported by `cs-sheet-page.js` for G to use; G does not import this module directly |
-| `getModifierEffects` | | ✓ | C **(dyn)** — ability score modifier descriptions |
+| `getModifierEffects` | | ✓ | C — ability score modifier descriptions |
 | *(all shared-core.js exports)* | — | — | Re-exported via `export * from './shared-core.js'` |
 
 ---

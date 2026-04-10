@@ -3,6 +3,7 @@
 // Re-exports everything from shared-core.js so cs-sheet-page.js has a single import point.
 
 export * from './shared-core.js';
+import { WEAPONS } from './shared-core.js';
 
 /**
  * cs-sheet-renderer.js

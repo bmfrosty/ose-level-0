@@ -6,6 +6,7 @@
 
 // ── Imports ───────────────────────────────────────────────────────────────────
 // gen-core.js — all gen logic + re-exports everything from shared-core.js
+import * as _genCore from './gen-core.js';
 import {
     PROGRESSION_TABLES,
     getRaceDisplayName,
@@ -61,12 +62,11 @@ function rollAbilitiesAdvanced(minimumScores, race, className, toughCharacters, 
 function createCharacterAdvanced(options) {
     const {
         level, race, className, baseScores, adjustedScores, hp,
-        classData, PROGRESSION_TABLES.ose: _CDS = PROGRESSION_TABLES.ose,
-        progressionMode: _pm, raceClassMode = 'strict', name, background,
+        classData, progressionMode: _pm, raceClassMode = 'strict', name, background,
     } = options;
     const racialAdjustments = getRaceInfo(race)?.abilityModifiers ?? {};
-    const progression = getProgAdvanced(className, level, adjustedScores, classData);
-    const features    = getClassFeatures(className, level, classData, _CDS);
+    const progression = getProgAdvanced({ className, level, abilityScores: adjustedScores, classData });
+    const features    = getClassFeatures({ className, level, classData, ClassDataShared: _genCore });
     const humanAbilitiesEnabled = raceClassMode !== 'strict';
     const racialAbilities = getAdvancedModeRacialAbilities(race, { isAdvanced: true, humanRacialAbilities: humanAbilitiesEnabled });
     const character = createCharacter({
@@ -151,8 +151,8 @@ function getEffectiveDemihumanLimits() {
 
 function getProgData(className, level, scores, classData) {
     return mode === 'basic'
-        ? getProgBasic(className, level, scores, classData)
-        : getProgAdvanced(className, level, scores, classData);
+        ? getProgBasic({ className, level, abilityScores: scores, classData })
+        : getProgAdvanced({ className, level, abilityScores: scores, classData });
 }
 
 function getClassDataForMode(pm) {
@@ -549,9 +549,9 @@ async function generateBasicCharacter() {
     const DEMIHUMAN_CLASSES = ['Dwarf_CLASS','Elf_CLASS','Halfling_CLASS','Gnome_CLASS'];
     const hasBlessed = !DEMIHUMAN_CLASSES.includes(selectedClass) && raceClassMode !== 'strict';
     const hpMode = hpRollingMode === '5e' ? 2 : (hpRollingMode === 'blessed' || hasBlessed) ? 1 : hpRollingMode === 'healthy' ? 3 : 0;
-    const hpResult = rollHPBasic(selectedClass, selectedLevel, conMod, classData, includeLevel0HP, hpMode, fixedHPRolls);
-    const progressionData = getProgBasic(selectedClass, selectedLevel, abilityScores, classData);
-    const features = getClassFeatures(selectedClass, selectedLevel, classData, PROGRESSION_TABLES.ose);
+    const hpResult = rollHPBasic({ className: selectedClass, level: selectedLevel, conModifier: conMod, classData, includeLevel0HP, hpMode, fixedRolls: fixedHPRolls });
+    const progressionData = getProgBasic({ className: selectedClass, level: selectedLevel, abilityScores, classData });
+    const features = getClassFeatures({ className: selectedClass, level: selectedLevel, classData, ClassDataShared: _genCore });
     const racialAbilities = getRacialBasic(selectedClass);
     const background = getRandomBackground(hpResult.backgroundHP);
 
@@ -720,9 +720,9 @@ async function generateAdvancedCharacter() {
     const hasBlessed = racialAbilitiesForBlessed.some(ab => ab.includes('Blessed'));
     const hpMode = hpRollingMode === '5e' ? 2 : (hpRollingMode === 'blessed' || hasBlessed) ? 1 : hpRollingMode === 'healthy' ? 3 : 0;
 
-    const hpResult = rollHPAdvanced(selectedClass, selectedLevel, abilityModifiers.CON, classData, includeLevel0HP, hpMode, fixedHPRolls);
+    const hpResult = rollHPAdvanced({ className: selectedClass, level: selectedLevel, conModifier: abilityModifiers.CON, classData, includeLevel0HP, hpMode, fixedRolls: fixedHPRolls });
     const background = getRandomBackground(hpResult.backgroundHP);
-    const progressionData = getProgAdvanced(selectedClass, selectedLevel, adjustedScores, classData);
+    const progressionData = getProgAdvanced({ className: selectedClass, level: selectedLevel, abilityScores: adjustedScores, classData });
 
     let startingGold;
     if (fixedStartingGold !== null)                     { startingGold = fixedStartingGold; }
@@ -731,7 +731,7 @@ async function generateAdvancedCharacter() {
 
     const purchased = purchaseEquipment(selectedClass, startingGold, abilityModifiers.DEX, noLevel0Equipment ? null : background, progressionMode);
     const character = createCharacterAdvanced({ level: selectedLevel, race: selectedRace, className: selectedClass,
-        baseScores, adjustedScores, hp: hpResult.max, classData, PROGRESSION_TABLES.ose, progressionMode, raceClassMode, name: characterName, background });
+        baseScores, adjustedScores, hp: hpResult.max, classData, progressionMode, raceClassMode, name: characterName, background });
     character.hpRolls = hpResult.rolls; character.hpDice = hpResult.dice; character.startingGold = startingGold;
     character.hpMode = hpMode;
     fixedHPRolls = null; fixedStartingGold = null; fixedAdjustments = null;
