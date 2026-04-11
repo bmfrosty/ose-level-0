@@ -482,16 +482,63 @@ function handleRandomName() {
     characterName = name;
 }
 
-// ── Zero-level wrapper ────────────────────────────────────────────────────────
-async function generateZeroLevelChar() {
+// ── Generate Character (entry point) ─────────────────────────────────────────
+export function generateCharacter() {
+    runGenerate().catch(e => console.error('generation error:', e));
+}
+
+async function runGenerate() {
+    const isAdv = mode === 'advanced';
+
+    if (selectedLevel === 0) { await generateZeroLevel(isAdv); return; }
+
+    if (!selectedLevel || !selectedClass) { alert('Please select a level and class first!'); return; }
+    if (isAdv && !selectedRace) { alert('Please select a race first!'); return; }
+
+    const classData = getClassDataForMode(progressionMode);
+    const { baseScores, adjustedScores, _preAdjScores } = resolveScores(isAdv);
+    fixedAdjustments = null;
+
+    const scores  = isAdv ? adjustedScores : abilityScores;
+    const conMod  = calculateModifier(scores.CON);
+    const dexMod  = calculateModifier(scores.DEX);
+    const DEMIHUMAN_CLASSES = ['Dwarf_CLASS','Elf_CLASS','Halfling_CLASS','Gnome_CLASS'];
+    const hasBlessed = isAdv
+        ? getRacialAdvanced(selectedRace, raceClassMode).some(ab => ab.includes('Blessed'))
+        : !DEMIHUMAN_CLASSES.includes(selectedClass) && raceClassMode !== 'strict';
+    const hpMode = hpRollingMode === '5e' ? 2 : (hpRollingMode === 'blessed' || hasBlessed) ? 1 : hpRollingMode === 'healthy' ? 3 : 0;
+
+    const hpResult = isAdv
+        ? rollHPAdvanced({ className: selectedClass, level: selectedLevel, conModifier: conMod, classData, includeLevel0HP, hpMode, fixedRolls: fixedHPRolls })
+        : rollHPBasic(   { className: selectedClass, level: selectedLevel, conModifier: conMod, classData, includeLevel0HP, hpMode, fixedRolls: fixedHPRolls });
+    const background     = getRandomBackground(hpResult.backgroundHP);
+    const progressionData = isAdv
+        ? getProgAdvanced({ className: selectedClass, level: selectedLevel, abilityScores: adjustedScores, classData })
+        : getProgBasic(   { className: selectedClass, level: selectedLevel, abilityScores, classData });
+    const features = getClassFeatures({ className: selectedClass, level: selectedLevel, classData, ClassDataShared: _genCore });
+
+    let startingGold;
+    if (fixedStartingGold !== null)                     { startingGold = fixedStartingGold; }
+    else if (selectedLevel === 1 || wealthRollAsLevel1) { startingGold = rollStartingGold(progressionMode); }
+    else                                                { startingGold = calcStartingGold(progressionData?.xpForCurrentLevel || 0, wealthPct); }
+
+    const purchased  = purchaseEquipment(selectedClass, startingGold, dexMod, noLevel0Equipment ? null : background, progressionMode);
+    const character  = assembleCharacter(isAdv, { baseScores, adjustedScores, _preAdjScores, hpResult, progressionData, features, background, startingGold, hasBlessed, classData, hpMode });
+    fixedHPRolls = null; fixedStartingGold = null;
+
+    if (isAdv) await displayAdvancedCharacter(character, purchased);
+    else       await displayBasicCharacter(character, purchased);
+}
+
+// ── Level-0 generation ────────────────────────────────────────────────────────
+async function generateZeroLevel(isAdv) {
     const fixedScores = useFixedScores ? readScoresFromInputs() : null;
     const fixedName   = document.getElementById('characterName')?.value.trim() || '';
-    const selectedOccupation = document.getElementById('zeroOccupation')?.value || '';
-    const _fixedAdj = fixedAdjustments;
-    fixedAdjustments = null;
+    const _fixedAdj   = fixedAdjustments;
+    fixedAdjustments  = null;
     const opts = {
         race:                selectedRaceForZero,
-        isAdvanced:          mode === 'advanced',
+        isAdvanced:          isAdv,
         humanRacialAbilities: true,
         isGygar:             progressionMode === 'gygar',
         minimums:            readScoresFromInputs(),
@@ -499,7 +546,7 @@ async function generateZeroLevelChar() {
         hpMode:              hpRollingMode === 'healthy' ? 3 : hpRollingMode === 'blessed' ? 1 : 0,
         fixedScores,
         fixedName,
-        fixedOccupation:     selectedOccupation || null,
+        fixedOccupation:     document.getElementById('zeroOccupation')?.value || null,
         fixedAdjustments:    _fixedAdj,
     };
     console.log('[generateZeroLevelChar] Called with opts:', opts);
@@ -511,90 +558,93 @@ async function generateZeroLevelChar() {
     await displayZeroLevelCharacter(char);
 }
 
-// ── Generate Character (dispatcher) ──────────────────────────────────────────
-export function generateCharacter() {
-    if (selectedLevel === 0) {
-        generateZeroLevelChar().catch(e => console.error('0-level gen error:', e));
-        return;
-    }
-    if (mode === 'basic') generateBasicCharacter().catch(e => console.error('basic gen error:', e));
-    else                  generateAdvancedCharacter().catch(e => console.error('advanced gen error:', e));
-}
-
-// ── Basic: Generate Character ─────────────────────────────────────────────────
-async function generateBasicCharacter() {
-    if (!selectedLevel || !selectedClass) { alert('Please select a level and class first!'); return; }
-
-    if (useFixedScores) {
-        readAbilityScores();
-        characterName = document.getElementById('characterName').value.trim();
-        if (!characterName) {
-            const classToRace = { 'Dwarf_CLASS':'Dwarf','Elf_CLASS':'Elf','Halfling_CLASS':'Halfling','Gnome_CLASS':'Gnome' };
-            characterName = getRandomName(classToRace[selectedClass] || 'Human');
-            document.getElementById('characterName').value = characterName;
+// ── Score rolling: sets characterName, returns scores ────────────────────────
+function resolveScores(isAdv) {
+    let baseScores, adjustedScores, _preAdjScores = null;
+    if (isAdv) {
+        if (useFixedScores) {
+            characterName = document.getElementById('characterName').value.trim();
+            if (!characterName) {
+                characterName = getRandomName(selectedRace.replace('_RACE',''));
+                document.getElementById('characterName').value = characterName;
+            }
+            baseScores = readScoresFromInputs();
+            if (fixedAdjustments) {
+                adjustedScores = {};
+                for (const a of ['STR','INT','WIS','DEX','CON','CHA'])
+                    adjustedScores[a] = baseScores[a] + (fixedAdjustments[a] || 0);
+            } else {
+                adjustedScores = _applyRacialAdj(baseScores, selectedRace);
+            }
+        } else {
+            characterName = getRandomName(selectedRace.replace('_RACE',''));
+            const userMins  = readScoresFromInputs();
+            const classReqs = getClassRequirements(selectedClass);
+            const effMins   = { ...userMins };
+            Object.keys(classReqs).forEach(a => { effMins[a] = Math.max(effMins[a]||3, classReqs[a]); });
+            if (primeRequisiteMode !== 'user') {
+                const prMin = parseInt(primeRequisiteMode);
+                getPrimeRequisites(selectedClass).forEach(a => { effMins[a] = Math.max(effMins[a]||3, prMin); });
+            }
+            const result = rollAbilitiesAdvanced(effMins, selectedRace, selectedClass, false, false);
+            baseScores = result.baseScores; adjustedScores = result.adjustedScores;
+            _scoreRollAttempts = result.attempts || 1;
         }
     } else {
-        handleRollAbilities(true);
-        const classToRace = { 'Dwarf_CLASS':'Dwarf','Elf_CLASS':'Elf','Halfling_CLASS':'Halfling','Gnome_CLASS':'Gnome' };
-        characterName = getRandomName(classToRace[selectedClass] || 'Human');
-    }
-
-    // Apply custom adjustments from edit panel (preserves base scores for strikethrough display)
-    let _preAdjScores = null;
-    if (fixedAdjustments && Object.values(fixedAdjustments).some(v => v !== 0)) {
-        _preAdjScores = { ...abilityScores };
-        for (const a of ['STR','INT','WIS','DEX','CON','CHA']) {
-            abilityScores[a] = Math.max(3, Math.min(18, abilityScores[a] + (fixedAdjustments[a] || 0)));
+        if (useFixedScores) {
+            readAbilityScores();
+            characterName = document.getElementById('characterName').value.trim();
+            if (!characterName) {
+                const classToRace = { 'Dwarf_CLASS':'Dwarf','Elf_CLASS':'Elf','Halfling_CLASS':'Halfling','Gnome_CLASS':'Gnome' };
+                characterName = getRandomName(classToRace[selectedClass] || 'Human');
+                document.getElementById('characterName').value = characterName;
+            }
+        } else {
+            handleRollAbilities(true);
+            const classToRace = { 'Dwarf_CLASS':'Dwarf','Elf_CLASS':'Elf','Halfling_CLASS':'Halfling','Gnome_CLASS':'Gnome' };
+            characterName = getRandomName(classToRace[selectedClass] || 'Human');
         }
+        // Apply custom adjustments (preserves base scores for strikethrough display)
+        if (fixedAdjustments && Object.values(fixedAdjustments).some(v => v !== 0)) {
+            _preAdjScores = { ...abilityScores };
+            for (const a of ['STR','INT','WIS','DEX','CON','CHA'])
+                abilityScores[a] = Math.max(3, Math.min(18, abilityScores[a] + (fixedAdjustments[a] || 0)));
+        }
+        baseScores = adjustedScores = abilityScores;
     }
-    fixedAdjustments = null;
+    return { baseScores, adjustedScores, _preAdjScores };
+}
 
-    const displayMode = progModeLabel(progressionMode);
-    const classData = getClassDataForMode(progressionMode);
-    const conMod = calculateModifier(abilityScores.CON);
-
-    const DEMIHUMAN_CLASSES = ['Dwarf_CLASS','Elf_CLASS','Halfling_CLASS','Gnome_CLASS'];
-    const hasBlessed = !DEMIHUMAN_CLASSES.includes(selectedClass) && raceClassMode !== 'strict';
-    const hpMode = hpRollingMode === '5e' ? 2 : (hpRollingMode === 'blessed' || hasBlessed) ? 1 : hpRollingMode === 'healthy' ? 3 : 0;
-    const hpResult = rollHPBasic({ className: selectedClass, level: selectedLevel, conModifier: conMod, classData, includeLevel0HP, hpMode, fixedRolls: fixedHPRolls });
-    const progressionData = getProgBasic({ className: selectedClass, level: selectedLevel, abilityScores, classData });
-    const features = getClassFeatures({ className: selectedClass, level: selectedLevel, classData, ClassDataShared: _genCore });
-    const racialAbilities = getRacialBasic(selectedClass);
-    const background = getRandomBackground(hpResult.backgroundHP);
-
-    let startingGold;
-    if (fixedStartingGold !== null)                     { startingGold = fixedStartingGold; }
-    else if (selectedLevel === 1 || wealthRollAsLevel1) { startingGold = rollStartingGold(progressionMode); }
-    else                                                { startingGold = calcStartingGold(progressionData.xpForCurrentLevel, wealthPct); }
-
-    const dexMod = calculateModifier(abilityScores.DEX);
-    const purchased = purchaseEquipment(selectedClass, startingGold, dexMod, noLevel0Equipment ? null : background, progressionMode);
-
-    const character = createCharacter({ level: selectedLevel, className: selectedClass, mode: displayMode,
-        abilityScores, hp: hpResult.max, progressionData, features, racialAbilities, name: characterName, background, startingGold });
+// ── Character assembly: returns a fully-populated character object ─────────────
+function assembleCharacter(isAdv, { baseScores, adjustedScores, _preAdjScores, hpResult, progressionData, features, background, startingGold, hasBlessed, classData, hpMode }) {
+    let character;
+    if (isAdv) {
+        character = createCharacterAdvanced({ level: selectedLevel, race: selectedRace, className: selectedClass,
+            baseScores, adjustedScores, hp: hpResult.max, classData, progressionMode, raceClassMode,
+            name: characterName, background, progressionData, features });
+        mergeAdvancedLanguages(character.racialAbilities, character.classAbilities);
+    } else {
+        const racialAbilities = getRacialBasic(selectedClass);
+        character = createCharacter({ level: selectedLevel, className: selectedClass, mode: progModeLabel(progressionMode),
+            abilityScores, hp: hpResult.max, progressionData, features, racialAbilities,
+            name: characterName, background, startingGold });
+        if (_preAdjScores) character.originalScores = _preAdjScores;
+        // Must be {name, description} objects to match the classAbilities renderer in cs-sheet-renderer.js
+        if (hasBlessed) {
+            character.classAbilities = [...(character.classAbilities || []),
+                { name: 'Blessed',      description: 'Roll HP twice, take best at each level (does not apply to level 0 HP roll)' },
+                { name: 'Decisiveness', description: 'Act first on tied initiative (+1 to individual initiative)' },
+                { name: 'Leadership',   description: 'Retainers/mercenaries +1 loyalty and morale' },
+            ];
+        }
+        character.blessed = hasBlessed;
+    }
     character.hpRolls = hpResult.rolls;
     character.hpDice  = hpResult.dice;
     character.startingGold = startingGold;
-    character.blessed = hasBlessed;
     character.hpMode  = hpMode;
-    if (_preAdjScores) character.originalScores = _preAdjScores;
-
-    // Append human racial abilities to class abilities for basic human classes
-    // Must be {name, description} objects to match the classAbilities renderer in cs-sheet-renderer.js
-    if (hasBlessed) {
-        const humanAbilities = [
-            { name: 'Blessed',       description: 'Roll HP twice, take best at each level (does not apply to level 0 HP roll)' },
-            { name: 'Decisiveness',  description: 'Act first on tied initiative (+1 to individual initiative)' },
-            { name: 'Leadership',    description: 'Retainers/mercenaries +1 loyalty and morale' },
-        ];
-        character.classAbilities = [...(character.classAbilities || []), ...humanAbilities];
-    }
-
-    fixedHPRolls = null; fixedStartingGold = null;
-
-    await displayBasicCharacter(character, purchased);
+    return character;
 }
-
 
 /** Read current global display options (called once per displayXxx invocation). */
 function sheetOpts() {
@@ -683,72 +733,6 @@ async function displayBasicCharacter(character, purchased) {
     };
     displayCharacterSheet(spec, document.getElementById('characterInfo'), document.getElementById('characterDisplay'));
 }
-// ── Advanced: Generate Character ──────────────────────────────────────────────
-async function generateAdvancedCharacter() {
-    if (!selectedLevel || !selectedRace || !selectedClass) { alert('Please select a level, race, and class first!'); return; }
-
-    const classData = getClassDataForMode(progressionMode);
-    let baseScores, adjustedScores;
-
-    if (useFixedScores) {
-        characterName = document.getElementById('characterName').value.trim();
-        if (!characterName) {
-            characterName = getRandomName(selectedRace.replace('_RACE',''));
-            document.getElementById('characterName').value = characterName;
-        }
-        baseScores = readScoresFromInputs();
-        if (fixedAdjustments) {
-            adjustedScores = {};
-            for (const a of ['STR','INT','WIS','DEX','CON','CHA']) {
-                adjustedScores[a] = baseScores[a] + (fixedAdjustments[a] || 0);
-            }
-        } else {
-            adjustedScores = _applyRacialAdj(baseScores, selectedRace);
-        }
-    } else {
-        characterName = getRandomName(selectedRace.replace('_RACE',''));
-        const userMins = readScoresFromInputs();
-        const classReqs = getClassRequirements(selectedClass);
-        const effMins = { ...userMins };
-        Object.keys(classReqs).forEach(a => { effMins[a] = Math.max(effMins[a]||3, classReqs[a]); });
-        if (primeRequisiteMode !== 'user') {
-            const prMin = parseInt(primeRequisiteMode);
-            getPrimeRequisites(selectedClass).forEach(a => { effMins[a] = Math.max(effMins[a]||3, prMin); });
-        }
-        const result = rollAbilitiesAdvanced(effMins, selectedRace, selectedClass, false, false);
-        baseScores = result.baseScores; adjustedScores = result.adjustedScores;
-        _scoreRollAttempts = result.attempts || 1;
-    }
-
-    const abilityModifiers = {};
-    for (const a in adjustedScores) abilityModifiers[a] = calculateModifier(adjustedScores[a]);
-
-    const racialAbilitiesForBlessed = getRacialAdvanced(selectedRace, raceClassMode);
-    const hasBlessed = racialAbilitiesForBlessed.some(ab => ab.includes('Blessed'));
-    const hpMode = hpRollingMode === '5e' ? 2 : (hpRollingMode === 'blessed' || hasBlessed) ? 1 : hpRollingMode === 'healthy' ? 3 : 0;
-
-    const hpResult = rollHPAdvanced({ className: selectedClass, level: selectedLevel, conModifier: abilityModifiers.CON, classData, includeLevel0HP, hpMode, fixedRolls: fixedHPRolls });
-    const background = getRandomBackground(hpResult.backgroundHP);
-    const progressionData = getProgAdvanced({ className: selectedClass, level: selectedLevel, abilityScores: adjustedScores, classData });
-    const features = getClassFeatures({ className: selectedClass, level: selectedLevel, classData, ClassDataShared: _genCore });
-
-    let startingGold;
-    if (fixedStartingGold !== null)                     { startingGold = fixedStartingGold; }
-    else if (selectedLevel === 1 || wealthRollAsLevel1) { startingGold = rollStartingGold(progressionMode); }
-    else                                                { startingGold = calcStartingGold(progressionData?.xpForCurrentLevel||0, wealthPct); }
-
-    const purchased = purchaseEquipment(selectedClass, startingGold, abilityModifiers.DEX, noLevel0Equipment ? null : background, progressionMode);
-    const character = createCharacterAdvanced({ level: selectedLevel, race: selectedRace, className: selectedClass,
-        baseScores, adjustedScores, hp: hpResult.max, classData, progressionMode, raceClassMode, name: characterName, background,
-        progressionData, features });
-    character.hpRolls = hpResult.rolls; character.hpDice = hpResult.dice; character.startingGold = startingGold;
-    character.hpMode = hpMode;
-    mergeAdvancedLanguages(character.racialAbilities, character.classAbilities);
-    fixedHPRolls = null; fixedStartingGold = null; fixedAdjustments = null;
-
-    await displayAdvancedCharacter(character, purchased);
-}
-
 async function displayAdvancedCharacter(character, purchased) {
     const hpMode = character.hpMode || 0;
     const raceDisplay  = getRaceDisplayName(character.race);
@@ -869,7 +853,7 @@ async function displayZeroLevelCharacter(char) {
         ['STR','INT','WIS','DEX','CON','CHA'].forEach(a=>{const el=document.getElementById(`score${a}`);if(el)el.value=values[a];});
         const nameEl=document.getElementById('characterName');if(nameEl)nameEl.value=characterName;
         useFixedScores=true;const fixEl=document.getElementById('useFixedScores');if(fixEl)fixEl.checked=true;
-        generateZeroLevelChar().catch(e=>console.error('0-level edit gen error:',e));
+        runGenerate().catch(e=>console.error('0-level edit gen error:',e));
     };
     displayCharacterSheet(spec, document.getElementById('characterInfo'), document.getElementById('characterDisplay'));
 }

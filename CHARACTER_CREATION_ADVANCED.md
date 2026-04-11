@@ -1,321 +1,137 @@
-# Character Creation: Advanced Method (Level 1+)
+# Character Creation: Advanced Method
 
-This document describes the OSE Advanced Fantasy character creation process for Level 1+ characters using the Advanced Method. This is distinct from Level 0 character generation and from the Basic Method.
+In Advanced Method, **race and class are completely separate**. A character chooses a race
+first (gaining racial abilities and ability score modifiers), then chooses a class available
+to that race. Racial abilities persist through all levels alongside class abilities.
 
-## Overview
+Levels 1–14 are supported.
 
-Advanced Method character creation is for creating 1st level characters using Advanced Fantasy rules with racial selection. Characters created this way:
-- Start at 1st level with 0 XP
-- Choose a race first, then a class available to that race
-- Have racial ability score modifiers applied
-- Have both racial and class-based abilities
-- Roll hit dice appropriate to their class
-- Purchase starting equipment with 3d6 × 10 gold pieces
+---
 
-## Current Implementation Status
-
-**NOT YET IMPLEMENTED** - The generator currently only creates Level 0 characters. This document serves as a specification for future Level 1+ character generation.
-
-## Character Creation Steps
+## Steps
 
 ### 1. Roll Ability Scores
-Roll 3d6 for each ability score: STR, DEX, CON, INT, WIS, CHA.
 
-**Sub-Par Characters Rule:**
-**We use this rule.** If a character has very poor ability scores (8 or less in every score, or extremely low in multiple abilities), allow re-rolling the entire character.
+Roll 3d6 for each ability score: STR, INT, WIS, DEX, CON, CHA.
 
-**Implementation Note:** Provide UI option to re-roll if character is sub-par. Same as Basic Method and Level 0.
+**Sub-par characters:** If scores are very poor (e.g. 8 or below in every score, or extremely
+low in more than one ability), the character may be discarded and re-rolled. The generator
+tracks how many attempts were needed.
 
 ### 2. Choose a Race
-Select from available races, considering minimum ability score requirements:
-- **Human**
-- **Dwarf** (requires CON 9)
-- **Elf** (requires INT 9)
-- **Gnome** (requires CON 9, INT 9)
-- **Halfling** (requires CON 9, DEX 9)
 
-**Ability Score Modifiers:**
-After selecting race, apply racial ability score modifiers:
-- **Human:** +1 CON, +1 CHA
-- **Dwarf:** +1 CON, -1 CHA
-- **Elf:** +1 DEX, -1 CON
-- **Gnome:** No modifiers
-- **Halfling:** -1 STR, +1 DEX
+Select a race, bearing in mind minimum ability score requirements for some races.
 
-**Restrictions:**
-- Modifiers cannot raise an ability score above 18
-- Modifiers cannot lower an ability score below 3
+Available races: Human, Dwarf, Elf, Gnome, Halfling.
 
-**Implementation Note:** This is the key difference from Basic Method - race is chosen separately from class, and racial modifiers are applied.
+**Racial ability score modifiers** are applied after race selection. Modifiers cannot raise a
+score above 18 or lower it below 3. The unmodified (base) scores are preserved and shown with
+strikethrough on the sheet when adjustments are in effect.
 
 ### 3. Choose a Class
-Select from classes available to your race, considering minimum ability score requirements.
 
-**Human Classes:**
-- Fighter
-- Cleric
-- Magic-User
-- Thief
-- (Any class available)
+Select a class available to the chosen race. Class availability is governed by the
+Race/Class Mode setting (Strict OSE, Strict + Human Abilities, Traditional Extended, Allow All).
 
-**Dwarf Classes:**
-- Dwarf (racial class)
-- Fighter
-- Cleric
-- Thief
+Available classes include the core OSE classes plus Advanced Fantasy expanded classes
+(Acrobat, Assassin, Bard, Druid, Illusionist, Knight, Paladin, Ranger) and Spellblade.
 
-**Elf Classes:**
-- Elf (racial class)
-- Fighter
-- Magic-User
-- Thief
+**Multiple classes:** Not used. Characters select one class.
 
-**Gnome Classes:**
-- Gnome (racial class)
-- Fighter
-- Cleric
-- Magic-User
-- Thief
+### 4. Note Ability Score Modifiers
 
-**Halfling Classes:**
-- Halfling (racial class)
-- Fighter
-- Cleric
-- Thief
+Bonuses and penalties from ability scores are calculated automatically, using the
+post-racial-modifier scores.
 
-**Multiple Classes (Optional Rule):**
-**We do NOT use this rule.** Characters select only one class.
+### 5. Note Attack Values
 
-**Implementation Note:** Need to implement class availability by race and enforce minimum requirements.
+We always use Ascending AC. Attack bonus is determined by class and level.
 
-### 4. Adjust Ability Scores (Optional)
-Players may raise prime requisite(s) by lowering other ability scores:
-- **Exchange Rate:** Lower 2 points to raise prime requisite by 1 point
-- **Restrictions:**
-  - Only STR, INT, and WIS may be lowered
-  - No score may be lowered below 9
-  - Some classes have additional constraints
+### 6. Note Saving Throws and Class/Race Abilities
 
-**Implementation Note:** Same as Basic Method.
+Saving throws are class-based with any applicable racial bonuses (e.g. Dwarf and Halfling
+Resilience). Racial abilities and class abilities are both listed on the character sheet.
+Languages from class abilities are merged into the racial languages list (sorted,
+deduplicated).
 
-### 5. Note Ability Score Modifiers
-Record all bonuses/penalties from ability scores.
+If the character has spells, starting spells are determined by class and level.
 
-**Implementation Note:** Same as Basic Method.
+### 7. Roll Hit Points
 
-### 6. Note Attack Values
-**We use Ascending AC (optional rule):**
-- 1st level characters have THAC0 19 [0]
-- Record attack bonus: **+0** for 1st level characters
-- The value in square brackets [0] is the ascending AC attack bonus
+Hit points are rolled using the class hit die, modified by CON. Minimum 1 HP.
 
-**Implementation Note:** Same as Basic Method - always use ascending AC.
+**HP rolling modes (selectable):**
+- **Standard:** Roll the hit die; keep the result.
+- **Blessed:** Roll twice, take the higher result (also used automatically if the character has
+  the Blessed racial ability, e.g. Humans with human racial abilities enabled).
+- **Healthy:** All HP rolls are treated as the maximum value for that die.
+- **5e-style:** Take the average die value (rounded up) instead of rolling.
 
-### 7. Note Saving Throws and Class/Race Abilities
-- Record racial special abilities
-- Record class special abilities
-- Record saving throws (class-dependent, with racial bonuses if applicable)
-- If character has a spell book, determine starting spells
+HP rolls are preserved and shown on the sheet so they can be edited on re-generation.
 
-**Weapon Proficiencies (Optional Rule):**
-**We do NOT use this rule.** All characters can use any weapon allowed by their race and class without proficiency selection.
+### 8. Choose Alignment
 
-**Implementation Note:** No proficiency system needed - just enforce race and class weapon restrictions.
+Alignment (Lawful / Neutral / Chaotic) is not tracked by the generator.
 
-### 8. Roll Hit Points
-Roll the hit die for the character's class:
-- **Fighter:** d8
-- **Cleric:** d6
-- **Magic-User:** d4
-- **Thief:** d4
-- **Dwarf:** d8
-- **Elf:** d6
-- **Gnome:** d4
-- **Halfling:** d6
+### 9. Note Known Languages
 
-Apply CON modifier. Minimum 1 HP regardless of modifier.
+Languages come from the racial abilities section of the character sheet. Characters with high
+INT may know additional languages as noted in the race description. Class language entries are
+merged into the racial languages list.
 
-**Re-Rolling 1s and 2s (Optional Rule):**
-We use this rule by default (checkbox enabled). If a 1 or 2 is rolled (before CON modifier), allow re-roll.
+### 10. Buy Equipment
 
-**Implementation Note:** Same as Basic Method.
+Starting gold is rolled (3d6 × 10 gp for level 1; scaled from XP for higher levels) and
+equipment is purchased automatically based on class and DEX modifier.
 
-### 9. Choose Alignment
-Select: Lawful, Neutral, or Chaotic.
+**Wealth options:**
+- Roll normally, or treat any level as level 1 for starting gold (checkbox).
+- Starting gold amount is preserved and editable on re-generation.
 
-**Implementation Note:** Same as Basic Method.
+### 11. Note Armour Class
 
-### 10. Note Known Languages
-- **Native Languages:** Listed in race description (varies by race)
-- **Additional Languages:** Characters with high INT may choose additional languages
+Ascending AC is always used. Base AC comes from purchased armour; DEX modifier is applied.
 
-**Race-Specific Languages:**
-- **Human:** Common, alignment language
-- **Dwarf:** Alignment, Common, Dwarvish, Gnomish, Goblin, Kobold
-- **Elf:** Alignment, Common, Elvish, Gnoll, Hobgoblin, Orcish
-- **Gnome:** Alignment, Common, Dwarvish, Gnomish, Goblin, Kobold
-- **Halfling:** Alignment, Common, Halfling
+### 12. Note Level and XP
 
-**Implementation Note:** Each race has specific language lists that differ from Basic Method.
+The generator supports levels 1–14. XP thresholds are calculated from the class progression
+table and displayed on the sheet. Racial level limits are enforced in Strict mode.
 
-### 11. Buy Equipment
-Starting wealth: **3d6 × 10 gold pieces**
+### 13. Background Profession
 
-Purchase equipment from standard lists, respecting both race and class restrictions on weapons and armor.
+The character receives a background profession derived from the level 0 background system,
+based on their HP total. At level 1+ this is flavor only — it does not grant additional
+equipment.
 
-**Implementation Note:** Need to enforce both racial and class equipment restrictions.
+### 14. Name Character
 
-### 12. Note Armour Class
-**We use Ascending AC (optional rule):**
+A name is generated randomly from race-appropriate name tables. The name can be overridden
+by typing in the name field before generating.
 
-Base AC determined by armor:
-- **Unarmored:** 9 [10] - we use the [10] value
-- **Leather:** 7 [12]
-- **Chain Mail:** 5 [14]
-- **Plate Mail:** 3 [16]
-
-Apply DEX modifier to the ascending AC value.
-
-**Implementation Note:** Same as Basic Method - always use ascending AC.
-
-### 13. Note Level and XP
-- **Starting Level:** 1
-- **Starting XP:** 0
-
-**Implementation Note:** Same as Basic Method.
-
-### 14. Secondary Skill (Optional Rule)
-**We use this rule** (equivalent to Level 0 occupations).
-
-Roll d100 on Secondary Skills table to determine character's secondary profession/hobby.
-
-**Implementation Note:** Same as Basic Method - use the same d100 table.
-
-### 15. Name Character
-Choose a character name.
-
-**Implementation Note:** Can use race-specific name tables.
+---
 
 ## Key Differences from Basic Method
 
 | Feature | Basic Method | Advanced Method |
 |---------|--------------|-----------------|
-| **Race Selection** | Determined by class | Chosen separately |
-| **Racial Modifiers** | None | Applied after race selection |
-| **Racial Minimums** | None | Required for some races |
-| **Class Selection** | First step (determines race) | Second step (after race) |
-| **Available Classes** | All classes | Race-dependent |
-| **Racial Abilities** | Only if demihuman class | Always (based on race) |
-| **Languages** | Class-based | Race-based |
-| **Equipment Restrictions** | Class only | Race AND class |
+| Race selection | Determined by class | Chosen first, separately |
+| Racial stat modifiers | None | Applied after race selection |
+| Racial minimums | None | Enforced (mode-dependent) |
+| Racial abilities | Baked into class abilities | Separate, persist all levels |
+| Class selection | First step (determines race) | Second step (after race) |
+| Languages | Class-based | Race-based, class langs merged in |
 
-## Key Differences from Level 0
+---
 
-| Feature | Level 0 | Level 1+ Advanced |
-|---------|---------|-------------------|
-| **Hit Points** | 1d4 + CON | Class hit die + CON |
-| **Re-roll 1s/2s** | No | Yes (optional, we use it) |
-| **Equipment** | From background | Purchase with 3d6×10 gp |
-| **Weapons** | From background | Purchase (race+class restricted) |
-| **Armor** | From background | Purchase (race+class restricted) |
-| **Class** | None | Required |
-| **Race Selection** | Available | Required first |
-| **Racial Modifiers** | Optional (Advanced checkbox) | Always applied |
-| **Racial Minimums** | Optional (Advanced checkbox) | Always enforced |
-| **Starting XP** | 0 | 0 |
-| **Advancement** | To Level 1 after adventure | Normal XP progression |
-| **Background** | Determines equipment | Secondary skill (flavor only) |
+## House Rules and Deviations
 
-## Optional Rules We Use
-
-1. ✅ **Ascending AC** - Always use the value in square brackets
-2. ✅ **Re-Rolling 1s and 2s** - Default enabled for HP rolls
-3. ✅ **Secondary Skills** - Roll d100 for background profession
-4. ✅ **Sub-par Character Re-rolling** - Allow re-roll if all scores ≤8 or multiple very low scores
-
-## Optional Rules We Don't Use
-
-- Prime requisite ability score swapping (available but not automatic)
-- **Multiple Classes** - NOT USED
-- **Weapon Proficiencies** - NOT USED (all race+class weapons available)
-
-## Implementation Checklist
-
-When implementing Level 1+ Advanced Method character generation:
-
-- [ ] Add level selection UI (currently fixed at 0)
-- [ ] Add race selection UI (separate from class)
-- [ ] Implement racial ability score modifiers
-- [ ] Implement racial minimum requirements
-- [ ] Add class selection UI (filtered by race)
-- [ ] Implement class data (hit dice, saves, abilities, restrictions)
-- [ ] Implement prime requisite ability score swapping
-- [ ] Implement class-based hit point rolling with re-roll 1s/2s
-- [ ] Implement starting wealth calculation (3d6 × 10 gp)
-- [ ] Implement equipment purchase system
-- [ ] Implement race-based language lists
-- [ ] Implement racial abilities display
-- [ ] Implement class abilities display
-- [ ] Implement secondary skill rolling (d100 table)
-- [ ] Update AC calculation for armor types
-- [ ] Update attack bonus for level 1 (THAC0 19 [0])
-- [ ] Update saving throws for class and level (with racial bonuses)
-- [ ] Ensure ascending AC values are used throughout
-- [ ] Add race and class ability descriptions to character sheet
-- [ ] Enforce both racial and class equipment restrictions
-
-## Racial Abilities Summary
-
-### Human
-- Roll HP twice, take best (Blessed)
-- Act first on tied initiative
-- Retainers/mercenaries +1 loyalty/morale
-
-### Dwarf
-- Languages: Alignment, Common, Dwarvish, Gnomish, Goblin, Kobold
-- Small/normal weapons only (no longbows or two-handed swords)
-- Detect construction tricks 2-in-6
-- Detect room traps 2-in-6
-- Infravision 60'
-- Listen at doors 2-in-6
-- Resilience: Bonus to Death/Wands/Spells saves based on CON
-
-### Elf
-- Languages: Alignment, Common, Elvish, Gnoll, Hobgoblin, Orcish
-- Detect secret doors 2-in-6 when actively searching
-- Infravision 60'
-- Listen at doors 2-in-6
-- Immunity to ghoul paralysis
-
-### Gnome
-- Languages: Alignment, Common, Dwarvish, Gnomish, Kobold, burrowing mammals
-- Small/normal weapons only (no longbows or two-handed swords)
-- Detect construction tricks 2-in-6
-- Infravision 90'
-- Listen at doors 2-in-6
-- +2 AC vs large opponents
-- Magic Resistance: Bonus to saves vs spells/wands/rods/staves based on CON
-
-### Halfling
-- Languages: Alignment, Common, Halfling
-- Listen at doors 2-in-6
-- +1 to missile attack rolls
-- +2 AC vs large opponents
-
-## Data Sources
-
-- **OSE Advanced Fantasy Player's Tome** - Character creation rules (p16-17)
-- **OSE Advanced Fantasy Player's Tome** - Race descriptions (p78+)
-- **OSE Advanced Fantasy Player's Tome** - Secondary skills table (p25)
-- **OSE SRD Website** - Class data and progressions
-- **Current Level 0 Implementation** - Racial abilities and background tables
-
-## Notes
-
-- Advanced Method provides more flexibility than Basic Method
-- Racial abilities are always present (not class-dependent)
-- Race and class restrictions both apply to equipment
-- Racial modifiers are applied before class selection
-- Some race/class combinations may be more optimal than others
-- Ascending AC simplifies calculations (higher is better)
-- Secondary skills provide flavor without mechanical benefits
+| Rule | Book | Generator |
+|------|------|-----------|
+| Ascending AC | Optional | Always on |
+| Re-rolling 1s/2s on HP | Optional | Selectable HP mode |
+| Sub-par re-rolling | Optional | Enabled |
+| Multiple classes | Optional | Not used |
+| Secondary skills | Optional | Background profession from level 0 system |
+| Alignment tracking | Required | Not tracked |
+| Spellblade | Not in book | Available |
+| Human racial abilities | Not in book | Optional (checkbox) |
