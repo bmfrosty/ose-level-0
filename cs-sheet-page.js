@@ -45,7 +45,7 @@ const PROG_TO_CODE = { ose:'O', smooth:'S', ll:'L' };
  * @param {string[]} racialAbilities - Already-formatted strings (e.g. "Languages: Alignment, Common, Elvish, ...")
  * @param {Object[]} classAbilities  - Raw ability objects; may include { name:'Languages', languages:[...] }
  */
-function mergeAdvancedLanguages(racialAbilities, classAbilities) {
+export function mergeAdvancedLanguages(racialAbilities, classAbilities) {
     const classLangEntries = classAbilities.filter(a => a.name === 'Languages' && Array.isArray(a.languages));
     if (classLangEntries.length === 0) return;
 
@@ -142,7 +142,7 @@ const getConMod = s => s >= 15 ? 1 : s >= 13 ? 1 : s <= 6 ? -1 : s <= 8 ? -1 : 0
  * Expand a compact v2 params object into a full sheet spec ready for
  * renderCharacterSheetHTML.
  */
-export async function expandCompactV2(cp) {
+export async function expandCompactV2(cp, precomp = {}) {
     const CODE_TO_CLASS = { FI:'Fighter_CLASS', CL:'Cleric_CLASS', MU:'Magic-User_CLASS',
                             TH:'Thief_CLASS',   SB:'Spellblade_CLASS', DW:'Dwarf_CLASS',
                             EL:'Elf_CLASS',     HA:'Halfling_CLASS',   GN:'Gnome_CLASS' };
@@ -222,44 +222,52 @@ export async function expandCompactV2(cp) {
     let character, raceDisplay, clsDisplay, raceClassDisplay;
 
     if (isAdv) {
-        const progData   = getClassProgressionData({ className: cls, level, abilityScores: adj, classData: classData });
-        const features   = getClassFeatures({ className: cls, level, classData: classData, ClassDataShared });
-        const humanAbilitiesEnabled = rcm !== 'strict';
-        const racialAbilities = getAdvancedModeRacialAbilities(race, { isAdvanced: true, humanRacialAbilities: humanAbilitiesEnabled });
-        mergeAdvancedLanguages(racialAbilities, features.classAbilities);
-        character = createCharacter({
-            level, className: cls, mode: prog === 'smooth' ? 'Smoothified' : 'Normal',
-            abilityScores: adj, hp: cp.h,
-            progressionData: progData, features, racialAbilities,
-            name: cp.n, background: { profession: cp.bg },
-        });
-        character.race              = race;
-        character.baseScores        = base;
-        character.adjustedScores    = adj;
-        character.racialAdjustments = getRaceInfo(race)?.abilityModifiers ?? {};
-        character.racialAbilities   = racialAbilities;
+        if (precomp.character) {
+            character = precomp.character;
+        } else {
+            const progData = precomp.progData ?? getClassProgressionData({ className: cls, level, abilityScores: adj, classData: classData });
+            const features = precomp.features ?? getClassFeatures({ className: cls, level, classData: classData, ClassDataShared });
+            const humanAbilitiesEnabled = rcm !== 'strict';
+            const racialAbilities = getAdvancedModeRacialAbilities(race, { isAdvanced: true, humanRacialAbilities: humanAbilitiesEnabled });
+            mergeAdvancedLanguages(racialAbilities, features.classAbilities);
+            character = createCharacter({
+                level, className: cls, mode: prog === 'smooth' ? 'Smoothified' : 'Normal',
+                abilityScores: adj, hp: cp.h,
+                progressionData: progData, features, racialAbilities,
+                name: cp.n, background: { profession: cp.bg },
+            });
+            character.race              = race;
+            character.baseScores        = base;
+            character.adjustedScores    = adj;
+            character.racialAdjustments = getRaceInfo(race)?.abilityModifiers ?? {};
+            character.racialAbilities   = racialAbilities;
+        }
         raceDisplay = getRaceDisplayName(race);
         clsDisplay  = getClassDisplayName(cls);
         raceClassDisplay = (cp.hhr && raceDisplay === 'Human') ? clsDisplay
             : (raceDisplay === clsDisplay ? raceDisplay : `${raceDisplay} ${clsDisplay}`);
     } else {
-        const progData = getClassProgressionData({ className: cls, level, abilityScores: adj, classData: classData });
-        const features = getClassFeatures({ className: cls, level, classData: classData, ClassDataShared });
-        const racial   = getBasicModeClassAbilities(cls);
-        character = createCharacter({
-            level, className: cls, mode: modeLabel,
-            abilityScores: adj, hp: cp.h,
-            progressionData: progData, features, racialAbilities: racial,
-            name: cp.n, background: { profession: cp.bg }, startingGold: cp.g || 0
-        });
-        // Basic mode: add Blessed / human racial abilities when cp.bl is set
-        if (cp.bl) {
-            const humanAbilities = [
-                { name: 'Blessed',      description: 'Roll HP twice, take best at each level (does not apply to level 0 HP roll)' },
-                { name: 'Decisiveness', description: 'Act first on tied initiative (+1 to individual initiative)' },
-                { name: 'Leadership',   description: 'Retainers/mercenaries +1 loyalty and morale' },
-            ];
-            character.classAbilities = [...(character.classAbilities || []), ...humanAbilities];
+        if (precomp.character) {
+            character = precomp.character;
+        } else {
+            const progData = precomp.progData ?? getClassProgressionData({ className: cls, level, abilityScores: adj, classData: classData });
+            const features = precomp.features ?? getClassFeatures({ className: cls, level, classData: classData, ClassDataShared });
+            const racial   = getBasicModeClassAbilities(cls);
+            character = createCharacter({
+                level, className: cls, mode: modeLabel,
+                abilityScores: adj, hp: cp.h,
+                progressionData: progData, features, racialAbilities: racial,
+                name: cp.n, background: { profession: cp.bg }, startingGold: cp.g || 0
+            });
+            // Basic mode: add Blessed / human racial abilities when cp.bl is set
+            if (cp.bl) {
+                const humanAbilities = [
+                    { name: 'Blessed',      description: 'Roll HP twice, take best at each level (does not apply to level 0 HP roll)' },
+                    { name: 'Decisiveness', description: 'Act first on tied initiative (+1 to individual initiative)' },
+                    { name: 'Leadership',   description: 'Retainers/mercenaries +1 loyalty and morale' },
+                ];
+                character.classAbilities = [...(character.classAbilities || []), ...humanAbilities];
+            }
         }
         raceDisplay = clsDisplay = cls.replace('_CLASS', '');
         raceClassDisplay = clsDisplay;

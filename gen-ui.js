@@ -98,7 +98,7 @@ function clearSettings(pageKey) {
     try { localStorage.removeItem(_SETTINGS_PREFIX + pageKey); }
     catch (e) { console.warn('OSE: could not clear settings:', e); }
 }
-import { expandCompactV2 } from './cs-sheet-page.js';
+import { expandCompactV2, mergeAdvancedLanguages } from './cs-sheet-page.js';
 import { PROG_CODE, CLS_CODE, RACE_CODE, RCM_CODE, progModeLabel } from './gen-core.js';
 
 // ── State ─────────────────────────────────────────────────────────────────────
@@ -628,7 +628,7 @@ async function displayBasicCharacter(character, purchased) {
         rr:_scoreRollAttempts, sm:SCORES.map(a=>readScoresFromInputs()[a]||3),
         ...({'dac-matrix':1,'dual':2,'dual-matrix':3}[acDisplayMode]!=null?{adm:{'dac-matrix':1,'dual':2,'dual-matrix':3}[acDisplayMode]}:{})
     };
-    const spec = await expandCompactV2(cp);
+    const spec = await expandCompactV2(cp, { character });
     const opts = sheetOpts();
     spec.openInNewTab  = opts.openInNewTab;
     spec.backgroundTab = opts.backgroundTab;
@@ -743,6 +743,7 @@ async function generateAdvancedCharacter() {
         progressionData, features });
     character.hpRolls = hpResult.rolls; character.hpDice = hpResult.dice; character.startingGold = startingGold;
     character.hpMode = hpMode;
+    mergeAdvancedLanguages(character.racialAbilities, character.classAbilities);
     fixedHPRolls = null; fixedStartingGold = null; fixedAdjustments = null;
 
     await displayAdvancedCharacter(character, purchased);
@@ -768,7 +769,7 @@ async function displayAdvancedCharacter(character, purchased) {
         rr:_scoreRollAttempts, sm:['STR','DEX','CON','INT','WIS','CHA'].map(a=>readScoresFromInputs()[a]||3),
         ...({'dac-matrix':1,'dual':2,'dual-matrix':3}[acDisplayMode]!=null?{adm:{'dac-matrix':1,'dual':2,'dual-matrix':3}[acDisplayMode]}:{})
     };
-    const spec = await expandCompactV2(cp);
+    const spec = await expandCompactV2(cp, { character });
     const opts = sheetOpts();
     spec.openInNewTab  = opts.openInNewTab;
     spec.backgroundTab = opts.backgroundTab;
