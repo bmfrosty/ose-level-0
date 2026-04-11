@@ -89,7 +89,7 @@ export const ARMOR_PRIORITY = ["Plate mail", "Chain mail", "Leather"];
 export function purchaseEquipment(className, startingGold, dexModifier, background, progression) {
     let gold = startingGold;
     const result = {
-        weapon: null, armor: null, shield: false,
+        weapons: [], armor: null, shield: false,
         items: [], startingAC: 10 + dexModifier, goldRemaining: 0
     };
 
@@ -107,11 +107,11 @@ export function purchaseEquipment(className, startingGold, dexModifier, backgrou
     const allowsShield   = (classInfo.armor || []).includes("Shield");
 
     if (background?.weapon && allowedWeapons.has(background.weapon)) {
-        result.weapon = background.weapon;
+        result.weapons.push(background.weapon);
     } else {
         for (const wName of (WEAPON_PRIORITY[baseClass] || [])) {
             if (allowedWeapons.has(wName) && WEAPONS[wName] && WEAPONS[wName].cost <= gold) {
-                result.weapon = wName; gold -= WEAPONS[wName].cost; result.items.push(wName); break;
+                result.weapons.push(wName); gold -= WEAPONS[wName].cost; result.items.push(wName); break;
             }
         }
     }
@@ -337,7 +337,7 @@ export function getBackgroundByProfession(profession) {
 // ── Internal constants ─────────────────────────────────────────────────────────
 
 const ABILITIES = ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'];
-const DEMIHUMANS = ['Dwarf_RACE', 'Elf_RACE', 'Gnome_RACE', 'Halfling_RACE'];
+const DEMIHUMANS = ['Dwarf_RACE', 'Elf_RACE', 'Halfling_RACE'];
 
 // ── Internal helpers ───────────────────────────────────────────────────────────
 
@@ -529,6 +529,24 @@ export function generateCharacter(opts = {}) {
         const savingThrows = calculateSavingThrows(0, race, conScore, isAdvanced, isGygar);
         const attackBonus  = calculateAttackBonus(0, race, isAdvanced, isGygar);
 
+        console.log('\n=== Level 0 Character Generation ===');
+        console.log(`Race: ${race}, Mode: ${mode}, Attempts: ${attempts}`);
+        console.log('\nAbility Scores:');
+        results.forEach(r => console.log(`  ${r.ability}: ${r.roll} (${r.modifier >= 0 ? '+' : ''}${r.modifier})`));
+        console.log('\nHP: roll=' + hp0.roll + ', total=' + hp0.total);
+        console.log('\nBackground: ' + background.profession + (background.armor ? ` (armor: ${background.armor})` : ''));
+        console.log('AC: ' + armorClass);
+        console.log('Starting Gold: ' + startingGold + ' gp');
+        console.log('\nSaving Throws:');
+        console.log(`  Death/Poison: ${savingThrows.death}`);
+        console.log(`  Wands: ${savingThrows.wands}`);
+        console.log(`  Paralysis/Petrify: ${savingThrows.paralysis}`);
+        console.log(`  Breath Attacks: ${savingThrows.breath}`);
+        console.log(`  Spells/Rods/Staves: ${savingThrows.spells}`);
+        console.log('\nAttack Bonus: ' + attackBonus);
+        console.log('\nRacial Abilities:');
+        racialAbilities.forEach(a => console.log(`  - ${a.name}: ${a.description}`));
+
         return {
             results, abilityScores,
             total: results.reduce((s, r) => s + r.modifier, 0),
@@ -604,5 +622,3 @@ export function generateCharacter(opts = {}) {
     };
 }
 
-export const generateZeroLevelCharacter = opts =>
-    generateCharacter({ ...opts, level: 0 });

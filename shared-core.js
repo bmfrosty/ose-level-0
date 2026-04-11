@@ -126,21 +126,15 @@ export function rollAbilities(minimumScores, toughCharacters, className = null, 
     }
 
     console.log('=== Rolling Ability Scores ===');
-    if (toughCharacters) {
-        console.log('Tough Characters enabled: At least one of STR/DEX/INT/WIS must be ≥ 13');
-    }
+    if (toughCharacters) console.log('Tough Characters enabled: At least one of STR/DEX/INT/WIS must be ≥ 13');
     if (primeReqMinimum && className) {
-        const primeReqs = getPrimeRequisites(className);
-        console.log(`Prime Requisite ≥ ${primeReqMinimum} enabled: At least one of ${primeReqs.join(', ')} must be ≥ ${primeReqMinimum} for ${className}`);
+        console.log(`Prime Requisite ≥ ${primeReqMinimum} enabled: At least one of ${getPrimeRequisites(className).join(', ')} must be ≥ ${primeReqMinimum} for ${className}`);
     }
 
     do {
         setAttempts++;
-        if (setAttempts > 1) {
-            console.log(`\nAttempt #${setAttempts} (previous set failed requirements):`);
-        } else {
-            console.log('\nRolling 3d6 for each ability:');
-        }
+        if (setAttempts > 1) console.log(`\nAttempt #${setAttempts} (previous set failed requirements):`);
+        else console.log('\nRolling 3d6 for each ability:');
 
         scores = {
             STR: rollAbilityScore('STR'),
@@ -168,11 +162,8 @@ export function rollAbilities(minimumScores, toughCharacters, className = null, 
         // Check Prime Requisite requirement
         if (primeReqMinimum && className) {
             const primeReqs = getPrimeRequisites(className);
-            // Check if at least ONE prime requisite meets the minimum
-            const meetsPR = primeReqs.some(ability => scores[ability] >= primeReqMinimum);
-            if (!meetsPR) {
-                const prValues = primeReqs.map(ability => `${ability}=${scores[ability]}`).join(', ');
-                console.log(`❌ Failed Prime Requisite check (need at least one of ${primeReqs.join(', ')} ≥ ${primeReqMinimum}, got: ${prValues})`);
+            if (!primeReqs.some(ability => scores[ability] >= primeReqMinimum)) {
+                console.log(`❌ Failed Prime Requisite check (need at least one of ${primeReqs.join(', ')} ≥ ${primeReqMinimum}, got: ${primeReqs.map(a => `${a}=${scores[a]}`).join(', ')})`);
                 continue;
             }
         }
@@ -181,17 +172,9 @@ export function rollAbilities(minimumScores, toughCharacters, className = null, 
         break;
     } while (true);
 
-    if (setAttempts > 1) {
-        console.log(`✅ Passed all requirements after ${setAttempts} attempts`);
-    }
-
+    if (setAttempts > 1) console.log(`✅ Passed all requirements after ${setAttempts} attempts`);
     console.log('\n=== Final Ability Scores ===');
-    console.log(`STR: ${scores.STR} (${formatModifier(calculateModifier(scores.STR))})`);
-    console.log(`INT: ${scores.INT} (${formatModifier(calculateModifier(scores.INT))})`);
-    console.log(`WIS: ${scores.WIS} (${formatModifier(calculateModifier(scores.WIS))})`);
-    console.log(`DEX: ${scores.DEX} (${formatModifier(calculateModifier(scores.DEX))})`);
-    console.log(`CON: ${scores.CON} (${formatModifier(calculateModifier(scores.CON))})`);
-    console.log(`CHA: ${scores.CHA} (${formatModifier(calculateModifier(scores.CHA))})`);
+    ['STR','INT','WIS','DEX','CON','CHA'].forEach(a => console.log(`${a}: ${scores[a]} (${formatModifier(calculateModifier(scores[a]))})`));
     console.log('==============================\n');
 
     return { scores, attempts: setAttempts };
@@ -1341,12 +1324,12 @@ export default {
  */
 export function getClassProgressionData(options) {
     const { className, level, abilityScores, classData } = options;
-    
+
     console.log('\n=== Getting Class Progression Data ===');
     console.log(`Class: ${className}, Level: ${level}`);
-    
+
     // className should already have _CLASS suffix
-    
+
     // Get saving throws
     const savingThrows = classData.getSavingThrows(className, level);
     console.log('\nSaving Throws:');
@@ -1355,17 +1338,17 @@ export function getClassProgressionData(options) {
     console.log(`  Paralysis/Petrify: ${savingThrows.paralysis}`);
     console.log(`  Breath Attacks: ${savingThrows.breath}`);
     console.log(`  Spells/Rods/Staves: ${savingThrows.spells}`);
-    
+
     // Get attack bonus
     const attackBonus = classData.getAttackBonus(className, level);
     console.log(`\nAttack Bonus: ${attackBonus >= 0 ? '+' : ''}${attackBonus}`);
-    
+
     // Get XP tracking
     const currentXP = 0;
     const xpForCurrentLevel = classData.getXPRequired(className, level);
     const xpForNextLevel = classData.getXPRequired(className, level + 1);
     const xpToNextLevel = xpForNextLevel ? xpForNextLevel - currentXP : null;
-    
+
     console.log(`\nXP Tracking:`);
     console.log(`  Current XP: ${currentXP}`);
     console.log(`  XP for Level ${level}: ${xpForCurrentLevel}`);
@@ -1375,7 +1358,7 @@ export function getClassProgressionData(options) {
     } else {
         console.log(`  Maximum level reached!`);
     }
-    
+
     // Calculate XP bonus from prime requisites
     const primeReqs = getPrimeRequisites(className);
     let xpBonus = 0;
@@ -1387,9 +1370,9 @@ export function getClassProgressionData(options) {
         });
     }
     console.log(`  Prime Requisite XP Bonus: ${xpBonus >= 0 ? '+' : ''}${xpBonus}%`);
-    
+
     console.log('======================================\n');
-    
+
     return {
         savingThrows,
         attackBonus,
@@ -1412,22 +1395,22 @@ export function getClassProgressionData(options) {
  */
 export function getClassFeatures(options) {
     const { className, level, classData, ClassDataShared } = options;
-    
+
     console.log('\n=== Getting Class-Specific Features ===');
     console.log(`Class: ${className}, Level: ${level}`);
-    
+
     // className should already have _CLASS suffix
-    
+
     const features = {
         spellSlots: null,
         thiefSkills: null,
         turnUndead: null,
         classAbilities: []
     };
-    
+
     // Extract base class name without _CLASS suffix for comparisons
     const baseClassName = className.replace('_CLASS', '');
-    
+
     // Spell slots for spellcasters
     const spellcasters = ['Cleric', 'Magic-User', 'Elf', 'Gnome', 'Spellblade'];
     if (spellcasters.includes(baseClassName)) {
@@ -1435,15 +1418,13 @@ export function getClassFeatures(options) {
         console.log('\nSpell Slots:');
         if (features.spellSlots) {
             Object.entries(features.spellSlots).forEach(([spellLevel, slots]) => {
-                if (slots > 0) {
-                    console.log(`  Level ${spellLevel}: ${slots} slots`);
-                }
+                if (slots > 0) console.log(`  Level ${spellLevel}: ${slots} slots`);
             });
         } else {
             console.log('  No spell slots at this level');
         }
     }
-    
+
     // Thief skills
     if (baseClassName === 'Thief') {
         features.thiefSkills = typeof classData.getThiefSkills === 'function'
@@ -1456,7 +1437,7 @@ export function getClassFeatures(options) {
             });
         }
     }
-    
+
     // Turn undead for clerics
     if (baseClassName === 'Cleric') {
         // Use HD categories instead of monster names
@@ -1466,18 +1447,13 @@ export function getClassFeatures(options) {
         undeadHDTypes.forEach(type => {
             const target = classData.getTurnUndead(level, type);
             features.turnUndead[type] = target;
-            if (target === 'T') {
-                console.log(`  ${type}: T (automatically turned)`);
-            } else if (target === 'D') {
-                console.log(`  ${type}: D (automatically destroyed)`);
-            } else if (target === null || target === undefined) {
-                console.log(`  ${type}: - (cannot turn)`);
-            } else {
-                console.log(`  ${type}: ${target}+ (roll 2d6)`);
-            }
+            if (target === 'T') console.log(`  ${type}: T (automatically turned)`);
+            else if (target === 'D') console.log(`  ${type}: D (automatically destroyed)`);
+            else if (target === null || target === undefined) console.log(`  ${type}: - (cannot turn)`);
+            else console.log(`  ${type}: ${target}+ (roll 2d6)`);
         });
     }
-    
+
     // Class abilities (strip _CLASS suffix — CLASS_INFO keys are plain names like "Cleric", "Fighter")
     const allAbilities = ClassDataShared.getAbilitiesAtLevel(baseClassName, level);
     if (allAbilities && allAbilities.length > 0) {
@@ -1487,9 +1463,9 @@ export function getClassFeatures(options) {
             console.log(`  - ${ability.name}: ${ability.description}`);
         });
     }
-    
+
     console.log('======================================\n');
-    
+
     return features;
 }
 
@@ -2732,23 +2708,11 @@ export function createCharacter(options) {
     console.log(`AC: ${character.armorClass}`);
     console.log(`XP: ${character.xp.current} (${character.xp.toNextLevel ? character.xp.toNextLevel + ' to next level' : 'max level'})`);
     console.log(`XP Bonus: ${character.xp.bonus >= 0 ? '+' : ''}${character.xp.bonus}%`);
-
-    if (character.spellSlots) {
-        console.log('Spell Slots: Yes');
-    }
-    if (character.thiefSkills) {
-        console.log('Thief Skills: Yes');
-    }
-    if (character.turnUndead) {
-        console.log('Turn Undead: Yes');
-    }
-    if (character.classAbilities && character.classAbilities.length > 0) {
-        console.log(`Class Abilities: ${character.classAbilities.length}`);
-    }
-    if (character.racialAbilities && character.racialAbilities.length > 0) {
-        console.log(`Racial Abilities: ${character.racialAbilities.length}`);
-    }
-
+    if (character.spellSlots) console.log('Spell Slots: Yes');
+    if (character.thiefSkills) console.log('Thief Skills: Yes');
+    if (character.turnUndead) console.log('Turn Undead: Yes');
+    if (character.classAbilities && character.classAbilities.length > 0) console.log(`Class Abilities: ${character.classAbilities.length}`);
+    if (character.racialAbilities && character.racialAbilities.length > 0) console.log(`Racial Abilities: ${character.racialAbilities.length}`);
     console.log('=================================\n');
 
     return character;

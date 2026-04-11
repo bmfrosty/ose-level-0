@@ -255,7 +255,7 @@ export function encodeCompactParams(cp) {
     const out = { ...cp };
     if (out.bg != null) out.bg = encodeStr(BG_TO_CODE,     out.bg);
     if (out.ar != null) out.ar = encodeStr(ARMOR_TO_CODE,  out.ar);
-    if (out.w  != null) out.w  = encodeStr(WEAPON_TO_CODE, out.w);
+    if (Array.isArray(out.w)) out.w = out.w.map(w => encodeStr(WEAPON_TO_CODE, w));
     if (Array.isArray(out.it)) out.it = encodeItems(out.it);
     return out;
 }
@@ -265,7 +265,7 @@ export function decodeCompactParams(cp) {
     const out = { ...cp };
     if (out.bg != null) out.bg = decodeStr(CODE_TO_BG,     out.bg);
     if (out.ar != null) out.ar = decodeStr(CODE_TO_ARMOR,  out.ar);
-    if (out.w  != null) out.w  = decodeStr(CODE_TO_WEAPON, out.w);
+    if (Array.isArray(out.w)) out.w = out.w.map(w => decodeStr(CODE_TO_WEAPON, w));
     if (Array.isArray(out.it)) out.it = decodeItems(out.it);
     return out;
 }
@@ -388,9 +388,8 @@ export function renderCharacterSheetHTML(sheet) {
     const _eq = sheet.equipment;  // early reference for categorisation
     const bgWeapons = (_eq.items || []).filter(i => _bgWeaponPattern.test(i));
     // All weapons to display in the Weapons/Armor/Skills box
-    const allWeapons = [];
-    if (ws.weapon) allWeapons.push(ws.weapon);
-    bgWeapons.forEach(w => { if (w !== ws.weapon) allWeapons.push(w); });
+    const allWeapons = [...(ws.weapons || [])];
+    bgWeapons.forEach(w => { if (!allWeapons.includes(w)) allWeapons.push(w); });
     // Shield — stored as a boolean on equipment, not as an item string
     const hasShield = !!_eq.shield;
     // Armor for the box (skip "Unarmored" entries)

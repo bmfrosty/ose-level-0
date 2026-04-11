@@ -34,7 +34,7 @@ import {
     getDemihumanLimits,
     purchaseEquipment,
     getRandomName, getRandomBackground,
-    getAllBackgroundTables, generateZeroLevelCharacter,
+    getAllBackgroundTables, generateCharacter as generateCharacterCore,
 } from './gen-core.js';
 import { displayCharacterSheet }                  from './cs-sheet-page.js';
 // ── Advanced helpers (inlined from former shared-advanced-character-gen.js) ────
@@ -63,10 +63,11 @@ function createCharacterAdvanced(options) {
     const {
         level, race, className, baseScores, adjustedScores, hp,
         classData, progressionMode: _pm, raceClassMode = 'strict', name, background,
+        progressionData: _precomputed, features: _precomputedFeatures,
     } = options;
     const racialAdjustments = getRaceInfo(race)?.abilityModifiers ?? {};
-    const progression = getProgAdvanced({ className, level, abilityScores: adjustedScores, classData });
-    const features    = getClassFeatures({ className, level, classData, ClassDataShared: _genCore });
+    const progression = _precomputed ?? getProgAdvanced({ className, level, abilityScores: adjustedScores, classData });
+    const features    = _precomputedFeatures ?? getClassFeatures({ className, level, classData, ClassDataShared: _genCore });
     const humanAbilitiesEnabled = raceClassMode !== 'strict';
     const racialAbilities = getAdvancedModeRacialAbilities(race, { isAdvanced: true, humanRacialAbilities: humanAbilitiesEnabled });
     const character = createCharacter({
@@ -212,6 +213,12 @@ function switchMode(newMode) {
     const advSections    = document.querySelectorAll('.advanced-only');
     basicSections.forEach(el => el.style.display = (mode === 'basic')    ? '' : 'none');
     advSections.forEach(el   => el.style.display = (mode === 'advanced') ? '' : 'none');
+    const hideHumanRaceOption = document.getElementById('hideHumanRaceOption');
+    if (hideHumanRaceOption) {
+        hideHumanRaceOption.classList.toggle('section-greyed', mode === 'basic');
+        const cb = document.getElementById('hideHumanRace');
+        if (cb) cb.disabled = (mode === 'basic');
+    }
     // Swap accent colour on the container
     const container = document.getElementById('generatorContainer');
     if (container) {
@@ -496,7 +503,7 @@ async function generateZeroLevelChar() {
         fixedAdjustments:    _fixedAdj,
     };
     console.log('[generateZeroLevelChar] Called with opts:', opts);
-    const char = await generateZeroLevelCharacter(opts);
+    const char = await generateCharacterCore({ ...opts, level: 0 });
     _scoreRollAttempts = char.attempts || 1;
     console.log('[generateZeroLevelChar] Character generated:', char);
     const racialAbilities = getAdvancedModeRacialAbilities(char.race);
@@ -611,7 +618,7 @@ async function displayBasicCharacter(character, purchased) {
         s:adjArr, ...(hasAdj?{bs:baseArr}:{}),
         h:character.hp.max, hr:character.hpRolls||[], hd:character.hpDice||[],
         il:includeLevel0HP?1:0, n:character.name||'', bg:character.background?.profession||'',
-        ar:purchased.armor||null, sh:purchased.shield?1:0, w:purchased.weapon||null,
+        ar:purchased.armor||null, sh:purchased.shield?1:0, w:purchased.weapons||[],
         it:purchased.items||[], g:purchased.goldRemaining||0, ac:purchased.startingAC||10,
         dl:getEffectiveDemihumanLimits()==='extended'?1:0, bl:character.blessed?1:0,
         ...(hpMode>0?{hm:hpMode}:{}),
@@ -723,6 +730,7 @@ async function generateAdvancedCharacter() {
     const hpResult = rollHPAdvanced({ className: selectedClass, level: selectedLevel, conModifier: abilityModifiers.CON, classData, includeLevel0HP, hpMode, fixedRolls: fixedHPRolls });
     const background = getRandomBackground(hpResult.backgroundHP);
     const progressionData = getProgAdvanced({ className: selectedClass, level: selectedLevel, abilityScores: adjustedScores, classData });
+    const features = getClassFeatures({ className: selectedClass, level: selectedLevel, classData, ClassDataShared: _genCore });
 
     let startingGold;
     if (fixedStartingGold !== null)                     { startingGold = fixedStartingGold; }
@@ -731,7 +739,8 @@ async function generateAdvancedCharacter() {
 
     const purchased = purchaseEquipment(selectedClass, startingGold, abilityModifiers.DEX, noLevel0Equipment ? null : background, progressionMode);
     const character = createCharacterAdvanced({ level: selectedLevel, race: selectedRace, className: selectedClass,
-        baseScores, adjustedScores, hp: hpResult.max, classData, progressionMode, raceClassMode, name: characterName, background });
+        baseScores, adjustedScores, hp: hpResult.max, classData, progressionMode, raceClassMode, name: characterName, background,
+        progressionData, features });
     character.hpRolls = hpResult.rolls; character.hpDice = hpResult.dice; character.startingGold = startingGold;
     character.hpMode = hpMode;
     fixedHPRolls = null; fixedStartingGold = null; fixedAdjustments = null;
@@ -751,7 +760,7 @@ async function displayAdvancedCharacter(character, purchased) {
         s:adjArr, ...(hasAdj?{bs:baseArr}:{}),
         h:character.hp.max, hr:character.hpRolls||[], hd:character.hpDice||[],
         il:includeLevel0HP?1:0, n:character.name||'', bg:character.background?.profession||'',
-        ar:purchased.armor||null, sh:purchased.shield?1:0, w:purchased.weapon||null, it:purchased.items||[],
+        ar:purchased.armor||null, sh:purchased.shield?1:0, w:purchased.weapons||[], it:purchased.items||[],
         g:purchased.goldRemaining||0, ac:purchased.startingAC||10, rcm:RCM_CODE[raceClassMode]||'SH',
         un:showUndeadNames?1:0, qr:showQRCode?1:0, ap:document.getElementById('autoPrintInNewTab')?.checked?1:0,
         wp:wealthPct, prm:primeRequisiteMode==='user'?0:parseInt(primeRequisiteMode), ao:basicAbilityOrdering?1:0,
@@ -825,7 +834,7 @@ async function displayZeroLevelCharacter(char) {
         v:2, m:isAdv?'A':'B', l:0, r:char.raceCode, p:(PROG_CODE[progressionMode]||'O'),
         s:adjArr, ...(hasAdj?{bs:baseArr}:{}), sv:svArr, h:char.hitPoints.total, hr:[char.hitPoints.total], hd:[4],
         n:char.name, bg:char.background.profession, ar:char.background.armor||null,
-        w:char.background.weapon||null, it:char.background.item||[], g:char.startingGold, ac:char.armorClass,
+        w:[], it:[...(char.background.weapon ? [`${char.background.weapon} (background)`] : []), ...(char.background.item||[])], g:char.startingGold, ac:char.armorClass,
         bl:raceClassMode!=='strict'?1:0,
         ...(isAdv?{rcm:(RCM_CODE[raceClassMode]||'ST')}:{dl:getEffectiveDemihumanLimits()==='extended'?1:0}),
         prm:primeRequisiteMode==='user'?0:parseInt(primeRequisiteMode),

@@ -413,7 +413,7 @@
                     <span><strong>1977 Ability Score Ordering</strong> (STR, INT, WIS, DEX, CON, CHA) — unchecked uses modern order (STR, DEX, CON, INT, WIS, CHA)</span>
                 </label>
             </div>
-            <div class="checkbox-option advanced-only">
+            <div class="checkbox-option" id="hideHumanRaceOption">
                 <label>
                     <input type="checkbox" id="hideHumanRace">
                     <span><strong>Hide "Human" prefix for Human characters</strong> in Advanced mode &mdash; show "Fighter" instead of "Human Fighter"</span>
@@ -645,7 +645,6 @@
                     <button class="grid-button zero-race-btn" style="width:auto;padding:5px 9px;" data-race="Demihuman_RACE">Random Demihuman</button>
                     <button class="grid-button zero-race-btn" style="width:auto;padding:5px 9px;" data-race="Dwarf_RACE">Dwarf</button>
                     <button class="grid-button zero-race-btn" style="width:auto;padding:5px 9px;" data-race="Elf_RACE">Elf</button>
-                    <button class="grid-button zero-race-btn" style="width:auto;padding:5px 9px;" data-race="Gnome_RACE">Gnome</button>
                     <button class="grid-button zero-race-btn" style="width:auto;padding:5px 9px;" data-race="Halfling_RACE">Halfling</button>
                 </div>
                 <div style="margin-top:10px;">
@@ -715,14 +714,6 @@
                                 <td><button class="grid-button" data-race="Elf" data-class="Magic-User">Magic-User</button></td>
                                 <td><button class="grid-button" data-race="Elf" data-class="Thief">Thief</button></td>
                                 <td><button class="grid-button" data-race="Elf" data-class="Spellblade" id="elfSpellblade">Spellblade</button></td>
-                            </tr>
-                            <tr>
-                                <td class="race-label">Gnome</td>
-                                <td><button class="grid-button" data-race="Gnome" data-class="Cleric">Cleric</button></td>
-                                <td><button class="grid-button" data-race="Gnome" data-class="Fighter">Fighter</button></td>
-                                <td><button class="grid-button" data-race="Gnome" data-class="Magic-User">Magic-User</button></td>
-                                <td><button class="grid-button" data-race="Gnome" data-class="Thief">Thief</button></td>
-                                <td><button class="grid-button" data-race="Gnome" data-class="Spellblade">Spellblade</button></td>
                             </tr>
                             <tr>
                                 <td class="race-label">Halfling</td>

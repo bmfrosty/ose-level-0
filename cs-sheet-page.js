@@ -35,6 +35,43 @@ export { displayCharacterSheet } from './cs-core.js';
 // ── Constants ──────────────────────────────────────────────────────────────────
 const PROG_TO_CODE = { ose:'O', smooth:'S', ll:'L' };
 
+/**
+ * Merge Languages entries from class abilities into the racial Languages string.
+ * For Advanced mode: Languages belongs solely in the racial abilities section.
+ * Class languages are merged in, sorted alphabetically, deduplicated.
+ * Language entries are then removed from classAbilities.
+ * Mutates both arrays in place.
+ *
+ * @param {string[]} racialAbilities - Already-formatted strings (e.g. "Languages: Alignment, Common, Elvish, ...")
+ * @param {Object[]} classAbilities  - Raw ability objects; may include { name:'Languages', languages:[...] }
+ */
+function mergeAdvancedLanguages(racialAbilities, classAbilities) {
+    const classLangEntries = classAbilities.filter(a => a.name === 'Languages' && Array.isArray(a.languages));
+    if (classLangEntries.length === 0) return;
+
+    const classLangs = classLangEntries.flatMap(a => a.languages);
+
+    const racialLangIdx = racialAbilities.findIndex(s => typeof s === 'string' && s.startsWith('Languages:'));
+    let racialLangs = [];
+    if (racialLangIdx !== -1) {
+        racialLangs = racialAbilities[racialLangIdx].slice('Languages:'.length).trim().split(',').map(s => s.trim()).filter(Boolean);
+    }
+
+    const merged = [...new Set([...racialLangs, ...classLangs])].sort((a, b) => a.localeCompare(b));
+    const newEntry = `Languages: ${merged.join(', ')}`;
+
+    if (racialLangIdx !== -1) {
+        racialAbilities[racialLangIdx] = newEntry;
+    } else {
+        racialAbilities.push(newEntry);
+    }
+
+    const toRemove = new Set(classLangEntries);
+    for (let i = classAbilities.length - 1; i >= 0; i--) {
+        if (toRemove.has(classAbilities[i])) classAbilities.splice(i, 1);
+    }
+}
+
 // ── Inlined from cs-sheet-builder.js (single-parent leaf — no separate file needed) ──
 
 /** Sides of the hit die, keyed by full class name */
@@ -65,7 +102,7 @@ function buildSheetSpec(sd, opts) {
         combat:          { maxHP: sd.maxHP, initMod: sd.initMod },
         abilityScores:   sd.abilityScores,
         weaponsAndSkills: {
-            weapon:          sd.weapon||null,
+            weapons:         sd.weapons||[],
             classAttackBonus:sd.classAttackBonus,
             meleeMod:        sd.meleeMod,
             rangedMod:       sd.rangedMod,
@@ -165,7 +202,7 @@ export async function expandCompactV2(cp) {
             ]},
             combat: { maxHP:cp.h||1, initMod:mods.DEX },
             abilityScores: abilityScoresSheet,
-            weaponsAndSkills: { weapon:cp.w||null, classAttackBonus: prog==='smooth' ? 0 : -1,
+            weaponsAndSkills: { weapons:cp.w||[], classAttackBonus: prog==='smooth' ? 0 : -1,
                                 meleeMod:mods.STR, rangedMod:mods.DEX, thiefSkills:null },
             abilitiesSection: { header:'RACIAL ABILITIES', racial:racialAbilities||[], class:[] },
             savingThrows: { death:sv[0], wands:sv[1], paralysis:sv[2], breath:sv[3], spells:sv[4] },
@@ -189,6 +226,7 @@ export async function expandCompactV2(cp) {
         const features   = getClassFeatures({ className: cls, level, classData: classData, ClassDataShared });
         const humanAbilitiesEnabled = rcm !== 'strict';
         const racialAbilities = getAdvancedModeRacialAbilities(race, { isAdvanced: true, humanRacialAbilities: humanAbilitiesEnabled });
+        mergeAdvancedLanguages(racialAbilities, features.classAbilities);
         character = createCharacter({
             level, className: cls, mode: prog === 'smooth' ? 'Smoothified' : 'Normal',
             abilityScores: adj, hp: cp.h,
@@ -246,7 +284,7 @@ export async function expandCompactV2(cp) {
         raceClass: raceClassDisplay, level, hd: `1d${hdSides}`, xpBonus: xpBonusStr,
         maxHP: cp.h, initMod: mods.DEX,
         abilityScores: abilityScoresSheet,
-        weapon: cp.w, classAttackBonus: character.attackBonus || 0,
+        weapons: cp.w||[], classAttackBonus: character.attackBonus || 0,
         meleeMod: mods.STR, rangedMod: mods.DEX, thiefSkills: character.thiefSkills || null,
         abilitiesHeader: (hasRacial && hasClass) ? 'RACIAL & CLASS ABILITIES'
                          : hasRacial ? (isBasicDemihuman ? 'CLASS ABILITIES' : 'RACIAL ABILITIES') : 'CLASS ABILITIES',
@@ -568,7 +606,7 @@ function initEditPanel(decoded) {
         // reset AC to 10 (unarmored). Attack bonus, melee/ranged modifiers, and
         // thief skills are computed from class/level/scores and remain untouched.
         if (document.getElementById('ep-clear-equipment')?.checked) {
-            newCp.w  = null;   // weapon
+            newCp.w  = [];     // weapons
             newCp.ar = null;   // armor
             newCp.sh = 0;      // shield
             newCp.it = [];     // items (includes helmet, gear, etc.)
@@ -666,7 +704,7 @@ function initEditPanel(decoded) {
                 s: decoded.s || [10,10,10,10,10,10],
                 h: l1HP, hr: [l0HP, l1HP], hd: [4, sides], il: 0,
                 n: decoded.n||'', bg: decoded.bg||'',
-                ar: decoded.ar||null, sh: 0, w: decoded.w||null, it: decoded.it||[],
+                ar: decoded.ar||null, sh: 0, w: decoded.w||[], it: decoded.it||[],
                 g: decoded.g||0, ac: decoded.ac||10,
                 un: document.getElementById('lup-undead').checked ? 1 : 0,
                 qr: document.getElementById('lup-qr').checked    ? 1 : 0,
