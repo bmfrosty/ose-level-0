@@ -3055,3 +3055,4 @@ export const PROGRESSION_TABLES = {
         getSpellSlots:   _makeGetSpellSlots(10),
     },
 };
+

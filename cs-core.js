@@ -92,47 +92,72 @@ export async function decompressFromBase64Url(b64url) {
  * Field   Type        Description
  * ──────  ──────────  ──────────────────────────────────────────────────────────
  * v       number      Schema version (always 2)
- * m       'A'|'B'|'Z' Mode: A=Advanced, B=Basic, Z=0-Level
+ * m       'A'|'B'    Mode: A=Advanced, B=Basic
+ *                    Level 0 characters use A or B with l=0 — there is no separate Z mode.
  *
  * ── Character identity ────────────────────────────────────────────────────────
  * p       'O'|'S'|'L' Progression mode: O=OSE Standard, S=Smoothified, L=Labyrinth Lord
- * r       2-char code Race code (Advanced only): HU DW EL HA GN
- * c       2-char code Class code: FI CL MU TH SB DW EL HA GN
- * l       number      Level (1–14)
+ * r       2-char code Race code (Advanced and 0-Level): HU DW EL HA GN
+ * c       2-char code Class code (Basic and Advanced): FI CL MU TH SB DW EL HA GN
+ * l       number      Level (0–14)
  * n       string      Character name
  * bg      string|code Background profession  (lookup-table compressed)
  *
  * ── Ability scores ────────────────────────────────────────────────────────────
  * s       number[6]   Adjusted ability scores [STR,DEX,CON,INT,WIS,CHA]
  * bs      number[6]   Base scores before racial adjustments (Advanced only, omitted if equal to s)
+ * sm      number[6]   Score minimums used during generation [STR,DEX,CON,INT,WIS,CHA]
+ *                     (Advanced and L0 only — not written for Basic L1+; CON default is 6,
+ *                     all others default 3; buildGeneratorURL omits the s= param when all match defaults)
+ * rr      number      Number of ability score roll attempts before a valid character was produced
+ *                     (Advanced and L0 only — not written for Basic L1+)
  *
  * ── Hit points ────────────────────────────────────────────────────────────────
  * h       number      Max HP (total, respects il flag)
  * hr      number[]    HP value per entry — index 0 is ALWAYS the L0 background roll,
  *                     regardless of il.  hr[1]=L1 HP, hr[2]=L2 HP, etc.
  * hd      number[]    Die sides per entry (matches hr[]).  hd[0]=4 (1d4 for L0).
- * il      0|1         includeLevel0HP — if 1, hr[0] is counted in h; if 0, not counted
- * hm      0|1|2       HP rolling mode: omit/0=normal random, 1=blessed (roll twice take
- *                     best), 2=5e style (max at L1, average die at L2+), 3=re-roll 1s and 2s.
+ * il      0|1         includeLevel0HP — if 1, hr[0] is added to h; if 0, hr[0] sets the
+ *                     floor for hr[1] but does not count toward h
+ * hm      0|1|2|3     HP rolling mode: omit/0=normal random, 1=blessed (roll twice take
+ *                     best), 2=5e style (average die value, rounded up), 3=healthy (treat
+ *                     every die as its maximum value)
+ *
+ * ── Saving throws ─────────────────────────────────────────────────────────────
+ * sv      number[5]   0-Level only: fixed save values [Death,Wands,Paralysis,Breath,Spells]
+ *                     (always D14 W15 P16 B17 S18 before racial bonuses; stored so the sheet
+ *                     page does not need to re-derive them, but see v3 plan for removal)
  *
  * ── Equipment ─────────────────────────────────────────────────────────────────
  * ar      string|null Armor name             (lookup-table compressed)
  * sh      0|1         Shield equipped
- * w       string|null Primary weapon name    (lookup-table compressed)
+ * w       string[]    Weapon name(s)         (each lookup-table compressed)
  * it      string[]    Item list              (each item lookup-table compressed)
  * g       number      Gold remaining after equipment purchase
- * ac      number      Starting AC
+ * ac      number      Starting AC (before DEX modifier)
  *
  * ── Generation options (preserved for level-up / regeneration) ────────────────
  * rcm     2-char code Race/class mode (Advanced only): ST SH TE AL
  *                       ST=strict, SH=strict+human, TE=traditional-extended, AL=allow-all
- * bl      0|1         Basic mode: character has human racial abilities (Blessed, Decisiveness,
- *                     Leadership displayed on sheet).  Does NOT encode HP rolling mode (see hm).
+ * bl      0|1         Basic and L0: character has human racial abilities (Blessed, Decisiveness,
+ *                     Leadership displayed on sheet).  Also written for L0 characters in both
+ *                     modes.  Does NOT encode HP rolling mode (see hm).
+ * dl      0|1         Basic mode: demihuman level limits — 0=standard OSE, 1=extended to 14
  * wp      number      wealthPct — starting gold % of XP-for-level for level 2+ chars (0–100)
  * prm     0|9|13      primeRequisiteMode — 0=user choice, 9=require ≥9, 13=require ≥13
+ *
+ * ── Display preferences ───────────────────────────────────────────────────────
  * un      0|1         showUndeadNames — show monster names in Turn Undead table
  * qr      0|1         showQRCode — show QR code on page 2
  * ap      0|1         autoPrint — auto-open print dialog when charactersheet.html loads
+ * ao      0|1         abilityOrder — 0=modern (STR DEX CON INT WIS CHA),
+ *                                    1=OSE/Basic (STR INT WIS DEX CON CHA)
+ * adm     1|2|3       acDisplayMode — omit=ascending AC only, 1=descending+attack matrix,
+ *                                     2=dual (AAC and DAC), 3=dual+attack matrix
+ * hhr     0|1         Advanced L1+ only: hide Human race label in race/class display — shows
+ *                     class name only (e.g. "Fighter" instead of "Human Fighter")
+ * mx      0|1         Modified flag — set to 1 when a character is modified inline on the
+ *                     sheet page; prepends "Modified " to the footer identity line
  * ════════════════════════════════════════════════════════════════════════════════
  */
 
