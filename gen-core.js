@@ -9,11 +9,11 @@
  *   - level >= 1: class HP via rollHitPoints, progression data, class/racial abilities
  *                 opts.classData is required for level >= 1
  *
- * Only four isAdvanced checks exist in the whole function (per the design):
+ * Only three isAdvanced checks exist in the whole function (per the design):
  *   1. applyRacialAbilityModifiers  — Advanced only
  *   2. meetsRacialMinimums          — Advanced only
- *   3. calcLevel0HP Blessed check   — Advanced + Human + humanRacialAbilities
- *   4. mode string passed to getRaceAbilitiesAtLevel — no conditional needed
+ *   3. class requirements check     — Advanced only (level >= 1)
+ *   mode string is passed to getRaceAbilitiesAtLevel — no conditional needed
  */
 
 import { WEAPONS, ARMOR, calculateModifier, rollDice,
@@ -22,6 +22,7 @@ import { WEAPONS, ARMOR, calculateModifier, rollDice,
     getRaceInfo, getRaceAbilitiesAtLevel, getClassProgressionData,
     getClassFeatures, getBasicModeClassAbilities, CLASS_INFO,
     rollHitPoints as rollHPLeveled, rollStartingGold, calcStartingGold,
+    getBackgroundByProfession, getRandomBackground,
 } from './shared-core.js';
 import * as ClassDataShared from './shared-core.js';
 
@@ -39,205 +40,6 @@ export function readAbilityScores() {
         CON: parseInt(document.getElementById('scoreCON').value) || 3,
         CHA: parseInt(document.getElementById('scoreCHA').value) || 3
     };
-}
-
-export function getClassRequirements(className) {
-    const base = (className || '').replace(/_CLASS$/, '');
-    const classInfo = CLASS_INFO[base];
-    if (!classInfo) return {};
-    const demihumans = ['Dwarf', 'Elf', 'Halfling', 'Gnome'];
-    const race = demihumans.includes(base) ? base : 'Human';
-    return classInfo.requirements?.[race] ?? {};
-}
-
-export function getDemihumanLimits() {
-    return Object.fromEntries(
-        ['Dwarf', 'Elf', 'Halfling', 'Gnome'].map(c => [c, CLASS_INFO[c].maxLevel])
-    );
-}
-
-// ── Equipment ─────────────────────────────────────────────────────────────────
-
-export const DUNGEONEERING_BUNDLE = [
-    { name: "Backpack",                   cost: 5 },
-    { name: "Tinder box (flint & steel)", cost: 3 },
-    { name: "Torches (6)",                cost: 1 },
-    { name: "Rope (50')",                 cost: 1 },
-    { name: "Waterskin",                  cost: 1 },
-    { name: "Crowbar",                    cost: 10 },
-];
-
-export const CLASS_SPECIFIC_GEAR = {
-    "Cleric": [{ name: "Holy symbol",    cost: 25 }],
-    "Thief":  [{ name: "Thieves' tools", cost: 25 }],
-};
-
-export const WEAPON_PRIORITY = {
-    "Fighter":    ["Sword", "Short sword", "Mace", "Hand axe", "Dagger"],
-    "Dwarf":      ["Sword", "Short sword", "Mace", "Hand axe", "Dagger"],
-    "Elf":        ["Sword", "Short sword", "Mace", "Hand axe", "Dagger"],
-    "Gnome":      ["Sword", "Short sword", "Mace", "Hand axe", "Dagger"],
-    "Halfling":   ["Sword", "Short sword", "Mace", "Hand axe", "Dagger"],
-    "Spellblade": ["Sword", "Short sword", "Mace", "Hand axe", "Dagger"],
-    "Cleric":     ["Mace", "War hammer", "Club", "Staff", "Sling"],
-    "Magic-User": ["Dagger", "Staff"],
-    "Thief":      ["Sword", "Short sword", "Dagger", "Club"],
-};
-
-export const ARMOR_PRIORITY = ["Plate mail", "Chain mail", "Leather"];
-
-export function purchaseEquipment(className, startingGold, dexModifier, background, progression) {
-    let gold = startingGold;
-    const result = {
-        weapons: [], armor: null, shield: false,
-        items: [], startingAC: 10 + dexModifier, goldRemaining: 0
-    };
-
-    if (background?.weapon) result.items.push(`${background.weapon} (background)`);
-    if (background?.armor)  result.items.push(`${background.armor} (background)`);
-    const bgItems = Array.isArray(background?.item) ? background.item : (background?.item ? [background.item] : []);
-    bgItems.forEach(i => { if (i) result.items.push(i); });
-
-    const baseClass = className.replace(/_CLASS$/, '');
-    const classInfo = CLASS_INFO[baseClass];
-    if (!classInfo) { result.goldRemaining = gold; return result; }
-
-    const allowedWeapons = new Set(classInfo.weapons || []);
-    const allowedArmors  = (classInfo.armor || []).filter(a => a !== "Shield");
-    const allowsShield   = (classInfo.armor || []).includes("Shield");
-
-    if (background?.weapon && allowedWeapons.has(background.weapon)) {
-        result.weapons.push(background.weapon);
-    } else {
-        for (const wName of (WEAPON_PRIORITY[baseClass] || [])) {
-            if (allowedWeapons.has(wName) && WEAPONS[wName] && WEAPONS[wName].cost <= gold) {
-                result.weapons.push(wName); gold -= WEAPONS[wName].cost; result.items.push(wName); break;
-            }
-        }
-    }
-
-    for (const aName of ARMOR_PRIORITY) {
-        if (allowedArmors.includes(aName) && ARMOR[aName] && ARMOR[aName].cost <= gold) {
-            result.armor = aName; gold -= ARMOR[aName].cost; break;
-        }
-    }
-
-    if (allowsShield && ARMOR["Shield"] && ARMOR["Shield"].cost <= gold) {
-        result.shield = true; gold -= ARMOR["Shield"].cost;
-    }
-
-    for (const { name, cost } of (CLASS_SPECIFIC_GEAR[baseClass] || [])) {
-        if (cost <= gold) { result.items.push(name); gold -= cost; }
-    }
-
-    for (const { name, cost } of DUNGEONEERING_BUNDLE) {
-        if (cost <= gold) { result.items.push(name); gold -= cost; }
-    }
-
-    if (ARMOR["Helmet"] && ARMOR["Helmet"].cost <= gold) {
-        result.items.push("Helmet"); gold -= ARMOR["Helmet"].cost;
-    }
-
-    const armorAC  = result.armor ? ARMOR[result.armor].ac.ascending : 10;
-    result.startingAC    = armorAC + dexModifier + (result.shield ? 1 : 0);
-    result.goldRemaining = gold;
-    return result;
-}
-
-// ── Background tables ──────────────────────────────────────────────────────────
-
-const backgroundTables = {
-    1: [
-        { profession: "Acolyte", item: ["Incense", "Holy symbol"], weapon: "Mace (1d6)", armor: "Unarmored" },
-        { profession: "Actor", item: ["2 x Masks", "2 x Costumes"], weapon: "Stage sword (1d4)", armor: "Unarmored" },
-        { profession: "Alchemist's Apprentice", item: ["Potion of Healing"], weapon: "Club (1d4)", armor: "Unarmored" },
-        { profession: "Artist", item: ["Parchment", "Paint", "Brush"], weapon: "Hammer (1d4)", armor: "Unarmored" },
-        { profession: "Beggar", item: ["Wooden bowl"], weapon: "Walking stick (1d4)", armor: "Unarmored" },
-        { profession: "Jeweller", item: ["Ostentatious Jewellery (25gp)"], weapon: "Dagger (1d4)", armor: "Unarmored" },
-        { profession: "Juggler", item: ["Juggling balls"], weapon: "3 x daggers (1d4)", armor: "Unarmored" },
-        { profession: "Money Lender", item: ["50gp"], weapon: "Mace (1d6)", armor: "Unarmored" },
-        { profession: "Scribe", item: ["3 x Parchment", "Ink pot", "Quill"], weapon: "Staff (1d4)", armor: "Unarmored" },
-        { profession: "Trumpet Player", item: ["Trumpet"], weapon: "Rock (1d3)", armor: "Unarmored" },
-        { profession: "Wealthy Heir", item: ["Signet ring", "Perfume"], weapon: "Jewelled dagger (1d4)", armor: "Unarmored" },
-        { profession: "Wizard's Apprentice", item: ["Spell book (1 random cantrip)"], weapon: "Dagger (1d4)", armor: "Unarmored" }
-    ],
-    2: [
-        { profession: "Butcher", item: ["Dried meat (5 days' iron rations)"], weapon: "2 x daggers (1d4)", armor: "Unarmored" },
-        { profession: "Butler", item: ["Livery", "Silver serving tray"], weapon: "Hand axe (1d6)", armor: "Unarmored" },
-        { profession: "Cook", item: ["Salt", "Skillet", "Onion"], weapon: "Dagger (1d4)", armor: "Unarmored" },
-        { profession: "Fletcher", item: ["Bag of feathers"], weapon: "Shortbow (1d6) + 10 arrows", armor: "Unarmored" },
-        { profession: "Gambler", item: ["Dice"], weapon: "Club (1d4)", armor: "Unarmored" },
-        { profession: "Horse Thief", item: ["A horse"], weapon: "Spear (1d6)", armor: "Unarmored" },
-        { profession: "Innkeeper", item: ["3 x Bottles of wine"], weapon: "Crossbow (1d6) + 10 bolts", armor: "Unarmored" },
-        { profession: "Navigator", item: ["Compass", "Parchment", "Chalk"], weapon: "Crossbow (1d6) + 10 bolts", armor: "Unarmored" },
-        { profession: "Shepherd", item: ["Pole (10' long, wooden)"], weapon: "Sling (1d4) + 10 stones", armor: "Unarmored" },
-        { profession: "Tailor", item: ["Needle", "Thread", "Bag of buttons"], weapon: "Scissors (1d4)", armor: "Unarmored" },
-        { profession: "Trader", item: ["Rare, fragrant spices"], weapon: "Crossbow (1d6) + 10 bolts", armor: "Unarmored" },
-        { profession: "Weaver", item: ["Hand Loom", "Yarn"], weapon: "Scissors (1d3)", armor: "Unarmored" }
-    ],
-    3: [
-        { profession: "Bowyer", item: ["Saw"], weapon: "Longbow (1d6) + 10 arrows", armor: "Unarmored" },
-        { profession: "Cooper", item: ["Barrel"], weapon: "Hammer (1d4)", armor: "Unarmored" },
-        { profession: "Executioner", item: ["50' Rope"], weapon: "Battle axe (1d8)", armor: "Unarmored" },
-        { profession: "Fisher", item: ["Net"], weapon: "Spear (1d6)", armor: "Unarmored" },
-        { profession: "Groom", item: ["Brush"], weapon: "Pitchfork (1d6)", armor: "Unarmored" },
-        { profession: "Hermit", item: ["Spell book (1 random cantrip)"], weapon: "Staff (1d4)", armor: "Unarmored" },
-        { profession: "Kennel Master", item: ["A dog"], weapon: "Staff (1d4)", armor: "Unarmored" },
-        { profession: "Leatherworker", item: ["A bearskin"], weapon: "Awl (1d4)", armor: "Unarmored" },
-        { profession: "Limner", item: ["Lantern", "2 x Oil flasks", "Paint"], weapon: "Staff (1d4)", armor: "Unarmored" },
-        { profession: "Sailor", item: ["Bottle of rum", "50' Rope"], weapon: "Belaying pin (1d4)", armor: "Unarmored" },
-        { profession: "Teamster", item: ["50' Rope"], weapon: "Whip (1d2, hits entangle)", armor: "Unarmored" },
-        { profession: "Trapper", item: ["Bear trap (1d6)"], weapon: "Club (1d4)", armor: "Unarmored" }
-    ],
-    4: [
-        { profession: "Armourer", item: ["Chain mail"], weapon: "War hammer (1d6)", armor: "Chain Mail" },
-        { profession: "Barber Surgeon", item: ["Bottle of strong spirits"], weapon: "Razor (1d4)", armor: "Unarmored" },
-        { profession: "Blacksmith", item: ["Tongs", "Apron"], weapon: "War hammer (1d6)", armor: "Unarmored" },
-        { profession: "Carpenter", item: ["Saw"], weapon: "Hand axe (1d6)", armor: "Unarmored" },
-        { profession: "Farmer", item: ["A pig"], weapon: "Pitchfork (1d6)", armor: "Unarmored" },
-        { profession: "Forester", item: ["Tent"], weapon: "Shortbow (1d6) + 10 arrows", armor: "Unarmored" },
-        { profession: "Hunter", item: ["Whistle"], weapon: "Longbow (1d6) + 10 arrows", armor: "Unarmored" },
-        { profession: "Mason", item: ["A bag of rocks"], weapon: "Rock (1d4)", armor: "Unarmored" },
-        { profession: "Miner", item: ["Lantern", "2 x Oil flasks"], weapon: "Pick axe (1d6)", armor: "Unarmored" },
-        { profession: "Shipwright", item: ["Pot of tar"], weapon: "Hand axe (1d6)", armor: "Unarmored" },
-        { profession: "Squire", item: ["Pole (10' long, wooden)", "Flag"], weapon: "Shortsword (1d6)", armor: "Unarmored" },
-        { profession: "Weaponsmith", item: ["Tongs", "Apron"], weapon: "Sword (1d8)", armor: "Unarmored" }
-    ]
-};
-
-export function getRandomBackground(hitPoints) {
-    const hpForOccupation = Math.min(Math.max(hitPoints, 1), 4);
-    const table = backgroundTables[hpForOccupation];
-    if (!table) {
-        console.warn(`No background table found for HP: ${hpForOccupation}`);
-        return { profession: 'Unknown', item: ['None'], weapon: 'Club (1d4)', armor: 'Unarmored' };
-    }
-    return table[Math.floor(Math.random() * 12)];
-}
-
-export function getBackgroundByIndex(hitPoints, index) {
-    const hpForOccupation = Math.min(Math.max(hitPoints, 1), 4);
-    const table = backgroundTables[hpForOccupation];
-    if (!table || index < 0 || index >= table.length) {
-        return { profession: 'Unknown', item: ['None'], weapon: 'Club (1d4)', armor: 'Unarmored' };
-    }
-    return table[index];
-}
-
-export function getBackgroundTable(hitPoints) {
-    return backgroundTables[Math.min(Math.max(hitPoints, 1), 4)] || [];
-}
-
-export function getAllBackgroundTables() {
-    return backgroundTables;
-}
-
-export function getBackgroundByProfession(profession) {
-    for (const hp of [1, 2, 3, 4]) {
-        const found = backgroundTables[hp].find(bg => bg.profession === profession);
-        if (found) return found;
-    }
-    return null;
 }
 
 // ── Internal constants ─────────────────────────────────────────────────────────
@@ -375,13 +177,11 @@ function passesFilters(results, { minimums, primeReqMode }) {
     return true;
 }
 
-function calcLevel0HP(conModifier, race, isAdvanced, humanRacialAbilities, hpMode) {
+function calcLevel0HP(conModifier, hpMode) {
     const d4 = () => Math.floor(Math.random() * 4) + 1;
-    const blessed = hpMode === 1 || (race === 'Human_RACE' && isAdvanced && humanRacialAbilities);
     let roll;
-    if (blessed)           { roll = Math.max(d4(), d4()); }
-    else if (hpMode === 3) { do { roll = d4(); } while (roll <= 2); }
-    else                   { roll = d4(); }
+    if (hpMode === 3) { do { roll = d4(); } while (roll <= 2); }
+    else              { roll = d4(); }
     return { roll, total: roll + conModifier };
 }
 
@@ -475,7 +275,7 @@ export function generateCharacter(opts = {}) {
         attempts = 1;
         if (level === 0) {
             const conMod = results.find(r => r.ability === 'CON').modifier;
-            hp0 = calcLevel0HP(conMod, race, isAdvanced, humanRacialAbilities, hpMode);
+            hp0 = calcLevel0HP(conMod, hpMode);
             if (hp0.total < 1) hp0 = { roll: 1, total: 1 };
         }
     } else {
@@ -492,15 +292,15 @@ export function generateCharacter(opts = {}) {
                 const bareClass = className.replace('_CLASS', '');
                 const bareRace  = race.replace('_RACE', '');
                 const reqs = CLASS_INFO[bareClass]?.requirements?.[bareRace] ?? {};
-                const adjMap = toMap(adj);
-                if (Object.entries(reqs).some(([ab, min]) => (adjMap[ab] ?? 0) < min)) continue;
+                const rawMap = toMap(raw);
+                if (Object.entries(reqs).some(([ab, min]) => (rawMap[ab] ?? 0) < min)) continue;
             }
 
-            if (!passesFilters(adj, { minimums, primeReqMode })) continue;
+            if (!passesFilters(raw, { minimums, primeReqMode })) continue;
 
             if (level === 0) {
                 const conMod = adj.find(r => r.ability === 'CON').modifier;
-                hp0 = calcLevel0HP(conMod, race, isAdvanced, humanRacialAbilities, hpMode);
+                hp0 = calcLevel0HP(conMod, hpMode);
                 if (hp0.total < 1) continue;
             }
 

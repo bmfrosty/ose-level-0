@@ -664,12 +664,12 @@ async function displayBasicCharacter(character, purchased) {
     const baseArr = character.originalScores ? SCORES.map(a => character.originalScores[a]) : adjArr;
     const hasAdj  = adjArr.some((v,i) => v !== baseArr[i]);
     const cp = {
-        v:2, m:'B', p:PROG_CODE[progressionMode]||'S', c:CLS_CODE[selectedClass]||'FI', l:character.level,
+        v:3, m:'B', p:PROG_CODE[progressionMode]||'S', c:CLS_CODE[selectedClass]||'FI', l:character.level,
         s:adjArr, ...(hasAdj?{bs:baseArr}:{}),
         h:character.hp.max, hr:character.hpRolls||[], hd:character.hpDice||[],
         il:includeLevel0HP?1:0, n:character.name||'', bg:character.background?.profession||'',
-        ar:purchased.armor||null, sh:purchased.shield?1:0, w:purchased.weapons||[],
-        it:purchased.items||[], g:purchased.goldRemaining||0, ac:purchased.startingAC||10,
+        g:character.startingGold||0,
+        ...(noLevel0Equipment?{nl0:1}:{}),
         dl:getEffectiveDemihumanLimits()==='extended'?1:0, bl:character.blessed?1:0,
         ...(hpMode>0?{hm:hpMode}:{}),
         un:showUndeadNames?1:0, qr:showQRCode?1:0, ap:document.getElementById('autoPrintInNewTab')?.checked?1:0,
@@ -741,12 +741,12 @@ async function displayAdvancedCharacter(character, purchased) {
     const baseArr = ['STR','DEX','CON','INT','WIS','CHA'].map(a=>character.baseScores[a]);
     const hasAdj = adjArr.some((v,i)=>v!==baseArr[i]);
     const cp = {
-        v:2, m:'A', p:PROG_CODE[progressionMode]||'S', r:RACE_CODE[selectedRace]||'HU', c:CLS_CODE[selectedClass]||'FI', l:character.level,
+        v:3, m:'A', p:PROG_CODE[progressionMode]||'S', r:RACE_CODE[selectedRace]||'HU', c:CLS_CODE[selectedClass]||'FI', l:character.level,
         s:adjArr, ...(hasAdj?{bs:baseArr}:{}),
         h:character.hp.max, hr:character.hpRolls||[], hd:character.hpDice||[],
         il:includeLevel0HP?1:0, n:character.name||'', bg:character.background?.profession||'',
-        ar:purchased.armor||null, sh:purchased.shield?1:0, w:purchased.weapons||[], it:purchased.items||[],
-        g:purchased.goldRemaining||0, ac:purchased.startingAC||10, rcm:RCM_CODE[raceClassMode]||'SH',
+        g:character.startingGold||0, rcm:RCM_CODE[raceClassMode]||'SH',
+        ...(noLevel0Equipment?{nl0:1}:{}),
         un:showUndeadNames?1:0, qr:showQRCode?1:0, ap:document.getElementById('autoPrintInNewTab')?.checked?1:0,
         wp:wealthPct, prm:primeRequisiteMode==='user'?0:parseInt(primeRequisiteMode), ao:basicAbilityOrdering?1:0,
         ...(hideHumanRace?{hhr:1}:{}), ...(hpMode>0?{hm:hpMode}:{}),
@@ -812,14 +812,11 @@ async function displayZeroLevelCharacter(char) {
     const adjArr  = ABILITIES.map(a=>char.results.find(r=>r.ability===a).roll);
     const baseArr = ABILITIES.map(a=>{ const r=char.results.find(x=>x.ability===a); return r.originalRoll ?? r.roll; });
     const hasAdj  = adjArr.some((v,i)=>v!==baseArr[i]);
-    const sv      = char.savingThrows;
-    const svArr   = [sv.Death,sv.Wands,sv.Paralysis,sv.Breath,sv.Spells];
     const isAdv   = mode==='advanced';
     const cp = {
-        v:2, m:isAdv?'A':'B', l:0, r:char.raceCode, p:(PROG_CODE[progressionMode]||'O'),
-        s:adjArr, ...(hasAdj?{bs:baseArr}:{}), sv:svArr, h:char.hitPoints.total, hr:[char.hitPoints.total], hd:[4],
-        n:char.name, bg:char.background.profession, ar:char.background.armor||null,
-        w:[], it:[...(char.background.weapon ? [`${char.background.weapon} (background)`] : []), ...(char.background.item||[])], g:char.startingGold, ac:char.armorClass,
+        v:3, m:isAdv?'A':'B', l:0, r:char.raceCode, p:(PROG_CODE[progressionMode]||'O'),
+        s:adjArr, ...(hasAdj?{bs:baseArr}:{}), h:char.hitPoints.total, hr:[char.hitPoints.total], hd:[4],
+        n:char.name, bg:char.background.profession, g:char.startingGold,
         bl:raceClassMode!=='strict'?1:0,
         ...(isAdv?{rcm:(RCM_CODE[raceClassMode]||'ST')}:{dl:getEffectiveDemihumanLimits()==='extended'?1:0}),
         prm:primeRequisiteMode==='user'?0:parseInt(primeRequisiteMode),

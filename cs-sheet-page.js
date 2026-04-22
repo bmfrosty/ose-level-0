@@ -27,6 +27,8 @@ import {
     createCharacter, calculateXPBonus, getPrimeRequisites,
     encodeCompactParams, decodeCompactParams,
     parseHitDice, HIT_DICE_PROGRESSIONS, HIT_DICE_SCALE,
+    ARMOR, purchaseEquipment, getBackgroundByProfession,
+    calculateSavingThrows, rollStartingGold,
 } from './cs-core.js';
 
 export { compressToBase64Url } from './cs-core.js';
@@ -189,7 +191,28 @@ export async function expandCompactV2(cp, precomp = {}) {
     if (level === 0) {
         const racialAbilities = getAdvancedModeRacialAbilities(race);
         const raceDisplay = race.replace('_RACE', '');
-        const sv = cp.sv || [14, 15, 16, 17, 18];
+
+        let sv, l0Weapons, l0Items, l0Armor, l0AC;
+        if (cp.v === 3) {
+            // v3: derive saves and equipment from stored params
+            const conScore = adjArr[2];
+            const rawSaves = calculateSavingThrows(0, race, conScore, isAdv, prog === 'smooth');
+            sv = [rawSaves.Death, rawSaves.Wands, rawSaves.Paralysis, rawSaves.Breath, rawSaves.Spells];
+            const bg = getBackgroundByProfession(cp.bg || '') || {};
+            l0Weapons = [];
+            const bgItems = Array.isArray(bg.item) ? bg.item : (bg.item ? [bg.item] : []);
+            l0Items   = [...(bg.weapon ? [`${bg.weapon} (background)`] : []), ...bgItems];
+            l0Armor   = (bg.armor && bg.armor !== 'Unarmored') ? bg.armor : null;
+            const armorAC = l0Armor ? (ARMOR[l0Armor]?.ac?.ascending ?? 10) : 10;
+            l0AC = armorAC + mods.DEX;
+        } else {
+            sv        = cp.sv || [14, 15, 16, 17, 18];
+            l0Weapons = cp.w  || [];
+            l0Items   = cp.it || [];
+            l0Armor   = cp.ar || null;
+            l0AC      = cp.ac || 10;
+        }
+
         return {
             title, subtitle,
             header: { columns: [
@@ -202,12 +225,12 @@ export async function expandCompactV2(cp, precomp = {}) {
             ]},
             combat: { maxHP:cp.h||1, initMod:mods.DEX },
             abilityScores: abilityScoresSheet,
-            weaponsAndSkills: { weapons:cp.w||[], classAttackBonus: prog==='smooth' ? 0 : -1,
+            weaponsAndSkills: { weapons:l0Weapons, classAttackBonus: prog==='smooth' ? 0 : -1,
                                 meleeMod:mods.STR, rangedMod:mods.DEX, thiefSkills:null },
             abilitiesSection: { header:'RACIAL ABILITIES', racial:racialAbilities||[], class:[] },
             savingThrows: { death:sv[0], wands:sv[1], paralysis:sv[2], breath:sv[3], spells:sv[4] },
             experience: null,
-            equipment: { armor:cp.ar||null, items:cp.it||[], startingAC:cp.ac||10,
+            equipment: { armor:l0Armor, items:l0Items, startingAC:l0AC,
                          startingGold:cp.g||0, startingHD:'1d4' },
             spellSlots: null, turnUndead: null,
             showUndeadNames: !!cp.un, showQRCode: cp.qr !== 0, abilityOrder: cp.ao ?? 1,
@@ -286,13 +309,32 @@ export async function expandCompactV2(cp, precomp = {}) {
     const isBasicDemihuman = !isAdv && BASIC_DEMIHUMAN_CLASSES.includes(cls);
 
     const hdSides = CLASS_HD[cp.c] || 6;
+
+    // ── Equipment: v3 derives at render time; v2 reads stored fields ──────────
+    let eqWeapons, eqArmor, eqShield, eqItems, eqAC;
+    if (cp.v === 3) {
+        const bg  = cp.nl0 ? null : (getBackgroundByProfession(cp.bg || '') || {});
+        const eq  = purchaseEquipment(cls, cp.g || 0, mods.DEX, bg, prog);
+        eqWeapons = eq.weapons;
+        eqArmor   = eq.armor;
+        eqShield  = eq.shield;
+        eqItems   = eq.items;
+        eqAC      = eq.startingAC;
+    } else {
+        eqWeapons = cp.w  || [];
+        eqArmor   = cp.ar || null;
+        eqShield  = !!cp.sh;
+        eqItems   = cp.it || [];
+        eqAC      = cp.ac || 10;
+    }
+
     const sd = {
         title, subtitle,
         name: cp.n, occupation: cp.bg,
         raceClass: raceClassDisplay, level, hd: `1d${hdSides}`, xpBonus: xpBonusStr,
         maxHP: cp.h, initMod: mods.DEX,
         abilityScores: abilityScoresSheet,
-        weapons: cp.w||[], classAttackBonus: character.attackBonus || 0,
+        weapons: eqWeapons, classAttackBonus: character.attackBonus || 0,
         meleeMod: mods.STR, rangedMod: mods.DEX, thiefSkills: character.thiefSkills || null,
         abilitiesHeader: (hasRacial && hasClass) ? 'RACIAL & CLASS ABILITIES'
                          : hasRacial ? (isBasicDemihuman ? 'CLASS ABILITIES' : 'RACIAL ABILITIES') : 'CLASS ABILITIES',
@@ -302,8 +344,8 @@ export async function expandCompactV2(cp, precomp = {}) {
         experience: { current: character.xp.current, forLevel: level,
                       forLevelXP: character.xp.forCurrentLevel,
                       forNext: character.xp.forNextLevel, bonus: xpBonusStr },
-        equipment: { armor: cp.ar || null, shield: !!cp.sh, items: cp.it || [],
-                     startingAC: cp.ac || 10, startingGold: cp.g || 0, startingHD: `1d${hdSides}` },
+        equipment: { armor: eqArmor, shield: eqShield, items: eqItems,
+                     startingAC: eqAC, startingGold: cp.g || 0, startingHD: `1d${hdSides}` },
         spellSlots: character.spellSlots || null,
         turnUndead: character.turnUndead || null,
         cp,
@@ -706,14 +748,14 @@ function initEditPanel(decoded) {
             } while (l1HP < l0HP);
 
             const newMode = isAdv ? 'A' : 'B';
+            const lupProg = decoded.p === 'S' ? 'smooth' : 'ose';
             const newCp = {
-                v:2, m: newMode, p: decoded.p || 'O', r: decoded.r || 'HU',
+                v:3, m: newMode, p: decoded.p || 'O', r: decoded.r || 'HU',
                 c: selectedClassCode, l: 1,
                 s: decoded.s || [10,10,10,10,10,10],
                 h: l1HP, hr: [l0HP, l1HP], hd: [4, sides], il: 0,
                 n: decoded.n||'', bg: decoded.bg||'',
-                ar: decoded.ar||null, sh: 0, w: decoded.w||[], it: decoded.it||[],
-                g: decoded.g||0, ac: decoded.ac||10,
+                g: rollStartingGold(lupProg),
                 un: document.getElementById('lup-undead').checked ? 1 : 0,
                 qr: document.getElementById('lup-qr').checked    ? 1 : 0,
                 ap: 0,
@@ -886,7 +928,7 @@ export async function initCharacterSheet() {
             const parsed = JSON.parse(json);
             console.log('[charactersheet] Decompressed URL data:\n' + JSON.stringify(parsed, null, 2));
 
-            if (parsed.v === 2) {
+            if (parsed.v === 2 || parsed.v === 3) {
                 decodedCp = decodeCompactParams(parsed);
                 console.log('[charactersheet] Decoded compact params:\n' + JSON.stringify(decodedCp, null, 2));
                 await renderFromCompactParams(decodedCp, contentEl,
