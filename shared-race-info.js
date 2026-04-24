@@ -67,8 +67,8 @@ export const RACE_INFO = {
         advancedAvailableAt: 0,
         advancedAvailableThrough: 14,
         includeName: true,
-        // SRD: stat block: "Alignment, Common"
-        // BOOK: stat block: "Alignment, Common"
+        // SRD:      stat block: "Alignment, Common"
+        // BOOK:     stat block: "Alignment, Common"
       },
       {
         name: "Blessed",
@@ -137,7 +137,8 @@ export const RACE_INFO = {
         advancedAvailableAt: 0,
         advancedAvailableThrough: 14,
         includeName: true,
-        // SRD: stat block: "Alignment, Common, Dwarvish, Gnomish, Goblin, Kobold"
+        // SRD:      stat block: "Alignment, Common, Dwarvish, Gnomish, Goblin, Kobold"
+        // BOOK:     stat block: "Alignment, Common, Dwarvish, Gnomish, Goblin, Kobold"
       },
       {
         name: "Combat",
@@ -251,7 +252,8 @@ export const RACE_INFO = {
         advancedAvailableAt: 0,
         advancedAvailableThrough: 14,
         includeName: true,
-        // SRD: stat block: "Alignment, Common, Elvish, Gnoll, Hobgoblin, Orcish"
+        // SRD:      stat block: "Alignment, Common, Elvish, Gnoll, Hobgoblin, Orcish"
+        // BOOK:     stat block: "Alignment, Common, Elvish, Gnoll, Hobgoblin, Orcish"
       },
       {
         name: "Detect Secret Doors",
@@ -336,7 +338,7 @@ export const RACE_INFO = {
         advancedAvailableAt: 0,
         advancedAvailableThrough: 14,
         includeName: true,
-        // BOOK: stat block: "Alignment, Common, Gnomish, Dwarvish, Kobold, the secret language of burrowing mammals"
+        // BOOK:     stat block: "Alignment, Common, Gnomish, Dwarvish, Kobold, the secret language of burrowing mammals"
       },
       {
         name: "Combat",
@@ -452,7 +454,8 @@ export const RACE_INFO = {
         advancedAvailableAt: 0,
         advancedAvailableThrough: 14,
         includeName: true,
-        // SRD: stat block: "Alignment, Common, Halfling"
+        // SRD:      stat block: "Alignment, Common, Halfling"
+        // BOOK:     stat block: "Alignment, Common, Halfling"
       },
       {
         name: "Combat",
