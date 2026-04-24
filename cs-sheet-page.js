@@ -35,7 +35,7 @@ export { compressToBase64Url } from './cs-core.js';
 export { displayCharacterSheet } from './cs-core.js';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
-const PROG_TO_CODE = { ose:'O', smooth:'S', ll:'L' };
+const PROG_TO_CODE = { ose:'O', smoothprog:'S', ll:'L' };
 
 /**
  * Merge Languages entries from class abilities into the racial Languages string.
@@ -83,7 +83,7 @@ const CLASS_HD = {
 };
 
 /** Compact code → progression mode name (e.g. 'O' → 'ose') */
-const CODE_TO_PROG = { O:'ose', S:'smooth', L:'ll' };
+const CODE_TO_PROG = { O:'ose', S:'smoothprog', L:'ll' };
 
 /**
  * Build the spec object passed to `renderFromCompactParams` / `displayCharacterSheet`
@@ -127,7 +127,6 @@ function buildSheetSpec(sd, opts) {
         footer:          sd.footer,
         printTitle:      sd.printTitle,
         openInNewTab:    opts.openInNewTab,
-        autoPrint:       opts.autoPrint,
         backgroundTab:   opts.backgroundTab,
         acDisplayMode:   opts.acDisplayMode || 'aac',
     };
@@ -144,7 +143,7 @@ const getConMod = s => s >= 15 ? 1 : s >= 13 ? 1 : s <= 6 ? -1 : s <= 8 ? -1 : 0
  * Expand a compact v2 params object into a full sheet spec ready for
  * renderCharacterSheetHTML.
  */
-export async function expandCompactV2(cp, precomp = {}) {
+export async function expandCompactV2(cp, precomp = {}, { silent = false } = {}) {
     const CODE_TO_CLASS = { FI:'Fighter_CLASS', CL:'Cleric_CLASS', MU:'Magic-User_CLASS',
                             TH:'Thief_CLASS',   SB:'Spellblade_CLASS', DW:'Dwarf_CLASS',
                             EL:'Elf_CLASS',     HA:'Halfling_CLASS',   GN:'Gnome_CLASS' };
@@ -153,18 +152,33 @@ export async function expandCompactV2(cp, precomp = {}) {
     const CODE_TO_RCM   = { ST:'strict', SH:'strict-human', TE:'traditional-extended', AL:'allow-all' };
 
     const mode  = cp.m;
-    const prog  = CODE_TO_PROG[cp.p] || 'smooth';
+    const prog  = CODE_TO_PROG[cp.p] || 'smoothprog';
     const race  = CODE_TO_RACE[cp.r] || 'Human_RACE';
     const cls   = CODE_TO_CLASS[cp.c] || 'Fighter_CLASS';
     const level = cp.l ?? 1;
     const rcm   = CODE_TO_RCM[cp.rcm] || 'strict';
 
-    const adjArr  = cp.s  || [10,10,10,10,10,10];
-    const baseArr = cp.bs || adjArr;
+    let adjArr, baseArr;
+    if (cp.v === 3) {
+        // v3: s = raw rolled scores; racial derived from r; sa = extra adjustments beyond racial
+        baseArr = cp.s || [10,10,10,10,10,10];
+        let racialMods3 = {};
+        if (cp.m === 'A') {
+            // Human ability mods only apply when human racial abilities are enabled (rcm !== 'strict')
+            const humanAbilitiesOn = race !== 'Human_RACE' || rcm !== 'strict';
+            if (humanAbilitiesOn) racialMods3 = getRaceInfo(race)?.abilityModifiers ?? {};
+        }
+        const sa3 = cp.sa || Array(6).fill(0);
+        adjArr = baseArr.map((v, i) => Math.max(3, Math.min(18, v + (racialMods3[ABILITIES[i]] || 0) + sa3[i])));
+    } else {
+        // v2: s = adjusted scores; bs = pre-adjustment base scores
+        adjArr  = cp.s  || [10,10,10,10,10,10];
+        baseArr = cp.bs || adjArr;
+    }
     const adj = {}, base = {};
     ABILITIES.forEach((a, i) => { adj[a] = adjArr[i]; base[a] = baseArr[i]; });
 
-    const classData = PROGRESSION_TABLES[prog] ?? PROGRESSION_TABLES.gygar;
+    const classData = PROGRESSION_TABLES[prog] ?? PROGRESSION_TABLES.smoothprog;
     const ClassDataShared = csCore;
     const mods = {};
     ABILITIES.forEach(a => mods[a] = calculateModifier(adj[a]));
@@ -189,14 +203,14 @@ export async function expandCompactV2(cp, precomp = {}) {
 
     // ── Level 0 ──────────────────────────────────────────────────────────────
     if (level === 0) {
-        const racialAbilities = getAdvancedModeRacialAbilities(race);
+        const racialAbilities = getAdvancedModeRacialAbilities(race, { isAdvanced: isAdv, humanRacialAbilities: rcm !== 'strict' });
         const raceDisplay = race.replace('_RACE', '');
 
         let sv, l0Weapons, l0Items, l0Armor, l0AC;
         if (cp.v === 3) {
             // v3: derive saves and equipment from stored params
             const conScore = adjArr[2];
-            const rawSaves = calculateSavingThrows(0, race, conScore, isAdv, prog === 'smooth');
+            const rawSaves = calculateSavingThrows(0, race, conScore, isAdv, prog === 'smoothprog');
             sv = [rawSaves.Death, rawSaves.Wands, rawSaves.Paralysis, rawSaves.Breath, rawSaves.Spells];
             const bg = getBackgroundByProfession(cp.bg || '') || {};
             l0Weapons = [];
@@ -213,6 +227,26 @@ export async function expandCompactV2(cp, precomp = {}) {
             l0AC      = cp.ac || 10;
         }
 
+        console.log('\n=== Level 0 Character ===');
+        console.log(`Race: ${raceDisplay}  |  Background: ${cp.bg||'(none)'}  |  Mode: ${modeLabel}${isAdv ? '' : ' Basic'}`);
+
+        const logableAbilities = racialAbilities.filter(a => !a.startsWith('\x00footnote:'));
+        if (logableAbilities.length) {
+            console.log('\nRacial Abilities:');
+            logableAbilities.forEach(a => console.log(`  - ${a}`));
+        } else {
+            console.log('\nRacial Abilities: (none displayed)');
+        }
+
+        console.log('\nSaving Throws:');
+        console.log(`  Death/Poison: ${sv[0]}  |  Wands: ${sv[1]}  |  Paralysis/Petrify: ${sv[2]}  |  Breath: ${sv[3]}  |  Spells: ${sv[4]}`);
+
+        console.log('\nBackground Equipment:');
+        if (l0Armor) console.log(`  Armor: ${l0Armor}`);
+        if (l0Items.length) console.log(`  Items: ${l0Items.join(', ')}`);
+        console.log(`  AC: ${l0AC}  |  HP: ${cp.h||1}  |  Gold: ${cp.g||0} gp`);
+        console.log('========================\n');
+
         return {
             title, subtitle,
             header: { columns: [
@@ -225,7 +259,7 @@ export async function expandCompactV2(cp, precomp = {}) {
             ]},
             combat: { maxHP:cp.h||1, initMod:mods.DEX },
             abilityScores: abilityScoresSheet,
-            weaponsAndSkills: { weapons:l0Weapons, classAttackBonus: prog==='smooth' ? 0 : -1,
+            weaponsAndSkills: { weapons:l0Weapons, classAttackBonus: prog==='smoothprog' ? 0 : -1,
                                 meleeMod:mods.STR, rangedMod:mods.DEX, thiefSkills:null },
             abilitiesSection: { header:'RACIAL ABILITIES', racial:racialAbilities||[], class:[] },
             savingThrows: { death:sv[0], wands:sv[1], paralysis:sv[2], breath:sv[3], spells:sv[4] },
@@ -237,24 +271,24 @@ export async function expandCompactV2(cp, precomp = {}) {
             cp,
             footer: buildFooter(`0-Level ${raceDisplay}`),
             printTitle: `OSE ${isAdv?'Advanced':'Basic'} - ${raceDisplay} - 0-Level - ${cp.bg||''} - ${cp.n||''}`,
-            autoPrint: !!cp.ap,
         };
     }
 
     // ── L1+ characters (Basic & Advanced merged) ──────────────────────────────
     let character, raceDisplay, clsDisplay, raceClassDisplay;
+    const BASIC_DEMIHUMAN_CLASSES = ['Dwarf_CLASS','Elf_CLASS','Halfling_CLASS','Gnome_CLASS'];
 
     if (isAdv) {
         if (precomp.character) {
             character = precomp.character;
         } else {
-            const progData = precomp.progData ?? getClassProgressionData({ className: cls, level, abilityScores: adj, classData: classData });
+            const progData = precomp.progData ?? getClassProgressionData({ className: cls, level, abilityScores: adj, classData: classData, silent });
             const features = precomp.features ?? getClassFeatures({ className: cls, level, classData: classData, ClassDataShared });
             const humanAbilitiesEnabled = rcm !== 'strict';
             const racialAbilities = getAdvancedModeRacialAbilities(race, { isAdvanced: true, humanRacialAbilities: humanAbilitiesEnabled });
             mergeAdvancedLanguages(racialAbilities, features.classAbilities);
             character = createCharacter({
-                level, className: cls, mode: prog === 'smooth' ? 'Smoothified' : 'Normal',
+                level, className: cls, mode: prog === 'smoothprog' ? 'Smoothified' : 'Normal',
                 abilityScores: adj, hp: cp.h,
                 progressionData: progData, features, racialAbilities,
                 name: cp.n, background: { profession: cp.bg },
@@ -273,23 +307,23 @@ export async function expandCompactV2(cp, precomp = {}) {
         if (precomp.character) {
             character = precomp.character;
         } else {
-            const progData = precomp.progData ?? getClassProgressionData({ className: cls, level, abilityScores: adj, classData: classData });
+            const progData = precomp.progData ?? getClassProgressionData({ className: cls, level, abilityScores: adj, classData: classData, silent });
             const features = precomp.features ?? getClassFeatures({ className: cls, level, classData: classData, ClassDataShared });
-            const racial   = getBasicModeClassAbilities(cls);
             character = createCharacter({
                 level, className: cls, mode: modeLabel,
                 abilityScores: adj, hp: cp.h,
-                progressionData: progData, features, racialAbilities: racial,
+                progressionData: progData, features, racialAbilities: [],
                 name: cp.n, background: { profession: cp.bg }, startingGold: cp.g || 0
             });
-            // Basic mode: add Blessed / human racial abilities when cp.bl is set
-            if (cp.bl) {
+            if (rcm !== 'strict' && !BASIC_DEMIHUMAN_CLASSES.includes(cls)) {
                 const humanAbilities = [
                     { name: 'Blessed',      description: 'Roll HP twice, take best at each level (does not apply to level 0 HP roll)' },
                     { name: 'Decisiveness', description: 'Act first on tied initiative (+1 to individual initiative)' },
                     { name: 'Leadership',   description: 'Retainers/mercenaries +1 loyalty and morale' },
                 ];
                 character.classAbilities = [...(character.classAbilities || []), ...humanAbilities];
+                console.log('\nHuman Racial Abilities (Basic mode):');
+                humanAbilities.forEach(a => console.log(`  - ${a.name}: ${a.description}`));
             }
         }
         raceDisplay = clsDisplay = cls.replace('_CLASS', '');
@@ -303,29 +337,28 @@ export async function expandCompactV2(cp, precomp = {}) {
     const xpBonusStr = xpBonusNum >= 0 ? `+${xpBonusNum}%` : `${xpBonusNum}%`;
     const hasRacial  = (character.racialAbilities || []).length > 0;
     const hasClass   = (character.classAbilities  || []).length > 0;
-    // In Basic mode, demihuman classes are race-as-class.
-    // Their class abilities ARE their racial abilities, so label the section "CLASS ABILITIES".
-    const BASIC_DEMIHUMAN_CLASSES = ['Dwarf_CLASS','Elf_CLASS','Halfling_CLASS','Gnome_CLASS'];
     const isBasicDemihuman = !isAdv && BASIC_DEMIHUMAN_CLASSES.includes(cls);
 
     const hdSides = CLASS_HD[cp.c] || 6;
 
     // ── Equipment: v3 derives at render time; v2 reads stored fields ──────────
-    let eqWeapons, eqArmor, eqShield, eqItems, eqAC;
+    let eqWeapons, eqArmor, eqShield, eqItems, eqAC, eqGoldRemaining;
     if (cp.v === 3) {
         const bg  = cp.nl0 ? null : (getBackgroundByProfession(cp.bg || '') || {});
         const eq  = purchaseEquipment(cls, cp.g || 0, mods.DEX, bg, prog);
-        eqWeapons = eq.weapons;
-        eqArmor   = eq.armor;
-        eqShield  = eq.shield;
-        eqItems   = eq.items;
-        eqAC      = eq.startingAC;
+        eqWeapons      = eq.weapons;
+        eqArmor        = eq.armor;
+        eqShield       = eq.shield;
+        eqItems        = eq.items;
+        eqAC           = eq.startingAC;
+        eqGoldRemaining = eq.goldRemaining;
     } else {
-        eqWeapons = cp.w  || [];
-        eqArmor   = cp.ar || null;
-        eqShield  = !!cp.sh;
-        eqItems   = cp.it || [];
-        eqAC      = cp.ac || 10;
+        eqWeapons      = cp.w  || [];
+        eqArmor        = cp.ar || null;
+        eqShield       = !!cp.sh;
+        eqItems        = cp.it || [];
+        eqAC           = cp.ac || 10;
+        eqGoldRemaining = cp.g || 0;
     }
 
     const sd = {
@@ -345,7 +378,7 @@ export async function expandCompactV2(cp, precomp = {}) {
                       forLevelXP: character.xp.forCurrentLevel,
                       forNext: character.xp.forNextLevel, bonus: xpBonusStr },
         equipment: { armor: eqArmor, shield: eqShield, items: eqItems,
-                     startingAC: eqAC, startingGold: cp.g || 0, startingHD: `1d${hdSides}` },
+                     startingAC: eqAC, startingGold: eqGoldRemaining, startingHD: `1d${hdSides}` },
         spellSlots: character.spellSlots || null,
         turnUndead: character.turnUndead || null,
         cp,
@@ -357,7 +390,7 @@ export async function expandCompactV2(cp, precomp = {}) {
 
     const opts = {
         showUndeadNames: !!cp.un, showQRCode: cp.qr !== 0, abilityOrder: cp.ao ?? 1,
-        openInNewTab: false, autoPrint: !!cp.ap, backgroundTab: false,
+        openInNewTab: false, backgroundTab: false,
         acDisplayMode: ADM_MAP[cp.adm] || 'aac',
     };
     return buildSheetSpec(sd, opts);
@@ -373,7 +406,7 @@ export async function expandCompactV2(cp, precomp = {}) {
  * @returns {string} URL string like "generator.html?mode=basic&p=ose&l=1&c=Fighter…"
  */
 function buildGeneratorURL(cp) {
-    const CODE_TO_PROG_KEY   = { O:'ose', S:'smooth', L:'ll' };
+    const CODE_TO_PROG_KEY   = { O:'ose', S:'smoothprog', L:'ll' };
     const CODE_TO_CLASS_NAME = {
         FI:'Fighter', CL:'Cleric', MU:'Magic-User', TH:'Thief',
         SB:'Spellblade', DW:'Dwarf', EL:'Elf', HA:'Halfling', GN:'Gnome'
@@ -388,7 +421,7 @@ function buildGeneratorURL(cp) {
     p.set('mode', isAdv ? 'advanced' : 'basic');
 
     // Progression mode (omit if OSE — that's the default)
-    const progKey = CODE_TO_PROG_KEY[cp.p] || 'smooth';
+    const progKey = CODE_TO_PROG_KEY[cp.p] || 'smoothprog';
     if (progKey !== 'ose') p.set('p', progKey);
 
     // Level
@@ -415,13 +448,11 @@ function buildGeneratorURL(cp) {
     // Basic: demihuman limits
     if (!isAdv && cp.dl) p.set('dl', 'extended');
 
-    // Advanced: race/class mode (omit if strict — that's the default)
-    if (isAdv && cp.rcm) {
-        const rcm = CODE_TO_RCM[cp.rcm];
-        if (rcm && rcm !== 'strict') p.set('rcm', rcm);
+    // Race/class mode (omit if strict — that's the default)
+    if (cp.rcm) {
+        const rcmVal = CODE_TO_RCM[cp.rcm];
+        if (rcmVal && rcmVal !== 'strict') p.set('rcm', rcmVal);
     }
-    // Basic: blessed flag → infer strict-human raceClassMode
-    if (!isAdv && cp.bl) p.set('rcm', 'strict-human');
 
     // Prime req mode (0 = 'user' = default → omit)
     if (cp.prm) p.set('prm', String(cp.prm));
@@ -634,7 +665,7 @@ function initEditPanel(decoded) {
         }
 
         const newCp = { ...decoded, p: PROG_TO_CODE[newProg], s: newScores, h: newHp,
-                        hr: newHpRolls, mx: 1, ap: 0 };
+                        hr: newHpRolls, mx: 1 };
         if (hasAnyAdj) { newCp.bs = newBaseScores; } else { delete newCp.bs; }
 
         const encoded = encodeCompactParams(newCp);
@@ -649,7 +680,7 @@ function initEditPanel(decoded) {
             n:  document.getElementById('ep-name').value || decoded.n,
             un: document.getElementById('ep-undead').checked ? 1 : 0,
             qr: document.getElementById('ep-qr').checked    ? 1 : 0,
-            ap: 0 };
+        };
         if (newAdm) newCp.adm = newAdm; else delete newCp.adm;
 
         // Clear equipment: null out weapon, armor, shield, items, and gold;
@@ -748,7 +779,7 @@ function initEditPanel(decoded) {
             } while (l1HP < l0HP);
 
             const newMode = isAdv ? 'A' : 'B';
-            const lupProg = decoded.p === 'S' ? 'smooth' : 'ose';
+            const lupProg = decoded.p === 'S' ? 'smoothprog' : 'ose';
             const newCp = {
                 v:3, m: newMode, p: decoded.p || 'O', r: decoded.r || 'HU',
                 c: selectedClassCode, l: 1,
@@ -758,8 +789,7 @@ function initEditPanel(decoded) {
                 g: rollStartingGold(lupProg),
                 un: document.getElementById('lup-undead').checked ? 1 : 0,
                 qr: document.getElementById('lup-qr').checked    ? 1 : 0,
-                ap: 0,
-                ...(newMode === 'A' ? { rcm:'SH' } : {}),
+                rcm: decoded.rcm || 'ST',
             };
 
             const encoded = encodeCompactParams(newCp);
@@ -852,7 +882,7 @@ function initEditPanel(decoded) {
 
             const newHp = newHpRolls.reduce((a, b, i) => (i === 0 && !decoded.il) ? a : a + b, 0);
             const newCp = { ...decoded, l: newLevel, hr: newHpRolls, hd: newHpDice,
-                            h: newHp, un: newUn, qr: newQr, ap: 0 };
+                            h: newHp, un: newUn, qr: newQr };
 
             const encoded = encodeCompactParams(newCp);
             const b64url  = await compressToBase64Url(JSON.stringify(encoded));
@@ -872,27 +902,13 @@ export async function renderFromCompactParams(cp, contentEl, opts = {}) {
     document.title       = sheet.printTitle || 'Character Sheet';
     contentEl.innerHTML  = renderCharacterSheetHTML(sheet);
 
-    if (sheet.autoPrint) setTimeout(() => window.print(), 400);
-
     if (opts.initEditPanels && cp) initEditPanel(cp);
 
     if (sheet.showQRCode !== false) {
         const qrImg  = document.getElementById('ose-qr-img');
         const qrLink = document.getElementById('ose-qr-link');
 
-        // The QR code is meant for sharing / scanning on another device, so it
-        // must never trigger auto-print.  If the current URL has ap:1 embedded,
-        // re-encode a copy with ap:0 so the scanned URL just shows the sheet.
-        let shareUrl = window.location.href;
-        if (cp && cp.ap) {
-            try {
-                const shareCp = { ...cp, ap: 0 };
-                const encoded = encodeCompactParams(shareCp);
-                const b64url  = await compressToBase64Url(JSON.stringify(encoded));
-                shareUrl = `${window.location.origin}${window.location.pathname}?d=${b64url}`;
-            } catch (e) { /* fall back to current URL on any error */ }
-        }
-
+        const shareUrl = window.location.href;
         if (qrLink) qrLink.href = shareUrl;
         if (qrImg) {
             try {
@@ -944,13 +960,11 @@ export async function initCharacterSheet() {
                 // Legacy v1 sheet object
                 document.title      = parsed.printTitle || 'Character Sheet';
                 contentEl.innerHTML = renderCharacterSheetHTML(parsed);
-                if (parsed.autoPrint) setTimeout(() => window.print(), 400);
             }
         } else if (legacy) {
             const parsed = JSON.parse(legacy);
             document.title      = parsed.printTitle || 'Character Sheet';
             contentEl.innerHTML = renderCharacterSheetHTML(parsed);
-            if (parsed.autoPrint) setTimeout(() => window.print(), 400);
         } else {
             errorEl.style.display = 'block';
             errorEl.textContent   = 'No character data found in URL. Please generate a character and click "Print / Save as PDF".';

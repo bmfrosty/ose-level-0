@@ -449,10 +449,14 @@ export function renderCharacterSheetHTML(sheet) {
 
     // ── Abilities section ────────────────────────────────────────────────────
     const sec = sheet.abilitiesSection;
-    const hasRacial = sec.racial && sec.racial.length > 0;
+    const FOOTNOTE_PREFIX = '\x00footnote:';
+    const racialItems = (sec.racial || []).filter(a => !a.startsWith(FOOTNOTE_PREFIX));
+    const racialFootnote = (sec.racial || []).find(a => a.startsWith(FOOTNOTE_PREFIX));
+    const hasRacial = racialItems.length > 0;
     const hasClass = sec.class && sec.class.length > 0;
     const racialHTML = hasRacial
-        ? `<ul style='margin: 0; padding-left: 18px;'>${sec.racial.map(a => `<li style='margin-bottom: 2px;'>${a}</li>`).join('')}</ul>`
+        ? `<ul style='margin: 0; padding-left: 18px;'>${racialItems.map(a => `<li style='margin-bottom: 2px;'>${a}</li>`).join('')}</ul>`
+          + (racialFootnote ? `<div style='margin-top:4px;font-size:0.8em;font-style:italic;color:#555;'>${racialFootnote.slice(FOOTNOTE_PREFIX.length)}</div>` : '')
         : '';
     const classHTML = hasClass
         ? `${hasRacial ? `<div style='margin-top: 6px; border-top: 1px solid #ccc; padding-top: 4px;'>` : ''}
@@ -650,10 +654,10 @@ export function renderCharacterSheetHTML(sheet) {
                     ${hasShield ? `<div style='margin-top: 2px;'><strong>Shield:</strong> Yes (+1 AC)</div>` : ''}
                     <div style='margin-top: 2px;'><strong>Helmet:</strong>${hasHelmet ? ' Yes' : ''}</div>
                     ${isDACMode
-                        ? `<div style='margin-top: 2px;'><strong>THAC0:</strong> ${thac0} <span style='color:#666;font-size:0.9em;'>(${thac0} [${fmt(-ws.classAttackBonus)}])</span></div>`
+                        ? `<div style='margin-top: 2px;'><strong>THAC0:</strong> ${thac0} <span style='color:#666;font-size:0.9em;'>(${thac0} [${fmt(ws.classAttackBonus)}])</span></div>`
                         : isDualMode
-                            ? `<div style='margin-top: 2px;'><strong>Class Attack Bonus:</strong> ${fmt(ws.classAttackBonus)} &nbsp;/&nbsp; <strong>THAC0:</strong> ${thac0} <span style='color:#666;font-size:0.9em;'>(${thac0} [${fmt(-ws.classAttackBonus)}])</span></div>`
-                            : `<div style='margin-top: 2px;'><strong>Class Attack Bonus:</strong> ${fmt(ws.classAttackBonus)} <span style='color:#666;font-size:0.9em;'>(${thac0} [${fmt(-ws.classAttackBonus)}])</span></div>`}
+                            ? `<div style='margin-top: 2px;'><strong>Class Attack Bonus:</strong> ${fmt(ws.classAttackBonus)} &nbsp;/&nbsp; <strong>THAC0:</strong> ${thac0} <span style='color:#666;font-size:0.9em;'>(${thac0} [${fmt(ws.classAttackBonus)}])</span></div>`
+                            : `<div style='margin-top: 2px;'><strong>Class Attack Bonus:</strong> ${fmt(ws.classAttackBonus)} <span style='color:#666;font-size:0.9em;'>(${thac0} [${fmt(ws.classAttackBonus)}])</span></div>`}
                     <div style='margin-top: 2px;'><strong>Melee Modifier (STR):</strong> ${fmt(ws.meleeMod)}</div>
                     <div style='margin-top: 2px;'><strong>Ranged Modifier (DEX):</strong> ${fmt(ws.rangedMod)}</div>
                     ${thiefSkillsHTML}
@@ -821,7 +825,7 @@ function renderEditPanel(editState) {
 
     const progModes = [
         { value: 'ose', label: 'OSE Standard' },
-        { value: 'smooth', label: 'Smoothified' },
+        { value: 'smoothprog', label: 'Smoothified' },
         { value: 'll', label: 'Labyrinth Lord' }
     ].map(m => `<label style='display:flex;align-items:center;gap:4px;cursor:pointer;white-space:nowrap;'>` +
         `<input type='radio' name='editProgression' value='${m.value}'${editState.progressionMode === m.value ? ' checked' : ''}> ${m.label}</label>`).join('');
@@ -984,7 +988,7 @@ async function buildPrintUrl(printSheet) {
         window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
     if (printSheet.cp) {
         // Compact v2: apply string lookup-table encoding, then gzip
-        const cp = encodeCompactParams({ ...printSheet.cp, ap: printSheet.autoPrint ? 1 : 0 });
+        const cp = encodeCompactParams(printSheet.cp);
         const encoded = await compressToBase64Url(JSON.stringify(cp));
         return `${base}charactersheet.html?d=${encoded}`;
     }
@@ -1000,9 +1004,8 @@ async function buildPrintUrl(printSheet) {
  * @param {Object} sheet - Normalized sheet object
  * @param {boolean} autoPrint - Whether to auto-open print dialog
  */
-async function openCharacterInPrintTab(sheet, autoPrint = false, backgroundTab = false) {
+async function openCharacterInPrintTab(sheet, backgroundTab = false) {
     const { onEditUpdate, editState, ...printSheet } = sheet;
-    printSheet.autoPrint = autoPrint;
     const url = await buildPrintUrl(printSheet);
     const newWin = window.open(url, '_blank');
     if (backgroundTab && newWin) {
@@ -1038,7 +1041,7 @@ export function displayCharacterSheet(sheet, targetInfo, targetDisplay) {
     const html = renderCharacterSheetHTML(sheet);
 
     if (sheet.openInNewTab) {
-        openCharacterInPrintTab(sheet, sheet.autoPrint, sheet.backgroundTab || false);
+        openCharacterInPrintTab(sheet, sheet.backgroundTab || false);
         if (targetInfo) {
             targetInfo.innerHTML = '<p style="text-align: center;">Character opened in new tab.</p>';
         }
@@ -1050,7 +1053,6 @@ export function displayCharacterSheet(sheet, targetInfo, targetDisplay) {
             const printBarHTML = `
                 <div class='ose-print-bar' style='margin-bottom: 12px; padding: 8px 12px; background: #f0f0f0; border-radius: 4px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; border: 1px solid #ddd;'>
                     <button id='openPrintTabBtn' style='padding: 7px 16px; font-size: 13px; font-weight: bold; background: #4CAF50; color: white; border: none; border-radius: 3px; cursor: pointer;'>🖨 Print / Save as PDF / EDIT</button>
-                    <button id='openPrintTabNowBtn' style='padding: 7px 16px; font-size: 13px; font-weight: bold; background: #1976D2; color: white; border: none; border-radius: 3px; cursor: pointer;'>📄 Open in New Tab for Printing</button>
                     <span style='color: #666; font-size: 0.85em; font-style: italic;'>Tip: Opens character sheet in new tab — print, save, or edit there</span>
                 </div>
             `;
@@ -1058,11 +1060,7 @@ export function displayCharacterSheet(sheet, targetInfo, targetDisplay) {
 
             // Print button — open character in a clean new tab for printing/editing
             const btn = targetInfo.querySelector('#openPrintTabBtn');
-            if (btn) btn.addEventListener('click', () => openCharacterInPrintTab(sheet, false));
-
-            // "Open in New Tab for Printing" button — opens and auto-triggers print dialog
-            const printNowBtn = targetInfo.querySelector('#openPrintTabNowBtn');
-            if (printNowBtn) printNowBtn.addEventListener('click', () => openCharacterInPrintTab(sheet, true));
+            if (btn) btn.addEventListener('click', () => openCharacterInPrintTab(sheet));
 
             // Async: generate inline QR code + make it clickable
             if (sheet.showQRCode !== false) {
@@ -1071,7 +1069,6 @@ export function displayCharacterSheet(sheet, targetInfo, targetDisplay) {
                 if (qrImg) {
                     (async () => {
                         const { onEditUpdate, editState, ...printSheet } = sheet;
-                        printSheet.autoPrint = false;
                         const printUrl = await buildPrintUrl(printSheet);
                         if (qrLink) qrLink.href = printUrl;
                         const dataUrl = await generateQRDataURL(printUrl);

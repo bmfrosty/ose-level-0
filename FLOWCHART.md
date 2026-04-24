@@ -3,7 +3,8 @@
 Solid arrows = static `import`. Dashed arrows = dynamic `await import(...)`.
 
 **Color key:**
-- 🟩 Green = `shared-core.js` (single source of truth, reached via gen-core.js or cs-core.js)
+- 🟩 Green = `shared-core.js` (logic hub — imports and re-exports data from the two purple modules below)
+- 🟪 Purple = data-only leaf modules (`shared-class-info.js`, `shared-race-info.js`)
 - 🟥 Red = gen-ui.js flow only
 - 🟦 Blue = cs-sheet-page.js flow only
 - 🟨 Yellow = `cs-sheet-page.js` node in the generator diagram (not expanded there)
@@ -18,8 +19,9 @@ Solid arrows = static `import`. Dashed arrows = dynamic `await import(...)`.
 
 ```mermaid
 flowchart LR
-    classDef shared fill:#90EE90,stroke:#228B22,color:#000
-    classDef csOnly fill:#6bb5ff,stroke:#0066cc,color:#000
+    classDef shared   fill:#90EE90,stroke:#228B22,color:#000
+    classDef csOnly   fill:#6bb5ff,stroke:#0066cc,color:#000
+    classDef dataLeaf fill:#c084fc,stroke:#7e22ce,color:#000
 
     csjs["cs-sheet-page.js"]
 
@@ -29,12 +31,20 @@ flowchart LR
     %% blue — cs-sheet-page.js flow only
     cscore["cs-core.js"]
 
+    %% purple — data-only leaf modules
+    classinfo["shared-class-info.js"]
+    raceinfo["shared-race-info.js"]
+
     class core shared
     class cscore csOnly
+    class classinfo dataLeaf
+    class raceinfo dataLeaf
 
     %% static imports
     csjs --> cscore
     cscore --> core
+    core --> classinfo
+    core --> raceinfo
 ```
 
 ---
@@ -43,9 +53,10 @@ flowchart LR
 
 ```mermaid
 flowchart LR
-    classDef shared  fill:#90EE90,stroke:#228B22,color:#000
-    classDef genOnly fill:#ff6b6b,stroke:#c00,color:#fff
-    classDef csOnly  fill:#6bb5ff,stroke:#0066cc,color:#000
+    classDef shared   fill:#90EE90,stroke:#228B22,color:#000
+    classDef genOnly  fill:#ff6b6b,stroke:#c00,color:#fff
+    classDef csOnly   fill:#6bb5ff,stroke:#0066cc,color:#000
+    classDef dataLeaf fill:#c084fc,stroke:#7e22ce,color:#000
 
     genui["gen-ui.js"]
 
@@ -58,8 +69,14 @@ flowchart LR
     %% yellow — present but not expanded (root of other diagram)
     csjs["cs-sheet-page.js"]
 
+    %% purple — data-only leaf modules
+    classinfo["shared-class-info.js"]
+    raceinfo["shared-race-info.js"]
+
     class core shared
     class gencore genOnly
+    class classinfo dataLeaf
+    class raceinfo dataLeaf
     style csjs fill:#ffe066,stroke:#b8860b,color:#333
 
     %% gen-ui.js static imports
@@ -67,6 +84,8 @@ flowchart LR
     genui --> csjs
 
     gencore --> core
+    core --> classinfo
+    core --> raceinfo
 ```
 
 ---
@@ -88,9 +107,9 @@ flowchart LR
 | `gen-backgrounds.js` | Merged into `gen-core.js` | 🗑️ Deleted |
 | `gen-utils.js` | Ability score utility re-exports + DOM helpers — merged into `gen-core.js` | 🗑️ Deleted |
 | `gen-equipment.js` | Equipment purchasing logic — merged into `gen-core.js` | 🗑️ Deleted |
-| `shared-class-data-shared.js` | CLASS_INFO and table data — inlined into `shared-core.js` | 🗑️ Deleted |
+| `shared-class-data-shared.js` | CLASS_INFO and table data — CLASS_INFO now in `shared-class-info.js`; tables inlined into `shared-core.js` | 🗑️ Deleted |
 | `shared-class-progression.js` | Class progression helpers — inlined into `shared-core.js` | 🗑️ Deleted |
-| `shared-racial-abilities.js` | RACE_INFO and racial helpers — inlined into `shared-core.js` | 🗑️ Deleted |
+| `shared-racial-abilities.js` | RACE_INFO and racial helpers — RACE_INFO now in `shared-race-info.js`; helpers inlined into `shared-core.js` | 🗑️ Deleted |
 | `shared-race-names.js` | `LEGACY_RACE_NAMES` / `normalizeRaceName` — inlined into `shared-core.js` | 🗑️ Deleted |
 | `shared-abilities.js` | Class/race data + helpers — merged into `shared-core.js` | 🗑️ Deleted |
 | `shared-ability-scores.js` | Ability score math — merged into `shared-core.js` | 🗑️ Deleted |
@@ -109,11 +128,13 @@ flowchart LR
 
 ---
 
-## Leaf Modules (no imports of their own)
+## Foundation Modules
 
 | File | Prefix | Role |
 |------|--------|------|
-| `shared-core.js` | shared | Everything shared: ability score math, class/race data (CLASS_INFO, RACE_INFO), progression helpers, HP rolling, character creation, weapons/armor data, compact-params encoding constants (PROG_CODE, CLS_CODE, RACE_CODE, RCM_CODE, progModeLabel), and all three mode's progression tables (PROGRESSION_TABLES) |
+| `shared-class-info.js` | shared | **Data leaf.** `CLASS_INFO` only — all class definitions with abilities, metadata, and requirements. No imports. |
+| `shared-race-info.js` | shared | **Data leaf.** `RACE_INFO` and `showDescriptionAnyway` only — all race definitions with abilities, modifiers, and class level limits. No imports. |
+| `shared-core.js` | shared | **Logic hub.** Imports `CLASS_INFO` and `RACE_INFO` from the two files above and re-exports them alongside all shared logic: ability score math, progression helpers, HP rolling, character creation, weapons/armor data, and compact-params encoding constants. Never imported directly by either page controller. |
 | `cs-core.js` | cs | All cs-only logic: HTML character sheet renderer, compact params codec, URL codec (gzip/base64), and ability score modifier display (`getModifierEffects`). Re-exports `shared-core.js` so `cs-sheet-page.js` has a single import point. |
 | `gen-core.js` | gen | All gen-only logic: DOM helpers, equipment purchasing, name/bg tables, character generator (Basic + Advanced, levels 0–14). Re-exports `shared-core.js` so `gen-ui.js` has a single import point. |
 | `legacy-utils.js` | — | Archive of orphaned exports — nothing currently imports from this module |

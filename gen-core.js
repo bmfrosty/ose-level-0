@@ -23,6 +23,8 @@ import { WEAPONS, ARMOR, calculateModifier, rollDice,
     getClassFeatures, getBasicModeClassAbilities, CLASS_INFO,
     rollHitPoints as rollHPLeveled, rollStartingGold, calcStartingGold,
     getBackgroundByProfession, getRandomBackground,
+    checkRacialMinimums, getClassRequirements, getPrimeRequisites,
+    CLS_CODE, RACE_CODE, RCM_CODE, PROG_CODE,
 } from './shared-core.js';
 import * as ClassDataShared from './shared-core.js';
 
@@ -139,7 +141,7 @@ export function getAvailableRaces() {
 // ── Internal constants ─────────────────────────────────────────────────────────
 
 const ABILITIES = ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA'];
-const DEMIHUMANS = ['Dwarf_RACE', 'Elf_RACE', 'Halfling_RACE'];
+const DEMIHUMANS = ['Dwarf_RACE', 'Elf_RACE', 'Gnome_RACE', 'Halfling_RACE'];
 
 // ── Internal helpers ───────────────────────────────────────────────────────────
 
@@ -185,240 +187,221 @@ function calcLevel0HP(conModifier, hpMode) {
     return { roll, total: roll + conModifier };
 }
 
-function calcAC(armor, dexMod) {
-    return (armor === 'Chain Mail' ? 14 : 10) + dexMod;
-}
-
 function toMap(results) {
     const m = {};
     results.forEach(r => { m[r.ability] = r.roll; });
     return m;
 }
 
-// ── Main export ────────────────────────────────────────────────────────────────
+// ── Generator ─────────────────────────────────────────────────────────────────
 
 /**
- * Generate a single character. Handles Basic and Advanced modes, levels 0–14.
+ * Generate a character and return a partial v3 compact-params object.
+ * Display-only fields (un, qr, ao, adm, ap) are NOT included — the caller adds them.
  *
- * @param {Object}  opts
- * @param {string}  [opts.mode='basic']               'basic' | 'advanced'
- * @param {number}  [opts.level=0]                    0–14
- * @param {string}  [opts.race='']                    '' | 'Demihuman_RACE' | 'Dwarf_RACE' | ...
- * @param {string}  [opts.className=null]              null (level 0) | 'Fighter_CLASS' | ...
- * @param {boolean} [opts.isGygar=false]               Smoothified/Gygar mode
- * @param {boolean} [opts.humanRacialAbilities=false]  Advanced: enable human racial abilities
- * @param {Object}  [opts.minimums={}]                 { STR, DEX, ... } user per-ability minimums
- * @param {string}  [opts.primeReqMode='user']         'user' | '9' | '13'
- * @param {number}  [opts.hpMode=0]                   0=standard | 1=everyone blessed | 3=reroll 1s/2s
- * @param {Object}  [opts.fixedScores=null]            { STR, DEX, ... } skip reroll loop
- * @param {Object}  [opts.fixedAdjustments=null]       { STR, DEX, ... } override racial adjustments
- * @param {string}  [opts.fixedName='']                Use this name instead of random
- * @param {string|null} [opts.fixedOccupation=null]    Pin to a specific background profession
- * @param {Object}  [opts.classData=null]              Class data module (required for level >= 1)
- * @param {boolean} [opts.includeLevel0HP=false]       Include level-0 HP in level 1+ totals
- * @param {number|null} [opts.fixedStartingGold=null]  Override starting gold
- * @param {number}  [opts.wealthPct=100]               Starting gold % of XP for level 2+
- * @param {number[]|null} [opts.fixedHPRolls=null]     Per-level HP values (level 1+ edit panel)
- * @returns {Object} Character data — see return statement for full shape
+ * v3 score semantics:
+ *   s[i]  = raw rolled score (pre-racial, immutable referee record)
+ *   racial adjustments are derived at render time from r
+ *   sa[i] = extra adjustments beyond racial (omitted when all zero)
+ *   displayed = s[i] + racial[i] + sa[i]
+ *
+ * fixedAdjustments, when present, is the TOTAL delta from the rolled score
+ * (racial already included), so sa[i] = fixedAdjustments[i] - racialMods[i].
  */
-export function generateCharacter(opts = {}) {
+export function generateCharacterV3(opts = {}) {
     const {
-        mode = 'basic',
-        level = 0,
-        race: forcedRace = '',
-        className = null,
-        isGygar = false,
-        humanRacialAbilities = false,
-        minimums = {},
-        primeReqMode = 'user',
-        hpMode = 0,
-        fixedScores = null,
-        fixedAdjustments = null,
-        fixedName = '',
-        fixedOccupation = null,
-        classData = null,
-        includeLevel0HP = false,
-        fixedStartingGold = null,
-        wealthPct = 100,
-        fixedHPRolls = null,
+        mode = 'basic', level = 0, race: rawRace = '', className = null,
+        progressionMode = 'ose', raceClassMode = 'strict',
+        minimums = {}, primeReqMode = 'user', hpMode = 0,
+        includeLevel0HP = false, fixedScores = null, fixedName = '',
+        fixedOccupation = null, fixedStartingGold = null,
+        fixedAdjustments = null, wealthPct = 100, fixedHPRolls = null,
+        noLevel0Equipment = false, classData = null,
     } = opts;
 
     const isAdvanced = mode === 'advanced';
+    const isSmoothprog = progressionMode === 'smoothprog';
+    const humanRacialAbilities = raceClassMode !== 'strict';
 
     const staticRace = (level >= 1 && !isAdvanced && className)
         ? raceFromBasicClass(className)
         : null;
 
-    let results, race, hp0, attempts = 0;
+    // ── Log settings and effective minimums (before rolling) ─────────────────
+    {
+        const _logRace = staticRace
+            ?? (rawRace && rawRace !== 'Demihuman_RACE' ? (rawRace.endsWith('_RACE') ? rawRace : `${rawRace}_RACE`) : '(random)');
+        const _eff = { ...minimums };
+        if (isAdvanced && _logRace !== '(random)') {
+            Object.entries(getRaceInfo(_logRace)?.minimums ?? {}).forEach(([a, v]) => {
+                _eff[a] = Math.max(_eff[a] ?? 0, v);
+            });
+        }
+        if (level >= 1 && isAdvanced && className && _logRace !== '(random)') {
+            const _reqs = CLASS_INFO[className.replace('_CLASS', '')]?.requirements?.[_logRace.replace('_RACE', '')] ?? {};
+            Object.entries(_reqs).forEach(([a, v]) => { _eff[a] = Math.max(_eff[a] ?? 0, v); });
+        }
+        if ((primeReqMode === '9' || primeReqMode === '13') && className) {
+            const _t = parseInt(primeReqMode);
+            getPrimeRequisites(className).forEach(a => { _eff[a] = Math.max(_eff[a] ?? 0, _t); });
+        }
+        const _row = src => ABILITIES.map(a => `${a}:${src[a] ?? 3}`).join('  ');
+        console.log(`[gen] race: ${_logRace} | class: ${className ?? '(none)'} | primeReqMode: ${primeReqMode}`);
+        console.log(`[gen] eff.minimums  ${_row(_eff)}`);
+    }
+
+    // ── Roll loop ──────────────────────────────────────────────────────────────
+
+    let rawArr, race, hp0, attempts = 0;
 
     if (fixedScores) {
-        race = staticRace ?? pickRace(forcedRace);
-        const raw = ABILITIES.map(a => ({
-            ability: a,
-            roll: fixedScores[a] ?? 10,
-            modifier: calculateModifier(fixedScores[a] ?? 10),
-        }));
-        if (fixedAdjustments && Object.values(fixedAdjustments).some(v => v !== 0)) {
-            results = raw.map(r => {
-                const delta = fixedAdjustments[r.ability] || 0;
-                const adjusted = Math.max(3, Math.min(18, r.roll + delta));
-                return {
-                    ability: r.ability,
-                    roll: adjusted,
-                    originalRoll: delta !== 0 ? r.roll : undefined,
-                    modifier: calculateModifier(adjusted),
-                };
-            });
-        } else {
-            results = applyRacialAbilityModifiers(raw, race, isAdvanced, humanRacialAbilities);
-        }
+        race   = staticRace ?? pickRace(rawRace);
+        rawArr = ABILITIES.map(a => fixedScores[a] ?? 10);
         attempts = 1;
-        if (level === 0) {
-            const conMod = results.find(r => r.ability === 'CON').modifier;
-            hp0 = calcLevel0HP(conMod, hpMode);
-            if (hp0.total < 1) hp0 = { roll: 1, total: 1 };
-        }
+        console.log(`[gen] attempt 1: ${ABILITIES.map((a, i) => `${a}:${rawArr[i]}`).join('  ')} → fixed scores`);
     } else {
         for (;;) {
             attempts++;
             const raw = rollAbilityScores();
-            race = staticRace ?? pickRace(forcedRace);
+            race = staticRace ?? pickRace(rawRace);
+            const _s = () => raw.map(r => `${r.ability}:${r.roll}`).join('  ');
 
-            if (isAdvanced && !meetsRacialMinimums(raw, race, true)) continue;
-
-            const adj = applyRacialAbilityModifiers(raw, race, isAdvanced, humanRacialAbilities);
+            if (isAdvanced && !meetsRacialMinimums(raw, race, true)) {
+                console.log(`[gen] attempt ${attempts}: ${_s()} → ✗ racial minimums`);
+                continue;
+            }
 
             if (level >= 1 && isAdvanced && className) {
                 const bareClass = className.replace('_CLASS', '');
                 const bareRace  = race.replace('_RACE', '');
                 const reqs = CLASS_INFO[bareClass]?.requirements?.[bareRace] ?? {};
                 const rawMap = toMap(raw);
-                if (Object.entries(reqs).some(([ab, min]) => (rawMap[ab] ?? 0) < min)) continue;
+                if (Object.entries(reqs).some(([ab, min]) => (rawMap[ab] ?? 0) < min)) {
+                    console.log(`[gen] attempt ${attempts}: ${_s()} → ✗ class requirements`);
+                    continue;
+                }
             }
 
-            if (!passesFilters(raw, { minimums, primeReqMode })) continue;
+            if (!passesFilters(raw, { minimums, primeReqMode })) {
+                console.log(`[gen] attempt ${attempts}: ${_s()} → ✗ filters`);
+                continue;
+            }
 
             if (level === 0) {
-                const conMod = adj.find(r => r.ability === 'CON').modifier;
-                hp0 = calcLevel0HP(conMod, hpMode);
-                if (hp0.total < 1) continue;
+                // CON mod comes from racial-adjusted scores for HP purposes
+                const adjRaw = applyRacialAbilityModifiers(raw, race, isAdvanced, humanRacialAbilities);
+                if (fixedAdjustments) {
+                    const adjCon = Math.max(3, Math.min(18, raw.find(r => r.ability === 'CON').roll + (fixedAdjustments.CON ?? 0)));
+                    hp0 = calcLevel0HP(calculateModifier(adjCon), hpMode);
+                } else {
+                    hp0 = calcLevel0HP(adjRaw.find(r => r.ability === 'CON').modifier, hpMode);
+                }
+                if (hp0.total < 1) {
+                    console.log(`[gen] attempt ${attempts}: ${_s()} → ✗ HP < 1`);
+                    continue;
+                }
             }
 
-            results = adj;
+            console.log(`[gen] attempt ${attempts}: ${_s()} → ✓ accepted`);
+            rawArr = raw.map(r => r.roll);
             break;
         }
     }
 
-    const abilityScores = toMap(results);
-    const conScore = results.find(r => r.ability === 'CON').roll;
-    const conMod   = results.find(r => r.ability === 'CON').modifier;
-    const dexMod   = results.find(r => r.ability === 'DEX').modifier;
+    // ── Derive adjusted scores (used internally for HP/progression) ────────────
+
+    const racialMods = isAdvanced
+        ? { ...(getRaceInfo(race)?.abilityModifiers ?? {}) }
+        : {};
+    if (isAdvanced && race === 'Human_RACE' && !humanRacialAbilities) {
+        Object.keys(racialMods).forEach(k => { racialMods[k] = 0; });
+    }
+
+    const adjArr = ABILITIES.map((a, i) => {
+        const base = rawArr[i];
+        if (fixedAdjustments) return Math.max(3, Math.min(18, base + (fixedAdjustments[a] ?? 0)));
+        return Math.max(3, Math.min(18, base + (racialMods[a] ?? 0)));
+    });
+
+    const conMod = calculateModifier(adjArr[ABILITIES.indexOf('CON')]);
+
+    // ── Level 0 HP (fixed-scores path) ───────────────────────────────────────
+
+    if (fixedScores && level === 0) {
+        hp0 = calcLevel0HP(conMod, hpMode);
+        if (hp0.total < 1) hp0 = { roll: hp0.roll, total: 1 };
+    }
+
+    // ── sa (post-gen adjustments beyond racial) ────────────────────────────────
+
+    let saArr = null;
+    if (fixedAdjustments && Object.values(fixedAdjustments).some(v => v !== 0)) {
+        const sa = ABILITIES.map(a => (fixedAdjustments[a] ?? 0) - (racialMods[a] ?? 0));
+        if (sa.some(v => v !== 0)) saArr = sa;
+    }
+
+    // ── Common cp fields ──────────────────────────────────────────────────────
+
+    const raceCode = getRaceInfo(race)?.code ?? 'HU';
+    const mCode    = isAdvanced ? 'A' : 'B';
+    const pCode    = PROG_CODE[progressionMode] ?? 'O';
+    const rcmCode  = RCM_CODE[raceClassMode]  ?? 'ST';
 
     const raceStem = race.replace('_RACE', '');
     const raceCap  = raceStem.charAt(0).toUpperCase() + raceStem.slice(1).toLowerCase();
     const name     = fixedName || getRandomName(raceCap);
 
-    const racialAbilities = getRaceAbilitiesAtLevel(race, level, mode, humanRacialAbilities);
+    // ── Level 0 ───────────────────────────────────────────────────────────────
 
     if (level === 0) {
         const background = fixedOccupation
             ? (getBackgroundByProfession(fixedOccupation) || getRandomBackground(hp0.total))
             : getRandomBackground(hp0.total);
-        const armorClass   = calcAC(background.armor, dexMod);
-        const startingGold = rollDice(3, 6);
-        const savingThrows = calculateSavingThrows(0, race, conScore, isAdvanced, isGygar);
-        const attackBonus  = calculateAttackBonus(0, race, isAdvanced, isGygar);
-
-        console.log('\n=== Level 0 Character Generation ===');
-        console.log(`Race: ${race}, Mode: ${mode}, Attempts: ${attempts}`);
-        console.log('\nAbility Scores:');
-        results.forEach(r => console.log(`  ${r.ability}: ${r.roll} (${r.modifier >= 0 ? '+' : ''}${r.modifier})`));
-        console.log('\nHP: roll=' + hp0.roll + ', total=' + hp0.total);
-        console.log('\nBackground: ' + background.profession + (background.armor ? ` (armor: ${background.armor})` : ''));
-        console.log('AC: ' + armorClass);
-        console.log('Starting Gold: ' + startingGold + ' gp');
-        console.log('\nSaving Throws:');
-        console.log(`  Death/Poison: ${savingThrows.death}`);
-        console.log(`  Wands: ${savingThrows.wands}`);
-        console.log(`  Paralysis/Petrify: ${savingThrows.paralysis}`);
-        console.log(`  Breath Attacks: ${savingThrows.breath}`);
-        console.log(`  Spells/Rods/Staves: ${savingThrows.spells}`);
-        console.log('\nAttack Bonus: ' + attackBonus);
-        console.log('\nRacial Abilities:');
-        racialAbilities.forEach(a => console.log(`  - ${a.name}: ${a.description}`));
-
+        const startingGold = fixedStartingGold !== null ? fixedStartingGold : rollDice(3, 6);
         return {
-            results, abilityScores,
-            total: results.reduce((s, r) => s + r.modifier, 0),
-            race, raceCode: getRaceInfo(race)?.code ?? 'HU',
-            name, level: 0, mode,
-            hitPoints: hp0,
-            armorClass, savingThrows, attackBonus,
-            racialAbilities, classAbilities: [],
-            background, startingGold,
-            attempts,
+            v: 3, m: mCode, p: pCode, r: raceCode, l: 0,
+            s: rawArr, ...(saArr ? { sa: saArr } : {}),
+            h: hp0.total, hr: [hp0.roll], hd: [4],
+            n: name, bg: background?.profession ?? '',
+            g: startingGold, rr: attempts,
+            rcm: rcmCode,
+            ...(noLevel0Equipment ? { nl0: 1 } : {}),
         };
     }
 
-    if (!classData) {
-        throw new Error('generateCharacter: opts.classData is required for level >= 1');
-    }
+    // ── Level 1+ ─────────────────────────────────────────────────────────────
+
+    if (!classData) throw new Error('generateCharacterV3: classData required for level >= 1');
 
     const hpResult = rollHPLeveled({
         className, level, conModifier: conMod, classData,
         includeLevel0HP, hpMode, fixedRolls: fixedHPRolls,
     });
 
-    const progressionData = getClassProgressionData({ className, level, abilityScores, classData });
+    const background = fixedOccupation
+        ? (getBackgroundByProfession(fixedOccupation) || getRandomBackground(hpResult.backgroundHP))
+        : getRandomBackground(hpResult.backgroundHP);
 
-    const savingThrows = applyRacialSaveModifiers(
-        { ...progressionData.savingThrows },
-        race,
-        { CON: conScore }
-    );
-
-    const attackBonus = progressionData.attackBonus;
-    const features = getClassFeatures({ className, level, classData, ClassDataShared });
-
-    const BASIC_DEMIHUMAN_CLASSES = ['Dwarf_CLASS', 'Elf_CLASS', 'Halfling_CLASS', 'Gnome_CLASS'];
-    const classAbilities = (!isAdvanced && BASIC_DEMIHUMAN_CLASSES.includes(className))
-        ? getBasicModeClassAbilities(className)
-        : (features.classAbilities || []);
+    const adjScores = Object.fromEntries(ABILITIES.map((a, i) => [a, adjArr[i]]));
+    const progressionData = getClassProgressionData({ className, level, abilityScores: adjScores, classData });
 
     let startingGold;
-    if (fixedStartingGold !== null) {
-        startingGold = fixedStartingGold;
-    } else if (level === 1) {
-        startingGold = rollStartingGold(isGygar ? 'smooth' : 'ose');
-    } else {
-        startingGold = calcStartingGold(progressionData.xpForCurrentLevel, wealthPct);
-    }
+    if (fixedStartingGold !== null)   { startingGold = fixedStartingGold; }
+    else if (level === 1)              { startingGold = rollStartingGold(isSmoothprog ? 'smoothprog' : 'ose'); }
+    else                               { startingGold = calcStartingGold(progressionData.xpForCurrentLevel, wealthPct); }
 
-    const baseScores = fixedScores
-        ? (fixedAdjustments
-            ? ABILITIES.reduce((o, a) => { o[a] = fixedScores[a] ?? 10; return o; }, {})
-            : abilityScores)
-        : toMap(results.map(r => ({ ability: r.ability, roll: r.originalRoll ?? r.roll })));
+    const clsCode = CLS_CODE[className] ?? 'FI';
 
     return {
-        results, abilityScores, baseScores,
-        total: results.reduce((s, r) => s + r.modifier, 0),
-        race, raceCode: getRaceInfo(race)?.code ?? 'HU',
-        name, level, mode, className,
-        hp: hpResult.max, hpRolls: hpResult.rolls, hpDice: hpResult.dice,
-        savingThrows, attackBonus, armorClass: 10,
-        xp: {
-            current: progressionData.currentXP,
-            forCurrentLevel: progressionData.xpForCurrentLevel,
-            forNextLevel: progressionData.xpForNextLevel,
-            toNextLevel: progressionData.xpToNextLevel,
-            bonus: progressionData.xpBonus,
-        },
-        spellSlots: features.spellSlots,
-        thiefSkills: features.thiefSkills,
-        turnUndead: features.turnUndead,
-        classAbilities, racialAbilities, startingGold,
-        attempts, hpMode,
+        v: 3, m: mCode, p: pCode, r: raceCode, c: clsCode, l: level,
+        s: rawArr, ...(saArr ? { sa: saArr } : {}),
+        h: hpResult.max, hr: hpResult.rolls, hd: hpResult.dice,
+        il: includeLevel0HP ? 1 : 0,
+        n: name, bg: background?.profession ?? '',
+        g: startingGold, rr: attempts,
+        rcm: rcmCode,
+        ...(noLevel0Equipment ? { nl0: 1 } : {}),
+        ...(hpMode > 0 ? { hm: hpMode } : {}),
     };
 }
 

@@ -941,8 +941,8 @@ Functions and helpers to delete outright after the rewrite:
    Verify `gen-core.js` still works by re-exporting from shared.
 2. ✅ Update `expandCompactV2()` to call `purchaseEquipment()` and `getBackgroundByProfession()`
    for equipment derivation. Verify the sheet renders correctly for existing v2 URLs.
-3. Write `generateCharacterV3()` in `gen-core.js` returning a v3 compact params object.
-   Wire it up in `gen-ui.js` alongside the old generator to test in parallel.
+3. ✅ Write `generateCharacterV3()` in `gen-core.js` returning a v3 compact params object.
+   Rewrite `runGenerate()` and `generateZeroLevel()` in `gen-ui.js` to call it directly.
 4. ✅ Fix Blessed-at-L0 bug and pre-racial requirements check in the new generator.
 5. ✅ Add v2→v3 dispatch to `initCharacterSheet()`.
 6. Remove old `generateCharacter()`, `rollAbilitiesAdvanced()`, `createCharacterAdvanced()`,
@@ -1005,16 +1005,44 @@ also checked against pre-racial rolled scores.
 `initCharacterSheet()` now accepts both `v:2` and `v:3`. Both go through `decodeCompactParams`
 (which decodes `bg`, `ar`, `w`, `it` lookup-table codes) and `renderFromCompactParams`.
 
-#### ✅ gen-ui.js updated to emit v3 compact params
+#### ✅ Step 3 — `generateCharacterV3()` written and wired into `gen-ui.js`
 
-`displayBasicCharacter`, `displayAdvancedCharacter`, and `displayZeroLevelCharacter` all
-updated:
-- `v:2` → `v:3`
-- `g`: changed from `purchased.goldRemaining` / `char.armorClass` to `character.startingGold` /
-  `char.startingGold` (the generation-time gold input, not the post-purchase remainder)
-- Removed: `ar`, `sh`, `w`, `it`, `ac` (equipment), `sv` (L0 saves)
-- Added `nl0:1` flag when `noLevel0Equipment` was active (so sheet renderer passes null bg to
-  `purchaseEquipment`)
+`generateCharacterV3(opts)` added to `gen-core.js` after `generateCharacter()`. Returns a
+v3 compact params object directly. Key behaviours:
+
+- `s` stores raw rolled scores (immutable). Racial adjustments are derived at render time
+  from `r`. No `bs` field.
+- `sa` (omitted if all zero) holds post-gen adjustments beyond racial (used when
+  `fixedAdjustments` are in effect at generation time).
+- Roll loop checks racial minimums and class requirements against raw scores only.
+- Level 0 HP computation is inside the roll loop for the random-scores path, so a character
+  with hp0 < 1 retries immediately. `hpMode=1` (Blessed) never applies at L0.
+- `fixedScores` path computes hp0 after the loop and clamps to 1 minimum.
+- Human racial mods (+1 CON/+1 CHA) are zeroed for Advanced Human when `rcm='strict'`.
+- L1+ delegates to `rollHPLeveled` (= `rollHitPoints` from `shared-core.js`); uses
+  `hpResult.backgroundHP` (not `hp0`) for background selection.
+
+`runGenerate()` and `generateZeroLevel()` in `gen-ui.js` rewritten to call
+`generateCharacterV3()` directly. The old bridge code (manual v3 cp construction from
+the legacy character object) is removed from these two paths.
+
+`expandCompactV2()` in `cs-sheet-page.js` updated for v3 score semantics:
+- `baseArr = cp.s` (raw rolled), `adjArr = raw + racial + sa` derived at render time.
+- Racial mods come from `getRaceInfo(race).abilityModifiers` for Advanced mode.
+- Human racial mods gated on `race !== 'Human_RACE' || rcm !== 'strict'`.
+- `sa3 = cp.sa || [0,0,0,0,0,0]`.
+- v2 path unchanged: `adjArr = cp.s`, `baseArr = cp.bs || adjArr`.
+
+**Bug fixed (this session):** `DEMIHUMANS` constant in `gen-core.js` was missing `Gnome_RACE`,
+causing `raceFromBasicClass('Gnome_CLASS')` to return `Human_RACE`. Fixed by adding
+`'Gnome_RACE'` to the array.
+
+**New features added (outside plan scope):**
+- XP-based level generation: "By XP" radio + number input in generator.html; `getEffectiveLevel()`
+  and `updateXPPreview()` helpers in gen-ui.js; `effectiveLevel` computed via
+  `classData.getLevelFromXP(selectedClass, xpAmount)` in `runGenerate()`.
+- Wealth % UI redesigned: radio pair (% input vs. roll-as-level-1) replaces the old 25/50/75/100%
+  radio buttons.
 
 ---
 
@@ -1022,41 +1050,32 @@ updated:
 
 The following items from the plan are not yet implemented:
 
-**Score semantics (v3 spec, not yet done):**
-The v3 spec says `s` stores rolled (pre-racial) scores and racial adjustments are derived from `r`.
-Currently `s` still stores post-racial adjusted scores (v2 behavior), and `bs` is used for
-pre-racial scores when they differ. The `sa` field is not used. `expandCompactV2()` does not
-yet apply racial adjustments from `r` for v3 — it still reads `cp.s` as the displayed scores.
-This means the score semantics change (and the `bs` retirement) is deferred.
-
-**`bl`→`rcm` unification:**
-`bl` is still emitted in v3 compact params from `gen-ui.js`. The plan calls for retiring `bl`
-and unifying all race/class mode encoding under `rcm` for all modes. Deferred.
+**~~`bl`→`rcm` unification~~: ✅ done.**
+`generateCharacterV3` now emits `rcm` unconditionally for all modes. `bl` removed from
+`fullCp` in `runGenerate` and `generateZeroLevel`. Renderer switched from `cp.bl` to
+`rcm !== 'strict'`. `buildGeneratorURL` workaround removed. Remaining `bl` refs in gen-ui.js
+are in dead code (`displayBasicCharacter`, `displayZeroLevelCharacter`) pending Step 6.
 
 **`ap` removal:**
 `ap` is still emitted in v3. The plan calls for removing it and using a separate `?print=1`
 URL parameter. Deferred.
 
-**`generateCharacterV3()` (Step 3):**
-The old `generateCharacter()` in `gen-core.js` is still in use. A new `generateCharacterV3()`
-returning a v3 compact params object directly has not been written. `gen-ui.js` currently
-bridges the old generator output into v3 cp format manually. This bridge works for now but
-should be replaced by a proper `generateCharacterV3()`.
-
 **Deletion list (Step 6):**
-`generateCharacter()`, `raceFromBasicClass()`, `pickRace()`, `rollAbilityScores()`,
-`passesFilters()`, `calcLevel0HP()`, `calcAC()`, `toMap()`, and the
-`applyRacialAbilityModifiers` calls in the generator are not yet deleted. These remain
-until `generateCharacterV3()` is written and wired in.
+In `gen-core.js`: `generateCharacter()` (old), `raceFromBasicClass()`, `pickRace()`,
+`rollAbilityScores()`, `passesFilters()`, `calcLevel0HP()`, `calcAC()`, `toMap()`.
+In `gen-ui.js`: `rollAbilitiesAdvanced()`, `createCharacterAdvanced()`, `resolveScores()`,
+`assembleCharacter()`, `displayBasicCharacter()`, `displayAdvancedCharacter()`,
+`displayZeroLevelCharacter()`, and the now-unused `generateCharacter as generateCharacterCore`
+import. These remain until the new paths are fully verified by browser testing.
 
 **`expandCompactV2()` rename (Step 7):**
 Not yet renamed to `expandCompactV3()`.
 
 **v2→v3 upgrade path (full):**
-`initCharacterSheet()` currently dispatches to the same rendering path for both v2 and v3.
-The full upgrade (recast scores, translate `bl`→`rcm`, drop `sv`/`ap`/`bs`/equipment arrays)
-is not yet run when encountering a v2 URL. Old v2 URLs continue to work because `expandCompactV2`
-still reads the v2 stored fields when `cp.v !== 3`.
+`initCharacterSheet()` dispatches to the same rendering path for v2 and v3. The full
+in-place upgrade (recast scores, translate `bl`→`rcm`, drop `sv`/`ap`/`bs`/equipment
+arrays) is not yet run when encountering a v2 URL. Old v2 URLs continue to work because
+`expandCompactV2` still reads v2 stored fields when `cp.v !== 3`.
 
 ---
 
