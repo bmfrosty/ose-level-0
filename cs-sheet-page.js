@@ -44,7 +44,7 @@ const PROG_TO_CODE = { ose:'O', smoothprog:'S', ll:'L' };
  * Language entries are then removed from classAbilities.
  * Mutates both arrays in place.
  *
- * @param {string[]} racialAbilities - Already-formatted strings (e.g. "Languages: Alignment, Common, Elvish, ...")
+ * @param {string[]} racialAbilities - Already-formatted strings (e.g. "<strong>Languages</strong>: Alignment, Common, Elvish, ...")
  * @param {Object[]} classAbilities  - Raw ability objects; may include { name:'Languages', languages:[...] }
  */
 export function mergeAdvancedLanguages(racialAbilities, classAbilities) {
@@ -53,14 +53,15 @@ export function mergeAdvancedLanguages(racialAbilities, classAbilities) {
 
     const classLangs = classLangEntries.flatMap(a => a.languages);
 
-    const racialLangIdx = racialAbilities.findIndex(s => typeof s === 'string' && s.startsWith('Languages:'));
+    const LANG_PREFIX = '<strong>Languages</strong>:';
+    const racialLangIdx = racialAbilities.findIndex(s => typeof s === 'string' && s.startsWith(LANG_PREFIX));
     let racialLangs = [];
     if (racialLangIdx !== -1) {
-        racialLangs = racialAbilities[racialLangIdx].slice('Languages:'.length).trim().split(',').map(s => s.trim()).filter(Boolean);
+        racialLangs = racialAbilities[racialLangIdx].slice(LANG_PREFIX.length).trim().split(',').map(s => s.trim()).filter(Boolean);
     }
 
     const merged = [...new Set([...racialLangs, ...classLangs])].sort((a, b) => a.localeCompare(b));
-    const newEntry = `Languages: ${merged.join(', ')}`;
+    const newEntry = `${LANG_PREFIX} ${merged.join(', ')}`;
 
     if (racialLangIdx !== -1) {
         racialAbilities[racialLangIdx] = newEntry;
@@ -285,7 +286,7 @@ export async function expandCompactV2(cp, precomp = {}, { silent = false } = {})
             const progData = precomp.progData ?? getClassProgressionData({ className: cls, level, abilityScores: adj, classData: classData, silent });
             const features = precomp.features ?? getClassFeatures({ className: cls, level, classData: classData, ClassDataShared });
             const humanAbilitiesEnabled = rcm !== 'strict';
-            const racialAbilities = getAdvancedModeRacialAbilities(race, { isAdvanced: true, humanRacialAbilities: humanAbilitiesEnabled });
+            const racialAbilities = getAdvancedModeRacialAbilities(race, { isAdvanced: true, humanRacialAbilities: humanAbilitiesEnabled, level });
             mergeAdvancedLanguages(racialAbilities, features.classAbilities);
             character = createCharacter({
                 level, className: cls, mode: prog === 'smoothprog' ? 'Smoothified' : 'Normal',
@@ -298,6 +299,11 @@ export async function expandCompactV2(cp, precomp = {}, { silent = false } = {})
             character.adjustedScores    = adj;
             character.racialAdjustments = getRaceInfo(race)?.abilityModifiers ?? {};
             character.racialAbilities   = racialAbilities;
+        }
+        const logable = (character.racialAbilities || []).filter(a => !a.startsWith('\x00footnote:'));
+        if (logable.length) {
+            console.log('\nRacial Abilities:');
+            logable.forEach(a => console.log(`  - ${a}`));
         }
         raceDisplay = getRaceDisplayName(race);
         clsDisplay  = getClassDisplayName(cls);

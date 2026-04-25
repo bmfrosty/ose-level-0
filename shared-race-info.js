@@ -73,7 +73,7 @@ export const RACE_INFO = {
       {
         name: "Blessed",
         description: "Roll HP twice at each level, take the best result.",
-        // hideDescription: false,
+        hideDescription: true,
         basicAvailableAt: 1,
         basicAvailableThrough: 14,
         advancedAvailableAt: 1,   // governs HP rolling at level 1, not level 0
@@ -86,7 +86,7 @@ export const RACE_INFO = {
       {
         name: "Decisiveness",
         description: "Act first on tied initiative; +1 to individual initiative rolls.",
-        // hideDescription: false,
+        hideDescription: true,
         basicAvailableAt: 0,
         basicAvailableThrough: 14,
         advancedAvailableAt: 0,
@@ -99,7 +99,7 @@ export const RACE_INFO = {
       {
         name: "Leadership",
         description: "All retainers and mercenaries gain +1 to loyalty and morale.",
-        // hideDescription: false,
+        hideDescription: true,
         basicAvailableAt: 0,
         basicAvailableThrough: 14,
         advancedAvailableAt: 0,
@@ -143,7 +143,7 @@ export const RACE_INFO = {
       {
         name: "Combat",
         description: "Dwarves use any armour but only small or normal sized weapons; no longbows or two-handed swords.",
-        // hideDescription: false,
+        hideDescription: false,
         basicAvailableAt: 0,
         basicAvailableThrough: 0,
         advancedAvailableAt: 0,
@@ -156,7 +156,7 @@ export const RACE_INFO = {
       {
         name: "Detect Construction Tricks",
         description: "As expert miners, 2-in-6 chance to detect new construction, sliding walls, or sloping passages.",
-        // hideDescription: false,
+        hideDescription: false,
         basicAvailableAt: 0,
         basicAvailableThrough: 0,
         advancedAvailableAt: 0,
@@ -169,7 +169,7 @@ export const RACE_INFO = {
       {
         name: "Detect Room Traps",
         description: "Construction expertise gives a 2-in-6 chance to detect non-magical room traps when searching.",
-        // hideDescription: false,
+        hideDescription: false,
         basicAvailableAt: 0,
         basicAvailableThrough: 0,
         advancedAvailableAt: 0,
@@ -195,7 +195,7 @@ export const RACE_INFO = {
       {
         name: "Listening at Doors",
         description: "Dwarves have a 2-in-6 chance of hearing noises.",
-        // hideDescription: false,
+        hideDescription: false,
         basicAvailableAt: 0,
         basicAvailableThrough: 0,
         advancedAvailableAt: 0,
@@ -208,7 +208,7 @@ export const RACE_INFO = {
       {
         name: "Resilience",
         description: "CON-based bonus to saves vs poison, spells, and wands/rods/staves (+0/+2/+3/+4/+5).",
-        // hideDescription: false,
+        hideDescription: true,
         basicAvailableAt: 0,
         basicAvailableThrough: 0,
         advancedAvailableAt: 0,
@@ -258,7 +258,7 @@ export const RACE_INFO = {
       {
         name: "Detect Secret Doors",
         description: "Elves have a 2-in-6 chance of locating secret or hidden doors when searching.",
-        // hideDescription: false,
+        hideDescription: false,
         basicAvailableAt: 0,
         basicAvailableThrough: 0,
         advancedAvailableAt: 0,
@@ -271,7 +271,7 @@ export const RACE_INFO = {
       {
         name: "Immunity to Ghoul Paralysis",
         description: "Elves are immune to the paralysing effect of ghouls' attacks.",
-        // hideDescription: false,
+        hideDescription: false,
         basicAvailableAt: 0,
         basicAvailableThrough: 0,
         advancedAvailableAt: 0,
@@ -284,7 +284,7 @@ export const RACE_INFO = {
       {
         name: "Infravision",
         description: "Elves have infravision to 60'.",
-        // hideDescription: false,
+        hideDescription: false,
         basicAvailableAt: 0,
         basicAvailableThrough: 0,
         advancedAvailableAt: 0,
@@ -297,7 +297,7 @@ export const RACE_INFO = {
       {
         name: "Listening at Doors",
         description: "Elves have a 2-in-6 chance of hearing noises.",
-        // hideDescription: false,
+        hideDescription: false,
         basicAvailableAt: 0,
         basicAvailableThrough: 0,
         advancedAvailableAt: 0,
@@ -332,7 +332,7 @@ export const RACE_INFO = {
       {
         name: "Languages",
         languages: ["Alignment", "Common", "Gnomish", "Dwarvish", "Kobold", "Burrowing mammals"],
-        // hideDescription: false,
+        hideDescription: true,
         basicAvailableAt: 0,
         basicAvailableThrough: 0,
         advancedAvailableAt: 0,
@@ -343,7 +343,7 @@ export const RACE_INFO = {
       {
         name: "Combat",
         description: "Armour must be tailored to size; only weapons appropriate to stature; no longbows or two-handed swords.",
-        // hideDescription: false,
+        hideDescription: true,
         basicAvailableAt: 0,
         basicAvailableThrough: 0,
         advancedAvailableAt: 0,
@@ -355,7 +355,7 @@ export const RACE_INFO = {
       {
         name: "Defensive Bonus",
         description: "+2 bonus to Armour Class when attacked by large opponents (greater than human-sized).",
-        // hideDescription: false,
+        hideDescription: true,
         basicAvailableAt: 0,
         basicAvailableThrough: 0,
         advancedAvailableAt: 0,
@@ -367,7 +367,7 @@ export const RACE_INFO = {
       {
         name: "Detect Construction Tricks",
         description: "2-in-6 chance to detect new construction, sliding walls, or sloping passages when searching.",
-        // hideDescription: false,
+        hideDescription: true,
         basicAvailableAt: 0,
         basicAvailableThrough: 0,
         advancedAvailableAt: 0,
@@ -379,7 +379,7 @@ export const RACE_INFO = {
       {
         name: "Infravision",
         description: "90'",
-        // hideDescription: false,
+        hideDescription: true,
         basicAvailableAt: 0,
         basicAvailableThrough: 0,
         advancedAvailableAt: 0,
@@ -390,7 +390,7 @@ export const RACE_INFO = {
       {
         name: "Listening at Doors",
         description: "2-in-6 chance of hearing noises.",
-        // hideDescription: false,
+        hideDescription: true,
         basicAvailableAt: 0,
         basicAvailableThrough: 0,
         advancedAvailableAt: 0,
@@ -401,7 +401,7 @@ export const RACE_INFO = {
       {
         name: "Magic Resistance",
         description: "CON-based bonus to saves vs spells and wands/rods/staves (+0/+2/+3/+4/+5).",
-        // hideDescription: false,
+        hideDescription: true,
         basicAvailableAt: 0,
         basicAvailableThrough: 0,
         advancedAvailableAt: 0,
@@ -417,7 +417,7 @@ export const RACE_INFO = {
       {
         name: "Speak with Burrowing Mammals",
         description: "Know and speak the secret language of burrowing mammals (e.g. badgers, moles).",
-        // hideDescription: false,
+        hideDescription: true,
         basicAvailableAt: 0,
         basicAvailableThrough: 0,
         advancedAvailableAt: 0,
@@ -448,7 +448,7 @@ export const RACE_INFO = {
       {
         name: "Languages",
         languages: ["Alignment", "Common", "Halfling"],
-        // hideDescription: false,
+        hideDescription: false,
         basicAvailableAt: 0,
         basicAvailableThrough: 0,
         advancedAvailableAt: 0,
@@ -460,7 +460,7 @@ export const RACE_INFO = {
       {
         name: "Combat",
         description: "Halflings use any armour or weapon sized for them; no longbows or two-handed swords.",
-        // hideDescription: false,
+        hideDescription: false,
         basicAvailableAt: 0,
         basicAvailableThrough: 0,
         advancedAvailableAt: 0,
@@ -473,7 +473,7 @@ export const RACE_INFO = {
       {
         name: "Defensive Bonus",
         description: "+2 Armour Class bonus when attacked by large opponents (greater than human-sized).",
-        // hideDescription: false,
+        hideDescription: false,
         basicAvailableAt: 0,
         basicAvailableThrough: 0,
         advancedAvailableAt: 0,
@@ -486,7 +486,7 @@ export const RACE_INFO = {
       {
         name: "Initiative Bonus",
         description: "If using the optional rule for individual initiative, halflings get a bonus of +1 to initiative rolls.",
-        // hideDescription: false,
+        hideDescription: false,
         basicAvailableAt: 0,
         basicAvailableThrough: 0,
         advancedAvailableAt: 0,
@@ -499,7 +499,7 @@ export const RACE_INFO = {
       {
         name: "Listening at Doors",
         description: "Halflings have a 2-in-6 chance of hearing noises.",
-        // hideDescription: false,
+        hideDescription: false,
         basicAvailableAt: 0,
         basicAvailableThrough: 0,
         advancedAvailableAt: 0,
@@ -512,7 +512,7 @@ export const RACE_INFO = {
       {
         name: "Missile Attack Bonus",
         description: "Halflings' accuracy grants them a +1 bonus to attack rolls with all missile weapons.",
-        // hideDescription: false,
+        hideDescription: false,
         basicAvailableAt: 0,
         basicAvailableThrough: 0,
         advancedAvailableAt: 0,
@@ -525,7 +525,7 @@ export const RACE_INFO = {
       {
         name: "Resilience",
         description: "CON-based bonus to saves vs poison, spells, and wands/rods/staves (+0/+2/+3/+4/+5).",
-        // hideDescription: false,
+        hideDescription: true,
         basicAvailableAt: 0,
         basicAvailableThrough: 0,
         advancedAvailableAt: 0,

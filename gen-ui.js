@@ -316,10 +316,10 @@ function initializeZeroLevelRaceSelection() {
             list.forEach(bg => all.push({ profession: bg.profession, hp: parseInt(hp) }));
         }
         all.sort((a, b) => a.profession.localeCompare(b.profession));
-        all.forEach(({ profession }) => {
+        all.forEach(({ profession, hp }) => {
             const opt = document.createElement('option');
             opt.value = profession;
-            opt.textContent = profession;
+            opt.textContent = `${profession} (HP ${hp})`;
             sel.appendChild(opt);
         });
     }
@@ -556,6 +556,7 @@ async function runGenerate() {
         fixedScores: fixedScoresForGen,
         fixedName: useFixedScores ? (document.getElementById('characterName')?.value.trim() || '') : '',
         fixedAdjustments: _fixedAdj,
+        fixedOccupation: document.getElementById('zeroOccupation')?.value || null,
         wealthPct, fixedHPRolls, noLevel0Equipment, classData,
         fixedStartingGold: _goldOverride,
     });

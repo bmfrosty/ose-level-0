@@ -694,6 +694,7 @@ export function getRaceAbilitiesAtLevel(race, level, mode = 'advanced', humanRac
  * @param {Object} [options] - Optional overrides (bypass DOM reading)
  * @param {boolean} [options.isAdvanced] - Whether Advanced mode is active
  * @param {boolean} [options.humanRacialAbilities] - Whether human racial abilities are enabled
+ * @param {number}  [options.level] - Character level (default 0); abilities with advancedAvailableAt > level are excluded
  * @returns {string[]} Array of racial ability descriptions
  */
 export function getAdvancedModeRacialAbilities(race, options = {}) {
@@ -708,24 +709,21 @@ export function getAdvancedModeRacialAbilities(race, options = {}) {
         }
     }
 
-    // Level 0 is the level for race selection; show all abilities available at level 0.
-    const abilities = getRaceAbilitiesAtLevel(race, 0, 'advanced', humanRacialAbilities);
+    const abilities = getRaceAbilitiesAtLevel(race, options.level ?? 0, 'advanced', humanRacialAbilities);
 
-    let needsSourceFootnote = false;
     const formatted = abilities.map(a => {
         if (a.languages) {
-            return `${a.name}: ${a.languages.join(', ')}`;
+            return `<strong>${a.name}</strong>: ${a.languages.join(', ')}`;
         }
         if (a.hideDescription && !showDescriptionAnyway) {
-            needsSourceFootnote = true;
-            return `${a.name}*`;
+            return a.includeName ? `<strong>${a.name}</strong>*` : `${a.name}*`;
         }
         if (a.includeName) {
-            return `${a.name}: ${a.description}`;
+            return `<strong>${a.name}</strong>: ${a.description}`;
         }
         return a.description;
     });
-    if (needsSourceFootnote) {
+    if (formatted.length) {
         formatted.push('\x00footnote:* See OSE Advanced Fantasy Player\'s Tome for details');
     }
     return formatted;
