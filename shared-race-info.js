@@ -142,7 +142,7 @@ export const RACE_INFO = {
       },
       {
         name: "Combat",
-        description: "Dwarves can use all types of armour. Their stature means they can only use small or normal sized weapons. They cannot use longbows or two-handed swords.",
+        description: "Dwarves use any armour but only small or normal sized weapons; no longbows or two-handed swords.",
         // hideDescription: false,
         basicAvailableAt: 0,
         basicAvailableThrough: 0,
@@ -155,7 +155,7 @@ export const RACE_INFO = {
       },
       {
         name: "Detect Construction Tricks",
-        description: "2-in-6 chance to detect new construction, sliding walls, or sloping passages when searching.",
+        description: "As expert miners, 2-in-6 chance to detect new construction, sliding walls, or sloping passages.",
         // hideDescription: false,
         basicAvailableAt: 0,
         basicAvailableThrough: 0,
@@ -168,7 +168,7 @@ export const RACE_INFO = {
       },
       {
         name: "Detect Room Traps",
-        description: "2-in-6 chance to detect non-magical room traps when searching.",
+        description: "Construction expertise gives a 2-in-6 chance to detect non-magical room traps when searching.",
         // hideDescription: false,
         basicAvailableAt: 0,
         basicAvailableThrough: 0,
@@ -181,7 +181,7 @@ export const RACE_INFO = {
       },
       {
         name: "Infravision",
-        description: "60'",
+        description: "Dwarves have infravision to 60'.",
         hideDescription: false,
         basicAvailableAt: 0,
         basicAvailableThrough: 0,
@@ -194,7 +194,7 @@ export const RACE_INFO = {
       },
       {
         name: "Listening at Doors",
-        description: "2-in-6 chance of hearing noises.",
+        description: "Dwarves have a 2-in-6 chance of hearing noises.",
         // hideDescription: false,
         basicAvailableAt: 0,
         basicAvailableThrough: 0,
@@ -257,7 +257,7 @@ export const RACE_INFO = {
       },
       {
         name: "Detect Secret Doors",
-        description: "2-in-6 chance to detect hidden or secret doors when actively searching.",
+        description: "Elves have a 2-in-6 chance of locating secret or hidden doors when searching.",
         // hideDescription: false,
         basicAvailableAt: 0,
         basicAvailableThrough: 0,
@@ -270,20 +270,20 @@ export const RACE_INFO = {
       },
       {
         name: "Immunity to Ghoul Paralysis",
-        description: "Immune to the paralysing effect of ghouls' attacks.",
+        description: "Elves are immune to the paralysing effect of ghouls' attacks.",
         // hideDescription: false,
         basicAvailableAt: 0,
         basicAvailableThrough: 0,
         advancedAvailableAt: 0,
         advancedAvailableThrough: 14,
-        // includeName: true,
+        includeName: true,
         // SRD:      "Elves are immune to the paralysing effect of ghouls' attacks."
         // BOOK:     "Elves are completely unaffected by the paralysis that ghouls can inflict."
         // PROPOSED: "Elves are immune to the paralysing effect of ghouls' attacks."
       },
       {
         name: "Infravision",
-        description: "60'",
+        description: "Elves have infravision to 60'.",
         // hideDescription: false,
         basicAvailableAt: 0,
         basicAvailableThrough: 0,
@@ -296,7 +296,7 @@ export const RACE_INFO = {
       },
       {
         name: "Listening at Doors",
-        description: "2-in-6 chance of hearing noises.",
+        description: "Elves have a 2-in-6 chance of hearing noises.",
         // hideDescription: false,
         basicAvailableAt: 0,
         basicAvailableThrough: 0,
@@ -348,7 +348,7 @@ export const RACE_INFO = {
         basicAvailableThrough: 0,
         advancedAvailableAt: 0,
         advancedAvailableThrough: 14,
-        // includeName: true,
+        includeName: true,
         // BOOK:     "Armour must be tailored to gnomes' small size. Likewise, gnomes can only use weapons appropriate to their stature (as determined by the referee). They cannot use longbows or two-handed swords."
         // PROPOSED: "Armour must be tailored to size; only weapons appropriate to stature; no longbows or two-handed swords."
       },
@@ -422,7 +422,7 @@ export const RACE_INFO = {
         basicAvailableThrough: 0,
         advancedAvailableAt: 0,
         advancedAvailableThrough: 14,
-        // includeName: true,
+        includeName: true,
         // BOOK:     "Gnomes often keep burrowing mammals such as badgers and moles as pets. They know the secret language of such creatures."
         // PROPOSED: "Know and speak the secret language of burrowing mammals (e.g. badgers, moles)."
       },
@@ -459,20 +459,20 @@ export const RACE_INFO = {
       },
       {
         name: "Combat",
-        description: "Armour must be tailored to size; only weapons appropriate to stature; no longbows or two-handed swords.",
+        description: "Halflings use any armour or weapon sized for them; no longbows or two-handed swords.",
         // hideDescription: false,
         basicAvailableAt: 0,
         basicAvailableThrough: 0,
         advancedAvailableAt: 0,
         advancedAvailableThrough: 14,
-        // includeName: true,
+        includeName: true,
         // SRD:      "Halflings can use all types of armour, but it must be tailored to their small size. Similarly, they can use any weapon appropriate to their stature (as determined by the referee). They cannot use longbows or two-handed swords."
         // BOOK:     "Armour must be tailored to halflings' small size. Likewise, halflings can only use weapons appropriate to their stature (as determined by the referee). They cannot use longbows or two-handed swords."
         // PROPOSED: "Halflings use any armour or weapon sized for them; no longbows or two-handed swords."
       },
       {
         name: "Defensive Bonus",
-        description: "+2 bonus to Armour Class when attacked by large opponents (greater than human-sized).",
+        description: "+2 Armour Class bonus when attacked by large opponents (greater than human-sized).",
         // hideDescription: false,
         basicAvailableAt: 0,
         basicAvailableThrough: 0,
@@ -485,7 +485,7 @@ export const RACE_INFO = {
       },
       {
         name: "Initiative Bonus",
-        description: "+1 to initiative rolls (optional individual initiative rule).",
+        description: "If using the optional rule for individual initiative, halflings get a bonus of +1 to initiative rolls.",
         // hideDescription: false,
         basicAvailableAt: 0,
         basicAvailableThrough: 0,
@@ -498,7 +498,7 @@ export const RACE_INFO = {
       },
       {
         name: "Listening at Doors",
-        description: "2-in-6 chance of hearing noises.",
+        description: "Halflings have a 2-in-6 chance of hearing noises.",
         // hideDescription: false,
         basicAvailableAt: 0,
         basicAvailableThrough: 0,
@@ -511,7 +511,7 @@ export const RACE_INFO = {
       },
       {
         name: "Missile Attack Bonus",
-        description: "+1 bonus to attack rolls with all missile weapons.",
+        description: "Halflings' accuracy grants them a +1 bonus to attack rolls with all missile weapons.",
         // hideDescription: false,
         basicAvailableAt: 0,
         basicAvailableThrough: 0,
