@@ -151,7 +151,7 @@ export const RACE_INFO = {
         includeName: true,
         // SRD:      "Dwarves can use all types of armour. Their stature means they can only use small or normal sized weapons. They cannot use longbows or two-handed swords."
         // BOOK:     "Due to their short height, dwarves can only use small or normal sized weapons. They cannot use longbows or two-handed swords."
-        // PROPOSED: "Dwarves can use all types of armour. Their stature means they can only use small or normal sized weapons. They cannot use longbows or two-handed swords."
+        // PROPOSED: "Dwarves use any armour but only small or normal sized weapons; no longbows or two-handed swords."
       },
       {
         name: "Detect Construction Tricks",
@@ -164,7 +164,7 @@ export const RACE_INFO = {
         includeName: true,
         // SRD:      "As expert miners, dwarves have a 2-in-6 chance of being able to detect new construction, sliding walls, or sloping passages when searching."
         // BOOK:     "As expert miners, dwarves have a 2-in-6 chance of being able to detect new construction, sliding walls, or sloping passages when searching."
-        // PROPOSED: "As expert miners, dwarves have a 2-in-6 chance of being able to detect new construction, sliding walls, or sloping passages when searching."
+        // PROPOSED: "As expert miners, 2-in-6 chance to detect new construction, sliding walls, or sloping passages."
       },
       {
         name: "Detect Room Traps",
@@ -177,7 +177,7 @@ export const RACE_INFO = {
         includeName: true,
         // SRD:      "Due to their expertise with construction, dwarves have a 2-in-6 chance of detecting non-magical room traps when searching."
         // BOOK:     "Due to their expertise with construction, dwarves have a 2-in-6 chance of detecting non-magical room traps when searching."
-        // PROPOSED: "Due to their expertise with construction, dwarves have a 2-in-6 chance of detecting non-magical room traps when searching."
+        // PROPOSED: "Construction expertise gives a 2-in-6 chance to detect non-magical room traps when searching."
       },
       {
         name: "Infravision",
@@ -468,7 +468,7 @@ export const RACE_INFO = {
         // includeName: true,
         // SRD:      "Halflings can use all types of armour, but it must be tailored to their small size. Similarly, they can use any weapon appropriate to their stature (as determined by the referee). They cannot use longbows or two-handed swords."
         // BOOK:     "Armour must be tailored to halflings' small size. Likewise, halflings can only use weapons appropriate to their stature (as determined by the referee). They cannot use longbows or two-handed swords."
-        // PROPOSED: "Halflings can use all armour tailored to their small size, and any weapon appropriate to their stature. They cannot use longbows or two-handed swords."
+        // PROPOSED: "Halflings use any armour or weapon sized for them; no longbows or two-handed swords."
       },
       {
         name: "Defensive Bonus",
@@ -481,7 +481,7 @@ export const RACE_INFO = {
         includeName: true,
         // SRD:      "Due to their small size, halflings gain a +2 bonus to Armour Class when attacked by large opponents (greater than human-sized)."
         // BOOK:     "Due to their small size, halflings gain a +2 bonus to Armour Class when attacked by large opponents (greater than human-sized)."
-        // PROPOSED: "Due to their small size, halflings gain a +2 bonus to Armour Class when attacked by large opponents (greater than human-sized)."
+        // PROPOSED: "+2 Armour Class bonus when attacked by large opponents (greater than human-sized)."
       },
       {
         name: "Initiative Bonus",
