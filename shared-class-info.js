@@ -3,6 +3,7 @@
 export const CLASS_INFO = {
   Cleric: {
     code: 'CL',
+    page: 36,
     name: "Cleric",
     description: "Clerics are adventurers sworn to the service of a deity. They are trained for battle and channel the power of their deity.",
     primeRequisite: "WIS",
@@ -118,6 +119,7 @@ export const CLASS_INFO = {
 
   Fighter: {
     code: 'FI',
+    page: 50,
     name: "Fighter",
     description: "Fighters are adventurers dedicated to mastering the arts of combat and war. In a group of adventurers, the role of fighters is to battle monsters and to defend other characters.",
     primeRequisite: "STR",
@@ -191,6 +193,7 @@ export const CLASS_INFO = {
 
   "Magic-User": {
     code: 'MU',
+    page: 66,
     name: "Magic-User",
     description: "Magic-users are adventurers who study arcane secrets and cast spells. Magic-users are able to cast a greater number of increasingly powerful spells as they advance in level.",
     primeRequisite: "INT",
@@ -278,6 +281,7 @@ export const CLASS_INFO = {
 
   Thief: {
     code: 'TH',
+    page: 74,
     name: "Thief",
     description: "Thieves are adventurers who live by their skills of deception and stealth. They have a range of specialised adventuring skills unavailable to other characters.",
     primeRequisite: "DEX",
@@ -378,6 +382,7 @@ export const CLASS_INFO = {
 
   Spellblade: {
     code: 'SB',
+    page: null,  // house-rules class, not in the book
     name: "Spellblade",
     description: "Spellblades are adventurers who combine martial prowess with arcane magic. They can fight in armor while casting spells, making them versatile combatants.",
     primeRequisite: "INT and STR",
@@ -465,6 +470,7 @@ export const CLASS_INFO = {
 
   Dwarf: {
     code: 'DW',
+    page: 46,
     name: "Dwarf",
     maxLevel: 12,
     description: "Dwarves are stout, bearded demihumans who average a height of approximately 4' and weigh about 150 pounds. Dwarves typically live in underground strongholds and have a great love of fine craftsmanship, gold, and warfare.",
@@ -554,6 +560,7 @@ export const CLASS_INFO = {
 
   Elf: {
     code: 'EL',
+    page: 48,
     name: "Elf",
     maxLevel: 10,
     description: "Elves are slender, fey demihumans with pointed ears. They typically weigh about 120 pounds and are between 5 and 5½ feet tall. Elves are seldom met in human settlements, preferring to feast and make merry in the woods.",
@@ -679,6 +686,7 @@ export const CLASS_INFO = {
 
   Halfling: {
     code: 'HA',
+    page: 56,
     name: "Halfling",
     maxLevel: 8,
     description: "Halflings are small, rotund demihumans with curly hair on their heads and feet. They weigh about 60 pounds and are around 3' tall. Halflings are a friendly and welcoming folk. Above all, they love the comforts of home and are not known for their bravery.",
@@ -779,6 +787,7 @@ export const CLASS_INFO = {
 
   Gnome: {
     code: 'GN',
+    page: 52,
     name: "Gnome",
     maxLevel: 8,
     description: "Gnomes are a race of short demihumans with long noses and beards, cousins of the dwarves. They prefer to dwell in underground complexes in forests or foothills. They love mining, precious stones, and machinery. Gnomes are typically around 3½' tall and weigh around 100 pounds.",
@@ -910,5 +919,320 @@ export const CLASS_INFO = {
         // PROPOSED: "May construct an underground stronghold; burrowing mammals within 5 miles become friendly (warn of intruders, carry messages). Only gnomish soldiers may be hired; retainers and specialists of any race may be hired."
       }
     ]
-  }
+  },
+
+  // ── Advanced classes (and future Basic expansion) ─────────────────────────
+  // These entries are stubs. Abilities must be filled in from the book.
+
+  Acrobat: {
+    code: 'AC',
+    page: 28,
+    name: "Acrobat",
+    description: "",  // TODO: fill in from book p28
+    primeRequisite: "DEX",  // TODO: confirm from book p28
+    hitDieType: "d6",       // TODO: confirm from book p28
+    maxLevel: 14,
+    armor: [],              // TODO: fill in from book p28
+    armorDescription: "TODO",
+    weapons: [],            // TODO: fill in from book p28
+    weaponDescription: "TODO",
+    availableIn: { basic: true, advanced: true },
+    availableRaces: {
+      basic: ["Human"],
+      advanced: [],         // TODO: fill in from book p28
+    },
+    requirements: {},       // TODO: fill in from book p28
+    abilities: []           // TODO: fill in from book p28
+  },
+
+  Assassin: {
+    code: 'AS',
+    page: 30,
+    name: "Assassin",
+    description: "",  // TODO: fill in from book p30
+    primeRequisite: "STR and DEX",  // TODO: confirm from book p30
+    hitDieType: "d6",               // TODO: confirm from book p30
+    maxLevel: 14,
+    armor: [],              // TODO: fill in from book p30
+    armorDescription: "TODO",
+    weapons: [],            // TODO: fill in from book p30
+    weaponDescription: "TODO",
+    availableIn: { basic: true, advanced: true },
+    availableRaces: {
+      basic: ["Human"],
+      advanced: [],         // TODO: fill in from book p30
+    },
+    requirements: {},       // TODO: fill in from book p30
+    abilities: []           // TODO: fill in from book p30
+  },
+
+  Barbarian: {
+    code: 'BA',
+    page: 32,
+    name: "Barbarian",
+    description: "",  // TODO: fill in from book p32
+    primeRequisite: "STR",  // TODO: confirm from book p32
+    hitDieType: "d8",       // TODO: confirm from book p32
+    maxLevel: 14,
+    armor: [],              // TODO: fill in from book p32
+    armorDescription: "TODO",
+    weapons: [],            // TODO: fill in from book p32
+    weaponDescription: "TODO",
+    availableIn: { basic: true, advanced: true },
+    availableRaces: {
+      basic: ["Human"],
+      advanced: [],         // TODO: fill in from book p32
+    },
+    requirements: {},       // TODO: fill in from book p32
+    abilities: []           // TODO: fill in from book p32
+  },
+
+  Bard: {
+    code: 'BD',
+    page: 34,
+    name: "Bard",
+    description: "",  // TODO: fill in from book p34
+    primeRequisite: "CHA",  // TODO: confirm from book p34
+    hitDieType: "d6",       // TODO: confirm from book p34
+    maxLevel: 14,
+    armor: [],              // TODO: fill in from book p34
+    armorDescription: "TODO",
+    weapons: [],            // TODO: fill in from book p34
+    weaponDescription: "TODO",
+    availableIn: { basic: true, advanced: true },
+    availableRaces: {
+      basic: ["Human"],
+      advanced: [],         // TODO: fill in from book p34
+    },
+    requirements: {},       // TODO: fill in from book p34
+    abilities: []           // TODO: fill in from book p34
+  },
+
+  Druid: {
+    code: 'DV',
+    page: 40,
+    name: "Druid",
+    description: "",  // TODO: fill in from book p40
+    primeRequisite: "WIS",  // TODO: confirm from book p40
+    hitDieType: "d6",       // TODO: confirm from book p40
+    maxLevel: 14,
+    armor: [],              // TODO: fill in from book p40
+    armorDescription: "TODO",
+    weapons: [],            // TODO: fill in from book p40
+    weaponDescription: "TODO",
+    availableIn: { basic: true, advanced: true },
+    availableRaces: {
+      basic: ["Human"],
+      advanced: [],         // TODO: fill in from book p40
+    },
+    requirements: {},       // TODO: fill in from book p40
+    abilities: []           // TODO: fill in from book p40
+  },
+
+  Illusionist: {
+    code: 'IL',
+    page: 62,
+    name: "Illusionist",
+    description: "",  // TODO: fill in from book p62
+    primeRequisite: "INT",  // TODO: confirm from book p62
+    hitDieType: "d4",       // TODO: confirm from book p62
+    maxLevel: 14,
+    armor: [],
+    armorDescription: "None",
+    weapons: [],            // TODO: fill in from book p62
+    weaponDescription: "TODO",
+    availableIn: { basic: true, advanced: true },
+    availableRaces: {
+      basic: ["Human"],
+      advanced: [],         // TODO: fill in from book p62
+    },
+    requirements: {},       // TODO: fill in from book p62
+    abilities: []           // TODO: fill in from book p62
+  },
+
+  Knight: {
+    code: 'KN',
+    page: 64,
+    name: "Knight",
+    description: "",  // TODO: fill in from book p64
+    primeRequisite: "STR",  // TODO: confirm from book p64
+    hitDieType: "d8",       // TODO: confirm from book p64
+    maxLevel: 14,
+    armor: [],              // TODO: fill in from book p64
+    armorDescription: "TODO",
+    weapons: [],            // TODO: fill in from book p64
+    weaponDescription: "TODO",
+    availableIn: { basic: true, advanced: true },
+    availableRaces: {
+      basic: ["Human"],
+      advanced: [],         // TODO: fill in from book p64
+    },
+    requirements: {},       // TODO: fill in from book p64
+    abilities: []           // TODO: fill in from book p64
+  },
+
+  Paladin: {
+    code: 'PA',
+    page: 68,
+    name: "Paladin",
+    description: "",  // TODO: fill in from book p68
+    primeRequisite: "STR and WIS",  // TODO: confirm from book p68
+    hitDieType: "d8",               // TODO: confirm from book p68
+    maxLevel: 14,
+    armor: [],              // TODO: fill in from book p68
+    armorDescription: "TODO",
+    weapons: [],            // TODO: fill in from book p68
+    weaponDescription: "TODO",
+    availableIn: { basic: true, advanced: true },
+    availableRaces: {
+      basic: ["Human"],
+      advanced: [],         // TODO: fill in from book p68
+    },
+    requirements: {},       // TODO: fill in from book p68
+    abilities: []           // TODO: fill in from book p68
+  },
+
+  Ranger: {
+    code: 'RA',
+    page: 70,
+    name: "Ranger",
+    description: "",  // TODO: fill in from book p70
+    primeRequisite: "STR",  // TODO: confirm from book p70
+    hitDieType: "d8",       // TODO: confirm from book p70
+    maxLevel: 14,
+    armor: [],              // TODO: fill in from book p70
+    armorDescription: "TODO",
+    weapons: [],            // TODO: fill in from book p70
+    weaponDescription: "TODO",
+    availableIn: { basic: true, advanced: true },
+    availableRaces: {
+      basic: ["Human"],
+      advanced: [],         // TODO: fill in from book p70
+    },
+    requirements: {},       // TODO: fill in from book p70
+    abilities: []           // TODO: fill in from book p70
+  },
+
+  // ── Basic-only race-as-class entries (class name matches race name) ────────
+
+  Drow: {
+    code: 'DK',
+    page: 38,
+    name: "Drow",
+    description: "",  // TODO: fill in from book p38
+    primeRequisite: "TODO",   // fill in from book p38
+    hitDieType: "d6",         // TODO: confirm from book p38
+    maxLevel: 14,             // TODO: confirm from book p38
+    armor: [],                // TODO: fill in from book p38
+    armorDescription: "TODO",
+    weapons: [],              // TODO: fill in from book p38
+    weaponDescription: "TODO",
+    availableIn: {
+      basic: true,    // race-as-class in Basic mode
+      advanced: false // use Drow_RACE + class in Advanced mode
+    },
+    availableRaces: {
+      basic: ["Drow"],
+      advanced: []
+    },
+    requirements: { Drow: {} },  // TODO: fill in from book p38
+    abilities: []                // TODO: fill in from book p38
+  },
+
+  Duergar: {
+    code: 'DG',
+    page: 44,
+    name: "Duergar",
+    description: "",  // TODO: fill in from book p44
+    primeRequisite: "STR",    // TODO: confirm from book p44
+    hitDieType: "d8",         // TODO: confirm from book p44
+    maxLevel: 12,             // TODO: confirm from book p44
+    armor: [],                // TODO: fill in from book p44
+    armorDescription: "TODO",
+    weapons: [],              // TODO: fill in from book p44
+    weaponDescription: "TODO",
+    availableIn: {
+      basic: true,    // race-as-class in Basic mode
+      advanced: false // use Duergar_RACE + class in Advanced mode
+    },
+    availableRaces: {
+      basic: ["Duergar"],
+      advanced: []
+    },
+    requirements: { Duergar: {} },  // TODO: fill in from book p44
+    abilities: []                   // TODO: fill in from book p44
+  },
+
+  "Half-Elf": {
+    code: 'HE',
+    page: 54,
+    name: "Half-Elf",
+    description: "",  // TODO: fill in from book p54
+    primeRequisite: "TODO",   // fill in from book p54
+    hitDieType: "d6",         // TODO: confirm from book p54
+    maxLevel: 14,             // TODO: confirm from book p54
+    armor: [],                // TODO: fill in from book p54
+    armorDescription: "TODO",
+    weapons: [],              // TODO: fill in from book p54
+    weaponDescription: "TODO",
+    availableIn: {
+      basic: true,    // race-as-class in Basic mode
+      advanced: false // use Half-Elf_RACE + class in Advanced mode
+    },
+    availableRaces: {
+      basic: ["Half-Elf"],
+      advanced: []
+    },
+    requirements: { "Half-Elf": {} },  // TODO: fill in from book p54
+    abilities: []                      // TODO: fill in from book p54
+  },
+
+  "Half-Orc": {
+    code: 'HO',
+    page: 60,
+    name: "Half-Orc",
+    description: "",  // TODO: fill in from book p60
+    primeRequisite: "STR",    // TODO: confirm from book p60
+    hitDieType: "d8",         // TODO: confirm from book p60
+    maxLevel: 14,             // TODO: confirm from book p60
+    armor: [],                // TODO: fill in from book p60
+    armorDescription: "TODO",
+    weapons: [],              // TODO: fill in from book p60
+    weaponDescription: "TODO",
+    availableIn: {
+      basic: true,    // race-as-class in Basic mode
+      advanced: false // use Half-Orc_RACE + class in Advanced mode
+    },
+    availableRaces: {
+      basic: ["Half-Orc"],
+      advanced: []
+    },
+    requirements: { "Half-Orc": {} },  // TODO: fill in from book p60
+    abilities: []                      // TODO: fill in from book p60
+  },
+
+  Svirfneblin: {
+    code: 'SV',
+    page: 72,
+    name: "Svirfneblin",
+    description: "",  // TODO: fill in from book p72
+    primeRequisite: "TODO",   // fill in from book p72
+    hitDieType: "d6",         // TODO: confirm from book p72
+    maxLevel: 8,              // TODO: confirm from book p72
+    armor: [],                // TODO: fill in from book p72
+    armorDescription: "TODO",
+    weapons: [],              // TODO: fill in from book p72
+    weaponDescription: "TODO",
+    availableIn: {
+      basic: true,    // race-as-class in Basic mode
+      advanced: false // use Svirfneblin_RACE + class in Advanced mode
+    },
+    availableRaces: {
+      basic: ["Svirfneblin"],
+      advanced: []
+    },
+    requirements: { Svirfneblin: {} },  // TODO: fill in from book p72
+    abilities: []                       // TODO: fill in from book p72
+  },
+
 };

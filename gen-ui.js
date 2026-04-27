@@ -74,7 +74,7 @@ function clearSettings(pageKey) {
     try { localStorage.removeItem(_SETTINGS_PREFIX + pageKey); }
     catch (e) { console.warn('OSE: could not clear settings:', e); }
 }
-import { expandCompactV2, mergeAdvancedLanguages } from './cs-sheet-page.js';
+import { expandCompactV3, mergeAdvancedLanguages } from './cs-sheet-page.js';
 import { PROG_CODE, CLS_CODE, RACE_CODE, RCM_CODE, progModeLabel } from './gen-core.js';
 
 // ── Dark mode (persisted separately — never reset by settings reset) ──────────
@@ -533,7 +533,7 @@ async function runGenerate() {
     const effectiveLevel = xpMode ? classData.getLevelFromXP(selectedClass, xpAmount) : selectedLevel;
     const DEMIHUMAN_CLASSES = ['Dwarf_CLASS','Elf_CLASS','Halfling_CLASS','Gnome_CLASS'];
     const hasBlessed = isAdv
-        ? getRacialAdvanced(selectedRace, raceClassMode).some(ab => ab.includes('Blessed'))
+        ? selectedRace === 'Human_RACE' && raceClassMode !== 'strict'
         : !DEMIHUMAN_CLASSES.includes(selectedClass) && raceClassMode !== 'strict';
     const hpMode = hpRollingMode === '5e' ? 2
         : (hpRollingMode === 'blessed' || hasBlessed) ? 1
@@ -587,7 +587,7 @@ async function runGenerate() {
     const totalAdj = SCRS.map((a, i) => (racialMods[a] || 0) + saArr[i]);
     const conIdx = SCRS.indexOf('CON');
 
-    const spec = await expandCompactV2(fullCp, {}, { silent: true });
+    const spec = await expandCompactV3(fullCp, {}, { silent: true });
     const dispOpts = sheetOpts();
     spec.openInNewTab  = dispOpts.openInNewTab;
     spec.backgroundTab = dispOpts.backgroundTab;
@@ -691,7 +691,7 @@ async function generateZeroLevel(isAdv) {
     const base0 = Object.fromEntries(SCRS.map((a, i) => [a, rawScores[i]]));
     const adj0  = Object.fromEntries(SCRS.map((a, i) => [`adj${a}`, totalAdj[i]]));
 
-    const spec = await expandCompactV2(fullCp, {}, { silent: true });
+    const spec = await expandCompactV3(fullCp, {}, { silent: true });
     const dispOpts = sheetOpts();
     spec.openInNewTab  = dispOpts.openInNewTab;
     spec.backgroundTab = dispOpts.backgroundTab;

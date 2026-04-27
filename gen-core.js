@@ -197,7 +197,7 @@ function toMap(results) {
 
 /**
  * Generate a character and return a partial v3 compact-params object.
- * Display-only fields (un, qr, ao, adm, ap) are NOT included — the caller adds them.
+ * Display-only fields (un, qr, ao, adm) are NOT included — the caller adds them.
  *
  * v3 score semantics:
  *   s[i]  = raw rolled score (pre-racial, immutable referee record)
@@ -361,7 +361,7 @@ export function generateCharacterV3(opts = {}) {
         return {
             v: 3, m: mCode, p: pCode, r: raceCode, l: 0,
             s: rawArr, ...(saArr ? { sa: saArr } : {}),
-            h: hp0.total, hr: [hp0.roll], hd: [4],
+            h: hp0.total, hr: [hp0.roll],
             n: name, bg: background?.profession ?? '',
             g: startingGold, rr: attempts,
             rcm: rcmCode,
@@ -395,7 +395,7 @@ export function generateCharacterV3(opts = {}) {
     return {
         v: 3, m: mCode, p: pCode, r: raceCode, c: clsCode, l: level,
         s: rawArr, ...(saArr ? { sa: saArr } : {}),
-        h: hpResult.max, hr: hpResult.rolls, hd: hpResult.dice,
+        h: hpResult.max, hr: hpResult.rolls,
         il: includeLevel0HP ? 1 : 0,
         n: name, bg: background?.profession ?? '',
         g: startingGold, rr: attempts,

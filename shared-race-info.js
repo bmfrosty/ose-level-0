@@ -43,6 +43,7 @@ export const RACE_INFO = {
   "Human_RACE": {
     name: "Human",
     code: "HU",
+    page: 86,
     description: "Versatile and ambitious, humans may choose any class and advance without level limits.",
     abilityModifiers: { CON: 1, CHA: 1 },  // Advanced mode only; only applied when humanRacialAbilities is on
     minimums: {},
@@ -116,6 +117,7 @@ export const RACE_INFO = {
   "Dwarf_RACE": {
     name: "Dwarf",
     code: "DW",
+    page: 81,
     description: "Stout, bearded underground-dwellers renowned for craftsmanship, stubbornness, and magic resistance.",
     abilityModifiers: { CON: 1, CHA: -1 },  // BOOK:     "Ability modifiers: –1 CHA, +1 CON"
     minimums: { CON: 9 },
@@ -228,6 +230,7 @@ export const RACE_INFO = {
   "Elf_RACE": {
     name: "Elf",
     code: "EL",
+    page: 82,
     description: "Slender, fey demihumans with keen senses, an affinity for magic, and immunity to ghoul paralysis.",
     abilityModifiers: { DEX: 1, CON: -1 },  // BOOK:     "Ability modifiers: –1 CON, +1 DEX"
     minimums: { INT: 9 },
@@ -314,6 +317,7 @@ export const RACE_INFO = {
   "Gnome_RACE": {
     name: "Gnome",
     code: "GN",
+    page: 83,
     description: "Small, bearded underground-dwellers with a love of machinery, gems, and burrowing animals.",
     abilityModifiers: {},  // no ability score modifiers
     minimums: { CON: 9, INT: 9 },  // BOOK:     "Requirements: Minimum CON 9, minimum INT 9"
@@ -433,6 +437,7 @@ export const RACE_INFO = {
   "Halfling_RACE": {
     name: "Halfling",
     code: "HA",
+    page: 85,
     description: "Small, rotund, and good-natured folk with keen aim, steady nerves, and a love of home comforts.",
     abilityModifiers: { STR: -1, DEX: 1 },  // BOOK:     "Ability modifiers: –1 STR, +1 DEX"
     minimums: { CON: 9, DEX: 9 },           // BOOK:     "Requirements: Minimum CON 9, minimum DEX 9"
@@ -541,47 +546,96 @@ export const RACE_INFO = {
     ]
   },
 
-  // ── NPC / Rare Races (level limits only — no ability data yet) ────────────
+  // ── Rare / Advanced races (level limits filled; abilities TODO) ──────────
   "Drow_RACE": {
     name: "Drow",
-    availableIn: { basic: false, advanced: false },  // NPC only
+    code: "DR",
+    page: 79,
+    description: "",  // TODO: fill in from book p79
+    abilityModifiers: {},       // TODO: fill in from book p79
+    minimums: {},               // TODO: fill in from book p79
+    availableIn: { basic: false, advanced: false },  // TODO: enable when abilities are filled in
+    availableClasses: {
+      advanced: [],             // TODO: fill in from book p79
+    },
     classLevelLimits: {
       "Acrobat_CLASS": 10, "Assassin_CLASS": 10, "Cleric_CLASS": 11,
       "Fighter_CLASS": 7, "Knight_CLASS": 9, "Magic-User_CLASS": 9,
-      "Ranger_CLASS": 9, "Thief_CLASS": 11,
+      "Ranger_CLASS": 9, "Spellblade_CLASS": 10, "Thief_CLASS": 11,
     },
+    abilities: []               // TODO: fill in from book p79
   },
+
   "Duergar_RACE": {
     name: "Duergar",
-    availableIn: { basic: false, advanced: false },  // NPC only
+    code: "DG",
+    page: 80,
+    description: "",  // TODO: fill in from book p80
+    abilityModifiers: {},       // TODO: fill in from book p80
+    minimums: {},               // TODO: fill in from book p80
+    availableIn: { basic: false, advanced: false },  // TODO: enable when abilities are filled in
+    availableClasses: {
+      advanced: [],             // TODO: fill in from book p80
+    },
     classLevelLimits: {
       "Assassin_CLASS": 9, "Cleric_CLASS": 8, "Fighter_CLASS": 9, "Thief_CLASS": 9,
     },
+    abilities: []               // TODO: fill in from book p80
   },
+
   "Half-Elf_RACE": {
     name: "Half-Elf",
-    availableIn: { basic: false, advanced: false },  // NPC only
+    code: "HE",
+    page: 84,
+    description: "",  // TODO: fill in from book p84
+    abilityModifiers: {},       // TODO: fill in from book p84
+    minimums: {},               // TODO: fill in from book p84
+    availableIn: { basic: false, advanced: false },  // TODO: enable when abilities are filled in
+    availableClasses: {
+      advanced: [],             // TODO: fill in from book p84
+    },
     classLevelLimits: {
       "Acrobat_CLASS": 12, "Assassin_CLASS": 11, "Bard_CLASS": 12, "Cleric_CLASS": 5,
       "Druid_CLASS": 12, "Fighter_CLASS": 8, "Knight_CLASS": 12, "Magic-User_CLASS": 8,
-      "Paladin_CLASS": 12, "Ranger_CLASS": 8, "Thief_CLASS": 12,
+      "Paladin_CLASS": 12, "Ranger_CLASS": 8, "Spellblade_CLASS": 10, "Thief_CLASS": 12,
     },
+    abilities: []               // TODO: fill in from book p84
   },
+
   "Half-Orc_RACE": {
     name: "Half-Orc",
-    availableIn: { basic: false, advanced: false },  // NPC only
+    code: "HO",
+    page: 86,
+    description: "",  // TODO: fill in from book p86
+    abilityModifiers: {},       // TODO: fill in from book p86
+    minimums: {},               // TODO: fill in from book p86
+    availableIn: { basic: false, advanced: false },  // TODO: enable when abilities are filled in
+    availableClasses: {
+      advanced: [],             // TODO: fill in from book p86
+    },
     classLevelLimits: {
       "Acrobat_CLASS": 8, "Assassin_CLASS": 8, "Cleric_CLASS": 4,
       "Fighter_CLASS": 10, "Thief_CLASS": 8,
     },
+    abilities: []               // TODO: fill in from book p86
   },
+
   "Svirfneblin_RACE": {
     name: "Svirfneblin",
-    availableIn: { basic: false, advanced: false },  // NPC only
+    code: "SN",
+    page: 87,
+    description: "",  // TODO: fill in from book p87
+    abilityModifiers: {},       // TODO: fill in from book p87
+    minimums: {},               // TODO: fill in from book p87
+    availableIn: { basic: false, advanced: false },  // TODO: enable when abilities are filled in
+    availableClasses: {
+      advanced: [],             // TODO: fill in from book p87
+    },
     classLevelLimits: {
       "Assassin_CLASS": 8, "Cleric_CLASS": 7, "Fighter_CLASS": 6,
       "Illusionist_CLASS": 7, "Thief_CLASS": 8,
     },
+    abilities: []               // TODO: fill in from book p87
   },
 
 };

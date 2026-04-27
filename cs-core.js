@@ -35,13 +35,72 @@ import { WEAPONS } from './shared-core.js';
  *   showUndeadNames: bool,
  *   footer: string,
  *   printTitle: string,
- *   openInNewTab: bool,
- *   autoPrint: bool
+ *   openInNewTab: bool
  * }
  */
 
 
 // ── URL codec (inlined from cs-url-codec.js) ──────────────────────────────────
+
+// RFC 4648 base32: A–Z = 0–25, 2–7 = 26–31. No padding.
+// QR alphanumeric mode supports this character set, giving ~2× more data per version
+// than base64url (which forces byte mode due to lowercase letters).
+const B32_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+const B32_LOOKUP = Object.fromEntries([...B32_CHARS].map((c, i) => [c, i]));
+
+function _uint8ToBase32(bytes) {
+    let bits = 0, acc = 0, out = '';
+    for (const b of bytes) {
+        acc = (acc << 8) | b;
+        bits += 8;
+        while (bits >= 5) {
+            bits -= 5;
+            out += B32_CHARS[(acc >> bits) & 31];
+        }
+    }
+    if (bits > 0) out += B32_CHARS[(acc << (5 - bits)) & 31];
+    return out;
+}
+
+function _base32ToUint8(str) {
+    let bits = 0, acc = 0;
+    const out = [];
+    for (const c of str.toUpperCase()) {
+        const val = B32_LOOKUP[c];
+        if (val === undefined) continue;
+        acc = (acc << 5) | val;
+        bits += 5;
+        if (bits >= 8) { bits -= 8; out.push((acc >> bits) & 0xff); }
+    }
+    return new Uint8Array(out);
+}
+
+/**
+ * Gzip-compress a string and return a base32-encoded string (RFC 4648, no padding).
+ * Uses QR-friendly alphanumeric characters (A–Z, 2–7) for better QR code efficiency.
+ */
+export async function compressToBase32(str) {
+    const bytes = new TextEncoder().encode(str);
+    const cs = new CompressionStream('gzip');
+    const writer = cs.writable.getWriter();
+    writer.write(bytes);
+    writer.close();
+    const compressed = await new Response(cs.readable).arrayBuffer();
+    return _uint8ToBase32(new Uint8Array(compressed));
+}
+
+/**
+ * Decompress a base32-encoded gzip string back to a UTF-8 string.
+ */
+export async function decompressFromBase32(b32) {
+    const bytes = _base32ToUint8(b32);
+    const ds = new DecompressionStream('gzip');
+    const writer = ds.writable.getWriter();
+    writer.write(bytes);
+    writer.close();
+    const decompressed = await new Response(ds.readable).arrayBuffer();
+    return new TextDecoder().decode(decompressed);
+}
 
 /**
  * Gzip-compress a string and return a URL-safe Base64 string (base64url, no padding).
@@ -116,7 +175,7 @@ export async function decompressFromBase64Url(b64url) {
  * h       number      Max HP (total, respects il flag)
  * hr      number[]    HP value per entry — index 0 is ALWAYS the L0 background roll,
  *                     regardless of il.  hr[1]=L1 HP, hr[2]=L2 HP, etc.
- * hd      number[]    Die sides per entry (matches hr[]).  hd[0]=4 (1d4 for L0).
+ * hd      —           Removed in v3. Die sides are derived from class at render time.
  * il      0|1         includeLevel0HP — if 1, hr[0] is added to h; if 0, hr[0] sets the
  *                     floor for hr[1] but does not count toward h
  * hm      0|1|2|3     HP rolling mode: omit/0=normal random, 1=blessed (roll twice take
@@ -149,7 +208,6 @@ export async function decompressFromBase64Url(b64url) {
  * ── Display preferences ───────────────────────────────────────────────────────
  * un      0|1         showUndeadNames — show monster names in Turn Undead table
  * qr      0|1         showQRCode — show QR code on page 2
- * ap      0|1         autoPrint — auto-open print dialog when charactersheet.html loads
  * ao      0|1         abilityOrder — 0=modern (STR DEX CON INT WIS CHA),
  *                                    1=OSE/Basic (STR INT WIS DEX CON CHA)
  * adm     1|2|3       acDisplayMode — omit=ascending AC only, 1=descending+attack matrix,
@@ -987,14 +1045,13 @@ async function buildPrintUrl(printSheet) {
     const base = window.location.origin +
         window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
     if (printSheet.cp) {
-        // Compact v2: apply string lookup-table encoding, then gzip
         const cp = encodeCompactParams(printSheet.cp);
-        const encoded = await compressToBase64Url(JSON.stringify(cp));
+        const encoded = await compressToBase32(JSON.stringify(cp));
         return `${base}charactersheet.html?d=${encoded}`;
     }
     // Fall back: full sheet (strip cp to avoid duplication)
     const { cp: _cp, ...sheetData } = printSheet;
-    const encoded = await compressToBase64Url(JSON.stringify(sheetData));
+    const encoded = await compressToBase32(JSON.stringify(sheetData));
     return `${base}charactersheet.html?d=${encoded}`;
 }
 
@@ -1002,7 +1059,6 @@ async function buildPrintUrl(printSheet) {
  * Open a character sheet in a new print tab via charactersheet.html?d=...
  * Uses compact params (v2) if sheet.cp is present for a short, QR-friendly URL.
  * @param {Object} sheet - Normalized sheet object
- * @param {boolean} autoPrint - Whether to auto-open print dialog
  */
 async function openCharacterInPrintTab(sheet, backgroundTab = false) {
     const { onEditUpdate, editState, ...printSheet } = sheet;
