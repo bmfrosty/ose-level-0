@@ -223,12 +223,21 @@ export function getClassAbilities(className) {
 // Helper function to get abilities available at a specific level
 // Respects availableThrough: entries with availableThrough < level are excluded
 // (use a replacement entry with a higher availableAt when an ability's text changes at a level)
-export function getAbilitiesAtLevel(className, level) {
+export function getAbilitiesAtLevel(className, level, { includeLookahead = false } = {}) {
   const abilities = CLASS_INFO[className]?.abilities || [];
-  return abilities.filter(ability =>
+  const current = abilities.filter(ability =>
     ability.availableAt <= level &&
     (ability.availableThrough === undefined || ability.availableThrough >= level)
   );
+  if (!includeLookahead) return current;
+  const next = level + 1;
+  const upcoming = abilities
+    .filter(ability =>
+      ability.availableAt === next &&
+      (ability.availableThrough === undefined || ability.availableThrough >= next)
+    )
+    .map(ability => ({ ...ability, notAvailableUntil: next }));
+  return [...current, ...upcoming];
 }
 
 // Helper function to check if a race can take a class
@@ -552,13 +561,17 @@ export function getClassFeatures(options) {
     }
 
     // Class abilities (strip _CLASS suffix — CLASS_INFO keys are plain names like "Cleric", "Fighter")
-    const allAbilities = ClassDataShared.getAbilitiesAtLevel(baseClassName, level);
+    const allAbilities = ClassDataShared.getAbilitiesAtLevel(baseClassName, level, { includeLookahead: true });
     if (allAbilities && allAbilities.length > 0) {
-        features.classAbilities = allAbilities.map(a =>
-            (a.languages && a.description === undefined)
+        features.classAbilities = allAbilities.map(a => {
+            const mapped = (a.languages && a.description === undefined)
                 ? { ...a, description: a.languages.join(', ') }
-                : a
-        );
+                : a;
+            if (mapped.notAvailableUntil !== undefined) {
+                return { ...mapped, description: mapped.description + ` <em style="color:#888;">(not available until level ${mapped.notAvailableUntil})</em>` };
+            }
+            return mapped;
+        });
         log('\nClass Abilities:');
         features.classAbilities.forEach(ability => {
             log(`  - ${ability.name}: ${ability.description}`);
@@ -667,7 +680,7 @@ export function getRaceInfo(race) {
  * @param {boolean} [humanRacialAbilities] - Whether human racial abilities option is on
  * @returns {Array} Filtered array of ability entry objects
  */
-export function getRaceAbilitiesAtLevel(race, level, mode = 'advanced', humanRacialAbilities = false) {
+export function getRaceAbilitiesAtLevel(race, level, mode = 'advanced', humanRacialAbilities = false, { includeLookahead = false } = {}) {
     const normalizedRace = normalizeRaceName(race);
     const raceData = RACE_INFO[normalizedRace];
     if (!raceData || !raceData.abilities) return [];
@@ -675,12 +688,26 @@ export function getRaceAbilitiesAtLevel(race, level, mode = 'advanced', humanRac
     const atKey   = mode === 'basic' ? 'basicAvailableAt'      : 'advancedAvailableAt';
     const throKey = mode === 'basic' ? 'basicAvailableThrough' : 'advancedAvailableThrough';
 
-    return raceData.abilities.filter(a => {
-        if (a.applyOnly) return false;
+    const passesLevel = (a, lvl) => {
         if (a.humanOnly && !humanRacialAbilities) return false;
         if (a[atKey] === undefined || a[throKey] === undefined) return false;
-        return a[atKey] <= level && a[throKey] >= level;
-    });
+        return a[atKey] <= lvl && a[throKey] >= lvl;
+    };
+
+    const current = raceData.abilities
+        .filter(a => passesLevel(a, level))
+        .map(a => a.applyOnly ? { ...a, alreadyApplied: true } : a);
+    if (!includeLookahead) return current;
+
+    const next = level + 1;
+    const upcoming = raceData.abilities
+        .filter(a => {
+            if (a.humanOnly && !humanRacialAbilities) return false;
+            if (a[atKey] === undefined || a[throKey] === undefined) return false;
+            return a[atKey] === next && a[throKey] >= next;
+        })
+        .map(a => ({ ...a, notAvailableUntil: next, ...(a.applyOnly ? { alreadyApplied: true } : {}) }));
+    return [...current, ...upcoming];
 }
 
 // ============================================================================
@@ -709,19 +736,25 @@ export function getAdvancedModeRacialAbilities(race, options = {}) {
         }
     }
 
-    const abilities = getRaceAbilitiesAtLevel(race, options.level ?? 0, 'advanced', humanRacialAbilities);
+    const abilities = getRaceAbilitiesAtLevel(race, options.level ?? 0, 'advanced', humanRacialAbilities, { includeLookahead: true });
 
     const formatted = abilities.map(a => {
+        let text;
         if (a.languages) {
-            return `<strong>${a.name}</strong>: ${a.languages.join(', ')}`;
+            text = `<strong>${a.name}</strong>: ${a.languages.join(', ')}`;
+        } else if (a.hideDescription && !showDescriptionAnyway) {
+            text = a.includeName ? `<strong>${a.name}</strong>*` : `${a.name}*`;
+        } else if (a.includeName) {
+            text = `<strong>${a.name}</strong>: ${a.description}`;
+        } else {
+            text = a.description;
         }
-        if (a.hideDescription && !showDescriptionAnyway) {
-            return a.includeName ? `<strong>${a.name}</strong>*` : `${a.name}*`;
+        if (a.notAvailableUntil !== undefined) {
+            text += ` <em style="color:#888;">(not available until level ${a.notAvailableUntil})</em>`;
+        } else if (a.alreadyApplied) {
+            text += ` <em style="color:#888;">(already applied)</em>`;
         }
-        if (a.includeName) {
-            return `<strong>${a.name}</strong>: ${a.description}`;
-        }
-        return a.description;
+        return text;
     });
     if (formatted.length) {
         formatted.push('\x00footnote:* See OSE Advanced Fantasy Player\'s Tome for details');

@@ -10,6 +10,9 @@ yarn-error.log*
 # Generated and non-distributable images (testing/debugging)
 *.png
 *.jpg
+# OSE third-party license logos (committed to repo)
+!Designed_dark.png
+!Designed_light.png
 
 # Generated JSON and MD files
 OSE_0Level_*.json

@@ -216,6 +216,7 @@ export const RACE_INFO = {
         advancedAvailableAt: 0,
         advancedAvailableThrough: 14,
         applyOnly: true,
+        includeName: true,
         saveModifier: {
           formula: "CON_RESILIENCE",
           appliesTo: ["Death", "Wands", "Spells"]
@@ -411,6 +412,7 @@ export const RACE_INFO = {
         advancedAvailableAt: 0,
         advancedAvailableThrough: 14,
         applyOnly: true,
+        includeName: true,
         saveModifier: {
           formula: "CON_MAGIC_RESISTANCE",
           appliesTo: ["Wands", "Spells"]
@@ -536,6 +538,7 @@ export const RACE_INFO = {
         advancedAvailableAt: 0,
         advancedAvailableThrough: 14,
         applyOnly: true,
+        includeName: true,
         saveModifier: {
           formula: "CON_RESILIENCE",
           appliesTo: ["Death", "Wands", "Spells"]

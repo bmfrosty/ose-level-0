@@ -159,24 +159,24 @@ function raceFromBasicClass(className) {
 }
 
 function rollAbilityScores() {
+    const d6 = () => Math.floor(Math.random() * 6) + 1;
     return ABILITIES.map(a => {
-        const roll = rollDice(3, 6);
-        return { ability: a, roll, modifier: calculateModifier(roll) };
+        const dice = [d6(), d6(), d6()];
+        const roll = dice[0] + dice[1] + dice[2];
+        return { ability: a, roll, dice, modifier: calculateModifier(roll) };
     });
 }
 
-function passesFilters(results, { minimums, primeReqMode }) {
+function passesFilters(results, effMins) {
     const s = {};
     results.forEach(r => { s[r.ability] = r.roll; });
-    for (const [ab, min] of Object.entries(minimums)) {
-        if ((s[ab] ?? 3) < min) return false;
+    const failed = [];
+    for (const [ab, min] of Object.entries(effMins)) {
+        if ((s[ab] ?? 3) < min) failed.push(`${ab}:${s[ab] ?? 3}<${min}`);
     }
-    if (!Object.values(s).some(v => v >= 9)) return false;
-    if (primeReqMode === '9' || primeReqMode === '13') {
-        const t = parseInt(primeReqMode);
-        if (!['STR', 'DEX', 'INT', 'WIS'].some(a => (s[a] ?? 3) >= t)) return false;
-    }
-    return true;
+    if (failed.length) return failed.join(', ');
+    if (!Object.values(s).some(v => v >= 9)) return 'no score ≥9';
+    return null;
 }
 
 function calcLevel0HP(conModifier, hpMode) {
@@ -227,11 +227,20 @@ export function generateCharacterV3(opts = {}) {
         ? raceFromBasicClass(className)
         : null;
 
+    // ── Effective minimums for filter enforcement ─────────────────────────────
+    // Prime-req minimums are folded in here so passesFilters enforces the class's
+    // specific prime requisite(s), not just "any prime-req-eligible stat ≥ threshold".
+    const effMins = { ...minimums };
+    if ((primeReqMode === '9' || primeReqMode === '13') && className) {
+        const _t = parseInt(primeReqMode);
+        getPrimeRequisites(className).forEach(a => { effMins[a] = Math.max(effMins[a] ?? 0, _t); });
+    }
+
     // ── Log settings and effective minimums (before rolling) ─────────────────
     {
         const _logRace = staticRace
             ?? (rawRace && rawRace !== 'Demihuman_RACE' ? (rawRace.endsWith('_RACE') ? rawRace : `${rawRace}_RACE`) : '(random)');
-        const _eff = { ...minimums };
+        const _eff = { ...effMins };
         if (isAdvanced && _logRace !== '(random)') {
             Object.entries(getRaceInfo(_logRace)?.minimums ?? {}).forEach(([a, v]) => {
                 _eff[a] = Math.max(_eff[a] ?? 0, v);
@@ -240,10 +249,6 @@ export function generateCharacterV3(opts = {}) {
         if (level >= 1 && isAdvanced && className && _logRace !== '(random)') {
             const _reqs = CLASS_INFO[className.replace('_CLASS', '')]?.requirements?.[_logRace.replace('_RACE', '')] ?? {};
             Object.entries(_reqs).forEach(([a, v]) => { _eff[a] = Math.max(_eff[a] ?? 0, v); });
-        }
-        if ((primeReqMode === '9' || primeReqMode === '13') && className) {
-            const _t = parseInt(primeReqMode);
-            getPrimeRequisites(className).forEach(a => { _eff[a] = Math.max(_eff[a] ?? 0, _t); });
         }
         const _row = src => ABILITIES.map(a => `${a}:${src[a] ?? 3}`).join('  ');
         console.log(`[gen] race: ${_logRace} | class: ${className ?? '(none)'} | primeReqMode: ${primeReqMode}`);
@@ -264,7 +269,7 @@ export function generateCharacterV3(opts = {}) {
             attempts++;
             const raw = rollAbilityScores();
             race = staticRace ?? pickRace(rawRace);
-            const _s = () => raw.map(r => `${r.ability}:${r.roll}`).join('  ');
+            const _s = () => raw.map(r => `${r.ability}:${r.roll}[${r.dice.join(',')}]`).join('  ');
 
             if (isAdvanced && !meetsRacialMinimums(raw, race, true)) {
                 console.log(`[gen] attempt ${attempts}: ${_s()} → ✗ racial minimums`);
@@ -282,8 +287,9 @@ export function generateCharacterV3(opts = {}) {
                 }
             }
 
-            if (!passesFilters(raw, { minimums, primeReqMode })) {
-                console.log(`[gen] attempt ${attempts}: ${_s()} → ✗ filters`);
+            const _filterFail = passesFilters(raw, effMins);
+            if (_filterFail) {
+                console.log(`[gen] attempt ${attempts}: ${_s()} → ✗ ${_filterFail}`);
                 continue;
             }
 

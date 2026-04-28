@@ -643,6 +643,28 @@ export function renderCharacterSheetHTML(sheet) {
             .ose-p2-row2 { flex: 3; margin-bottom: 8px; display: flex; flex-direction: column; }
             .ose-p2-row2-notes { flex: 1; }
             .ose-p2-row3 { flex: 2; }
+            /* On-screen page break */
+            .ose-page-break-indicator {
+                padding: 20px 0;
+                background: #ddd;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 10px;
+            }
+            .ose-page-break-indicator::before,
+            .ose-page-break-indicator::after {
+                content: '';
+                flex: 1;
+                border-top: 1px solid #bbb;
+            }
+            body.dark-mode .ose-page-break-indicator {
+                background: #1a1a2e;
+            }
+            body.dark-mode .ose-page-break-indicator::before,
+            body.dark-mode .ose-page-break-indicator::after {
+                border-top-color: #444;
+            }
             @media print {
                 /* Match letter paper content area (11in − 0.5in top − 0.5in bottom = 10in) */
                 .ose-page1 { height: 10in; }
@@ -772,11 +794,8 @@ export function renderCharacterSheetHTML(sheet) {
         </div><!-- end ose-page1 -->
 
         <!-- ── On-screen page-break indicator (hidden when printing) ── -->
-        <div class='ose-page-break-indicator'
-             style='margin: 20px 0 0; border-top: 2px dashed #bbb;
-                    text-align: center; padding-top: 6px;'>
-            <span style='font-size: 0.75em; color: #aaa; font-style: italic;
-                         background: white; padding: 0 10px;'>— Page 2 —</span>
+        <div class='ose-page-break-indicator'>
+            <span style='font-size: 0.75em; color: #888; font-style: italic; white-space: nowrap;'>— Page 2 —</span>
         </div>
 
         <!-- ═══ PAGE 2 ═══ -->

@@ -105,11 +105,11 @@ export const CLASS_INFO = {
         availableThrough: 14,
         // includeName: true,
         raceOverrides: {
-          "Human":   { /* PROPOSED: TBD */ },
-          "Dwarf":   { /* PROPOSED: TBD */ },
-          "Elf":     { /* PROPOSED: TBD */ },
-          "Gnome":   { /* PROPOSED: TBD */ },
-          "Halfling":{ /* PROPOSED: TBD */ }
+          "Human":   { description: "May build a stronghold; costs halved if in deity's favour. Attracts 5d6×10 devoted fighters (levels 1–2)." },
+          "Dwarf":   { description: "May build a dwarven shrine-fortress; costs halved if in deity's favour. Attracts 5d6×10 devoted dwarven fighters (levels 1–2). Dwarven mercenaries only." },
+          "Elf":     { description: "May build an elven temple or sylvan shrine; costs halved if in deity's favour. Attracts 5d6×10 devoted elven fighters (levels 1–2). Elvish mercenaries only." },
+          "Gnome":   { description: "May build a gnomish temple-stronghold; costs halved if in deity's favour. Attracts 5d6×10 devoted gnomish fighters (levels 1–2). Gnomish mercenaries only." },
+          "Halfling":{ description: "May build a halfling shrine-hall; costs halved if in deity's favour. Attracts 5d6×10 devoted halfling fighters (levels 1–2). Halfling mercenaries only." },
         },
         // SRD: "A cleric may construct a stronghold. If the cleric is in favour with their deity, the construction costs are halved, due to divine aid. When the stronghold is complete, 5d6 x 10 fighters of level 1-2 will arrive to serve the cleric. These followers are completely devoted to the cleric, never checking morale."
         // PROPOSED: "May build a stronghold; costs halved if in deity's favour. Attracts 5d6×10 devoted fighters (levels 1-2)."
@@ -169,11 +169,11 @@ export const CLASS_INFO = {
         availableThrough: 14,
         // includeName: true,
         raceOverrides: {
-          "Human":   { /* PROPOSED: TBD */ },
-          "Dwarf":   { /* PROPOSED: TBD */ },
-          "Elf":     { /* PROPOSED: TBD */ },
-          "Gnome":   { /* PROPOSED: TBD */ },
-          "Halfling":{ /* PROPOSED: TBD */ }
+          "Human":   { description: "May build a castle or stronghold and control surrounding lands at any time." },
+          "Dwarf":   { description: "May build a subterranean keep or dwarven hall at any time and control surrounding territory. Dwarven mercenaries only." },
+          "Elf":     { description: "May build a woodland stronghold or sylvan keep at any time and control surrounding lands. Elvish mercenaries only." },
+          "Gnome":   { description: "May build a subterranean complex or gnomish hall at any time and control surrounding territory. Gnomish mercenaries only." },
+          "Halfling":{ description: "May build a fortified shire-hall or burrow-mound at any time and control surrounding lands. Halfling mercenaries only." },
         },
         // SRD: "Any time a fighter wishes (and has sufficient money), they can build a castle or stronghold and control the surrounding lands." (== Stronghold == section — NOT under After Reaching 9th Level)
         // PROPOSED: "May build a castle or stronghold and control surrounding lands at any time (not restricted to 9th level)."
@@ -267,11 +267,11 @@ export const CLASS_INFO = {
         availableThrough: 14,
         // includeName: true,
         raceOverrides: {
-          "Human":   { /* PROPOSED: TBD */ },
-          "Dwarf":   { /* PROPOSED: TBD */ },
-          "Elf":     { /* PROPOSED: TBD */ },
-          "Gnome":   { /* PROPOSED: TBD */ },
-          "Halfling":{ /* PROPOSED: TBD */ }
+          "Human":   { description: "May construct an arcane tower or sanctum; 1d6 apprentice magic-users (levels 1–3) arrive to study." },
+          "Dwarf":   { description: "May construct an underground arcane vault or stone tower; 1d6 apprentice magic-users (levels 1–3) arrive to study. Dwarven apprentices preferred." },
+          "Elf":     { description: "May construct a forest tower or hidden elven sanctum; 1d6 apprentice magic-users (levels 1–3) arrive to study. Elvish apprentices preferred." },
+          "Gnome":   { description: "May construct an underground arcane workshop or gnomish tower; 1d6 apprentice magic-users (levels 1–3) arrive to study. Gnomish apprentices preferred." },
+          "Halfling":{ description: "May construct a hidden arcane burrow or halfling tower; 1d6 apprentice magic-users (levels 1–3) arrive to study. Halfling apprentices preferred." },
         },
         // SRD: "A magic-user may construct a stronghold (usually in the form of a tower). 1d6 apprentices of levels 1-3 will then arrive to study under the magic-user."
         // PROPOSED: "May construct a stronghold (usually a tower); 1d6 apprentices of levels 1-3 arrive to study."
@@ -359,11 +359,11 @@ export const CLASS_INFO = {
         availableThrough: 14,
         // includeName: true,
         raceOverrides: {
-          "Human":   { /* PROPOSED: TBD */ },
-          "Dwarf":   { /* PROPOSED: TBD */ },
-          "Elf":     { /* PROPOSED: TBD */ },
-          "Gnome":   { /* PROPOSED: TBD */ },
-          "Halfling":{ /* PROPOSED: TBD */ }
+          "Human":   { description: "Construct a secret urban hideout; attracts 2d6 loyal 1st-level apprentice thieves (potential Thieves' Guild)." },
+          "Dwarf":   { description: "Construct a secret underground hideout in a dwarven settlement; attracts 2d6 loyal dwarven apprentice thieves (potential Thieves' Guild)." },
+          "Elf":     { description: "Construct a hidden woodland hideout; attracts 2d6 loyal elvish apprentice thieves (potential Thieves' Guild). Elvish apprentices preferred." },
+          "Gnome":   { description: "Construct a hidden underground hideout; attracts 2d6 loyal gnomish apprentice thieves (potential Thieves' Guild)." },
+          "Halfling":{ description: "Construct a secret burrow-hideout in a halfling settlement; attracts 2d6 loyal halfling apprentice thieves (potential Thieves' Guild)." },
         },
         // SRD: "A thief may construct a secret hideout, attracting 2d6 apprentice thieves of 1st level. Apprentices are usually loyal to the character, but are not automatically replaced if killed. The character may use their apprentices as the beginnings of a Thieves' Guild."
         // PROPOSED: "Construct a secret hideout; attracts 2d6 loyal 1st-level apprentice thieves (potential Thieves' Guild)."
@@ -456,14 +456,13 @@ export const CLASS_INFO = {
         availableThrough: 14,
         // includeName: true,
         raceOverrides: {
-          "Human":   { /* PROPOSED: TBD */ },
-          "Dwarf":   { /* PROPOSED: TBD */ },
-          "Elf":     { /* PROPOSED: TBD */ },
-          "Gnome":   { /* PROPOSED: TBD */ },
-          "Halfling":{ /* PROPOSED: TBD */ }
+          "Human":   { description: "May construct a fortified arcane tower; 3d2 fighters, 1d3 magic-users, and 1d2 spellblades (all L1–2) arrive to serve." },
+          "Elf":     { description: "May construct a forest stronghold; 3d2 fighters, 1d3 magic-users, and 1d2 spellblades (all L1–2) arrive. Forest animals become friendly. Elven mercenaries only." },
+          "Dwarf":   { description: "May construct a subterranean arcane stronghold; 3d2 dwarven fighters, 1d3 magic-users, and 1d2 spellblades (all L1–2) serve. Dwarven mercenaries only." },
+          "Gnome":   { description: "May construct a subterranean stronghold; 3d2 gnomish fighters, 1d3 magic-users, and 1d2 spellblades (all L1–2) arrive to serve. Gnomish mercenaries only." },
+          "Halfling":{ description: "May construct a halfling community stronghold; 3d2 halfling fighters, 1d3 magic-users, and 1d2 spellblades (all L1–2) arrive to serve." },
         },
         // SRD: N/A (house rules class)
-        // PROPOSED: TBD — stronghold details not yet defined per race for this house-rules class
       }
     ]
   },

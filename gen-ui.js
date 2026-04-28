@@ -78,19 +78,17 @@ import { expandCompactV3, mergeAdvancedLanguages } from './cs-sheet-page.js';
 import { PROG_CODE, CLS_CODE, RACE_CODE, RCM_CODE, progModeLabel } from './gen-core.js';
 
 // ── Dark mode (persisted separately — never reset by settings reset) ──────────
-const _DM_KEY = 'ose_ui_darkmode';
-let darkMode = localStorage.getItem(_DM_KEY) !== 'false'; // default true
+let darkMode = localStorage.getItem('theme') === 'dark'; // default light
 
 function applyDarkMode() {
-    const container = document.getElementById('generatorContainer');
-    if (container) container.classList.toggle('dark-mode', darkMode);
+    document.body.classList.toggle('dark-mode', darkMode);
     const btn = document.getElementById('darkModeToggle');
-    if (btn) btn.textContent = darkMode ? '☀️ Light Mode' : '🌙 Dark Mode';
+    if (btn) btn.textContent = darkMode ? '☀ Light' : '☽ Dark';
 }
 
 function handleDarkModeToggle() {
     darkMode = !darkMode;
-    localStorage.setItem(_DM_KEY, darkMode ? 'true' : 'false');
+    localStorage.setItem('theme', darkMode ? 'dark' : 'light');
     applyDarkMode();
 }
 
@@ -945,7 +943,7 @@ function handleResetSettings() {
     ['useFixedScores','showUndeadNames','hideHumanRace','openInNewTab','noLevel0Equipment'].forEach(id=>{const el=document.getElementById(id);if(el)el.checked=false;});
     ['autoGenerateOnLevelChange','autoGenerateOnClassChange','autoGenerateOnLoad'].forEach(id=>{const el=document.getElementById(id);if(el)el.checked=false;});
     const aoEl=document.getElementById('basicAbilityOrdering'); if(aoEl) aoEl.checked=true;
-    ['STR','INT','WIS','DEX','CON','CHA'].forEach(a=>{const el=document.getElementById(`score${a}`);if(el)el.value=(a==='CON'?6:3);});
+    ['STR','INT','WIS','DEX','CON','CHA'].forEach(a=>{const el=document.getElementById(`score${a}`);if(el)el.value=3;});
     const _nameEl=document.getElementById('characterName'); if(_nameEl) _nameEl.value='';
     characterName='';
     updateModifiers();

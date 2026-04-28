@@ -53,6 +53,56 @@
         .btn-generator:hover { background-color: #BF360C; }
         .print-hint { color: #666; font-size: 0.85em; font-style: italic; }
 
+        /* ── Nav bar ───────────────────────────────────────────────────── */
+        nav {
+            background-color: #f0f0f0;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        nav .nav-left { display: flex; gap: 20px; }
+        nav a { text-decoration: none; color: #333; font-weight: bold; }
+        nav a:hover { color: #4CAF50; }
+
+        /* ── Dark mode ─────────────────────────────────────────────────── */
+        body.dark-mode { background-color: #1a1a2e; color: #e0e0e0; }
+        body.dark-mode nav { background-color: #2d2d44; }
+        body.dark-mode nav a { color: #ccc; }
+        body.dark-mode nav a:hover { color: #4CAF50; }
+        body.dark-mode #print-controls { background-color: #2d2d44; border-bottom-color: #555; }
+        body.dark-mode .print-hint { color: #aaa; }
+        body.dark-mode #sheet-content { background: white; color: #333; padding: 8px; border-radius: 5px; }
+        body.dark-mode footer { border-top-color: #444; color: #666; }
+        body.dark-mode #error { background: #2a1010; }
+
+        body.dark-mode #level-up-panel { background: #1e1228 !important; border-color: #7B1FA2 !important; }
+        body.dark-mode #level-up-panel h3 { color: #ce93d8; }
+        body.dark-mode #level-up-panel label { color: #ccc; }
+        body.dark-mode #modify-panel { background: #1a2030 !important; border-color: #2196F3 !important; }
+        body.dark-mode #modify-panel h3 { color: #64b5f6 !important; }
+        body.dark-mode #modify-panel label,
+        body.dark-mode #modify-panel strong { color: #ccc; }
+        body.dark-mode #sheet-opts-panel { background: #1a2a1a !important; border-color: #388E3C !important; }
+        body.dark-mode #sheet-opts-panel h3 { color: #81c784 !important; }
+        body.dark-mode #sheet-opts-panel label,
+        body.dark-mode #sheet-opts-panel strong { color: #ccc; }
+
+        #darkModeToggle {
+            background: none;
+            border: 1px solid #999;
+            border-radius: 4px;
+            padding: 4px 10px;
+            cursor: pointer;
+            font-size: 11px;
+            color: #333;
+            font-weight: bold;
+        }
+        body.dark-mode #darkModeToggle { color: #ccc; border-color: #666; }
+        #darkModeToggle:hover { border-color: #4CAF50; color: #4CAF50; }
+
         /* Edit panel — blue theme */
         #edit-panel {
             display: none;
@@ -105,13 +155,28 @@
             #modify-panel    { display: none !important; }
             #sheet-opts-panel { display: none !important; }
             #level-up-panel  { display: none !important; }
-            body { margin: 0; padding: 0; }
+            nav              { display: none !important; }
+            footer           { display: none !important; }
+            body, body.dark-mode { background: white !important; color: #000 !important; margin: 0; padding: 0; }
+            #sheet-content { padding: 0 !important; border-radius: 0 !important; }
             @page { size: letter; margin: 0.5in; }
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
         }
     </style>
 </head>
 <body>
+    <script>if(localStorage.getItem('theme')==='dark')document.body.classList.add('dark-mode');</script>
+    <nav>
+        <div class="nav-left">
+            <a href="generator.html">Character Generator</a>
+            <a href="classes.html">Class Tables</a>
+        </div>
+        <div style="display:flex; gap:20px; align-items:center;">
+            <a href="https://github.com/bmfrosty/ose-level-0" target="_blank" rel="noopener" title="View source on GitHub">⬡ GitHub</a>
+            <a href="index.html">About</a>
+            <button id="darkModeToggle" title="Toggle light/dark mode">☽ Dark</button>
+        </div>
+    </nav>
     <div id="print-controls">
         <button class="btn-print" onclick="window.print()">🖨 Print / Save as PDF</button>
         <button class="btn-edit"    id="toggleModifyBtn"    style="display:none">🔧 Modify Character</button>
@@ -223,6 +288,26 @@
     <script type="module">
         import { initCharacterSheet } from './cs-sheet-page.js';
         initCharacterSheet();
+    </script>
+
+    <footer style="margin-top: 32px; padding: 16px 0; border-top: 1px solid #ddd; font-size: 0.75em; color: #888; text-align: center;">
+        <p style="margin: 0;">Old-School Essentials is a trademark of Necrotic Gnome. The trademark and Old-School Essentials logo are used with permission of Necrotic Gnome, under license.</p>
+    </footer>
+
+    <script>
+        (function() {
+            const btn = document.getElementById('darkModeToggle');
+            function applyTheme(dark) {
+                document.body.classList.toggle('dark-mode', dark);
+                btn.textContent = dark ? '☀ Light' : '☽ Dark';
+            }
+            applyTheme(localStorage.getItem('theme') === 'dark');
+            btn.addEventListener('click', function() {
+                const isDark = document.body.classList.contains('dark-mode');
+                localStorage.setItem('theme', isDark ? 'light' : 'dark');
+                applyTheme(!isDark);
+            });
+        })();
     </script>
 </body>
 </html>
