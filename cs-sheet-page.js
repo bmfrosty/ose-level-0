@@ -10,20 +10,71 @@
  *   initCharacterSheet()       — entry point
  *
  * Public API used by gen-ui.js:
- *   expandCompactV2(cp)        — expand decoded compact params to a sheet spec
- *   renderFromCompactParams()  — render into a DOM element (used by generator preview)
- *   compressToBase64Url()      — re-exported for callers that need URL encoding
+ *   expandCompactV3(cp)        — expand decoded compact params to a sheet spec
+ *   displayCharacterSheet()    — re-exported from cs-core.js
+ *   compressToBase32()         — re-exported for callers that need URL encoding
  */
 
-import { renderCharacterSheetHTML } from './cs-sheet-renderer.js';
-import { buildOptionsLine }         from './cs-compact-codes.js';
-import { progModeLabel }            from './shared-sheet-builder.js';
-import { compressToBase64Url, decompressFromBase64Url } from './cs-url-codec.js';
+import * as csCore from './cs-core.js';
+import {
+    renderCharacterSheetHTML,
+    buildOptionsLine, compressToBase32, decompressFromBase32,
+    compressToBase64Url, decompressFromBase64Url,
+    progModeLabel,
+    PROGRESSION_TABLES, calculateModifier, getModifierEffects,
+    getAdvancedModeRacialAbilities, getRaceDisplayName, getClassDisplayName,
+    getClassProgressionData, getClassFeatures, getBasicModeClassAbilities,
+    getRaceInfo,
+    createCharacter, calculateXPBonus, getPrimeRequisites,
+    encodeCompactParams, decodeCompactParams,
+    parseHitDice, HIT_DICE_PROGRESSIONS, HIT_DICE_SCALE,
+    ARMOR, purchaseEquipment, getBackgroundByProfession,
+    calculateSavingThrows, rollStartingGold,
+} from './cs-core.js';
 
-export { compressToBase64Url } from './cs-url-codec.js';
+export { compressToBase32 } from './cs-core.js';
+export { displayCharacterSheet } from './cs-core.js';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
-const PROG_TO_CODE = { ose:'O', smooth:'S', ll:'L' };
+const PROG_TO_CODE = { ose:'O', smoothprog:'S', ll:'L' };
+
+/**
+ * Merge Languages entries from class abilities into the racial Languages string.
+ * For Advanced mode: Languages belongs solely in the racial abilities section.
+ * Class languages are merged in, sorted alphabetically, deduplicated.
+ * Language entries are then removed from classAbilities.
+ * Mutates both arrays in place.
+ *
+ * @param {string[]} racialAbilities - Already-formatted strings (e.g. "<strong>Languages</strong>: Alignment, Common, Elvish, ...")
+ * @param {Object[]} classAbilities  - Raw ability objects; may include { name:'Languages', languages:[...] }
+ */
+export function mergeAdvancedLanguages(racialAbilities, classAbilities) {
+    const classLangEntries = classAbilities.filter(a => a.name === 'Languages' && Array.isArray(a.languages));
+    if (classLangEntries.length === 0) return;
+
+    const classLangs = classLangEntries.flatMap(a => a.languages);
+
+    const LANG_PREFIX = '<strong>Languages</strong>:';
+    const racialLangIdx = racialAbilities.findIndex(s => typeof s === 'string' && s.startsWith(LANG_PREFIX));
+    let racialLangs = [];
+    if (racialLangIdx !== -1) {
+        racialLangs = racialAbilities[racialLangIdx].slice(LANG_PREFIX.length).trim().split(',').map(s => s.trim()).filter(Boolean);
+    }
+
+    const merged = [...new Set([...racialLangs, ...classLangs])].sort((a, b) => a.localeCompare(b));
+    const newEntry = `${LANG_PREFIX} ${merged.join(', ')}`;
+
+    if (racialLangIdx !== -1) {
+        racialAbilities[racialLangIdx] = newEntry;
+    } else {
+        racialAbilities.push(newEntry);
+    }
+
+    const toRemove = new Set(classLangEntries);
+    for (let i = classAbilities.length - 1; i >= 0; i--) {
+        if (toRemove.has(classAbilities[i])) classAbilities.splice(i, 1);
+    }
+}
 
 // ── Inlined from cs-sheet-builder.js (single-parent leaf — no separate file needed) ──
 
@@ -33,8 +84,27 @@ const CLASS_HD = {
     Spellblade_CLASS:6, Dwarf_CLASS:8, Elf_CLASS:6, Halfling_CLASS:6, Gnome_CLASS:4
 };
 
+const CODE_TO_CLASSNAME = {
+    FI:'Fighter_CLASS', CL:'Cleric_CLASS', MU:'Magic-User_CLASS',
+    TH:'Thief_CLASS',   SB:'Spellblade_CLASS', DW:'Dwarf_CLASS',
+    EL:'Elf_CLASS',     HA:'Halfling_CLASS',   GN:'Gnome_CLASS',
+};
+
+/** Derive the die sides for hr[levelIndex]: 4 for L0, class HD for L1+, 0 for fixed-bonus levels. */
+function getDieSidesForLevel(classCode, levelIndex) {
+    if (levelIndex === 0) return 4;
+    const className = CODE_TO_CLASSNAME[classCode];
+    if (!className) return 6;
+    const scale = HIT_DICE_SCALE[className];
+    const prog  = scale ? HIT_DICE_PROGRESSIONS[scale] : null;
+    const hdStr = prog ? (prog[levelIndex - 1] || null) : null;
+    if (!hdStr) return CLASS_HD[className] || 6;
+    const hd = parseHitDice(hdStr);
+    return hd.noConModifier ? 0 : (hd.sides || CLASS_HD[className] || 6);
+}
+
 /** Compact code → progression mode name (e.g. 'O' → 'ose') */
-const CODE_TO_PROG = { O:'ose', S:'smooth', L:'ll' };
+const CODE_TO_PROG = { O:'ose', S:'smoothprog', L:'ll' };
 
 /**
  * Build the spec object passed to `renderFromCompactParams` / `displayCharacterSheet`
@@ -55,7 +125,7 @@ function buildSheetSpec(sd, opts) {
         combat:          { maxHP: sd.maxHP, initMod: sd.initMod },
         abilityScores:   sd.abilityScores,
         weaponsAndSkills: {
-            weapon:          sd.weapon||null,
+            weapons:         sd.weapons||[],
             classAttackBonus:sd.classAttackBonus,
             meleeMod:        sd.meleeMod,
             rangedMod:       sd.rangedMod,
@@ -78,7 +148,6 @@ function buildSheetSpec(sd, opts) {
         footer:          sd.footer,
         printTitle:      sd.printTitle,
         openInNewTab:    opts.openInNewTab,
-        autoPrint:       opts.autoPrint,
         backgroundTab:   opts.backgroundTab,
         acDisplayMode:   opts.acDisplayMode || 'aac',
     };
@@ -89,13 +158,14 @@ const ADM_MAP      = { 0:'aac', 1:'dac-matrix', 2:'dual', 3:'dual-matrix' };
 /** Shared CON modifier helper (matches shared-hit-points.js logic). */
 const getConMod = s => s >= 15 ? 1 : s >= 13 ? 1 : s <= 6 ? -1 : s <= 8 ? -1 : 0;
 
-// ── expandCompactV2 ────────────────────────────────────────────────────────────
+// ── expandCompactV3 ────────────────────────────────────────────────────────────
 
 /**
- * Expand a compact v2 params object into a full sheet spec ready for
- * renderCharacterSheetHTML.
+ * Expand a compact v3 params object into a full sheet spec ready for
+ * renderCharacterSheetHTML. v2 params are upgraded to v3 by initCharacterSheet
+ * before reaching this function.
  */
-export async function expandCompactV2(cp) {
+export async function expandCompactV3(cp, precomp = {}, { silent = false } = {}) {
     const CODE_TO_CLASS = { FI:'Fighter_CLASS', CL:'Cleric_CLASS', MU:'Magic-User_CLASS',
                             TH:'Thief_CLASS',   SB:'Spellblade_CLASS', DW:'Dwarf_CLASS',
                             EL:'Elf_CLASS',     HA:'Halfling_CLASS',   GN:'Gnome_CLASS' };
@@ -104,27 +174,36 @@ export async function expandCompactV2(cp) {
     const CODE_TO_RCM   = { ST:'strict', SH:'strict-human', TE:'traditional-extended', AL:'allow-all' };
 
     const mode  = cp.m;
-    const prog  = CODE_TO_PROG[cp.p] || 'smooth';
+    const prog  = CODE_TO_PROG[cp.p] || 'smoothprog';
     const race  = CODE_TO_RACE[cp.r] || 'Human_RACE';
     const cls   = CODE_TO_CLASS[cp.c] || 'Fighter_CLASS';
     const level = cp.l ?? 1;
     const rcm   = CODE_TO_RCM[cp.rcm] || 'strict';
 
-    const adjArr  = cp.s  || [10,10,10,10,10,10];
-    const baseArr = cp.bs || adjArr;
+    let adjArr, baseArr;
+    if (cp.v === 3) {
+        // v3: s = raw rolled scores; racial derived from r; sa = extra adjustments beyond racial
+        baseArr = cp.s || [10,10,10,10,10,10];
+        let racialMods3 = {};
+        if (cp.m === 'A') {
+            // Human ability mods only apply when human racial abilities are enabled (rcm !== 'strict')
+            const humanAbilitiesOn = race !== 'Human_RACE' || rcm !== 'strict';
+            if (humanAbilitiesOn) racialMods3 = getRaceInfo(race)?.abilityModifiers ?? {};
+        }
+        const sa3 = cp.sa || Array(6).fill(0);
+        adjArr = baseArr.map((v, i) => Math.max(3, Math.min(18, v + (racialMods3[ABILITIES[i]] || 0) + sa3[i])));
+    } else {
+        // v2: s = adjusted scores; bs = pre-adjustment base scores
+        adjArr  = cp.s  || [10,10,10,10,10,10];
+        baseArr = cp.bs || adjArr;
+    }
     const adj = {}, base = {};
     ABILITIES.forEach((a, i) => { adj[a] = adjArr[i]; base[a] = baseArr[i]; });
 
-    const { calculateModifier } = await import('./shared-ability-scores.js');
-    const { getModifierEffects } = await import('./cs-modifier-display.js');
+    const classData = PROGRESSION_TABLES[prog] ?? PROGRESSION_TABLES.smoothprog;
+    const ClassDataShared = csCore;
     const mods = {};
     ABILITIES.forEach(a => mods[a] = calculateModifier(adj[a]));
-
-    const classDataMod = await import(
-        prog === 'll' ? './shared-class-data-ll.js' :
-        prog === 'ose' ? './shared-class-data-ose.js' : './shared-class-data-gygar.js'
-    );
-    const ClassDataShared = await import('./shared-class-data-shared.js');
 
     const abilityScoresSheet = ABILITIES.map((a, i) => ({
         name: a, score: adjArr[i],
@@ -146,102 +225,176 @@ export async function expandCompactV2(cp) {
 
     // ── Level 0 ──────────────────────────────────────────────────────────────
     if (level === 0) {
-        const { getAdvancedModeRacialAbilities } = await import('./shared-racial-abilities.js');
-        const racialAbilities = getAdvancedModeRacialAbilities(race);
+        const racialAbilities = getAdvancedModeRacialAbilities(race, { isAdvanced: isAdv, humanRacialAbilities: rcm !== 'strict' });
         const raceDisplay = race.replace('_RACE', '');
-        const sv = cp.sv || [14, 15, 16, 17, 18];
+
+        let sv, l0Weapons, l0Items, l0Armor, l0AC;
+        if (cp.v === 3) {
+            // v3: derive saves and equipment from stored params
+            const conScore = adjArr[2];
+            const rawSaves = calculateSavingThrows(0, race, conScore, isAdv, prog === 'smoothprog');
+            sv = [rawSaves.Death, rawSaves.Wands, rawSaves.Paralysis, rawSaves.Breath, rawSaves.Spells];
+            const bg = getBackgroundByProfession(cp.bg || '') || {};
+            l0Weapons = [];
+            const bgItems = Array.isArray(bg.item) ? bg.item : (bg.item ? [bg.item] : []);
+            l0Items   = [...(bg.weapon ? [`${bg.weapon} (background)`] : []), ...bgItems];
+            l0Armor   = (bg.armor && bg.armor !== 'Unarmored') ? bg.armor : null;
+            const armorAC = l0Armor ? (ARMOR[l0Armor]?.ac?.ascending ?? 10) : 10;
+            l0AC = armorAC + mods.DEX;
+        } else {
+            sv        = cp.sv || [14, 15, 16, 17, 18];
+            l0Weapons = cp.w  || [];
+            l0Items   = cp.it || [];
+            l0Armor   = cp.ar || null;
+            l0AC      = cp.ac || 10;
+        }
+
+        console.log('\n=== Level 0 Character ===');
+        console.log(`Race: ${raceDisplay}  |  Background: ${cp.bg||'(none)'}  |  Mode: ${modeLabel}${isAdv ? '' : ' Basic'}`);
+
+        const logableAbilities = racialAbilities.filter(a => !a.startsWith('\x00footnote:'));
+        if (logableAbilities.length) {
+            console.log('\nRacial Abilities:');
+            logableAbilities.forEach(a => console.log(`  - ${a}`));
+        } else {
+            console.log('\nRacial Abilities: (none displayed)');
+        }
+
+        console.log('\nSaving Throws:');
+        console.log(`  Death/Poison: ${sv[0]}  |  Wands: ${sv[1]}  |  Paralysis/Petrify: ${sv[2]}  |  Breath: ${sv[3]}  |  Spells: ${sv[4]}`);
+
+        console.log('\nBackground Equipment:');
+        if (l0Armor) console.log(`  Armor: ${l0Armor}`);
+        if (l0Items.length) console.log(`  Items: ${l0Items.join(', ')}`);
+        console.log(`  AC: ${l0AC}  |  HP: ${cp.h||1}  |  Gold: ${cp.g||0} gp`);
+        console.log('========================\n');
+
         return {
             title, subtitle,
             header: { columns: [
                 { label:'Character Name', value:cp.n||'Unknown', flex:3 },
                 { label:'Occupation',     value:cp.bg||'',       flex:2 },
-                { label:'Race/Class',     value:'',              flex:2 },
+                { label:'Race/Class',     value:raceDisplay,     flex:2 },
                 { label:'Level',          value:'0',             flex:1, center:true },
-                { label:'HD',             value:'',              flex:1, center:true },
+                { label:'HD',             value:'1d4',           flex:1, center:true },
                 { label:'XP Bonus',       value:'',              flex:1, center:true },
             ]},
             combat: { maxHP:cp.h||1, initMod:mods.DEX },
             abilityScores: abilityScoresSheet,
-            weaponsAndSkills: { weapon:cp.w||null, classAttackBonus: prog==='smooth' ? 0 : -1,
+            weaponsAndSkills: { weapons:l0Weapons, classAttackBonus: prog==='smoothprog' ? 0 : -1,
                                 meleeMod:mods.STR, rangedMod:mods.DEX, thiefSkills:null },
             abilitiesSection: { header:'RACIAL ABILITIES', racial:racialAbilities||[], class:[] },
             savingThrows: { death:sv[0], wands:sv[1], paralysis:sv[2], breath:sv[3], spells:sv[4] },
             experience: null,
-            equipment: { armor:cp.ar||null, items:cp.it||[], startingAC:cp.ac||10,
+            equipment: { armor:l0Armor, items:l0Items, startingAC:l0AC,
                          startingGold:cp.g||0, startingHD:'1d4' },
             spellSlots: null, turnUndead: null,
             showUndeadNames: !!cp.un, showQRCode: cp.qr !== 0, abilityOrder: cp.ao ?? 1,
             cp,
             footer: buildFooter(`0-Level ${raceDisplay}`),
             printTitle: `OSE ${isAdv?'Advanced':'Basic'} - ${raceDisplay} - 0-Level - ${cp.bg||''} - ${cp.n||''}`,
-            autoPrint: !!cp.ap,
         };
     }
 
     // ── L1+ characters (Basic & Advanced merged) ──────────────────────────────
     let character, raceDisplay, clsDisplay, raceClassDisplay;
+    const BASIC_DEMIHUMAN_CLASSES = ['Dwarf_CLASS','Elf_CLASS','Halfling_CLASS','Gnome_CLASS'];
 
     if (isAdv) {
-        const { getRaceDisplayName, getClassDisplayName } = await import('./shared-advanced-utils.js');
-        const { createCharacterAdvanced } = await import('./shared-advanced-character-gen.js');
-        character = createCharacterAdvanced({
-            level, race, className: cls,
-            baseScores: base, adjustedScores: adj,
-            hp: cp.h, classData: classDataMod, ClassDataShared,
-            progressionMode: prog, raceClassMode: rcm,
-            name: cp.n, background: { profession: cp.bg }
-        });
+        if (precomp.character) {
+            character = precomp.character;
+        } else {
+            const progData = precomp.progData ?? getClassProgressionData({ className: cls, level, abilityScores: adj, classData: classData, silent });
+            const features = precomp.features ?? getClassFeatures({ className: cls, level, classData: classData, ClassDataShared });
+            const humanAbilitiesEnabled = rcm !== 'strict';
+            const racialAbilities = getAdvancedModeRacialAbilities(race, { isAdvanced: true, humanRacialAbilities: humanAbilitiesEnabled, level });
+            mergeAdvancedLanguages(racialAbilities, features.classAbilities);
+            character = createCharacter({
+                level, className: cls, mode: prog === 'smoothprog' ? 'Smoothified' : 'Normal',
+                abilityScores: adj, hp: cp.h,
+                progressionData: progData, features, racialAbilities,
+                name: cp.n, background: { profession: cp.bg },
+            });
+            character.race              = race;
+            character.baseScores        = base;
+            character.adjustedScores    = adj;
+            character.racialAdjustments = getRaceInfo(race)?.abilityModifiers ?? {};
+            character.racialAbilities   = racialAbilities;
+        }
+        const logable = (character.racialAbilities || []).filter(a => !a.startsWith('\x00footnote:'));
+        if (logable.length) {
+            console.log('\nRacial Abilities:');
+            logable.forEach(a => console.log(`  - ${a}`));
+        }
         raceDisplay = getRaceDisplayName(race);
         clsDisplay  = getClassDisplayName(cls);
         raceClassDisplay = (cp.hhr && raceDisplay === 'Human') ? clsDisplay
             : (raceDisplay === clsDisplay ? raceDisplay : `${raceDisplay} ${clsDisplay}`);
     } else {
-        const { getClassProgressionData, getClassFeatures,
-                getRacialAbilities, createCharacter } = await import('./shared-basic-character-gen.js');
-        const progData = getClassProgressionData(cls, level, adj, classDataMod);
-        const features = getClassFeatures(cls, level, classDataMod, ClassDataShared);
-        const racial   = getRacialAbilities(cls);
-        character = createCharacter({
-            level, className: cls, mode: modeLabel,
-            abilityScores: adj, hp: cp.h,
-            progressionData: progData, features, racialAbilities: racial,
-            name: cp.n, background: { profession: cp.bg }, startingGold: cp.g || 0
-        });
-        // Basic mode: add Blessed / human racial abilities when cp.bl is set
-        if (cp.bl) {
-            const humanAbilities = [
-                { name: 'Blessed',      description: 'Roll HP twice, take best at each level (does not apply to level 0 HP roll)' },
-                { name: 'Decisiveness', description: 'Act first on tied initiative (+1 to individual initiative)' },
-                { name: 'Leadership',   description: 'Retainers/mercenaries +1 loyalty and morale' },
-            ];
-            character.classAbilities = [...(character.classAbilities || []), ...humanAbilities];
+        if (precomp.character) {
+            character = precomp.character;
+        } else {
+            const progData = precomp.progData ?? getClassProgressionData({ className: cls, level, abilityScores: adj, classData: classData, silent });
+            const features = precomp.features ?? getClassFeatures({ className: cls, level, classData: classData, ClassDataShared });
+            character = createCharacter({
+                level, className: cls, mode: modeLabel,
+                abilityScores: adj, hp: cp.h,
+                progressionData: progData, features, racialAbilities: [],
+                name: cp.n, background: { profession: cp.bg }, startingGold: cp.g || 0
+            });
+            if (rcm !== 'strict' && !BASIC_DEMIHUMAN_CLASSES.includes(cls)) {
+                const humanAbilities = [
+                    { name: 'Blessed',      description: 'Roll HP twice, take best at each level (does not apply to level 0 HP roll)' },
+                    { name: 'Decisiveness', description: 'Act first on tied initiative (+1 to individual initiative)' },
+                    { name: 'Leadership',   description: 'Retainers/mercenaries +1 loyalty and morale' },
+                ];
+                character.classAbilities = [...(character.classAbilities || []), ...humanAbilities];
+                console.log('\nHuman Racial Abilities (Basic mode):');
+                humanAbilities.forEach(a => console.log(`  - ${a.name}: ${a.description}`));
+            }
         }
         raceDisplay = clsDisplay = cls.replace('_CLASS', '');
         raceClassDisplay = clsDisplay;
     }
 
     // XP bonus — lowest prime requisite score wins
-    const { calculateXPBonus, getPrimeRequisites } =
-        await import(isAdv ? './shared-advanced-utils.js' : './shared-basic-utils.js');
     const primeReqs = getPrimeRequisites(cls);
     let xpBonusNum = primeReqs.length > 0 ? 10 : 0;
     primeReqs.forEach(a => { xpBonusNum = Math.min(xpBonusNum, calculateXPBonus(adj[a] || 10)); });
     const xpBonusStr = xpBonusNum >= 0 ? `+${xpBonusNum}%` : `${xpBonusNum}%`;
     const hasRacial  = (character.racialAbilities || []).length > 0;
     const hasClass   = (character.classAbilities  || []).length > 0;
-    // In Basic mode, demihuman classes are race-as-class.
-    // Their class abilities ARE their racial abilities, so label the section "CLASS ABILITIES".
-    const BASIC_DEMIHUMAN_CLASSES = ['Dwarf_CLASS','Elf_CLASS','Halfling_CLASS','Gnome_CLASS'];
     const isBasicDemihuman = !isAdv && BASIC_DEMIHUMAN_CLASSES.includes(cls);
 
-    const hdSides = CLASS_HD[cp.c] || 6;
+    const hdSides = CLASS_HD[CODE_TO_CLASSNAME[cp.c]] || 6;
+
+    // ── Equipment: v3 derives at render time; v2 reads stored fields ──────────
+    let eqWeapons, eqArmor, eqShield, eqItems, eqAC, eqGoldRemaining;
+    if (cp.v === 3) {
+        const bg  = cp.nl0 ? null : (getBackgroundByProfession(cp.bg || '') || {});
+        const eq  = purchaseEquipment(cls, cp.g || 0, mods.DEX, bg, prog);
+        eqWeapons      = eq.weapons;
+        eqArmor        = eq.armor;
+        eqShield       = eq.shield;
+        eqItems        = eq.items;
+        eqAC           = eq.startingAC;
+        eqGoldRemaining = eq.goldRemaining;
+    } else {
+        eqWeapons      = cp.w  || [];
+        eqArmor        = cp.ar || null;
+        eqShield       = !!cp.sh;
+        eqItems        = cp.it || [];
+        eqAC           = cp.ac || 10;
+        eqGoldRemaining = cp.g || 0;
+    }
+
     const sd = {
         title, subtitle,
         name: cp.n, occupation: cp.bg,
         raceClass: raceClassDisplay, level, hd: `1d${hdSides}`, xpBonus: xpBonusStr,
         maxHP: cp.h, initMod: mods.DEX,
         abilityScores: abilityScoresSheet,
-        weapon: cp.w, classAttackBonus: character.attackBonus || 0,
+        weapons: eqWeapons, classAttackBonus: character.attackBonus || 0,
         meleeMod: mods.STR, rangedMod: mods.DEX, thiefSkills: character.thiefSkills || null,
         abilitiesHeader: (hasRacial && hasClass) ? 'RACIAL & CLASS ABILITIES'
                          : hasRacial ? (isBasicDemihuman ? 'CLASS ABILITIES' : 'RACIAL ABILITIES') : 'CLASS ABILITIES',
@@ -251,8 +404,8 @@ export async function expandCompactV2(cp) {
         experience: { current: character.xp.current, forLevel: level,
                       forLevelXP: character.xp.forCurrentLevel,
                       forNext: character.xp.forNextLevel, bonus: xpBonusStr },
-        equipment: { armor: cp.ar || null, shield: !!cp.sh, items: cp.it || [],
-                     startingAC: cp.ac || 10, startingGold: cp.g || 0, startingHD: `1d${hdSides}` },
+        equipment: { armor: eqArmor, shield: eqShield, items: eqItems,
+                     startingAC: eqAC, startingGold: eqGoldRemaining, startingHD: `1d${hdSides}` },
         spellSlots: character.spellSlots || null,
         turnUndead: character.turnUndead || null,
         cp,
@@ -264,7 +417,7 @@ export async function expandCompactV2(cp) {
 
     const opts = {
         showUndeadNames: !!cp.un, showQRCode: cp.qr !== 0, abilityOrder: cp.ao ?? 1,
-        openInNewTab: false, autoPrint: !!cp.ap, backgroundTab: false,
+        openInNewTab: false, backgroundTab: false,
         acDisplayMode: ADM_MAP[cp.adm] || 'aac',
     };
     return buildSheetSpec(sd, opts);
@@ -276,11 +429,11 @@ export async function expandCompactV2(cp) {
  * Reconstruct a generator.html URL with the settings that were used to
  * generate this character, so the user can go back and roll another.
  *
- * @param {Object} cp - Decoded compact params v2 object (post-decodeCompactParams)
+ * @param {Object} cp - Decoded compact params object (post-decodeCompactParams)
  * @returns {string} URL string like "generator.html?mode=basic&p=ose&l=1&c=Fighter…"
  */
 function buildGeneratorURL(cp) {
-    const CODE_TO_PROG_KEY   = { O:'ose', S:'smooth', L:'ll' };
+    const CODE_TO_PROG_KEY   = { O:'ose', S:'smoothprog', L:'ll' };
     const CODE_TO_CLASS_NAME = {
         FI:'Fighter', CL:'Cleric', MU:'Magic-User', TH:'Thief',
         SB:'Spellblade', DW:'Dwarf', EL:'Elf', HA:'Halfling', GN:'Gnome'
@@ -295,7 +448,7 @@ function buildGeneratorURL(cp) {
     p.set('mode', isAdv ? 'advanced' : 'basic');
 
     // Progression mode (omit if OSE — that's the default)
-    const progKey = CODE_TO_PROG_KEY[cp.p] || 'smooth';
+    const progKey = CODE_TO_PROG_KEY[cp.p] || 'smoothprog';
     if (progKey !== 'ose') p.set('p', progKey);
 
     // Level
@@ -322,13 +475,11 @@ function buildGeneratorURL(cp) {
     // Basic: demihuman limits
     if (!isAdv && cp.dl) p.set('dl', 'extended');
 
-    // Advanced: race/class mode (omit if strict — that's the default)
-    if (isAdv && cp.rcm) {
-        const rcm = CODE_TO_RCM[cp.rcm];
-        if (rcm && rcm !== 'strict') p.set('rcm', rcm);
+    // Race/class mode (omit if strict — that's the default)
+    if (cp.rcm) {
+        const rcmVal = CODE_TO_RCM[cp.rcm];
+        if (rcmVal && rcmVal !== 'strict') p.set('rcm', rcmVal);
     }
-    // Basic: blessed flag → infer strict-human raceClassMode
-    if (!isAdv && cp.bl) p.set('rcm', 'strict-human');
 
     // Prime req mode (0 = 'user' = default → omit)
     if (cp.prm) p.set('prm', String(cp.prm));
@@ -458,7 +609,6 @@ function initEditPanel(decoded) {
 
     const hpSec        = document.getElementById('ep-hp-section');
     const hpRollsData  = decoded.hr && decoded.hr.length > 0 ? decoded.hr : null;
-    const hpDiceData   = decoded.hd || [];
     const conScoreInit = decoded.s ? decoded.s[2] : 10;
 
     if (hpRollsData) {
@@ -470,7 +620,7 @@ function initEditPanel(decoded) {
         hpRollsData.forEach((hp, i) => {
             const isL0  = i === 0;
             const label = isL0 ? 'L0' : `L${i}`;
-            const sides = hpDiceData[i] || 0;
+            const sides = getDieSidesForLevel(decoded.c, i);
             const cell  = document.createElement('div');
             cell.style.cssText = 'display:flex;align-items:center;gap:3px;';
             cell.innerHTML =
@@ -516,8 +666,6 @@ function initEditPanel(decoded) {
 
     // ── Apply Changes (Modify Character) ──────────────────────────────────────
     document.getElementById('ep-apply-btn').addEventListener('click', async () => {
-        const { encodeCompactParams } = await import('./cs-compact-codes.js');
-
         const newProg = document.querySelector('input[name="ep-prog"]:checked')?.value
             || CODE_TO_PROG[decoded.p] || 'ose';
 
@@ -543,30 +691,31 @@ function initEditPanel(decoded) {
         }
 
         const newCp = { ...decoded, p: PROG_TO_CODE[newProg], s: newScores, h: newHp,
-                        hr: newHpRolls, mx: 1, ap: 0 };
+                        hr: newHpRolls, mx: 1 };
+        delete newCp.hd;
         if (hasAnyAdj) { newCp.bs = newBaseScores; } else { delete newCp.bs; }
 
         const encoded = encodeCompactParams(newCp);
-        const b64url  = await compressToBase64Url(JSON.stringify(encoded));
-        window.location.href = `charactersheet.html?d=${b64url}`;
+        const b32    = await compressToBase32(JSON.stringify(encoded));
+        window.location.href = `charactersheet.html?d=${b32}`;
     });
 
     // ── Apply Options (Sheet Options) ─────────────────────────────────────────
     document.getElementById('so-apply-btn').addEventListener('click', async () => {
-        const { encodeCompactParams } = await import('./cs-compact-codes.js');
         const newAdm = parseInt(document.querySelector('input[name="ep-adm"]:checked')?.value || '0');
         const newCp  = { ...decoded,
             n:  document.getElementById('ep-name').value || decoded.n,
             un: document.getElementById('ep-undead').checked ? 1 : 0,
             qr: document.getElementById('ep-qr').checked    ? 1 : 0,
-            ap: 0 };
+        };
+        delete newCp.hd;
         if (newAdm) newCp.adm = newAdm; else delete newCp.adm;
 
         // Clear equipment: null out weapon, armor, shield, items, and gold;
         // reset AC to 10 (unarmored). Attack bonus, melee/ranged modifiers, and
         // thief skills are computed from class/level/scores and remain untouched.
         if (document.getElementById('ep-clear-equipment')?.checked) {
-            newCp.w  = null;   // weapon
+            newCp.w  = [];     // weapons
             newCp.ar = null;   // armor
             newCp.sh = 0;      // shield
             newCp.it = [];     // items (includes helmet, gear, etc.)
@@ -575,8 +724,8 @@ function initEditPanel(decoded) {
         }
 
         const encoded = encodeCompactParams(newCp);
-        const b64url  = await compressToBase64Url(JSON.stringify(encoded));
-        window.location.href = `charactersheet.html?d=${b64url}`;
+        const b32    = await compressToBase32(JSON.stringify(encoded));
+        window.location.href = `charactersheet.html?d=${b32}`;
     });
 
     // ── Level Up panel ─────────────────────────────────────────────────────────
@@ -632,10 +781,6 @@ function initEditPanel(decoded) {
         document.getElementById('lup-apply-btn').addEventListener('click', async () => {
             if (!selectedClassCode) { alert('Please select a class first!'); return; }
 
-            const { encodeCompactParams }               = await import('./cs-compact-codes.js');
-            const { parseHitDice }                      = await import('./shared-hit-points.js');
-            const { HIT_DICE_PROGRESSIONS, HIT_DICE_SCALE } = await import('./shared-class-data-shared.js');
-
             const CODE_TO_CLASS_LU = {
                 FI:'Fighter_CLASS', CL:'Cleric_CLASS', MU:'Magic-User_CLASS',
                 TH:'Thief_CLASS',   SB:'Spellblade_CLASS', DW:'Dwarf_CLASS',
@@ -656,29 +801,48 @@ function initEditPanel(decoded) {
             const hd    = parseHitDice(hdStr);
             const sides = hd.sides || CLASS_HD[selectedClassCode] || 6;
 
+            const hpMode0 = decoded.hm || 0;
+            const DEMIHUMAN_CODES_L01 = new Set(['DW','EL','HA','GN']);
+            const hasBlessed0 = decoded.rcm && decoded.rcm !== 'ST'
+                && (decoded.m === 'A' ? decoded.r === 'HU' : !DEMIHUMAN_CODES_L01.has(selectedClassCode));
+            const effMode0 = hasBlessed0 ? 1 : hpMode0;
+            const roll = () => Math.floor(Math.random() * sides) + 1;
+
             let l1HP;
-            do {
-                l1HP = Math.max(1, Math.floor(Math.random() * sides) + 1 + conMod);
-            } while (l1HP < l0HP);
+            if (effMode0 === 2) {
+                l1HP = Math.max(l0HP, sides + conMod);
+            } else if (effMode0 === 1) {
+                do {
+                    l1HP = Math.max(l0HP, Math.max(roll(), roll()) + conMod);
+                } while (l1HP < l0HP);
+            } else if (effMode0 === 3) {
+                let d;
+                do { d = roll(); } while (d <= 2);
+                l1HP = Math.max(l0HP, d + conMod);
+            } else {
+                do {
+                    l1HP = Math.max(1, roll() + conMod);
+                } while (l1HP < l0HP);
+            }
 
             const newMode = isAdv ? 'A' : 'B';
+            const lupProg = decoded.p === 'S' ? 'smoothprog' : 'ose';
             const newCp = {
-                v:2, m: newMode, p: decoded.p || 'O', r: decoded.r || 'HU',
+                v:3, m: newMode, p: decoded.p || 'O', r: decoded.r || 'HU',
                 c: selectedClassCode, l: 1,
                 s: decoded.s || [10,10,10,10,10,10],
-                h: l1HP, hr: [l0HP, l1HP], hd: [4, sides], il: 0,
+                h: l1HP, hr: [l0HP, l1HP], il: 0,
                 n: decoded.n||'', bg: decoded.bg||'',
-                ar: decoded.ar||null, sh: 0, w: decoded.w||null, it: decoded.it||[],
-                g: decoded.g||0, ac: decoded.ac||10,
+                g: rollStartingGold(lupProg),
                 un: document.getElementById('lup-undead').checked ? 1 : 0,
                 qr: document.getElementById('lup-qr').checked    ? 1 : 0,
-                ap: 0,
-                ...(newMode === 'A' ? { rcm:'SH' } : {}),
+                rcm: decoded.rcm || 'ST',
+                ...(hpMode0 > 0 ? { hm: hpMode0 } : {}),
             };
 
             const encoded = encodeCompactParams(newCp);
-            const b64url  = await compressToBase64Url(JSON.stringify(encoded));
-            window.location.href = `charactersheet.html?d=${b64url}`;
+            const b32    = await compressToBase32(JSON.stringify(encoded));
+            window.location.href = `charactersheet.html?d=${b32}`;
         });
 
     } else {
@@ -699,10 +863,6 @@ function initEditPanel(decoded) {
         document.getElementById('lup-qr').checked     = decoded.qr !== 0;
 
         document.getElementById('lup-apply-btn').addEventListener('click', async () => {
-            const { encodeCompactParams }               = await import('./cs-compact-codes.js');
-            const { parseHitDice }                      = await import('./shared-hit-points.js');
-            const { HIT_DICE_PROGRESSIONS, HIT_DICE_SCALE } = await import('./shared-class-data-shared.js');
-
             const CODE_TO_CLASS_LU = {
                 FI:'Fighter_CLASS', CL:'Cleric_CLASS', MU:'Magic-User_CLASS',
                 TH:'Thief_CLASS',   SB:'Spellblade_CLASS', DW:'Dwarf_CLASS',
@@ -723,12 +883,17 @@ function initEditPanel(decoded) {
             };
 
             let newHpRolls = [...(decoded.hr || [])];
-            let newHpDice  = [...(decoded.hd || [])];
+            const rollLog = [];
 
             if (newLevel > curLevel) {
-                const l0HP  = newHpRolls[0] || 1;
-                // hm: 0=normal, 1=blessed, 2=5e, 3=re-roll 1s and 2s
+                const l0HP   = newHpRolls[0] || 1;
                 const hpMode = decoded.hm || 0;
+                const DEMIHUMAN_CODES_BL = new Set(['DW','EL','HA','GN']);
+                const hasBlessed = decoded.rcm && decoded.rcm !== 'ST'
+                    && (decoded.m === 'A' ? decoded.r === 'HU' : !DEMIHUMAN_CODES_BL.has(decoded.c));
+                const effectiveHpMode = hasBlessed ? 1 : hpMode;
+                const roll   = sides => Math.floor(Math.random() * sides) + 1;
+
                 for (let lvl = curLevel + 1; lvl <= newLevel; lvl++) {
                     const hdStr = getHdStr(className, lvl);
                     const hd    = parseHitDice(hdStr);
@@ -736,45 +901,51 @@ function initEditPanel(decoded) {
                     if (hd.noConModifier) {
                         const prevHd = parseHitDice(getHdStr(className, lvl - 1));
                         lvlHP = Math.max(1, hd.bonus - prevHd.bonus);
+                        rollLog.push(`  L${lvl}: fixed +${lvlHP} hp (no die roll)`);
                     } else {
+                        const sides = hd.sides;
                         const minHP = (lvl === 1 && !decoded.il) ? l0HP : 1;
-                        if (hpMode === 2) {
-                            // 5e: max die at L1, average (floor(sides/2)+1) at L2+
-                            const dieVal = (lvl === 1) ? hd.sides : Math.floor(hd.sides / 2) + 1;
+                        const conStr = conMod >= 0 ? `+${conMod}` : `${conMod}`;
+                        if (effectiveHpMode === 2) {
+                            const dieVal = (lvl === 1) ? sides : Math.floor(sides / 2) + 1;
                             lvlHP = Math.max(minHP, dieVal + conMod);
-                        } else if (hpMode === 1) {
-                            // Blessed: roll twice, take best
+                            rollLog.push(`  L${lvl}: 5e-style ${dieVal} CON ${conStr} = ${lvlHP}`);
+                        } else if (effectiveHpMode === 1) {
+                            let r1, r2;
                             do {
-                                const r1 = Math.max(1, Math.floor(Math.random() * hd.sides) + 1 + conMod);
-                                const r2 = Math.max(1, Math.floor(Math.random() * hd.sides) + 1 + conMod);
-                                lvlHP = Math.max(r1, r2);
+                                r1 = roll(sides); r2 = roll(sides);
+                                lvlHP = Math.max(minHP, Math.max(r1, r2) + conMod);
                             } while (lvlHP < minHP);
-                        } else if (hpMode === 3) {
-                            // Re-roll 1s and 2s: re-roll die if it shows 1 or 2
-                            let dieRoll;
-                            do {
-                                dieRoll = Math.floor(Math.random() * hd.sides) + 1;
-                            } while (dieRoll <= 2);
-                            lvlHP = Math.max(minHP, dieRoll + conMod);
+                            rollLog.push(`  L${lvl}: Blessed 1d${sides} — rolled ${r1} and ${r2}, kept ${Math.max(r1,r2)} CON ${conStr} = ${lvlHP}`);
+                        } else if (effectiveHpMode === 3) {
+                            let d;
+                            do { d = roll(sides); } while (d <= 2);
+                            lvlHP = Math.max(minHP, d + conMod);
+                            rollLog.push(`  L${lvl}: 1d${sides} (re-roll 1s/2s) rolled ${d} CON ${conStr} = ${lvlHP}`);
                         } else {
-                            // Normal: single roll
-                            do {
-                                lvlHP = Math.max(1, Math.floor(Math.random() * hd.sides) + 1 + conMod);
-                            } while (lvlHP < minHP);
+                            let d;
+                            do { d = roll(sides); lvlHP = Math.max(1, d + conMod); } while (lvlHP < minHP);
+                            rollLog.push(`  L${lvl}: 1d${sides} rolled ${d} CON ${conStr} = ${lvlHP}`);
                         }
                     }
                     newHpRolls.push(lvlHP);
-                    newHpDice.push(hd.noConModifier ? 0 : hd.sides);
                 }
             }
 
             const newHp = newHpRolls.reduce((a, b, i) => (i === 0 && !decoded.il) ? a : a + b, 0);
-            const newCp = { ...decoded, l: newLevel, hr: newHpRolls, hd: newHpDice,
-                            h: newHp, un: newUn, qr: newQr, ap: 0 };
+            const newCp = { ...decoded, l: newLevel, hr: newHpRolls,
+                            h: newHp, un: newUn, qr: newQr };
 
+            if (rollLog.length) {
+                sessionStorage.setItem('levelUpNotice', JSON.stringify({
+                    from: curLevel, to: newLevel, lines: rollLog, totalHP: newHp
+                }));
+            }
+
+            delete newCp.hd;
             const encoded = encodeCompactParams(newCp);
-            const b64url  = await compressToBase64Url(JSON.stringify(encoded));
-            window.location.href = `charactersheet.html?d=${b64url}`;
+            const b32    = await compressToBase32(JSON.stringify(encoded));
+            window.location.href = `charactersheet.html?d=${b32}`;
         });
     }
 }
@@ -786,11 +957,9 @@ function initEditPanel(decoded) {
  * If editPanelEl is provided and decodedForEdit is set, the edit panels are initialised.
  */
 export async function renderFromCompactParams(cp, contentEl, opts = {}) {
-    const sheet = await expandCompactV2(cp);
+    const sheet = await expandCompactV3(cp);
     document.title       = sheet.printTitle || 'Character Sheet';
     contentEl.innerHTML  = renderCharacterSheetHTML(sheet);
-
-    if (sheet.autoPrint) setTimeout(() => window.print(), 400);
 
     if (opts.initEditPanels && cp) initEditPanel(cp);
 
@@ -798,20 +967,7 @@ export async function renderFromCompactParams(cp, contentEl, opts = {}) {
         const qrImg  = document.getElementById('ose-qr-img');
         const qrLink = document.getElementById('ose-qr-link');
 
-        // The QR code is meant for sharing / scanning on another device, so it
-        // must never trigger auto-print.  If the current URL has ap:1 embedded,
-        // re-encode a copy with ap:0 so the scanned URL just shows the sheet.
-        let shareUrl = window.location.href;
-        if (cp && cp.ap) {
-            try {
-                const { encodeCompactParams } = await import('./cs-compact-codes.js');
-                const shareCp = { ...cp, ap: 0 };
-                const encoded = encodeCompactParams(shareCp);
-                const b64url  = await compressToBase64Url(JSON.stringify(encoded));
-                shareUrl = `${window.location.origin}${window.location.pathname}?d=${b64url}`;
-            } catch (e) { /* fall back to current URL on any error */ }
-        }
-
+        const shareUrl = window.location.href;
         if (qrLink) qrLink.href = shareUrl;
         if (qrImg) {
             try {
@@ -843,12 +999,33 @@ export async function initCharacterSheet() {
         let decodedCp = null;
 
         if (compressed) {
-            const json   = await decompressFromBase64Url(compressed);
+            // Detect encoding: base32 uses only A-Z and 2-7; base64url uses lowercase/- /_
+            const isBase32 = /^[A-Z2-7]+$/.test(compressed);
+            const json   = isBase32
+                ? await decompressFromBase32(compressed)
+                : await decompressFromBase64Url(compressed);
             const parsed = JSON.parse(json);
             console.log('[charactersheet] Decompressed URL data:\n' + JSON.stringify(parsed, null, 2));
 
-            if (parsed.v === 2) {
-                const { decodeCompactParams } = await import('./cs-compact-codes.js');
+            if (parsed.v === 2 || parsed.v === 3) {
+                if (parsed.v === 2) {
+                    // Upgrade v2 → v3 in-place before decoding
+                    if (parsed.bs !== undefined) { parsed.s = parsed.bs; delete parsed.bs; }
+                    if (parsed.bl !== undefined && parsed.rcm === undefined) {
+                        parsed.rcm = parsed.bl ? 'SH' : 'ST';
+                    }
+                    delete parsed.bl;
+                    delete parsed.sv;
+                    delete parsed.ap;
+                    delete parsed.ar;
+                    delete parsed.sh;
+                    delete parsed.w;
+                    delete parsed.it;
+                    delete parsed.ac;
+                    delete parsed.de;
+                    delete parsed.hd;
+                    parsed.v = 3;
+                }
                 decodedCp = decodeCompactParams(parsed);
                 console.log('[charactersheet] Decoded compact params:\n' + JSON.stringify(decodedCp, null, 2));
                 await renderFromCompactParams(decodedCp, contentEl,
@@ -860,17 +1037,33 @@ export async function initCharacterSheet() {
                     genBtn.href = buildGeneratorURL(decodedCp);
                     genBtn.style.display = '';
                 }
+
+                // Show level-up HP notice if one was stored by the previous page
+                const rawNotice = sessionStorage.getItem('levelUpNotice');
+                if (rawNotice) {
+                    sessionStorage.removeItem('levelUpNotice');
+                    try {
+                        const n = JSON.parse(rawNotice);
+                        console.log(`\n=== Level Up: ${n.from} → ${n.to} ===`);
+                        n.lines.forEach(l => console.log(l));
+                        console.log(`  Total HP now: ${n.totalHP}`);
+                        console.log('========================\n');
+
+                        const banner = document.createElement('div');
+                        banner.style.cssText = 'margin:8px 0;padding:8px 12px;background:#e8f5e9;border:1px solid #a5d6a7;border-radius:4px;font-size:13px;';
+                        banner.innerHTML = `<strong>Level ${n.from} → ${n.to}:</strong> ${n.lines.map(l => l.trim()).join(' &nbsp;·&nbsp; ')} &nbsp;·&nbsp; Total HP: ${n.totalHP}`;
+                        contentEl.insertBefore(banner, contentEl.firstChild);
+                    } catch (_) {}
+                }
             } else {
                 // Legacy v1 sheet object
                 document.title      = parsed.printTitle || 'Character Sheet';
                 contentEl.innerHTML = renderCharacterSheetHTML(parsed);
-                if (parsed.autoPrint) setTimeout(() => window.print(), 400);
             }
         } else if (legacy) {
             const parsed = JSON.parse(legacy);
             document.title      = parsed.printTitle || 'Character Sheet';
             contentEl.innerHTML = renderCharacterSheetHTML(parsed);
-            if (parsed.autoPrint) setTimeout(() => window.print(), 400);
         } else {
             errorEl.style.display = 'block';
             errorEl.textContent   = 'No character data found in URL. Please generate a character and click "Print / Save as PDF".';

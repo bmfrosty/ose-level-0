@@ -10,6 +10,9 @@ yarn-error.log*
 # Generated and non-distributable images (testing/debugging)
 *.png
 *.jpg
+# OSE third-party license logos (committed to repo)
+!Designed_dark.png
+!Designed_light.png
 
 # Generated JSON and MD files
 OSE_0Level_*.json
@@ -78,6 +81,10 @@ jspm_packages/
 tmp/
 temp/
 
-PLAN_CLASS_ABILITIES_AUDIT.md
-PLAN_RACE_ABILITIES_AUDIT.md
+PLAN_*
+PLANS_COMPLETED
 COPYRIGHTED-*
+BASIC_VS_ADVANCED_CLASSES.md
+CHARACTER_CREATION_*
+
+legacy-functions.txt

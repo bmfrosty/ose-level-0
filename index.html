@@ -14,6 +14,9 @@
             margin: 0 auto;
             padding: 20px;
             line-height: 1.6;
+        }
+        .welcome-section, .generator-grid, .mode-comparison,
+        .gygar-section, .content-section, .links-section {
             font-size: 11px;
         }
         nav {
@@ -37,10 +40,7 @@
         nav a:hover {
             color: #4CAF50;
         }
-        nav a.active {
-            color: #4CAF50;
-            text-decoration: underline;
-        }
+        nav a.active { color: #4CAF50; }
         
         h1 {
             color: #333;
@@ -194,21 +194,70 @@
         .links-section a:hover {
             background-color: #0b7dda;
         }
+
+        /* Dark mode */
+        body.dark-mode { background-color: #1a1a2e; color: #e0e0e0; }
+        body.dark-mode nav { background-color: #2d2d44; }
+        body.dark-mode nav a { color: #ccc; }
+        body.dark-mode nav a:hover { color: #4CAF50; }
+        body.dark-mode nav a.active { color: #4CAF50; }
+        body.dark-mode h1 { color: #e0e0e0; }
+        body.dark-mode .welcome-section { background-color: #1a3020; }
+        body.dark-mode .welcome-section h2 { color: #81c784; }
+        body.dark-mode .generator-card { background-color: #1e1e2e; }
+        body.dark-mode .generator-card p { color: #bbb; }
+        body.dark-mode .generator-card h3 { color: #81c784; }
+        body.dark-mode .generator-card a { background-color: #2e7d32; }
+        body.dark-mode .generator-card a:hover { background-color: #388e3c; }
+        body.dark-mode .mode-comparison { background-color: #1a2030; }
+        body.dark-mode .mode-comparison h2 { color: #64b5f6; }
+        body.dark-mode .mode-table th { background-color: #1565c0; }
+        body.dark-mode .mode-table td, body.dark-mode .mode-table th { border-color: #444; }
+        body.dark-mode .mode-table tr:nth-child(even) { background-color: #1e2a38; }
+        body.dark-mode .gygar-section { background-color: #1e1228; }
+        body.dark-mode .gygar-section h2 { color: #ce93d8; }
+        body.dark-mode .content-section { background-color: #1e201e; }
+        body.dark-mode .content-section h2 { color: #ddd; }
+        body.dark-mode .links-section { background-color: #1a2030; }
+        body.dark-mode .links-section h2 { color: #ddd; }
+        body.dark-mode .links-section a { background-color: #0d47a1; }
+        body.dark-mode .links-section a:hover { background-color: #1565c0; }
+        body.dark-mode footer { border-top-color: #444; color: #666; }
+
+        #darkModeToggle {
+            background: none;
+            border: 1px solid #999;
+            border-radius: 4px;
+            padding: 4px 10px;
+            cursor: pointer;
+            font-size: 11px;
+            color: #333;
+            font-weight: bold;
+        }
+        body.dark-mode #darkModeToggle { color: #ccc; border-color: #666; }
+        #darkModeToggle:hover { border-color: #4CAF50; color: #4CAF50; }
     </style>
 </head>
 <body>
+    <script>if(localStorage.getItem('theme')==='dark')document.body.classList.add('dark-mode');</script>
     <nav>
         <div class="nav-left">
             <a href="generator.html">Character Generator</a>
             <a href="classes.html">Class Tables</a>
         </div>
         <div style="display:flex; gap:20px; align-items:center;">
-            <a href="https://github.com/bmfrosty/ose-level-0" target="_blank" rel="noopener" title="View source on GitHub" style="color:#333;">⬡ GitHub</a>
+            <a href="https://github.com/bmfrosty/ose-level-0" target="_blank" rel="noopener" title="View source on GitHub">⬡ GitHub</a>
             <a href="index.html" class="active">About</a>
+            <button id="darkModeToggle" title="Toggle light/dark mode">☽ Dark</button>
         </div>
     </nav>
 
     <h1>OSE Character Generator</h1>
+    <div style="text-align:center; margin: -20px 0 24px;">
+        <img id="ose-logo" src="Designed_light.png" alt="Designed for use with Old-School Essentials"
+             style="height: 72px; width: auto; display: inline-block;">
+        <div style="font-size: 0.8em; color: #888; margin-top: 4px;">Requires Old-School Essentials</div>
+    </div>
 
     <div class="welcome-section">
         <h2>Welcome!</h2>
@@ -286,7 +335,7 @@
         
         <p>The author initially started the campaign using <strong>Basic OSE</strong> (race-as-class system), where Dwarf, Elf, and Halfling are classes rather than races. After a few sessions, the campaign transitioned to <strong>Advanced OSE</strong>, which separates race from class and allows for more flexible character combinations.</p>
         
-        <p>The "Smoothified Mode" progressions were designed to provide more gradual advancement and remove demihuman level limits, making the game feel more balanced and rewarding for players who choose non-human characters.</p>
+        <p>The "Smoothified Mode" progressions were designed to provide more gradual advancement make the game feel more balanced and rewarding at level-up.</p>
     </div>
 
     <div class="content-section">
@@ -314,14 +363,28 @@
         <a href="https://www.drivethrurpg.com/en/product/78523/advanced-edition-companion-labyrinth-lord" target="_blank" rel="noopener">Advanced Edition Companion</a>
     </div>
 
-    <div class="content-section">
-        <h2>📝 License & Attribution</h2>
-        <p>Old-School Essentials is a trademark of Necrotic Gnome. The trademark and Old-School Essentials logo are used with permission of Necrotic Gnome, under license.</p>
-        
-        <p>The Ruins of Castle Gygar is a campaign setting by Tidal Wave Games, available on DriveThruRPG.</p>
-        
-        <p>These tools are fan-made resources created to support play and are not official products.</p>
-    </div>
+    <script>
+        (function() {
+            const logo = document.getElementById('ose-logo');
+            const btn  = document.getElementById('darkModeToggle');
+            function applyTheme(dark) {
+                document.body.classList.toggle('dark-mode', dark);
+                logo.src = dark ? 'Designed_dark.png' : 'Designed_light.png';
+                btn.textContent = dark ? '☀ Light' : '☽ Dark';
+            }
+            applyTheme(localStorage.getItem('theme') === 'dark');
+            btn.addEventListener('click', function() {
+                const isDark = document.body.classList.contains('dark-mode');
+                localStorage.setItem('theme', isDark ? 'light' : 'dark');
+                applyTheme(!isDark);
+            });
+        })();
+    </script>
+
+    <footer style="margin-top: 32px; padding: 16px 0; border-top: 1px solid #ddd; font-size: 0.8em; color: #888; text-align: center;">
+        <p style="margin: 0 0 4px;">The Ruins of Castle Gygar is a campaign setting by Tidal Wave Games. These tools are fan-made resources and are not official products.</p>
+        <p style="margin: 0;">Old-School Essentials is a trademark of Necrotic Gnome. The trademark and Old-School Essentials logo are used with permission of Necrotic Gnome, under license.</p>
+    </footer>
 
 </body>
 </html>

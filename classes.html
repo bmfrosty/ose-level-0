@@ -13,8 +13,10 @@
             max-width: 800px;
             margin: 0 auto;
             padding: 20px;
-            font-size: 11px;
             line-height: 1.5;
+        }
+        .subtitle, .intro-box, .class-buttons, #class-display {
+            font-size: 11px;
         }
         nav {
             background-color: #f0f0f0;
@@ -28,7 +30,7 @@
         nav .nav-left { display: flex; gap: 20px; }
         nav a { text-decoration: none; color: #333; font-weight: bold; }
         nav a:hover { color: #4CAF50; }
-        nav a.active { color: #4CAF50; text-decoration: underline; }
+        nav a.active { color: #4CAF50; }
 
         h1 { color: #333; margin-bottom: 6px; }
         .subtitle { color: #666; margin-bottom: 20px; font-size: 12px; }
@@ -127,17 +129,60 @@
             padding: 40px;
             font-size: 13px;
         }
+
+        /* Dark mode */
+        body.dark-mode { background-color: #1a1a2e; color: #e0e0e0; }
+        body.dark-mode nav { background-color: #2d2d44; }
+        body.dark-mode nav a { color: #ccc; }
+        body.dark-mode nav a:hover { color: #4CAF50; }
+        body.dark-mode nav a.active { color: #4CAF50; }
+        body.dark-mode h1 { color: #e0e0e0; }
+        body.dark-mode .subtitle { color: #aaa; }
+        body.dark-mode .intro-box { background: #1e1228; border-color: #7B1FA2; }
+        body.dark-mode .intro-box a { color: #ce93d8; }
+        body.dark-mode .class-btn { background-color: #6a1b9a; }
+        body.dark-mode .class-btn:hover { background-color: #7b1fa2; }
+        body.dark-mode .class-btn.active { background-color: #9c27b0; border-color: #ce93d8; }
+        body.dark-mode #class-display { background: #1e1e2e; border-color: #555; }
+        body.dark-mode #class-display h2 { color: #ce93d8; border-color: #7B1FA2; }
+        body.dark-mode .table-note { color: #aaa; }
+        body.dark-mode th { background-color: #4a148c; }
+        body.dark-mode td, body.dark-mode th { border-color: #444; }
+        body.dark-mode tr:nth-child(even) { background-color: #1e1228; }
+        body.dark-mode tr:hover { background-color: #2a1a35; }
+        body.dark-mode td.tohit { color: #9fa8da; }
+        body.dark-mode .class-note { background: #1a2a1a; border-color: #4CAF50; }
+        body.dark-mode .class-note strong:first-child { color: #81c784; }
+        body.dark-mode .fighter-note { background: #1a2030; border-color: #1976D2; }
+        body.dark-mode .fighter-note strong:first-child { color: #64b5f6; }
+        body.dark-mode .placeholder { color: #777; }
+        body.dark-mode footer { border-top-color: #444; color: #666; }
+
+        #darkModeToggle {
+            background: none;
+            border: 1px solid #999;
+            border-radius: 4px;
+            padding: 4px 10px;
+            cursor: pointer;
+            font-size: 11px;
+            color: #333;
+            font-weight: bold;
+        }
+        body.dark-mode #darkModeToggle { color: #ccc; border-color: #666; }
+        #darkModeToggle:hover { border-color: #4CAF50; color: #4CAF50; }
     </style>
 </head>
 <body>
+    <script>if(localStorage.getItem('theme')==='dark')document.body.classList.add('dark-mode');</script>
     <nav>
         <div class="nav-left">
             <a href="generator.html">Character Generator</a>
             <a href="classes.html" class="active">Class Tables</a>
         </div>
         <div style="display:flex; gap:20px; align-items:center;">
-            <a href="https://github.com/bmfrosty/ose-level-0" target="_blank" rel="noopener" title="View source on GitHub" style="color:#333;">⬡ GitHub</a>
+            <a href="https://github.com/bmfrosty/ose-level-0" target="_blank" rel="noopener" title="View source on GitHub">⬡ GitHub</a>
             <a href="index.html">About</a>
+            <button id="darkModeToggle" title="Toggle light/dark mode">☽ Dark</button>
         </div>
     </nav>
 
@@ -159,16 +204,13 @@
 
     <script type="module">
         import {
-            ATTACK_BONUS_PROGRESSIONS,
-            ATTACK_BONUS_SCALE,
-            SAVING_THROWS
-        } from './shared-class-data-gygar.js';
-
-        import {
+            PROGRESSION_TABLES,
             XP_REQUIREMENTS,
             HIT_DICE_SCALE,
             HIT_DICE_PROGRESSIONS
-        } from './shared-class-data-shared.js';
+        } from './cs-core.js';
+
+        const { ATTACK_BONUS_PROGRESSIONS, ATTACK_BONUS_SCALE, SAVING_THROWS } = PROGRESSION_TABLES.smoothprog;
 
         const CLASSES = [
             { key: "Cleric_CLASS",      name: "Cleric" },
@@ -303,5 +345,26 @@
         const initial = CLASSES.find(c => c.key === urlParam) ? urlParam : 'Fighter_CLASS';
         showClass(initial);
     </script>
+
+    <script>
+        (function() {
+            const btn = document.getElementById('darkModeToggle');
+            function applyTheme(dark) {
+                document.body.classList.toggle('dark-mode', dark);
+                btn.textContent = dark ? '☀ Light' : '☽ Dark';
+            }
+            applyTheme(localStorage.getItem('theme') === 'dark');
+            btn.addEventListener('click', function() {
+                const isDark = document.body.classList.contains('dark-mode');
+                localStorage.setItem('theme', isDark ? 'light' : 'dark');
+                applyTheme(!isDark);
+            });
+        })();
+    </script>
+
+    <footer style="margin-top: 32px; padding: 16px 0; border-top: 1px solid #ddd; font-size: 0.75em; color: #888; text-align: center;">
+        <p style="margin: 0;">Old-School Essentials is a trademark of Necrotic Gnome. The trademark and Old-School Essentials logo are used with permission of Necrotic Gnome, under license.</p>
+    </footer>
+
 </body>
 </html>

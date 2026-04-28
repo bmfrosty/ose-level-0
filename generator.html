@@ -13,7 +13,7 @@
         }
 
         /* Keep small font for controls only */
-        .generator-container, nav, h1 {
+        .generator-container, h1 {
             font-size: 11px;
         }
         nav {
@@ -35,7 +35,7 @@
             font-weight: bold;
         }
         nav a:hover { color: #4CAF50; }
-        nav a.active { color: #4CAF50; text-decoration: underline; }
+        nav a.active { color: #4CAF50; }
 
         /* ── Accent colour — switches with mode ────────────────────────────── */
         .generator-container {
@@ -257,9 +257,72 @@
             box-shadow: 0 4px 20px rgba(0,0,0,0.3); font-size: 11px;
         }
         .share-modal-box h3 { font-size: 14px; margin-top: 0; }
+
+        /* ── Dark mode ─────────────────────────────────────────────────────── */
+        body.dark-mode { background-color: #1a1a2e; color: #e0e0e0; }
+        body.dark-mode nav { background-color: #2d2d44; }
+        body.dark-mode nav a { color: #ccc; }
+        body.dark-mode nav a:hover { color: #4CAF50; }
+        body.dark-mode nav a.active { color: #4CAF50; }
+        body.dark-mode h1 { color: #e0e0e0; }
+        body.dark-mode footer { border-top-color: #444; color: #666; }
+
+        body.dark-mode .generator-container { background-color: #1e1e2e; color: #ddd; }
+        body.dark-mode .generator-container h3,
+        body.dark-mode .generator-container label,
+        body.dark-mode .generator-container small,
+        body.dark-mode .generator-container .ability-label { color: #ddd; }
+        body.dark-mode .generator-container .control-section { border-bottom-color: #444; }
+        body.dark-mode .generator-container .level-btn,
+        body.dark-mode .generator-container .class-button,
+        body.dark-mode .generator-container .grid-button,
+        body.dark-mode .generator-container .roll-button { background-color: #2a2a3e; color: var(--accent); }
+        body.dark-mode .generator-container .level-btn:hover,
+        body.dark-mode .generator-container .class-button:hover:not(:disabled),
+        body.dark-mode .generator-container .grid-button:hover:not(:disabled),
+        body.dark-mode .generator-container .roll-button:hover:not(:disabled) { background-color: #3a3a4e; }
+        body.dark-mode .generator-container .level-btn.selected,
+        body.dark-mode .generator-container .class-button.selected,
+        body.dark-mode .generator-container .grid-button.selected { background-color: var(--accent); color: white; }
+        body.dark-mode .generator-container .ability-input,
+        body.dark-mode .generator-container input[type="number"],
+        body.dark-mode .generator-container input[type="text"],
+        body.dark-mode .generator-container select {
+            background-color: #2a2a3e;
+            border-color: #555;
+            color: #ddd;
+        }
+        body.dark-mode .generator-container .ability-modifier { color: #aaa; }
+        body.dark-mode .generator-container .race-class-grid table { background-color: #252535; }
+        body.dark-mode .generator-container .race-class-grid td { border-color: #444; color: #ddd; }
+        body.dark-mode .generator-container .race-class-grid td.race-label { background-color: #2a2a3e; }
+        body.dark-mode .generator-container .grid-button { background-color: #252535; }
+
+        /* Character display box stays light */
+        body.dark-mode .character-display { background: white; color: #333; padding: 16px; border-radius: 5px; }
+        body.dark-mode .character-display h2 { color: #333; }
+
+        /* Nav dark mode toggle */
+        #darkModeToggle {
+            background: none;
+            border: 1px solid #999;
+            border-radius: 4px;
+            padding: 4px 10px;
+            cursor: pointer;
+            font-size: 11px;
+            color: #333;
+            font-weight: bold;
+        }
+        body.dark-mode #darkModeToggle { color: #ccc; border-color: #666; }
+        #darkModeToggle:hover { border-color: #4CAF50; color: #4CAF50; }
+        @media print {
+            body, body.dark-mode { background: white !important; color: #000 !important; }
+            .character-display { padding: 0 !important; border-radius: 0 !important; }
+        }
     </style>
 </head>
 <body>
+    <script>if(localStorage.getItem('theme')==='dark')document.body.classList.add('dark-mode');</script>
 
     <nav>
         <div class="nav-left">
@@ -267,8 +330,9 @@
             <a href="classes.html">Class Tables</a>
         </div>
         <div style="display:flex; gap:20px; align-items:center;">
-            <a href="https://github.com/bmfrosty/ose-level-0" target="_blank" rel="noopener" title="View source on GitHub" style="color:#333;">⬡ GitHub</a>
+            <a href="https://github.com/bmfrosty/ose-level-0" target="_blank" rel="noopener" title="View source on GitHub">⬡ GitHub</a>
             <a href="index.html">About</a>
+            <button id="darkModeToggle" title="Toggle light/dark mode">☽ Dark</button>
         </div>
     </nav>
 
@@ -276,9 +340,11 @@
 
     <div class="generator-container mode-basic" id="generatorContainer">
 
-        <!-- Reset Settings + Share -->
+        <!-- Reset Settings + Presets + Share -->
         <div style="margin-bottom: 10px; display:flex; gap:8px; flex-wrap:wrap;">
             <button class="roll-button" id="resetSettingsButton" style="font-size:10px;padding:4px 10px;margin-top:0;">Reset Saved Settings</button>
+            <button class="roll-button" id="authorPreferredButton" style="font-size:10px;padding:4px 10px;margin-top:0;">Author Preferred Settings</button>
+            <button class="roll-button" id="conventionModeButton" style="font-size:10px;padding:4px 10px;margin-top:0;">Convention Mode</button>
             <button class="roll-button" id="shareButton" style="font-size:10px;padding:4px 10px;margin-top:0;">📱 Share / QR</button>
         </div>
 
@@ -304,6 +370,19 @@
             <div class="level-selection" id="levelSelection" style="margin-top: 12px;">
                 <!-- Populated by JS -->
             </div>
+            <div style="margin-top:10px; display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                <label style="display:flex;align-items:center;gap:6px;">
+                    <input type="radio" name="levelMode" id="levelModeFixed" value="fixed" checked>
+                    <strong>Fixed level</strong>
+                </label>
+                <label style="display:flex;align-items:center;gap:6px;">
+                    <input type="radio" name="levelMode" id="levelModeXP" value="xp">
+                    <strong>By XP:</strong>
+                    <input type="number" id="xpAmount" min="0" placeholder="e.g. 1750"
+                           style="width:90px; padding:2px 4px; font-size:14px;" disabled>
+                    <span id="xpLevelPreview" style="color:#555; font-size:0.9em;"></span>
+                </label>
+            </div>
         </div>
 
         <!-- 2. Progression Mode -->
@@ -311,9 +390,9 @@
             <h3>2. Attack &amp; Saving Throw Progressions</h3>
             <div class="radio-option">
                 <label>
-                    <input type="radio" name="progressionMode" id="progressionSmooth" value="smooth">
+                    <input type="radio" name="progressionMode" id="progressionSmooth" value="smoothprog">
                     <span>
-                        <strong>Smoothified (Recommended)</strong> - Smooth XP curve, gradual progression
+                        <strong>Smoothified (Recommended)</strong> - Smoothed attack bonus and saving throw progression
                     </span>
                 </label>
             </div>
@@ -413,7 +492,7 @@
                     <span><strong>1977 Ability Score Ordering</strong> (STR, INT, WIS, DEX, CON, CHA) — unchecked uses modern order (STR, DEX, CON, INT, WIS, CHA)</span>
                 </label>
             </div>
-            <div class="checkbox-option advanced-only">
+            <div class="checkbox-option" id="hideHumanRaceOption">
                 <label>
                     <input type="checkbox" id="hideHumanRace">
                     <span><strong>Hide "Human" prefix for Human characters</strong> in Advanced mode &mdash; show "Fighter" instead of "Human Fighter"</span>
@@ -453,16 +532,14 @@
             <div id="startingWealthSection" style="margin-top: 12px; border-top: 1px solid #ddd; padding-top: 10px;">
                 <strong>Starting Wealth (level 2+):</strong>
                 <span style="color:#555; font-size:0.95em;"> — % of minimum XP for level, in gp</span>
-                <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:6px;">
-                    <label style="display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="radio" name="wealthPct" value="0"> 0%</label>
-                    <label style="display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="radio" name="wealthPct" value="25"> 25%</label>
-                    <label style="display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="radio" name="wealthPct" value="50" checked> 50%</label>
-                    <label style="display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="radio" name="wealthPct" value="75"> 75%</label>
-                    <label style="display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="radio" name="wealthPct" value="100"> 100%</label>
-                </div>
-                <div class="checkbox-option" style="margin-top:6px;">
-                    <label>
-                        <input type="checkbox" id="wealthRollAsLevel1">
+                <div style="display:flex; align-items:center; gap:12px; margin-top:6px; flex-wrap:wrap;">
+                    <label style="display:flex;align-items:center;gap:4px;">
+                        <input type="radio" name="wealthMode" id="wealthModePct" value="pct" checked>
+                        <input type="number" id="wealthPctInput" value="50" min="0" max="1000" style="width:60px; padding:2px 4px; font-size:14px;">
+                        <span>%</span>
+                    </label>
+                    <label style="display:flex;align-items:center;gap:4px;cursor:pointer;">
+                        <input type="radio" name="wealthMode" id="wealthModeLevel1" value="level1">
                         <span><strong>Roll as Level 1</strong> &mdash; 3d6&times;10 gp regardless of level</span>
                     </label>
                 </div>
@@ -498,12 +575,6 @@
                     <label>
                         <input type="checkbox" id="openInNewTab">
                         <span title="Tip: Hold Ctrl (Win/Linux) or ⌘ Cmd (Mac) when clicking Generate to open the new tab in the background."><strong>Open character in new tab</strong> (unchecked = display on this page)</span>
-                    </label>
-                </div>
-                <div class="checkbox-option" style="margin-left: 24px;">
-                    <label>
-                        <input type="checkbox" id="autoPrintInNewTab">
-                        <span>Auto-open print dialog when tab opens</span>
                     </label>
                 </div>
             </div>
@@ -645,14 +716,7 @@
                     <button class="grid-button zero-race-btn" style="width:auto;padding:5px 9px;" data-race="Demihuman_RACE">Random Demihuman</button>
                     <button class="grid-button zero-race-btn" style="width:auto;padding:5px 9px;" data-race="Dwarf_RACE">Dwarf</button>
                     <button class="grid-button zero-race-btn" style="width:auto;padding:5px 9px;" data-race="Elf_RACE">Elf</button>
-                    <button class="grid-button zero-race-btn" style="width:auto;padding:5px 9px;" data-race="Gnome_RACE">Gnome</button>
                     <button class="grid-button zero-race-btn" style="width:auto;padding:5px 9px;" data-race="Halfling_RACE">Halfling</button>
-                </div>
-                <div style="margin-top:10px;">
-                    <label for="zeroOccupation"><strong>Occupation:</strong></label>
-                    <select id="zeroOccupation" style="margin-left:8px; padding:3px 6px; font-size:0.9em;">
-                        <option value="">Random</option>
-                    </select>
                 </div>
             </div>
 
@@ -717,14 +781,6 @@
                                 <td><button class="grid-button" data-race="Elf" data-class="Spellblade" id="elfSpellblade">Spellblade</button></td>
                             </tr>
                             <tr>
-                                <td class="race-label">Gnome</td>
-                                <td><button class="grid-button" data-race="Gnome" data-class="Cleric">Cleric</button></td>
-                                <td><button class="grid-button" data-race="Gnome" data-class="Fighter">Fighter</button></td>
-                                <td><button class="grid-button" data-race="Gnome" data-class="Magic-User">Magic-User</button></td>
-                                <td><button class="grid-button" data-race="Gnome" data-class="Thief">Thief</button></td>
-                                <td><button class="grid-button" data-race="Gnome" data-class="Spellblade">Spellblade</button></td>
-                            </tr>
-                            <tr>
                                 <td class="race-label">Halfling</td>
                                 <td><button class="grid-button" data-race="Halfling" data-class="Cleric">Cleric</button></td>
                                 <td><button class="grid-button" data-race="Halfling" data-class="Fighter">Fighter</button></td>
@@ -735,6 +791,14 @@
                         </tbody>
                     </table>
                 </div>
+            </div>
+
+            <!-- Occupation — shared across level 0 and level 1+ -->
+            <div style="margin-top: 15px;">
+                <label for="zeroOccupation"><strong>Occupation:</strong></label>
+                <select id="zeroOccupation" style="margin-left:8px; padding:3px 6px; font-size:0.9em;">
+                    <option value="">Random</option>
+                </select>
             </div>
 
             <div style="margin-top: 15px;">
@@ -756,6 +820,10 @@
         import { initialize } from './gen-ui.js';
         // Module auto-initializes via DOMContentLoaded listener in gen-ui.js
     </script>
+
+    <footer style="margin-top: 32px; padding: 16px 0; border-top: 1px solid #ddd; font-size: 0.75em; color: #888; text-align: center;">
+        <p style="margin: 0;">Old-School Essentials is a trademark of Necrotic Gnome. The trademark and Old-School Essentials logo are used with permission of Necrotic Gnome, under license.</p>
+    </footer>
 
 </body>
 </html>
