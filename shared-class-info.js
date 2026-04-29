@@ -33,7 +33,6 @@ export const CLASS_INFO = {
         availableAt: 1,
         availableThrough: 14,
         includeName: true,
-        // SRD: stat block: "Alignment, Common"
       },
       {
         name: "Combat",
@@ -41,8 +40,6 @@ export const CLASS_INFO = {
         availableAt: 1,
         availableThrough: 14,
         // includeName: true,
-        // SRD: "Clerics can use all types of armour. The edicts of their holy order forbid them from using weapons that have a sharp, cutting edge or stabbing point. They may use the following weapons: club, mace, sling, staff, war hammer."
-        // PROPOSED: "Can use all armour; blunt weapons only (club, mace, sling, staff, war hammer)."
       },
       {
         name: "Holy Symbol",
@@ -50,8 +47,6 @@ export const CLASS_INFO = {
         availableAt: 1,
         availableThrough: 14,
         // includeName: true,
-        // SRD: "A cleric must carry a holy symbol (see Adventuring Gear)."
-        // PROPOSED: "A cleric must carry a holy symbol (see Adventuring Gear)."
       },
       {
         name: "Deity Disfavour",
@@ -59,8 +54,6 @@ export const CLASS_INFO = {
         availableAt: 1,
         availableThrough: 14,
         // includeName: true,
-        // SRD: "Clerics must be faithful to the tenets of their alignment, clergy, and religion. Clerics who fall from favour with their deity may incur penalties."
-        // PROPOSED: "Must be faithful to alignment, clergy, and religion; falling from deity's favour may incur penalties."
       },
       {
         name: "Magical Research",
@@ -68,8 +61,6 @@ export const CLASS_INFO = {
         availableAt: 1,
         availableThrough: 14,
         includeName: true,
-        // SRD: "A cleric of any level may spend time and money on magical research. This allows them to create new spells or other magical effects associated with their deity. When a cleric reaches 9th level, they are also able to create magic items."
-        // PROPOSED: "Any level; create new spells or magical effects for the deity. At 9th level: also create magic items."
       },
       {
         name: "Turn Undead",
@@ -77,8 +68,6 @@ export const CLASS_INFO = {
         availableAt: 1,
         availableThrough: 14,
         includeName: true,
-        // SRD: "Clerics can invoke the power of their deity to repel undead monsters encountered. To turn the undead, the player rolls 2d6. The referee then consults the table below, comparing the roll against the HD of the type of undead monsters targeted."
-        // PROPOSED: "Invoke deity's power to repel undead encountered; roll 2d6 vs undead HD on turning table."
       },
       {
         name: "Spell Casting",
@@ -86,8 +75,6 @@ export const CLASS_INFO = {
         availableAt: 2,
         availableThrough: 14,
         // includeName: true,
-        // SRD: "Once a cleric has proven their faith (from 2nd level), the character may pray to receive spells. The level progression table (below) shows the number of spells a cleric may memorize, based on their experience level."
-        // PROPOSED: "Once a cleric has proven their faith (from 2nd level), the character may pray to receive spells."
       },
       {
         name: "Using Magic Items",
@@ -95,8 +82,6 @@ export const CLASS_INFO = {
         availableAt: 2,
         availableThrough: 14,
         // includeName: true,
-        // SRD: "As spell casters, clerics can use magic scrolls of spells on their spell list. They can also use items that may only be used by divine spell casters (e.g. some magic staves)."
-        // PROPOSED: "Use scrolls from cleric spell list and items restricted to divine casters (e.g. some magic staves)."
       },
       {
         name: "Stronghold",
@@ -111,8 +96,6 @@ export const CLASS_INFO = {
           "Gnome":   { description: "May build a gnomish temple-stronghold; costs halved if in deity's favour. Attracts 5d6×10 devoted gnomish fighters (levels 1–2). Gnomish mercenaries only." },
           "Halfling":{ description: "May build a halfling shrine-hall; costs halved if in deity's favour. Attracts 5d6×10 devoted halfling fighters (levels 1–2). Halfling mercenaries only." },
         },
-        // SRD: "A cleric may construct a stronghold. If the cleric is in favour with their deity, the construction costs are halved, due to divine aid. When the stronghold is complete, 5d6 x 10 fighters of level 1-2 will arrive to serve the cleric. These followers are completely devoted to the cleric, never checking morale."
-        // PROPOSED: "May build a stronghold; costs halved if in deity's favour. Attracts 5d6×10 devoted fighters (levels 1-2)."
       }
     ]
   },
@@ -151,7 +134,6 @@ export const CLASS_INFO = {
         availableAt: 1,
         availableThrough: 14,
         includeName: true,
-        // SRD: stat block: "Alignment, Common"
       },
       {
         name: "Combat",
@@ -159,8 +141,6 @@ export const CLASS_INFO = {
         availableAt: 1,
         availableThrough: 14,
         // includeName: true,
-        // SRD: "Fighters can use all types of weapons and armour."
-        // PROPOSED: "Fighters can use all types of weapons and armour."
       },
       {
         name: "Stronghold",
@@ -175,8 +155,6 @@ export const CLASS_INFO = {
           "Gnome":   { description: "May build a subterranean complex or gnomish hall at any time and control surrounding territory. Gnomish mercenaries only." },
           "Halfling":{ description: "May build a fortified shire-hall or burrow-mound at any time and control surrounding lands. Halfling mercenaries only." },
         },
-        // SRD: "Any time a fighter wishes (and has sufficient money), they can build a castle or stronghold and control the surrounding lands." (== Stronghold == section — NOT under After Reaching 9th Level)
-        // PROPOSED: "May build a castle or stronghold and control surrounding lands at any time (not restricted to 9th level)."
         // NOTE: The SRD puts Stronghold in its own section (any time), unlike most classes where it's under After Reaching 9th Level.
       },
       {
@@ -185,8 +163,6 @@ export const CLASS_INFO = {
         availableAt: 9,
         availableThrough: 14,
         // includeName: true,
-        // SRD: "A fighter may be granted a title such as Baron or Baroness. The land under the fighter's control is then known as a Barony." (Under After Reaching 9th Level)
-        // PROPOSED: "At 9th level, may be granted the title of Baron or Baroness; the controlled land is known as a Barony."
       }
     ]
   },
@@ -222,7 +198,6 @@ export const CLASS_INFO = {
         availableAt: 1,
         availableThrough: 14,
         includeName: true,
-        // SRD: stat block: "Alignment, Common"
       },
       {
         name: "Spell Casting",
@@ -230,8 +205,6 @@ export const CLASS_INFO = {
         availableAt: 1,
         availableThrough: 14,
         // includeName: true,
-        // SRD: "Magic-users own spell books containing the formulae for arcane spells. The level progression table (below) shows both the number of spells in the magic-user's spell book and the number they may memorize. A 1st level magic-user has one spell in their spell book, selected by the referee (who may allow the player to choose)."
-        // PROPOSED: "Own a spell book; memorize spells per day per level table. Start with 1 spell (referee's choice)."
       },
       {
         name: "Magical Research",
@@ -239,8 +212,6 @@ export const CLASS_INFO = {
         availableAt: 1,
         availableThrough: 14,
         // includeName: true,
-        // SRD: "A magic-user of any level may spend time and money on magical research. This allows them to add new spells to their spell book and to research other magical effects. When a magic-user reaches 9th level, they are also able to create magic items."
-        // PROPOSED: "Any level; add spells to spell book or research magical effects. At 9th level: create magic items."
       },
       {
         name: "Using Magic Items",
@@ -248,8 +219,6 @@ export const CLASS_INFO = {
         availableAt: 1,
         availableThrough: 14,
         // includeName: true,
-        // SRD: "As spell casters, magic-users are able to use magic scrolls of spells on their spell list. They can also use items that may only be used by arcane spell casters (e.g. magic wands)."
-        // PROPOSED: "Use scrolls from spell list and items restricted to arcane casters (e.g. magic wands)."
       },
       {
         name: "Combat",
@@ -257,8 +226,6 @@ export const CLASS_INFO = {
         availableAt: 1,
         availableThrough: 14,
         // includeName: true,
-        // SRD: "Magic-users can only use daggers and are unable to use shields or wear any kind of armour. This makes them very vulnerable in combat."
-        // PROPOSED: "Can only use daggers; cannot use shields or any armour."
       },
       {
         name: "Stronghold",
@@ -273,8 +240,6 @@ export const CLASS_INFO = {
           "Gnome":   { description: "May construct an underground arcane workshop or gnomish tower; 1d6 apprentice magic-users (levels 1–3) arrive to study. Gnomish apprentices preferred." },
           "Halfling":{ description: "May construct a hidden arcane burrow or halfling tower; 1d6 apprentice magic-users (levels 1–3) arrive to study. Halfling apprentices preferred." },
         },
-        // SRD: "A magic-user may construct a stronghold (usually in the form of a tower). 1d6 apprentices of levels 1-3 will then arrive to study under the magic-user."
-        // PROPOSED: "May construct a stronghold (usually a tower); 1d6 apprentices of levels 1-3 arrive to study."
       }
     ]
   },
@@ -314,7 +279,6 @@ export const CLASS_INFO = {
         availableAt: 1,
         availableThrough: 14,
         includeName: true,
-        // SRD: stat block: "Alignment, Common"
       },
       {
         name: "Combat",
@@ -322,8 +286,6 @@ export const CLASS_INFO = {
         availableAt: 1,
         availableThrough: 14,
         // includeName: true,
-        // SRD: "Valuing stealth above all, thieves can only wear leather armour and cannot use shields. They can use any weapon."
-        // PROPOSED: "Can only wear leather armour, no shields; can use any weapon."
       },
       {
         name: "Back-stab",
@@ -331,8 +293,6 @@ export const CLASS_INFO = {
         availableAt: 1,
         availableThrough: 14,
         // includeName: true,
-        // SRD: "When attacking an unaware opponent from behind, a thief receives a +4 bonus to hit and doubles any damage dealt."
-        // PROPOSED: "When attacking an unaware opponent from behind, a thief receives a +4 bonus to hit and doubles any damage dealt."
       },
       {
         name: "Thief Skills",
@@ -340,8 +300,6 @@ export const CLASS_INFO = {
         availableAt: 1,
         availableThrough: 14,
         includeName: true,
-        // SRD: "Thieves can use the following skills, with the chance of success shown below:" (CS, TR, HN, HS, MS, OL, PP — individual descriptions in Thief Skills section)
-        // PROPOSED: "Climb sheer surfaces, find/remove traps, hear noise, hide in shadows, move silently, open locks, pick pockets."
       },
       {
         name: "Read Languages",
@@ -349,8 +307,6 @@ export const CLASS_INFO = {
         availableAt: 4,
         availableThrough: 14,
         // includeName: true,
-        // SRD: "A thief of 4th level or higher can read non-magical text in any language (including dead languages and basic codes) with 80% probability. If the roll fails, the thief may not try to read the same text again before gaining an experience level."
-        // PROPOSED: "4th level or higher: 80% chance to read non-magical text in any language, including dead languages and codes."
       },
       {
         name: "Hideout",
@@ -365,8 +321,6 @@ export const CLASS_INFO = {
           "Gnome":   { description: "Construct a hidden underground hideout; attracts 2d6 loyal gnomish apprentice thieves (potential Thieves' Guild)." },
           "Halfling":{ description: "Construct a secret burrow-hideout in a halfling settlement; attracts 2d6 loyal halfling apprentice thieves (potential Thieves' Guild)." },
         },
-        // SRD: "A thief may construct a secret hideout, attracting 2d6 apprentice thieves of 1st level. Apprentices are usually loyal to the character, but are not automatically replaced if killed. The character may use their apprentices as the beginnings of a Thieves' Guild."
-        // PROPOSED: "Construct a secret hideout; attracts 2d6 loyal 1st-level apprentice thieves (potential Thieves' Guild)."
       },
       {
         name: "Scroll Use",
@@ -374,8 +328,6 @@ export const CLASS_INFO = {
         availableAt: 10,
         availableThrough: 14,
         // includeName: true,
-        // SRD: "A thief of 10th level or higher can cast arcane spells from scrolls. There is a 10% chance of error: an unusual or deleterious effect instead of the expected effect."
-        // PROPOSED: "10th level or higher: cast arcane spells from scrolls; 10% chance of unusual or deleterious effect."
       }
     ]
   },
@@ -411,7 +363,6 @@ export const CLASS_INFO = {
         availableAt: 1,
         availableThrough: 14,
         includeName: true,
-        // SRD: N/A (house rules class)
       },
       {
         name: "Combat",
@@ -419,8 +370,6 @@ export const CLASS_INFO = {
         availableAt: 1,
         availableThrough: 14,
         // includeName: true,
-        // SRD: N/A (house rules class)
-        // PROPOSED: "Spellblades can use any weapon and all types of armour."
       },
       {
         name: "Spell Casting",
@@ -428,8 +377,6 @@ export const CLASS_INFO = {
         availableAt: 1,
         availableThrough: 14,
         // includeName: true,
-        // SRD: N/A (house rules class)
-        // PROPOSED: "Spellblades own spell books containing arcane spell formulae; may cast arcane spells while wearing armour."
       },
       {
         name: "Magical Research",
@@ -437,8 +384,6 @@ export const CLASS_INFO = {
         availableAt: 1,
         availableThrough: 14,
         // includeName: true,
-        // SRD: N/A (house rules class)
-        // PROPOSED: "A spellblade of any level may spend time and money on magical research, adding new spells to their spell book or researching other magical effects. At 9th level, may also create magic items."
       },
       {
         name: "Using Magic Items",
@@ -446,8 +391,6 @@ export const CLASS_INFO = {
         availableAt: 1,
         availableThrough: 14,
         // includeName: true,
-        // SRD: N/A (house rules class)
-        // PROPOSED: "As arcane spell casters, spellblades can use magic scrolls from their spell list and items restricted to arcane casters (e.g. magic wands)."
       },
       {
         name: "Stronghold",
@@ -462,7 +405,6 @@ export const CLASS_INFO = {
           "Gnome":   { description: "May construct a subterranean stronghold; 3d2 gnomish fighters, 1d3 magic-users, and 1d2 spellblades (all L1–2) arrive to serve. Gnomish mercenaries only." },
           "Halfling":{ description: "May construct a halfling community stronghold; 3d2 halfling fighters, 1d3 magic-users, and 1d2 spellblades (all L1–2) arrive to serve." },
         },
-        // SRD: N/A (house rules class)
       }
     ]
   },
@@ -498,7 +440,6 @@ export const CLASS_INFO = {
         availableAt: 1,
         availableThrough: 14,
         includeName: true,
-        // SRD: stat block: "Alignment, Common, Dwarvish, Gnomish, Goblin, Kobold"
       },
       {
         name: "Combat",
@@ -506,8 +447,6 @@ export const CLASS_INFO = {
         availableAt: 1,
         availableThrough: 14,
         includeName: true,
-        // SRD: "Dwarves can use all types of armour. Their stature means they can only use small or normal sized weapons. They cannot use longbows or two-handed swords."
-        // PROPOSED: "Can use all types of armour; small or normal sized weapons only (no longbows or two-handed swords)."
       },
       {
         name: "Detect Construction Tricks",
@@ -515,8 +454,6 @@ export const CLASS_INFO = {
         availableAt: 1,
         availableThrough: 14,
         includeName: true,
-        // SRD: "As expert miners, dwarves have a 2-in-6 chance of being able to detect new construction, sliding walls, or sloping passages when searching."
-        // PROPOSED: "2-in-6 chance of detecting new construction, sliding walls, or sloping passages when searching."
       },
       {
         name: "Detect Room Traps",
@@ -524,8 +461,6 @@ export const CLASS_INFO = {
         availableAt: 1,
         availableThrough: 14,
         includeName: true,
-        // SRD: "Due to their expertise with construction, dwarves have a 2-in-6 chance of detecting non-magical room traps when searching (see Dungeon Adventuring)."
-        // PROPOSED: "2-in-6 chance of detecting non-magical room traps when searching."
       },
       {
         name: "Infravision",
@@ -533,8 +468,6 @@ export const CLASS_INFO = {
         availableAt: 1,
         availableThrough: 14,
         includeName: true,
-        // SRD: "Dwarves have infravision to 60' (see Darkness under Hazards and Challenges)."
-        // PROPOSED: "60'"
       },
       {
         name: "Listening at Doors",
@@ -542,8 +475,6 @@ export const CLASS_INFO = {
         availableAt: 1,
         availableThrough: 14,
         includeName: true,
-        // SRD: "Dwarves have a 2-in-6 chance of hearing noises (see Dungeon Adventuring)."
-        // PROPOSED: "2-in-6 chance of hearing noises."
       },
       {
         name: "Stronghold",
@@ -551,8 +482,6 @@ export const CLASS_INFO = {
         availableAt: 9,
         availableThrough: 14,
         // includeName: true,
-        // SRD: "A dwarf may construct a subterranean stronghold delved beneath hills or mountains. Other dwarves may come to live under the rule of the character, establishing a new clan. A dwarf ruler may only hire dwarven mercenaries. Specialists and retainers of any race may be hired."
-        // PROPOSED: "May construct a subterranean stronghold; other dwarves may come to establish a new clan. Only dwarven mercenaries may be hired; specialists and retainers of any race may be hired."
       }
     ]
   },
@@ -587,7 +516,6 @@ export const CLASS_INFO = {
         availableAt: 1,
         availableThrough: 14,
         includeName: true,
-        // SRD: stat block: "Alignment, Common, Elvish, Gnoll, Hobgoblin, Orcish"
       },
       {
         name: "Combat",
@@ -595,8 +523,6 @@ export const CLASS_INFO = {
         availableAt: 1,
         availableThrough: 14,
         // includeName: true,
-        // SRD: "Elves can use all types of weapons and armour."
-        // PROPOSED: "Elves can use all types of weapons and armour."
       },
       {
         name: "Detect Secret Doors",
@@ -604,9 +530,7 @@ export const CLASS_INFO = {
         availableAt: 1,
         availableThrough: 14,
         includeName: true,
-        // SRD: "Elves have a 2-in-6 chance of locating secret or hidden doors when searching (see Dungeon Adventuring)."
         // NOTE: 1-in-6 passive is the standard dungeon rule for ALL characters — not an Elf class ability.
-        // PROPOSED: "Elves have a 2-in-6 chance of locating secret or hidden doors when searching."
       },
       {
         name: "Immunity to Ghoul Paralysis",
@@ -614,8 +538,6 @@ export const CLASS_INFO = {
         availableAt: 1,
         availableThrough: 14,
         // includeName: true,
-        // SRD: "Elves are immune to the paralysing effect of ghouls' attacks."
-        // PROPOSED: "Elves are immune to the paralysing effect of ghouls' attacks."
       },
       {
         name: "Infravision",
@@ -623,8 +545,6 @@ export const CLASS_INFO = {
         availableAt: 1,
         availableThrough: 14,
         includeName: true,
-        // SRD: "Elves have infravision to 60' (see Darkness under Hazards and Challenges)."
-        // PROPOSED: "60'"
       },
       {
         name: "Listening at Doors",
@@ -632,8 +552,6 @@ export const CLASS_INFO = {
         availableAt: 1,
         availableThrough: 14,
         includeName: true,
-        // SRD: "Elves have a 2-in-6 chance of hearing noises (see Dungeon Adventuring)."
-        // PROPOSED: "2-in-6 chance of hearing noises."
       },
       {
         name: "Magical Research",
@@ -641,8 +559,6 @@ export const CLASS_INFO = {
         availableAt: 1,
         availableThrough: 14,
         // includeName: true,
-        // SRD: "An elf of any level may spend time and money on magical research. This allows them to add new spells to their spell book and to research other magical effects. When an elf reaches 9th level, they are also able to create magic items."
-        // PROPOSED: "An elf of any level may spend time and money on magical research, adding new spells to their spell book or researching other magical effects."
       },
       {
         name: "Magical Research (Magic Items)",
@@ -650,8 +566,6 @@ export const CLASS_INFO = {
         availableAt: 9,
         availableThrough: 14,
         // includeName: true,
-        // SRD: "When an elf reaches 9th level, they are also able to create magic items."
-        // PROPOSED: "May create magic items."
       },
       {
         name: "Spell Casting",
@@ -659,8 +573,6 @@ export const CLASS_INFO = {
         availableAt: 1,
         availableThrough: 14,
         // includeName: true,
-        // SRD: "Elves carry spell books containing the formulae for arcane spells. The level progression table shows both the number of spells in the elf's spell book and the number they may memorize, determined by the character's experience level. Thus, a 1st level elf has one spell in their spell book, selected by the referee (who may allow the player to choose). The list of spells available to elves is found in Magic-User Spells (elves have the same spell selection as magic-users)."
-        // PROPOSED: "Elves carry spell books; a 1st level elf has one spell. Elves have the same spell selection as magic-users."
       },
       {
         name: "Using Magic Items",
@@ -668,8 +580,6 @@ export const CLASS_INFO = {
         availableAt: 1,
         availableThrough: 14,
         // includeName: true,
-        // SRD: "As spell casters, elves are able to use magic scrolls of spells on their spell list. They can also use items that may only be used by arcane spell casters (e.g. magic wands)."
-        // PROPOSED: "As spell casters, elves can use magic scrolls and items usable only by arcane spell casters (e.g. magic wands)."
       },
       {
         name: "Stronghold",
@@ -677,8 +587,6 @@ export const CLASS_INFO = {
         availableAt: 9,
         availableThrough: 14,
         // includeName: true,
-        // SRD: "An elf may construct a stronghold in the depths of the forest. Forest animals within a 5 mile radius will become friends with the elves. An elf ruler may only hire elven mercenaries. Specialists and retainers of any race may be hired."
-        // PROPOSED: "May construct a forest stronghold; forest animals within 5 miles become friendly. Only elven mercenaries may be hired; specialists and retainers of any race may be hired."
       }
     ]
   },
@@ -715,7 +623,6 @@ export const CLASS_INFO = {
         availableAt: 1,
         availableThrough: 14,
         includeName: true,
-        // SRD: stat block: "Alignment, Common, Halfling"
       },
       {
         name: "Combat",
@@ -723,8 +630,6 @@ export const CLASS_INFO = {
         availableAt: 1,
         availableThrough: 14,
         // includeName: true,
-        // SRD: "Halflings can use all types of armour, but it must be tailored to their small size. Similarly, they can use any weapon appropriate to their stature (as determined by the referee). They cannot use longbows or two-handed swords."
-        // PROPOSED: "Can use all armour and any weapon, but must be tailored to halfling size; no longbows or two-handed swords."
       },
       {
         name: "Defensive Bonus",
@@ -732,8 +637,6 @@ export const CLASS_INFO = {
         availableAt: 1,
         availableThrough: 14,
         // includeName: true,
-        // SRD: "Due to their small size, halflings gain a +2 bonus to Armour Class when attacked by large opponents (greater than human-sized)."
-        // PROPOSED: "+2 bonus to Armour Class when attacked by large opponents (greater than human-sized)."
       },
       {
         name: "Hiding",
@@ -741,8 +644,6 @@ export const CLASS_INFO = {
         availableAt: 1,
         availableThrough: 14,
         includeName: true,
-        // SRD: "In woods or undergrowth, a halfling can hide with a 90% chance of success. In dungeons, a halfling can hide in normal lighting conditions with a 2-in-6 chance of success. There must be some form of cover (e.g. shadows) and the halfling must remain motionless and silent."
-        // PROPOSED: "In woods or undergrowth, 90% chance; in dungeons, 2-in-6 (requires cover, motionless and silent)."
       },
       {
         name: "Initiative Bonus",
@@ -750,8 +651,6 @@ export const CLASS_INFO = {
         availableAt: 1,
         availableThrough: 14,
         // includeName: true,
-        // SRD: "If using the optional rule for individual initiative (see Combat), halflings get a bonus of +1."
-        // PROPOSED: "+1 to initiative rolls (optional rule)."
       },
       {
         name: "Listening at Doors",
@@ -759,8 +658,6 @@ export const CLASS_INFO = {
         availableAt: 1,
         availableThrough: 14,
         includeName: true,
-        // SRD: "Halflings have a 2-in-6 chance of hearing noises (see Dungeon Adventuring)."
-        // PROPOSED: "2-in-6 chance of hearing noises."
       },
       {
         name: "Missile Attack Bonus",
@@ -768,8 +665,6 @@ export const CLASS_INFO = {
         availableAt: 1,
         availableThrough: 14,
         // includeName: true,
-        // SRD: "Halflings' accuracy grants them a +1 bonus to attack rolls with all missile weapons."
-        // PROPOSED: "Halflings' accuracy grants them a +1 bonus to attack rolls with all missile weapons."
       },
       {
         name: "Stronghold",
@@ -777,8 +672,6 @@ export const CLASS_INFO = {
         availableAt: 1,
         availableThrough: 14,
         // includeName: true,
-        // SRD: "Any time a halfling wishes (and has sufficient money), they may build a stronghold, which will form the basis of a new community of halflings. Halfling communities—known as Shires—are typically located in gentle countryside of little rivers and rolling hills. The leader of the community is called the Sheriff." (== Stronghold == section — NOT under After Reaching 9th Level)
-        // PROPOSED: "May build a stronghold forming a new halfling community (Shire) at any time; the character becomes Sheriff."
         // NOTE: The SRD puts Stronghold in its own section (any time), unlike most classes where it's under After Reaching 9th Level.
       }
     ]
