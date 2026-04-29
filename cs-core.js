@@ -516,11 +516,15 @@ export function renderCharacterSheetHTML(sheet) {
         ? `<ul style='margin: 0; padding-left: 18px;'>${racialItems.map(a => `<li style='margin-bottom: 2px;'>${a}</li>`).join('')}</ul>`
           + (racialFootnote ? `<div style='margin-top:4px;font-size:0.8em;font-style:italic;color:#555;'>${racialFootnote.slice(FOOTNOTE_PREFIX.length)}</div>` : '')
         : '';
+    const classFootnoteHTML = hasClass && sec.classPage
+        ? `<div style='margin-top:4px;font-size:0.8em;font-style:italic;color:#555;'>${sec.classPageNote ? `* ${sec.classPageNote} - ` : '* '}See OSE Advanced Fantasy Player's Tome p${sec.classPage} for details</div>`
+        : '';
     const classHTML = hasClass
         ? `${hasRacial ? `<div style='margin-top: 6px; border-top: 1px solid #ccc; padding-top: 4px;'>` : ''}
            <ul style='margin: 0; padding-left: 18px;'>
                ${sec.class.map(a => `<li style='margin-bottom: 2px;'><strong>${a.name}:</strong> ${a.description}</li>`).join('')}
            </ul>
+           ${classFootnoteHTML}
            ${hasRacial ? '</div>' : ''}`
         : '';
     const abilitiesHTML = (racialHTML || classHTML)

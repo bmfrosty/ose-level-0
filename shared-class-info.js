@@ -334,7 +334,8 @@ export const CLASS_INFO = {
 
   Spellblade: {
     code: 'SB',
-    page: null,  // house-rules class, not in the book
+    page: 48,  // Elf class — Spellblade is a custom variant
+    pageNote: 'Custom class based on Elf',
     name: "Spellblade",
     description: "Spellblades are adventurers who combine martial prowess with arcane magic. They can fight in armor while casting spells, making them versatile combatants.",
     primeRequisite: "INT and STR",

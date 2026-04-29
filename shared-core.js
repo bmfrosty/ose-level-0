@@ -757,7 +757,9 @@ export function getAdvancedModeRacialAbilities(race, options = {}) {
         return text;
     });
     if (formatted.length) {
-        formatted.push('\x00footnote:* See OSE Advanced Fantasy Player\'s Tome for details');
+        const page = getRaceInfo(race)?.page;
+        const pageRef = page ? ` p${page}` : '';
+        formatted.push(`\x00footnote:* See OSE Advanced Fantasy Player's Tome${pageRef} for details`);
     }
     return formatted;
 }
