@@ -319,120 +319,18 @@ export const RACE_INFO = {
     name: "Gnome",
     code: "GN",
     page: 83,
-    description: "Small, bearded underground-dwellers with a love of machinery, gems, and burrowing animals.",
-    abilityModifiers: {},  // no ability score modifiers
-    minimums: { CON: 9, INT: 9 },  // BOOK:     "Requirements: Minimum CON 9, minimum INT 9"
-    availableIn: { basic: true, advanced: true },
+    description: "",  // TODO: fill in from book p83
+    abilityModifiers: {},
+    minimums: { CON: 9, INT: 9 },
+    availableIn: { basic: true, advanced: false },  // TODO: enable advanced when abilities filled in
     availableClasses: {
-      advanced: ['Cleric', 'Fighter', 'Illusionist', 'Thief'],
-      // BOOK:     "Available Classes: Assassin, Cleric, Fighter, Illusionist, Thief"
-      // Illusionist is confirmed traditional (classLevelLimits max 7th)
+      advanced: [],  // TODO: fill in from book p83
     },
     classLevelLimits: {
-      // BOOK: Assassin 6th, Cleric 7th, Fighter 6th, Illusionist 7th, Thief 8th
       "Assassin_CLASS": 6, "Cleric_CLASS": 7, "Fighter_CLASS": 6,
       "Illusionist_CLASS": 7, "Thief_CLASS": 8,
     },
-    abilities: [
-      {
-        name: "Languages",
-        languages: ["Alignment", "Common", "Gnomish", "Dwarvish", "Kobold", "Burrowing mammals"],
-        hideDescription: true,
-        basicAvailableAt: 0,
-        basicAvailableThrough: 0,
-        advancedAvailableAt: 0,
-        advancedAvailableThrough: 14,
-        includeName: true,
-        // BOOK:     stat block: "Alignment, Common, Gnomish, Dwarvish, Kobold, the secret language of burrowing mammals"
-      },
-      {
-        name: "Combat",
-        description: "Armour must be tailored to size; only weapons appropriate to stature; no longbows or two-handed swords.",
-        hideDescription: true,
-        basicAvailableAt: 0,
-        basicAvailableThrough: 0,
-        advancedAvailableAt: 0,
-        advancedAvailableThrough: 14,
-        includeName: true,
-        // BOOK:     "Armour must be tailored to gnomes' small size. Likewise, gnomes can only use weapons appropriate to their stature (as determined by the referee). They cannot use longbows or two-handed swords."
-        // PROPOSED: "Armour must be tailored to size; only weapons appropriate to stature; no longbows or two-handed swords."
-      },
-      {
-        name: "Defensive Bonus",
-        description: "+2 bonus to Armour Class when attacked by large opponents (greater than human-sized).",
-        hideDescription: true,
-        basicAvailableAt: 0,
-        basicAvailableThrough: 0,
-        advancedAvailableAt: 0,
-        advancedAvailableThrough: 14,
-        includeName: true,
-        // BOOK:     "Due to their small size, gnomes gain a +2 bonus to Armour Class when attacked by large opponents (greater than human-sized)."
-        // PROPOSED: "+2 bonus to Armour Class when attacked by large opponents (greater than human-sized)."
-      },
-      {
-        name: "Detect Construction Tricks",
-        description: "2-in-6 chance to detect new construction, sliding walls, or sloping passages when searching.",
-        hideDescription: true,
-        basicAvailableAt: 0,
-        basicAvailableThrough: 0,
-        advancedAvailableAt: 0,
-        advancedAvailableThrough: 14,
-        includeName: true,
-        // BOOK:     "As expert tunnellers, gnomes have a 2-in-6 chance of being able to detect new construction, sliding walls, or sloping passages when searching."
-        // PROPOSED: "2-in-6 chance to detect new construction, sliding walls, or sloping passages when searching."
-      },
-      {
-        name: "Infravision",
-        description: "90'",
-        hideDescription: true,
-        basicAvailableAt: 0,
-        basicAvailableThrough: 0,
-        advancedAvailableAt: 0,
-        advancedAvailableThrough: 14,
-        includeName: true,
-        // BOOK:     "Gnomes have infravision to 90'."
-      },
-      {
-        name: "Listening at Doors",
-        description: "2-in-6 chance of hearing noises.",
-        hideDescription: true,
-        basicAvailableAt: 0,
-        basicAvailableThrough: 0,
-        advancedAvailableAt: 0,
-        advancedAvailableThrough: 14,
-        includeName: true,
-        // BOOK:     "Gnomes have a 2-in-6 chance of hearing noises."
-      },
-      {
-        name: "Magic Resistance",
-        description: "CON-based bonus to saves vs spells and wands/rods/staves (+0/+2/+3/+4/+5).",
-        hideDescription: true,
-        basicAvailableAt: 0,
-        basicAvailableThrough: 0,
-        advancedAvailableAt: 0,
-        advancedAvailableThrough: 14,
-        applyOnly: true,
-        includeName: true,
-        saveModifier: {
-          formula: "CON_MAGIC_RESISTANCE",
-          appliesTo: ["Wands", "Spells"]
-        },
-        // BOOK:     "Gnomes are naturally resistant to magic, gaining a bonus to saving throws versus spells and magic wands, rods, and staves. This bonus depends on a gnome's CON score: 6 or lower: No bonus | 7–10: +2 | 11–14: +3 | 15–17: +4 | 18: +5"
-        // PROPOSED: "CON-based bonus to saves vs spells and wands/rods/staves (+0/+2/+3/+4/+5)."
-      },
-      {
-        name: "Speak with Burrowing Mammals",
-        description: "Know and speak the secret language of burrowing mammals (e.g. badgers, moles).",
-        hideDescription: true,
-        basicAvailableAt: 0,
-        basicAvailableThrough: 0,
-        advancedAvailableAt: 0,
-        advancedAvailableThrough: 14,
-        includeName: true,
-        // BOOK:     "Gnomes often keep burrowing mammals such as badgers and moles as pets. They know the secret language of such creatures."
-        // PROPOSED: "Know and speak the secret language of burrowing mammals (e.g. badgers, moles)."
-      },
-    ]
+    abilities: []  // TODO: fill in from book p83
   },
 
   // ── Halfling ───────────────────────────────────────────────────────────────

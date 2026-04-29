@@ -788,136 +788,21 @@ export const CLASS_INFO = {
     code: 'GN',
     page: 52,
     name: "Gnome",
-    maxLevel: 8,
-    description: "Gnomes are a race of short demihumans with long noses and beards, cousins of the dwarves. They prefer to dwell in underground complexes in forests or foothills. They love mining, precious stones, and machinery. Gnomes are typically around 3½' tall and weigh around 100 pounds.",
+    description: "",        // TODO: fill in from book p52
     primeRequisite: "DEX and INT",
     hitDieType: "d4",
-    armor: ["Leather", "Shield"],
-    armorDescription: "Leather armour and shields (must be tailored to gnome size)",
-    weapons: ["Any appropriate to size"],
-    weaponDescription: "Any weapon appropriate to size (referee's discretion); no longbows or two-handed swords",
-    weaponRestrictions: "Cannot use longbows or two-handed swords (too large)",
-    armorRestrictions: "Leather armour and shields only; must be tailored to gnome size",
-    availableIn: {
-      basic: true,    // Available in Basic Mode (race-as-class)
-      advanced: false // NOT available in Advanced Mode (use Gnome race + other classes)
-    },
+    maxLevel: 8,
+    armor: [],              // TODO: fill in from book p52
+    armorDescription: "",
+    weapons: [],            // TODO: fill in from book p52
+    weaponDescription: "",
+    availableIn: { basic: true, advanced: false },
     availableRaces: {
       basic: ["Gnome"],
-      advanced: ["Gnome"]
+      advanced: [],         // TODO: fill in from book p52
     },
-    requirements: {
-      Gnome: { CON: 9 }  // Book: "Minimum CON 9" only — no minimum INT/DEX (those are prime requisites, not minimums)
-    },
-    abilities: [
-      {
-        name: "Languages",
-        languages: ["Alignment", "Common", "Gnomish", "Dwarvish", "Kobold", "Burrowing mammals"],
-        availableAt: 1,
-        availableThrough: 14,
-        includeName: true,
-        // BOOK: "Languages: Alignment, Common, Gnomish, Dwarvish, Kobold, the secret language of burrowing mammals"
-      },
-      {
-        name: "Magical Research",
-        description: "Add spells to spell book or research other effects; create magic items at 8th level.",
-        availableAt: 1,
-        availableThrough: 14,
-        includeName: true,
-        // BOOK: "A gnome of any level may spend time and money on magical research. This allows them to add new spells to their spell book and to research other magical effects. When a gnome reaches 8th level, they are also able to create magic items."
-        // PROPOSED: "Add spells to spell book or research other effects; create magic items at 8th level."
-      },
-      {
-        name: "Spell Casting",
-        description: "Maintain arcane spell books; memorize spells per day per level table. Use illusionist spell list.",
-        availableAt: 1,
-        availableThrough: 14,
-        includeName: true,
-        // BOOK: "Gnomes carry spell books containing the formulae for arcane spells. The level progression table shows both the number of spells in the gnome's spell book and the number they may memorize. The list of spells available to gnomes is found on p130 (gnomes have the same spell selection as illusionists)."
-        // PROPOSED: "Maintain arcane spell books; memorize spells per day per level table. Use illusionist spell list."
-      },
-      {
-        name: "Using Magic Items",
-        description: "May use scrolls from spell list and items restricted to arcane casters (e.g. magic wands).",
-        availableAt: 1,
-        availableThrough: 14,
-        includeName: true,
-        // BOOK: "As spell casters, gnomes are able to use magic scrolls of spells on their spell list. They can also use items that may only be used by arcane spell casters (e.g. magic wands)."
-        // PROPOSED: "May use scrolls from spell list and items restricted to arcane casters (e.g. magic wands)."
-      },
-      {
-        name: "Combat",
-        description: "Leather armour and shields (sized for gnomes). Any small-sized weapon; no longbows or two-handed swords.",
-        availableAt: 1,
-        availableThrough: 14,
-        includeName: true,
-        // BOOK: "Gnomes can use leather armour and shields. Armour must be tailored to gnomes' small size. Similarly, they can use any weapon appropriate to their stature (as determined by the referee). They cannot use longbows or two-handed swords."
-        // PROPOSED: "Leather armour and shields (sized for gnomes). Any small-sized weapon; no longbows or two-handed swords."
-      },
-      {
-        name: "Defensive Bonus",
-        description: "+2 bonus to Armour Class when attacked by large opponents (greater than human-sized).",
-        availableAt: 1,
-        availableThrough: 14,
-        // includeName: true,
-        // BOOK: "Due to their small size, gnomes gain a +2 bonus to Armour Class when attacked by large opponents (greater than human-sized)."
-        // PROPOSED: "+2 bonus to Armour Class when attacked by large opponents (greater than human-sized)."
-      },
-      {
-        name: "Detect Construction Tricks",
-        description: "2-in-6 chance of detecting new construction, sliding walls, or sloping passages when searching.",
-        availableAt: 1,
-        availableThrough: 14,
-        includeName: true,
-        // BOOK: "As expert tunnellers, gnomes have a 2-in-6 chance of being able to detect new construction, sliding walls, or sloping passages when searching."
-        // PROPOSED: "2-in-6 chance of detecting new construction, sliding walls, or sloping passages when searching."
-      },
-      {
-        name: "Hiding",
-        description: "Woodland cover 90%; dungeons 2-in-6 in shadows or behind cover; must remain motionless.",
-        availableAt: 1,
-        availableThrough: 14,
-        includeName: true,
-        // BOOK: "In woodland cover, a gnome can hide with a 90% chance of success. In dungeons, a gnome can hide in shadows or behind other forms of cover. The chance of success is 2-in-6. Hiding requires the gnome to be motionless."
-        // PROPOSED: "Woodland cover 90%; dungeons 2-in-6 in shadows or behind cover; must remain motionless."
-      },
-      {
-        name: "Infravision",
-        description: "90'",
-        availableAt: 1,
-        availableThrough: 14,
-        includeName: true,
-        // BOOK: "Gnomes have infravision to 90' (see Darkness, p220)."
-        // PROPOSED: "90'"
-      },
-      {
-        name: "Listening at Doors",
-        description: "2-in-6 chance of hearing noises.",
-        availableAt: 1,
-        availableThrough: 14,
-        includeName: true,
-        // BOOK: "Gnomes have a 2-in-6 chance of hearing noises (see Dungeon Adventuring, p222)."
-        // PROPOSED: "2-in-6 chance of hearing noises."
-      },
-      {
-        name: "Speak with Burrowing Mammals",
-        description: "Know and speak the secret language of burrowing mammals (e.g. badgers, moles).",
-        availableAt: 1,
-        availableThrough: 14,
-        includeName: true,
-        // BOOK: "Gnomes often keep burrowing mammals such as badgers and moles as pets. They know the secret language of such creatures."
-        // PROPOSED: "Know and speak the secret language of burrowing mammals (e.g. badgers, moles)."
-      },
-      {
-        name: "Stronghold",
-        description: "May construct an underground stronghold; burrowing mammals within 5 miles become friendly (warn of intruders, carry messages). Only gnomish soldiers may be hired; retainers and specialists of any race may be hired.",
-        availableAt: 8,
-        availableThrough: 14,
-        // includeName: true,
-        // BOOK: "A gnome has the option of creating an underground stronghold that will attract gnomes from far and wide. Because of gnomes' connection with burrowing mammals, all such creatures within 5 miles of the stronghold will become friends with the gnomes. They may warn of intruders, carry messages and news, and so on. In exchange for this friendship, the gnome must protect the animals from harm. Gnome rulers can hire members of other races in the capacity of retainers or specialists, but only soldiers of gnomish stock may be hired."
-        // PROPOSED: "May construct an underground stronghold; burrowing mammals within 5 miles become friendly (warn of intruders, carry messages). Only gnomish soldiers may be hired; retainers and specialists of any race may be hired."
-      }
-    ]
+    requirements: {},       // TODO: fill in from book p52
+    abilities: []           // TODO: fill in from book p52
   },
 
   // ── Advanced classes (and future Basic expansion) ─────────────────────────
