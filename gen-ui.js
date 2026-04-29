@@ -19,8 +19,8 @@ import {
     getAdvancedModeRacialAbilities,
     applyRacialSaveModifiers,
     getRaceInfo,
-    applyRacialAdjustments as _applyRacialAdj,
-    checkRacialMinimums   as _meetsRacialMins,
+    applyRacialAdjustments,
+    checkRacialMinimums,
     getClassRequirements  as _getClassReqs,
     getMaxLevel,
     calculateModifier, formatModifier, rollAbilities,
@@ -52,8 +52,8 @@ function rollAbilitiesAdvanced(minimumScores, race, className, toughCharacters, 
     while (true) {
         const { scores: baseScores, attempts } = rollAbilities(minimumScores, toughCharacters, className, primeRequisite13);
         totalAttempts += attempts;
-        if (!_meetsRacialMins(baseScores, race)) continue;
-        const adjustedScores = _applyRacialAdj(baseScores, race);
+        if (!checkRacialMinimums(baseScores, race)) continue;
+        const adjustedScores = applyRacialAdjustments(baseScores, race);
         const classReqs = _getClassReqs(className, race);
         if (Object.entries(classReqs).some(([ab, min]) => adjustedScores[ab] < min)) continue;
         return { baseScores, adjustedScores, attempts: totalAttempts };

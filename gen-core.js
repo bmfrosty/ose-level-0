@@ -10,20 +10,20 @@
  *                 opts.classData is required for level >= 1
  *
  * Only three isAdvanced checks exist in the whole function (per the design):
- *   1. applyRacialAbilityModifiers  — Advanced only
- *   2. meetsRacialMinimums          — Advanced only
- *   3. class requirements check     — Advanced only (level >= 1)
+ *   1. applyRacialAdjustments  — Advanced only (guards internally)
+ *   2. checkRacialMinimums     — Advanced only (caller guards)
+ *   3. class requirements check — Advanced only (level >= 1)
  *   mode string is passed to getRaceAbilitiesAtLevel — no conditional needed
  */
 
 import { WEAPONS, ARMOR, calculateModifier, rollDice,
     calculateSavingThrows, calculateAttackBonus,
-    applyRacialAbilityModifiers, applyRacialSaveModifiers, meetsRacialMinimums,
+    applyRacialAdjustments, applyRacialSaveModifiers, checkRacialMinimums,
     getRaceInfo, getRaceAbilitiesAtLevel, getClassProgressionData,
     getClassFeatures, getBasicModeClassAbilities, CLASS_INFO,
     rollHitPoints as rollHPLeveled, rollStartingGold, calcStartingGold,
     getBackgroundByProfession, getRandomBackground,
-    checkRacialMinimums, getClassRequirements, getPrimeRequisites,
+    getClassRequirements, getPrimeRequisites,
     CLS_CODE, RACE_CODE, RCM_CODE, PROG_CODE,
 } from './shared-core.js';
 import * as ClassDataShared from './shared-core.js';
@@ -271,7 +271,7 @@ export function generateCharacterV3(opts = {}) {
             race = staticRace ?? pickRace(rawRace);
             const _s = () => raw.map(r => `${r.ability}:${r.roll}[${r.dice.join(',')}]`).join('  ');
 
-            if (isAdvanced && !meetsRacialMinimums(raw, race, true)) {
+            if (isAdvanced && !checkRacialMinimums(toMap(raw), race)) {
                 console.log(`[gen] attempt ${attempts}: ${_s()} → ✗ racial minimums`);
                 continue;
             }
@@ -295,12 +295,12 @@ export function generateCharacterV3(opts = {}) {
 
             if (level === 0) {
                 // CON mod comes from racial-adjusted scores for HP purposes
-                const adjRaw = applyRacialAbilityModifiers(raw, race, isAdvanced, humanRacialAbilities);
+                const adjScores = applyRacialAdjustments(toMap(raw), race, isAdvanced, humanRacialAbilities);
                 if (fixedAdjustments) {
                     const adjCon = Math.max(3, Math.min(18, raw.find(r => r.ability === 'CON').roll + (fixedAdjustments.CON ?? 0)));
                     hp0 = calcLevel0HP(calculateModifier(adjCon), hpMode);
                 } else {
-                    hp0 = calcLevel0HP(adjRaw.find(r => r.ability === 'CON').modifier, hpMode);
+                    hp0 = calcLevel0HP(calculateModifier(adjScores.CON), hpMode);
                 }
                 if (hp0.total < 1) {
                     console.log(`[gen] attempt ${attempts}: ${_s()} → ✗ HP < 1`);
