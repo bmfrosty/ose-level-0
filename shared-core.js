@@ -877,31 +877,6 @@ export function calculateSavingThrows(level, race, conScore, isAdvanced, isSmoot
  * @param {boolean} [humanRacialAbilities=false] - Required for Human modifiers to apply
  * @returns {Array} New array with adjustments applied (originalRoll set when delta != 0)
  */
-export function applyRacialAbilityModifiers(results, race, isAdvanced, humanRacialAbilities = false) {
-    if (!isAdvanced) return results;
-
-    const raceData = getRaceInfo(race);
-    if (!raceData) return results;
-
-    const mods = raceData.abilityModifiers || {};
-    if (Object.keys(mods).length === 0) return results;
-
-    const normalizedRace = normalizeRaceName(race);
-    if (normalizedRace === 'Human_RACE' && !humanRacialAbilities) return results;
-
-    return results.map(r => {
-        const delta = mods[r.ability] ?? 0;
-        if (delta === 0) return r;
-        const adjustedRoll = r.roll + delta;
-        return {
-            ability: r.ability,
-            roll: adjustedRoll,
-            modifier: calculateModifier(adjustedRoll),
-            originalRoll: r.roll,
-            adjustment: delta
-        };
-    });
-}
 
 /**
  * Check if a character's rolled scores meet the racial minimums. Advanced mode only.
@@ -912,17 +887,6 @@ export function applyRacialAbilityModifiers(results, race, isAdvanced, humanRaci
  * @param {boolean} isAdvanced - Returns true immediately if false
  * @returns {boolean}
  */
-export function meetsRacialMinimums(results, race, isAdvanced) {
-    if (!isAdvanced) return true;
-    const raceData = getRaceInfo(race);
-    if (!raceData) return true;
-    const minimums = raceData.minimums || {};
-    for (const [ability, minimum] of Object.entries(minimums)) {
-        const r = results.find(r => r.ability === ability);
-        if (r && r.roll < minimum) return false;
-    }
-    return true;
-}
 
 /**
  * Calculate attack bonus for a character
@@ -982,22 +946,24 @@ export function getClassDisplayName(className) {
  * @param {string} race - Race name
  * @returns {Object} Adjusted ability scores
  */
-export function applyRacialAdjustments(baseScores, race) {
-    const adjustments = !race ? {} : (getRaceInfo(race)?.abilityModifiers ?? {});
+export function applyRacialAdjustments(baseScores, race, isAdvanced = true, humanRacialAbilities = false) {
+    if (!isAdvanced) return { ...baseScores };
+    const raceData = getRaceInfo(race);
+    if (!raceData) return { ...baseScores };
+    const mods = raceData.abilityModifiers || {};
+    if (Object.keys(mods).length === 0) return { ...baseScores };
+    if (normalizeRaceName(race) === 'Human_RACE' && !humanRacialAbilities) return { ...baseScores };
     const adjusted = {};
     for (const ability in baseScores) {
-        let score = baseScores[ability] + (adjustments[ability] || 0);
-        score = Math.max(3, Math.min(18, score));
-        adjusted[ability] = score;
+        adjusted[ability] = Math.max(3, Math.min(18, baseScores[ability] + (mods[ability] || 0)));
     }
     return adjusted;
 }
 
 /**
- * Check if ability scores (plain object) meet racial minimums.
- * Used by Advanced mode generator when scores are a {STR, DEX, ...} object.
- * See also: meetsRacialMinimums (array-based, used by shared-generator.js).
- * @param {Object} scores - Ability scores (before racial adjustments)
+ * Check if ability scores meet racial minimums (plain object form).
+ * Caller is responsible for gating to Advanced mode only.
+ * @param {Object} scores - Ability scores as {STR, DEX, ...}
  * @param {string} race - Race name
  * @returns {boolean} True if requirements met
  */
