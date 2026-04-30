@@ -3,7 +3,7 @@
 // Re-exports everything from shared-core.js so cs-sheet-page.js has a single import point.
 
 export * from './shared-core.js';
-import { WEAPONS } from './shared-core.js';
+import { WEAPONS, progModeLabel } from './shared-core.js';
 
 /**
  * cs-sheet-renderer.js
@@ -383,7 +383,7 @@ export function buildOptionsLine(cp) {
     if (cp.fs) {
         parts.push('Fixed Scores');
     } else if (cp.rr != null) {
-        parts.push(`${cp.rr} roll${cp.rr === 1 ? '' : 's'}`);
+        parts.push(`<strong>${cp.rr}</strong> roll${cp.rr === 1 ? '' : 's'}`);
     }
     return parts.join(' &nbsp;·&nbsp; ');
 }
@@ -435,9 +435,12 @@ export function renderCharacterSheetHTML(sheet) {
     );
 
     // ── Ability scores rows ──────────────────────────────────────────────────
+    const hasAdjustedScores = sheet.abilityScores.some(
+        a => a.originalScore !== null && a.originalScore !== undefined && a.originalScore !== a.score
+    );
     const abilityRows = _sortedAbilityScores.map(a => {
         const scoreDisplay = (a.originalScore !== null && a.originalScore !== undefined && a.originalScore !== a.score)
-            ? `<span style='text-decoration:line-through; color:#999; font-size:0.85em; margin-right:4px;'>${a.originalScore}</span>${a.score}`
+            ? `<span style='text-decoration:line-through; color:#999; margin-right:4px;'>${a.originalScore}</span>${a.score}`
             : `${a.score}`;
         return `
                     <tr>
@@ -714,6 +717,7 @@ export function renderCharacterSheetHTML(sheet) {
                         <th style='border: 1px solid #000; padding: 3px 6px; text-align: left;'>Effects</th>
                     </tr>
                     ${abilityRows}
+                    ${hasAdjustedScores ? `<tr><td colspan='3' style='border: 1px solid #000; padding: 3px 6px;'><span style='text-decoration:line-through; color:#999; margin-right:4px;'>12</span>13 ability score racial adjustment</td></tr>` : ''}
                 </table>
             </div>
 
@@ -766,34 +770,44 @@ export function renderCharacterSheetHTML(sheet) {
 
         <!-- Footer lives on page 1 -->
         <hr style='margin-top: 0; border-color: #ccc;'>
-        <div style='display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start;'>
-            <!-- Left column: footer text + legend -->
-            <div style='font-size: 0.8em; color: #666;'>
-                <p style='margin: 0 0 4px;'>${sheet.footer}</p>
-                <div style='font-size:0.72em;color:#aaa;font-style:italic;'><span style='text-decoration:line-through;color:#ccc;'>00</span> = ability score before racial adjustment</div>
-            </div>
-            <!-- Right column: starting stats + HP rolls -->
-            <div style='font-size:0.7em;color:#444;text-align:right;'>
-                ${(startingACDisplay !== null && startingACDisplay !== undefined) || eq.startingHD || startingGold !== null ? `
-                <div style='margini-bottom:3px;display:flex;column-gap:12px;row-gap:0;justify-content:flex-end;flex-wrap:wrap;'>
-                    ${startingACDisplay !== null && startingACDisplay !== undefined ? `<span><strong>Starting AC:</strong> ${startingACDisplay}</span>` : ''}
-                    ${eq.startingHD ? `<span><strong>Starting HD:</strong> ${eq.startingHD}</span>` : ''}
-                    ${startingGold !== null ? `<span><strong>Starting Gold:</strong> ${startingGold} gp</span>` : ''}
-                </div>` : ''}
-                ${(() => {
-                    const _cpConMod = (() => { const s = sheet.cp?.s?.[2]; if (s == null) return 0; return s>=15?1:s>=13?1:s<=6?-1:s<=8?-1:0; })();
-                    const _hpRolls = (sheet.editState?.hpRolls?.length > 0 ? sheet.editState.hpRolls : null) || sheet.cp?.hr || [];
-                    const _conMod  = sheet.editState?.conModifier ?? _cpConMod;
-                    if (_hpRolls.length === 0) return '';
-                    const conStr = `CON ${_conMod >= 0 ? '+' : ''}${_conMod}`;
-                    const items = _hpRolls.map((hp, i) => {
-                        const label = i === 0 ? 'L0' : `L${i}`;
-                        return `<span style='white-space:nowrap;'><strong>${label}:</strong>&nbsp;${hp}</span>`;
-                    }).join('');
-                    return `<div style='font-weight:bold;font-size:0.75em;color:#666;text-transform:uppercase;margin-bottom:1px;'>HP Rolls <span style='font-weight:normal;font-style:italic;'>${conStr}</span></div>
-                    <div style='display:flex;flex-wrap:wrap;justify-content:flex-end;gap:2px 10px;'>${items}</div>`;
-                })()}
-            </div>
+        <div style='display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; font-size: 0.7em;'>
+            <!-- Left column: identity + options -->
+            ${(() => {
+                const modeLabel  = progModeLabel(sheet.cp?.p || 'O');
+                const modPfx     = sheet.cp?.mx ? 'Modified ' : '';
+                const identity   = `${modPfx}${sheet.footerLabel} &nbsp;·&nbsp; ${modeLabel} Mode`;
+                const optParts   = buildOptionsLine(sheet.cp).split(' &nbsp;·&nbsp; ').filter(Boolean);
+                let afterBreak = false;
+                const optSpans = optParts.map((p, i) => {
+                    const dot = i > 0 && !afterBreak ? '&nbsp;·&nbsp;' : '';
+                    const br  = p.startsWith('L0 HP:') ? `<div style='flex-basis:100%;height:0;'></div>` : '';
+                    afterBreak = !!br;
+                    return `<span style='white-space:nowrap;'>${dot}${p}</span>${br}`;
+                }).join('');
+                return `<div>
+                    <div>${identity}</div>
+                    ${optParts.length ? `<div style='display:flex;flex-wrap:wrap;'>${optSpans}</div>` : ''}
+                </div>`;
+            })()}
+            <!-- Right column: starting stats, HP rolls, legend -->
+            ${(() => {
+                const dots = (parts) => parts.map((p, i) =>
+                    `<span style='white-space:nowrap;'>${i > 0 ? '&nbsp;·&nbsp;' : ''}${p}</span>`).join('');
+                const statParts = [];
+                if (startingACDisplay !== null && startingACDisplay !== undefined) statParts.push(`Starting AC: ${startingACDisplay}`);
+                if (eq.startingHD)    statParts.push(`Starting HD: ${eq.startingHD}`);
+                if (startingGold !== null) statParts.push(`Starting Gold: ${startingGold} gp`);
+                const cpConMod = (() => { const s = sheet.cp?.s?.[2]; if (s == null) return 0; return s>=15?1:s>=13?1:s<=6?-1:s<=8?-1:0; })();
+                const hpRolls  = (sheet.editState?.hpRolls?.length > 0 ? sheet.editState.hpRolls : null) || sheet.cp?.hr || [];
+                const conMod   = sheet.editState?.conModifier ?? cpConMod;
+                const hpParts  = hpRolls.length > 0
+                    ? [`HP Rolls CON ${conMod >= 0 ? '+' : ''}${conMod}`, ...hpRolls.map((hp, i) => `${i === 0 ? 'L0' : `L${i}`}: ${hp}`)]
+                    : [];
+                return `<div style='text-align:right;'>
+                    ${statParts.length ? `<div style='display:flex;flex-wrap:wrap;justify-content:flex-end;'>${dots(statParts)}</div>` : ''}
+                    ${hpParts.length  ? `<div style='display:flex;flex-wrap:wrap;justify-content:flex-end;'>${dots(hpParts)}</div>`  : ''}
+                </div>`;
+            })()}
         </div>
         </div><!-- end ose-page1 -->
 

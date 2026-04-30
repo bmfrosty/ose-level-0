@@ -267,6 +267,11 @@ export function generateCharacterV3(opts = {}) {
     } else {
         for (;;) {
             attempts++;
+            if (attempts > 25000) {
+                const err = new Error('Could not satisfy these constraints after 25,000 rolls. Try relaxing your minimum scores or requirements.');
+                err.code = 'TOO_MANY_ATTEMPTS';
+                throw err;
+            }
             const raw = rollAbilityScores();
             race = staticRace ?? pickRace(rawRace);
             const _s = () => raw.map(r => `${r.ability}:${r.roll}[${r.dice.join(',')}]`).join('  ');
