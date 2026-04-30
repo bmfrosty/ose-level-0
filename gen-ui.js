@@ -52,6 +52,11 @@ function rollAbilitiesAdvanced(minimumScores, race, className, toughCharacters, 
     while (true) {
         const { scores: baseScores, attempts } = rollAbilities(minimumScores, toughCharacters, className, primeRequisite13);
         totalAttempts += attempts;
+        if (totalAttempts > 25000) {
+            const err = new Error('Could not satisfy these constraints after 25,000 rolls. Try relaxing your minimum scores or requirements.');
+            err.code = 'TOO_MANY_ATTEMPTS';
+            throw err;
+        }
         if (!checkRacialMinimums(baseScores, race)) continue;
         const adjustedScores = applyRacialAdjustments(baseScores, race);
         const classReqs = _getClassReqs(className, race);
@@ -514,11 +519,26 @@ function handleRandomName() {
 
 // ── Generate Character (entry point) ─────────────────────────────────────────
 export function generateCharacter() {
-    runGenerate().catch(e => console.error('generation error:', e));
+    runGenerate().catch(e => {
+        if (e.code === 'TOO_MANY_ATTEMPTS') {
+            const display = document.getElementById('characterDisplay');
+            if (display) {
+                const err = document.createElement('div');
+                err.id = 'charGenError';
+                err.style.cssText = 'font-family: Arial, sans-serif; max-width: 760px; padding: 40px 20px; text-align: center;';
+                err.innerHTML = `<div style='font-size: 1.2em; font-weight: bold; color: #c00; margin-bottom: 12px;'>Could Not Generate Character</div><div>${e.message}</div>`;
+                display.insertAdjacentElement('afterbegin', err);
+                display.classList.add('visible');
+            }
+        } else {
+            console.error('generation error:', e);
+        }
+    });
 }
 
 async function runGenerate() {
     const isAdv = mode === 'advanced';
+    document.getElementById('charGenError')?.remove();
 
     if (!xpMode && selectedLevel === 0) { await generateZeroLevel(isAdv); return; }
 

@@ -147,7 +147,7 @@ function buildSheetSpec(sd, opts) {
         showQRCode:      opts.showQRCode,
         abilityOrder:    opts.abilityOrder,
         cp:              sd.cp,
-        footer:          sd.footer,
+        footerLabel:     sd.footerLabel,
         printTitle:      sd.printTitle,
         openInNewTab:    opts.openInNewTab,
         backgroundTab:   opts.backgroundTab,
@@ -218,12 +218,7 @@ export async function expandCompactV3(cp, precomp = {}, { silent = false } = {})
     const modeLabel = progModeLabel(cp.p || 'O');
     const title     = isAdv ? 'OLD-SCHOOL ESSENTIALS ADVANCED' : 'OLD-SCHOOL ESSENTIALS';
     const subtitle  = `RETRO ADVENTURE GAME &nbsp;·&nbsp; ${modeLabel} Mode`;
-    const buildFooter = (identity) => {
-        const o      = buildOptionsLine(cp);
-        const modPfx = cp.mx ? 'Modified ' : '';
-        return `${modPfx}${identity} &nbsp;·&nbsp; ${modeLabel} Mode` +
-               (o ? `<br><small style="opacity:0.7;">${o}</small>` : '');
-    };
+    const footerLabel = (identity) => ({ footerLabel: identity });
 
     // ── Level 0 ──────────────────────────────────────────────────────────────
     if (level === 0) {
@@ -293,7 +288,7 @@ export async function expandCompactV3(cp, precomp = {}, { silent = false } = {})
             spellSlots: null, turnUndead: null,
             showUndeadNames: !!cp.un, showQRCode: cp.qr !== 0, abilityOrder: cp.ao ?? 1,
             cp,
-            footer: buildFooter(`0-Level ${raceDisplay}`),
+            ...footerLabel(`0-Level ${raceDisplay}`),
             printTitle: `OSE ${isAdv?'Advanced':'Basic'} - ${raceDisplay} - 0-Level - ${cp.bg||''} - ${cp.n||''}`,
         };
     }
@@ -413,7 +408,7 @@ export async function expandCompactV3(cp, precomp = {}, { silent = false } = {})
         spellSlots: character.spellSlots || null,
         turnUndead: character.turnUndead || null,
         cp,
-        footer: buildFooter(isAdv ? `Level ${level} ${raceDisplay} ${clsDisplay}` : `Level ${level} ${clsDisplay}`),
+        ...footerLabel(isAdv ? `Level ${level} ${raceDisplay} ${clsDisplay}` : `Level ${level} ${clsDisplay}`),
         printTitle: isAdv
             ? `OSE Advanced - ${raceDisplay} - ${clsDisplay} - Level ${level} - ${cp.bg || ''} - ${cp.n || ''}`
             : `OSE Basic - ${clsDisplay} - Level ${level} - ${cp.bg || ''} - ${cp.n || ''}`,
