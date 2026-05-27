@@ -224,8 +224,12 @@ function switchMode(newMode) {
         container.classList.toggle('mode-advanced', mode === 'advanced');
     }
 
-    // Load this mode's saved settings, then re-init character selector
-    applySettings(loadSettings(getSettingsKey()));
+    // Load this mode's saved settings, then re-init character selector.
+    // If no saved settings exist (e.g. after a reset), still sync the current
+    // raceClassMode variable to the correct radio for the new mode.
+    const _saved = loadSettings(getSettingsKey());
+    applySettings(_saved);
+    if (!_saved) applySettings({ raceClassMode });
 
     if (mode === 'basic') {
         initializeClassSelection();
@@ -305,6 +309,7 @@ function initializeZeroLevelRaceSelection() {
             container.querySelectorAll('.zero-race-btn').forEach(b => b.classList.remove('selected'));
             btn.classList.add('selected');
             selectedRaceForZero = btn.dataset.race;
+            saveCurrentSettings();
             if (autoGenerateOnClassChange) generateCharacter();
         });
     });
@@ -520,13 +525,14 @@ function handleRandomName() {
 // ── Generate Character (entry point) ─────────────────────────────────────────
 export function generateCharacter() {
     runGenerate().catch(e => {
-        if (e.code === 'TOO_MANY_ATTEMPTS') {
+        if (e.code === 'TOO_MANY_ATTEMPTS' || e.code === 'LOW_HP') {
             const display = document.getElementById('characterDisplay');
             if (display) {
                 const err = document.createElement('div');
                 err.id = 'charGenError';
                 err.style.cssText = 'font-family: Arial, sans-serif; max-width: 760px; padding: 40px 20px; text-align: center;';
-                err.innerHTML = `<div style='font-size: 1.2em; font-weight: bold; color: #c00; margin-bottom: 12px;'>Could Not Generate Character</div><div>${e.message}</div>`;
+                const header = e.code === 'LOW_HP' ? 'Character Did Not Become an Adventurer' : 'Could Not Generate Character';
+                err.innerHTML = `<div style='font-size: 1.2em; font-weight: bold; color: #c00; margin-bottom: 12px;'>${header}</div><div>${e.message}</div>`;
                 display.insertAdjacentElement('afterbegin', err);
                 display.classList.add('visible');
             }
@@ -716,7 +722,7 @@ async function generateZeroLevel(isAdv) {
     spec.editState = {
         level: 0, progressionMode, name: cp.n || '',
         ...base0, ...adj0,
-        hpRolls: [], hpDice: [],
+        hpRolls: cp.hr || [], hpDice: [],
         startingGold: cp.g || 0,
         conModifier: calculateModifier(rawScores[SCRS.indexOf('CON')] + totalAdj[SCRS.indexOf('CON')]),
         showUndeadNames, showQRCode, includeLevel0HP: false,
@@ -765,7 +771,7 @@ function saveCurrentSettings() {
         scoreCON: parseInt(document.getElementById('scoreCON')?.value)||6,
         scoreCHA: parseInt(document.getElementById('scoreCHA')?.value)||3,
         // Both mode-specific fields always saved so switching modes preserves them
-        demihumanLimits, raceClassMode, selectedRace,
+        demihumanLimits, raceClassMode, selectedRace, selectedRaceForZero,
     });
     syncURLParams();
 }
@@ -789,6 +795,7 @@ function syncURLParams() {
     if (wealthPct !== 50)                                          p.set('wp', String(wealthPct));
     if (wealthRollAsLevel1)                                        p.set('l1w', '1');
     if (noLevel0Equipment)                                         p.set('nl0e', '1');
+    if (selectedLevel === 0 && selectedRaceForZero)                p.set('zr', selectedRaceForZero);
     if (autoGenerateOnLevelChange)                                 p.set('agl', '1');
     if (autoGenerateOnClassChange)                                 p.set('agc', '1');
     if (autoGenerateOnLoad)                                        p.set('ago', '1');
@@ -913,6 +920,10 @@ function applySettings(s) {
             const r=b.dataset.race?`${b.dataset.race}_RACE`:null, c=b.dataset.class?`${b.dataset.class}_CLASS`:null;
             b.classList.toggle('selected',r===s.selectedRace&&c===s.selectedClass);
         });
+    }
+    if (s.selectedRaceForZero!==undefined) {
+        selectedRaceForZero=s.selectedRaceForZero;
+        document.querySelectorAll('.zero-race-btn').forEach(b=>b.classList.toggle('selected',b.dataset.race===s.selectedRaceForZero));
     }
     if (s.characterName!==undefined) { characterName=s.characterName; const el=document.getElementById('characterName'); if(el) el.value=s.characterName; }
     ['STR','INT','WIS','DEX','CON','CHA'].forEach(a=>{

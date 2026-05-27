@@ -328,6 +328,17 @@ export const THIEF_SKILLS = {
   pickPockets: [20, 25, 30, 35, 40, 45, 55, 65, 75, 85, 95, 105, 115, 125]
 };
 
+export const SMOOTHPROG_THIEF_SKILLS = {
+  climbSheerSurfaces: [87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 99],
+  findRemoveTraps:    [20, 24, 28, 33, 37, 46, 55, 65, 74, 83, 92, 97, 98, 99],
+  hearNoise:          [33, 41, 50, 54, 58, 62, 67, 71, 75, 79, 83, 87, 91, 95],
+  hearNoiseFormat:    'pct',
+  hideInShadows:      [10, 15, 20, 25, 30, 36, 45, 55, 65, 75, 85, 90, 95, 99],
+  moveSilently:       [25, 30, 34, 39, 43, 48, 58, 67, 77, 87, 96, 97, 98, 99],
+  openLocks:          [25, 29, 33, 38, 42, 51, 60, 70, 79, 88, 97, 98, 98, 99],
+  pickPockets:        [30, 34, 38, 43, 47, 51, 60, 70, 79, 88, 97, 107, 116, 125]
+};
+
 // ============================================================================
 // TURN UNDEAD TABLE (Shared across all modes)
 // ============================================================================
@@ -854,7 +865,7 @@ export function applyRacialSaveModifiers(saves, race, abilityScores) {
  * @param {boolean} isSmoothprog - Whether Smoothified progression mode is enabled
  * @returns {Object} Object with Death, Wands, Paralysis, Breath, Spells
  */
-export function calculateSavingThrows(level, race, conScore, isAdvanced, isSmoothprog) {
+export function calculateSavingThrows(race, conScore) {
     const saves = {
         Death:    savingThrowsLevel0.Death,
         Wands:    savingThrowsLevel0.Wands,
@@ -1101,27 +1112,33 @@ export function rollHitPoints(options) {
     // ─── Level 0 ──────────────────────────────────────────────────────────────
     dice.push(4);
     let backgroundHP;
+    let l0FloorHP;  // actual CON-modified L0 HP — used as L1 HP floor (NOT the raw die)
+    let l0RawHP;    // l0Die + conModifier before clamping; undefined for fixed rolls
     {
         let l0HP;
+        let l0Die;
         if (fixedRolls && fixedRolls[0] !== undefined) {
             l0HP = fixedRolls[0];   // stored value is already the final HP
             console.log(`  L0${includeLevel0HP ? '' : ' (bg only)'}: fixed → ${l0HP}`);
         } else {
             // L0 is NEVER blessed — it determines background occupation
-            let l0Die;
             do {
                 l0Die = rollSingleDie(4);
-                const lbl = includeLevel0HP ? 'L0' : 'L0 (bg only)';
-                console.log(`  ${lbl}: 1d4 → ${l0Die} (unblessed — background selection roll)`);
                 l0HP = Math.max(1, l0Die + conModifier);
+                const lbl = includeLevel0HP ? 'L0' : 'L0 (bg only)';
+                const modStr = conModifier !== 0 ? ` + CON ${conModifier >= 0 ? '+' : ''}${conModifier} = ${l0HP}` : '';
+                console.log(`  ${lbl}: 1d4 → ${l0Die}${modStr} (unblessed; raw roll selects background tier)`);
             } while (mode === 3 && includeLevel0HP && l0Die <= 2);
+            l0RawHP = l0Die + conModifier;
         }
         rolls.push(l0HP);                       // always at index 0
         if (includeLevel0HP) totalHP += l0HP;   // only counts when requested
-        backgroundHP = l0HP;
+        backgroundHP = l0Die ?? l0HP;           // raw die selects background tier; fallback for fixed rolls
+        l0FloorHP    = l0HP;                    // CON-adjusted L0 HP — floor for L1 re-roll
     }
 
     // ─── Levels 1–N ─────────────────────────────────────────────────────────
+    let l1RawHP, l1Die, l1Sides;
     for (let lvl = 1; lvl <= level; lvl++) {
         const hitDiceString = classData.getHitDice(className, lvl);
         const hitDice = parseHitDice(hitDiceString);
@@ -1152,9 +1169,14 @@ export function rollHitPoints(options) {
                 levelHP = hitDice.bonus + dieRoll + conModifier;
                 if (levelHP < 1) levelHP = 1;
             } while (
-                (lvl === 1 && !includeLevel0HP && levelHP < backgroundHP) ||
+                (lvl === 1 && !includeLevel0HP && levelHP < l0FloorHP) ||
                 (mode === 3 && dieRoll <= 2)
             );
+            if (lvl === 1) {
+                l1RawHP = hitDice.bonus + dieRoll + conModifier;
+                l1Die   = dieRoll;
+                l1Sides = hitDice.sides;
+            }
         }
 
         rolls.push(levelHP);
@@ -1163,7 +1185,7 @@ export function rollHitPoints(options) {
 
     const label = rolls.map((r,i) => `[${i===0 ? 'L0' : 'L'+i}:${r}]`).join(' ');
     console.log(`HP total: ${label} = ${totalHP}  (bg L0 hp=${backgroundHP}${mode===1?' ✨blessed':mode===2?' 🎲5e':''})`);
-    return { max: totalHP, rolls, dice, backgroundHP };
+    return { max: totalHP, rolls, dice, backgroundHP, l0RawHP, l1RawHP, l1Die, l1Sides };
 }
 
 // ── Character object creation ─────────────────────────────────────────────────
@@ -1503,19 +1525,25 @@ export function getHitDice(className, level) {
     return progression[level - 1];
 }
 
-export function getThiefSkills(level) {
-    if (level < 1 || level > 14) return null;
-    const i = level - 1;
-    return {
-        climbSheerSurfaces: `${THIEF_SKILLS.climbSheerSurfaces[i]}%`,
-        findRemoveTraps:    `${THIEF_SKILLS.findRemoveTraps[i]}%`,
-        hearNoise:          `1-${THIEF_SKILLS.hearNoise[i]} on 1d6`,
-        hideInShadows:      `${THIEF_SKILLS.hideInShadows[i]}%`,
-        moveSilently:       `${THIEF_SKILLS.moveSilently[i]}%`,
-        openLocks:          `${THIEF_SKILLS.openLocks[i]}%`,
-        pickPockets:        `${THIEF_SKILLS.pickPockets[i]}%`
+function _makeGetThiefSkills(table) {
+    return function getThiefSkills(level) {
+        if (level < 1 || level > 14) return null;
+        const i = level - 1;
+        return {
+            climbSheerSurfaces: `${table.climbSheerSurfaces[i]}%`,
+            findRemoveTraps:    `${table.findRemoveTraps[i]}%`,
+            hearNoise:          table.hearNoiseFormat === 'pct'
+                                    ? `${table.hearNoise[i]}%`
+                                    : `1-${table.hearNoise[i]} on 1d6`,
+            hideInShadows:      `${table.hideInShadows[i]}%`,
+            moveSilently:       `${table.moveSilently[i]}%`,
+            openLocks:          `${table.openLocks[i]}%`,
+            pickPockets:        `${table.pickPockets[i]}%`
+        };
     };
 }
+
+export const getThiefSkills = _makeGetThiefSkills(THIEF_SKILLS);
 
 export function getTurnUndead(level, undeadType) {
     if (level < 1 || level > 14) return null;
@@ -1609,7 +1637,8 @@ export const PROGRESSION_TABLES = {
         ATTACK_BONUS_PROGRESSIONS: GYGAR_ATTACK_BONUS_PROGRESSIONS,
         ATTACK_BONUS_SCALE:        GYGAR_ATTACK_BONUS_SCALE,
         SAVING_THROWS:             GYGAR_SAVING_THROWS,
-        getHitDice, getXPRequired, getThiefSkills, getTurnUndead, getLevelFromXP, getXPToNextLevel,
+        getHitDice, getXPRequired, getTurnUndead, getLevelFromXP, getXPToNextLevel,
+        getThiefSkills:  _makeGetThiefSkills(SMOOTHPROG_THIEF_SKILLS),
         getAttackBonus:  _makeGetAttackBonus(GYGAR_ATTACK_BONUS_PROGRESSIONS, GYGAR_ATTACK_BONUS_SCALE),
         getSavingThrows: _makeGetSavingThrows(GYGAR_SAVING_THROWS),
         getSpellSlots:   _makeGetSpellSlots(null),

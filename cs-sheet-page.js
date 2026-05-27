@@ -229,7 +229,7 @@ export async function expandCompactV3(cp, precomp = {}, { silent = false } = {})
         if (cp.v === 3) {
             // v3: derive saves and equipment from stored params
             const conScore = adjArr[2];
-            const rawSaves = calculateSavingThrows(0, race, conScore, isAdv, prog === 'smoothprog');
+            const rawSaves = calculateSavingThrows(race, conScore);
             sv = [rawSaves.Death, rawSaves.Wands, rawSaves.Paralysis, rawSaves.Breath, rawSaves.Spells];
             const bg = getBackgroundByProfession(cp.bg || '') || {};
             l0Weapons = [];

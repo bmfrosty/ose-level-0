@@ -170,6 +170,15 @@
         }
         body.dark-mode #darkModeToggle { color: #ccc; border-color: #666; }
         #darkModeToggle:hover { border-color: #4CAF50; color: #4CAF50; }
+
+        @media print {
+            nav, .class-buttons, #darkModeToggle, .intro-box { display: none; }
+            body { max-width: 100%; padding: 0; font-size: 9px; }
+            #class-display { border: none; padding: 4px; }
+            th, td { padding: 2px 4px; font-size: 9px; }
+            .class-note, .fighter-note { display: none; }
+            @page { size: landscape; margin: 1cm; }
+        }
     </style>
 </head>
 <body>
@@ -224,6 +233,13 @@
 
         // Extra per-class notes shown at the top of the table
         const CLASS_NOTES = {
+            "Thief_CLASS": {
+                text: `In Smoothified mode, most thief skills start at a higher base value at low levels and converge
+                to the same OSE values by level 14. Hear Noise is converted from a d6 roll to a percentile scale.
+                Inspired by <a href="https://www.basicfantasy.org/" target="_blank" rel="noopener" style="color:#2e7d32;font-weight:bold;">Basic Fantasy RPG</a>.<br><br>
+                CS = Climb Sheer Surfaces, TR = Find/Remove Traps, HN = Hear Noise,
+                HS = Hide in Shadows, MS = Move Silently, OL = Open Locks, PP = Pick Pockets.`
+            },
             "Elf_CLASS": {
                 text: `The <strong>Elf / Spellblade</strong> share identical progression tables — same attack bonus, saving throws, XP, and spell slots at every level.
                 The difference is context:<br><br>
@@ -244,10 +260,20 @@
             const xpReqs  = XP_REQUIREMENTS[classKey];
             const hd      = HIT_DICE_PROGRESSIONS[HIT_DICE_SCALE[classKey]];
             const maxLvl  = xpReqs ? xpReqs.length : 14;
+            const isThief = classKey === 'Thief_CLASS';
 
             let rows = '';
             for (let lvl = 1; lvl <= maxLvl; lvl++) {
                 const i = lvl - 1;
+                const ts = isThief ? PROGRESSION_TABLES.smoothprog.getThiefSkills(lvl) : null;
+                const thiefCells = ts ? `
+                    <td>${ts.climbSheerSurfaces}</td>
+                    <td>${ts.findRemoveTraps}</td>
+                    <td>${ts.hearNoise}</td>
+                    <td>${ts.hideInShadows}</td>
+                    <td>${ts.moveSilently}</td>
+                    <td>${ts.openLocks}</td>
+                    <td>${ts.pickPockets}</td>` : '';
                 rows += `<tr>
                     <td>${lvl}</td>
                     <td>${hd[i]}</td>
@@ -257,9 +283,18 @@
                     <td>${saves.wands[i]}</td>
                     <td>${saves.paralysis[i]}</td>
                     <td>${saves.breath[i]}</td>
-                    <td>${saves.spells[i]}</td>
+                    <td>${saves.spells[i]}</td>${thiefCells}
                 </tr>`;
             }
+
+            const thiefHeaders = isThief ? `
+                        <th title="Climb Sheer Surfaces">CS</th>
+                        <th title="Find or Remove Treasure Traps">TR</th>
+                        <th title="Hear Noise">HN</th>
+                        <th title="Hide in Shadows">HS</th>
+                        <th title="Move Silently">MS</th>
+                        <th title="Open Locks">OL</th>
+                        <th title="Pick Pockets">PP</th>` : '';
 
             return `<table>
                 <thead>
@@ -272,7 +307,7 @@
                         <th title="Wands / Rods / Staves">Wands</th>
                         <th title="Paralysis / Petrify">Para.</th>
                         <th title="Breath Attacks">Breath</th>
-                        <th title="Spells / Rods / Staves">Spells</th>
+                        <th title="Spells / Rods / Staves">Spells</th>${thiefHeaders}
                     </tr>
                 </thead>
                 <tbody>${rows}</tbody>

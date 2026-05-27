@@ -17,7 +17,7 @@
  */
 
 import { WEAPONS, ARMOR, calculateModifier, rollDice,
-    calculateSavingThrows, calculateAttackBonus,
+    calculateSavingThrows,
     applyRacialAdjustments, applyRacialSaveModifiers, checkRacialMinimums,
     getRaceInfo, getRaceAbilitiesAtLevel, getClassProgressionData,
     getClassFeatures, getBasicModeClassAbilities, CLASS_INFO,
@@ -179,13 +179,6 @@ function passesFilters(results, effMins) {
     return null;
 }
 
-function calcLevel0HP(conModifier, hpMode) {
-    const d4 = () => Math.floor(Math.random() * 4) + 1;
-    let roll;
-    if (hpMode === 3) { do { roll = d4(); } while (roll <= 2); }
-    else              { roll = d4(); }
-    return { roll, total: roll + conModifier };
-}
 
 function toMap(results) {
     const m = {};
@@ -298,21 +291,6 @@ export function generateCharacterV3(opts = {}) {
                 continue;
             }
 
-            if (level === 0) {
-                // CON mod comes from racial-adjusted scores for HP purposes
-                const adjScores = applyRacialAdjustments(toMap(raw), race, isAdvanced, humanRacialAbilities);
-                if (fixedAdjustments) {
-                    const adjCon = Math.max(3, Math.min(18, raw.find(r => r.ability === 'CON').roll + (fixedAdjustments.CON ?? 0)));
-                    hp0 = calcLevel0HP(calculateModifier(adjCon), hpMode);
-                } else {
-                    hp0 = calcLevel0HP(calculateModifier(adjScores.CON), hpMode);
-                }
-                if (hp0.total < 1) {
-                    console.log(`[gen] attempt ${attempts}: ${_s()} → ✗ HP < 1`);
-                    continue;
-                }
-            }
-
             console.log(`[gen] attempt ${attempts}: ${_s()} → ✓ accepted`);
             rawArr = raw.map(r => r.roll);
             break;
@@ -336,11 +314,22 @@ export function generateCharacterV3(opts = {}) {
 
     const conMod = calculateModifier(adjArr[ABILITIES.indexOf('CON')]);
 
-    // ── Level 0 HP (fixed-scores path) ───────────────────────────────────────
+    // ── Name — needed before HP roll so LOW_HP error can include it ───────────
 
-    if (fixedScores && level === 0) {
-        hp0 = calcLevel0HP(conMod, hpMode);
-        if (hp0.total < 1) hp0 = { roll: hp0.roll, total: 1 };
+    const raceStem = race.replace('_RACE', '');
+    const raceCap  = raceStem.charAt(0).toUpperCase() + raceStem.slice(1).toLowerCase();
+    const name     = fixedName || getRandomName(raceCap);
+
+    // ── Level 0 HP ────────────────────────────────────────────────────────────
+
+    if (level === 0) {
+        hp0 = rollHPLeveled({ level: 0, conModifier: conMod, includeLevel0HP: true, hpMode, fixedRolls: fixedHPRolls });
+        if (!fixedHPRolls && hp0.l0RawHP <= 0) {
+            const scoreStr = ABILITIES.map((a, i) => `${a}:${rawArr[i]}`).join(' ');
+            const err = new Error(`${name} decided to not become an adventurer, for they rolled ${scoreStr} and then a ${hp0.backgroundHP} on a 1d4 for a hit die and didn't have enough hit points.`);
+            err.code = 'LOW_HP';
+            throw err;
+        }
     }
 
     // ── sa (post-gen adjustments beyond racial) ────────────────────────────────
@@ -358,21 +347,17 @@ export function generateCharacterV3(opts = {}) {
     const pCode    = PROG_CODE[progressionMode] ?? 'O';
     const rcmCode  = RCM_CODE[raceClassMode]  ?? 'ST';
 
-    const raceStem = race.replace('_RACE', '');
-    const raceCap  = raceStem.charAt(0).toUpperCase() + raceStem.slice(1).toLowerCase();
-    const name     = fixedName || getRandomName(raceCap);
-
     // ── Level 0 ───────────────────────────────────────────────────────────────
 
     if (level === 0) {
         const background = fixedOccupation
-            ? (getBackgroundByProfession(fixedOccupation) || getRandomBackground(hp0.total))
-            : getRandomBackground(hp0.total);
+            ? (getBackgroundByProfession(fixedOccupation) || getRandomBackground(hp0.backgroundHP))
+            : getRandomBackground(hp0.backgroundHP);
         const startingGold = fixedStartingGold !== null ? fixedStartingGold : rollDice(3, 6);
         return {
             v: 3, m: mCode, p: pCode, r: raceCode, l: 0,
             s: rawArr, ...(saArr ? { sa: saArr } : {}),
-            h: hp0.total, hr: [hp0.roll],
+            h: hp0.max, hr: hp0.rolls,
             n: name, bg: background?.profession ?? '',
             g: startingGold, rr: attempts,
             rcm: rcmCode,
@@ -388,6 +373,19 @@ export function generateCharacterV3(opts = {}) {
         className, level, conModifier: conMod, classData,
         includeLevel0HP, hpMode, fixedRolls: fixedHPRolls,
     });
+    if (!fixedHPRolls) {
+        const scoreStr = ABILITIES.map((a, i) => `${a}:${rawArr[i]}`).join(' ');
+        if (hpResult.l0RawHP <= 0) {
+            const err = new Error(`${name} decided to not become an adventurer, for they rolled ${scoreStr} and then a ${hpResult.backgroundHP} on a 1d4 for a hit die and didn't have enough hit points.`);
+            err.code = 'LOW_HP';
+            throw err;
+        }
+        if (hpResult.l1RawHP !== undefined && hpResult.l1RawHP <= 0) {
+            const err = new Error(`${name} decided to not become an adventurer, for they rolled ${scoreStr} and then a ${hpResult.l1Die} on a 1d${hpResult.l1Sides} for a hit die and didn't have enough hit points.`);
+            err.code = 'LOW_HP';
+            throw err;
+        }
+    }
 
     const background = fixedOccupation
         ? (getBackgroundByProfession(fixedOccupation) || getRandomBackground(hpResult.backgroundHP))
