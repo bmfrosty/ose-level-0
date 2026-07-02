@@ -22,6 +22,7 @@ jobs:
         uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          claude_args: "--model claude-sonnet-4-6 --allowedTools Bash,Read,Glob,Grep"
           use_sticky_comment: true
           prompt: |
             Review this pull request for an OSE (Old-School Essentials) character generator.
