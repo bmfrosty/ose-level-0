@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OSE Class Reference</title>
+    <style>
+        html { background: #ccc; }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: white;
+            max-width: 8.5in;
+            margin: 0.5in auto;
+            padding: 0.75in;
+            font-size: 9pt;
+            line-height: 1.4;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            min-height: 11in;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #content { flex: 1; }
+
+        /* Print controls */
+        #print-controls {
+            background: #f0f0f0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            padding: 10px 14px;
+            margin-bottom: 18px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+        .btn-print {
+            padding: 7px 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .btn-print:hover { background-color: #388E3C; }
+        .btn-back {
+            color: #6a1b9a;
+            text-decoration: none;
+            font-size: 11px;
+            font-weight: bold;
+        }
+        .btn-back:hover { text-decoration: underline; }
+        .print-hint { color: #666; font-size: 10px; font-style: italic; }
+
+        h1 {
+            color: #4a148c;
+            font-size: 14pt;
+            margin: 0 0 2px;
+            border-bottom: 2px solid #9C27B0;
+            padding-bottom: 3px;
+        }
+        .subtitle {
+            color: #888;
+            font-size: 7.5pt;
+            margin: 2px 0 6px;
+        }
+        .class-desc {
+            font-size: 8.5pt;
+            color: #333;
+            font-style: italic;
+            margin: 4px 0 5px;
+        }
+        .class-meta {
+            font-size: 8pt;
+            color: #444;
+            background: #f8f4ff;
+            border-left: 3px solid #9C27B0;
+            padding: 4px 9px;
+            margin-bottom: 6px;
+        }
+        .print-note {
+            background: #f8f4ff;
+            border-left: 3px solid #9C27B0;
+            padding: 4px 9px;
+            font-size: 8.5pt;
+            color: #333;
+            margin-bottom: 7px;
+            line-height: 1.4;
+        }
+        .section-head {
+            font-size: 10pt;
+            font-weight: bold;
+            color: #4a148c;
+            border-bottom: 1px solid #9C27B0;
+            margin: 8px 0 4px;
+            padding-bottom: 2px;
+        }
+        .table-note {
+            color: #555;
+            font-style: italic;
+            font-size: 8pt;
+            margin: 0 0 5px;
+        }
+        .abilities {
+            margin: 4px 0 6px 0;
+            padding-left: 16px;
+            font-size: 8.5pt;
+        }
+        .abilities li { margin-bottom: 2px; line-height: 1.4; }
+        .lvl-note { color: #888; font-size: 7.5pt; }
+        .racial-box {
+            background: #e8f5e9;
+            border-left: 3px solid #388E3C;
+            padding: 4px 9px;
+            margin-bottom: 6px;
+            font-size: 8.5pt;
+        }
+        .racial-box strong.racial-head {
+            display: block;
+            color: #1b5e20;
+            font-size: 8pt;
+            margin-bottom: 2px;
+        }
+        .racial-box ul { margin: 2px 0 0; padding-left: 14px; }
+        .racial-box li { margin-bottom: 1px; line-height: 1.4; }
+
+        table { border-collapse: collapse; width: 100%; }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 2px 5px;
+            text-align: center;
+            font-size: 9pt;
+        }
+        th {
+            background-color: #6a1b9a;
+            color: white;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+        tr:nth-child(even) { background-color: #faf0ff; }
+        td:first-child { font-weight: bold; }
+        td.tohit { font-weight: bold; color: #1a237e; }
+        td.turn-t { font-weight: bold; color: #1565c0; }
+        td.turn-d { font-weight: bold; color: #b71c1c; }
+
+        /* On-screen page break indicator */
+        .page-break-indicator {
+            border-top: 2px dashed #ccc;
+            margin: 16px 0;
+            text-align: center;
+            font-size: 8pt;
+            color: #bbb;
+            padding-top: 3px;
+        }
+        .page-break-indicator::before { content: "— page 2 —"; }
+
+        /* Page 2 section — looks like a page on screen, breaks before in print */
+        .page-2 {
+            display: flex;
+            flex-direction: column;
+            min-height: 9.5in;
+        }
+        .page-2-content { flex: 1; }
+
+        footer {
+            margin-top: auto;
+            padding-top: 5px;
+            border-top: 1px solid #ddd;
+            font-size: 7pt;
+            color: #999;
+            text-align: center;
+        }
+
+        @page { size: letter portrait; margin: 0; }
+
+        @media print {
+            html { background: white; }
+            #print-controls { display: none; }
+            body {
+                max-width: 100%; width: 100%; box-sizing: border-box;
+                margin: 0; padding: 0.75in; box-shadow: none; min-height: 11in;
+            }
+            .page-break-indicator { display: none; }
+            .page-2 { break-before: page; min-height: 9.5in; }
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+        }
+    </style>
+</head>
+<body>
+    <div id="print-controls">
+        <button class="btn-print" onclick="window.print()">🖨 Print / Save as PDF</button>
+        <span class="print-hint">Tip: set margins to None or Minimum in the print dialog for best fit.</span>
+        <a id="back-link" class="btn-back" href="classes.html">← Class Tables</a>
+    </div>
+
+    <div id="content">
+        <p style="color:#999;">Loading…</p>
+    </div>
+
+    <footer id="main-footer">
+        Old-School Essentials is a trademark of Necrotic Gnome. The trademark and Old-School Essentials logo are used with permission of Necrotic Gnome, under license.
+    </footer>
+
+    <script type="module">
+        import {
+            PROGRESSION_TABLES,
+            XP_REQUIREMENTS,
+            HIT_DICE_SCALE,
+            HIT_DICE_PROGRESSIONS
+        } from './cs-core.js';
+
+        import {
+            ARCANE_SPELL_SLOTS,
+            DIVINE_SPELL_SLOTS,
+            TURN_UNDEAD,
+            SPELL_SLOT_SCALE
+        } from './shared-core.js';
+
+        import { CLASS_INFO } from './shared-class-info.js';
+
+        const { ATTACK_BONUS_PROGRESSIONS, ATTACK_BONUS_SCALE, SAVING_THROWS } = PROGRESSION_TABLES.smoothprog;
+
+        const CLASSES = [
+            { key: "Cleric_CLASS",      name: "Cleric" },
+            { key: "Dwarf_CLASS",       name: "Dwarf" },
+            { key: "Elf_CLASS",         name: "Elf / Spellblade" },
+            { key: "Fighter_CLASS",     name: "Fighter" },
+            { key: "Halfling_CLASS",    name: "Halfling" },
+            { key: "Magic-User_CLASS",  name: "Magic-User" },
+            { key: "Thief_CLASS",       name: "Thief" },
+        ];
+
+        // Elf abilities that are racial (Basic mode Elf only, not shared with Spellblade)
+        const ELF_RACIAL = new Set([
+            "Languages", "Detect Secret Doors", "Immunity to Ghoul Paralysis",
+            "Infravision", "Listening at Doors"
+        ]);
+
+        // Maps progression key → CLASS_INFO key (SRD content only; Spellblade is not SRD)
+        const CLASS_INFO_KEY = {
+            "Cleric_CLASS":     "Cleric",
+            "Dwarf_CLASS":      "Dwarf",
+            "Elf_CLASS":        "Elf",
+            "Fighter_CLASS":    "Fighter",
+            "Halfling_CLASS":   "Halfling",
+            "Magic-User_CLASS": "Magic-User",
+            "Thief_CLASS":      "Thief",
+        };
+
+        // These classes get a second page
+        const TWO_PAGE = new Set(["Cleric_CLASS"]);
+
+        // These classes get spell slots inline on page 1
+        const INLINE_SPELL_SLOTS = new Set(["Magic-User_CLASS", "Elf_CLASS"]);
+
+        const CLASS_PRINT_NOTES = {
+            "Elf_CLASS": "Basic Mode — Elf (race-as-class): racial abilities (infravision 60', detect secret doors, ghoul paralysis immunity, elvish languages) are built into the class. Advanced Mode — Spellblade: identical progression, no racial features; any race may take this class.",
+        };
+
+        const FIGHTER_NOTES = {
+            self:  "Attack bonus is front-loaded — starts at +1 at level 1, reaches +9 at level 14, consistently ahead of the Cleric/Thief progression (max +7) and Magic-User at every level.",
+            other: "Uses the Fighter attack bonus progression — front-loaded, starts at +1 at level 1, consistently ahead of Cleric/Thief (max +7) and Magic-User progressions at every level.",
+        };
+
+        const FOOTER_TEXT = `Old-School Essentials is a trademark of Necrotic Gnome. The trademark and Old-School Essentials logo are used with permission of Necrotic Gnome, under license.`;
+
+        function fmt(n) { return n >= 0 ? `+${n}` : `${n}`; }
+
+        function buildMainTable(classKey) {
+            const saves   = SAVING_THROWS[classKey];
+            const scale   = ATTACK_BONUS_SCALE[classKey];
+            const attacks = ATTACK_BONUS_PROGRESSIONS[scale];
+            const xpReqs  = XP_REQUIREMENTS[classKey];
+            const hd      = HIT_DICE_PROGRESSIONS[HIT_DICE_SCALE[classKey]];
+            const maxLvl  = xpReqs ? xpReqs.length : 14;
+
+            let rows = '';
+            for (let lvl = 1; lvl <= maxLvl; lvl++) {
+                const i = lvl - 1;
+                rows += `<tr>
+                    <td>${lvl}</td><td>${hd[i]}</td>
+                    <td>${xpReqs[i].toLocaleString()}</td>
+                    <td class="tohit">${fmt(attacks[i])}</td>
+                    <td>${saves.death[i]}</td><td>${saves.wands[i]}</td>
+                    <td>${saves.paralysis[i]}</td><td>${saves.breath[i]}</td>
+                    <td>${saves.spells[i]}</td>
+                </tr>`;
+            }
+
+            return `<div class="section-head">Smoothified Progression — Levels 1–14</div>
+                <p class="table-note">Saving throws: <em>lower is better</em> (roll ≥ target). To-hit: <em>higher is better</em> (ascending AC).</p>
+                <table>
+                    <thead><tr>
+                        <th>Lvl</th><th>HD</th><th>XP Required</th><th>To-Hit</th>
+                        <th title="Death / Poison">Death</th>
+                        <th title="Wands / Rods / Staves">Wands</th>
+                        <th title="Paralysis / Petrify">Para.</th>
+                        <th title="Breath Attacks">Breath</th>
+                        <th title="Spells / Rods / Staves">Spells</th>
+                    </tr></thead>
+                    <tbody>${rows}</tbody>
+                </table>`;
+        }
+
+        function buildSpellSlotsTable(slots, maxSpellLevel, label) {
+            const levels = Array.from({length: maxSpellLevel}, (_, i) => i + 1);
+            const headers = levels.map(l => `<th>${l}</th>`).join('');
+            let rows = '';
+            for (let lvl = 1; lvl <= 14; lvl++) {
+                const cells = levels.map(sl => {
+                    const n = slots[sl][lvl - 1];
+                    return `<td>${n > 0 ? n : '—'}</td>`;
+                }).join('');
+                rows += `<tr><td>${lvl}</td>${cells}</tr>`;
+            }
+            return `<div class="section-head">${label} <span style="font-size:7.5pt;font-weight:normal;color:#888;">(spell level →)</span></div>
+                <table>
+                    <thead><tr><th>Lvl</th>${headers}</tr></thead>
+                    <tbody>${rows}</tbody>
+                </table>`;
+        }
+
+        function buildCombinedProgressionSpellTable(classKey, slots, maxSpellLevel, spellLabel) {
+            const saves   = SAVING_THROWS[classKey];
+            const scale   = ATTACK_BONUS_SCALE[classKey];
+            const attacks = ATTACK_BONUS_PROGRESSIONS[scale];
+            const xpReqs  = XP_REQUIREMENTS[classKey];
+            const hd      = HIT_DICE_PROGRESSIONS[HIT_DICE_SCALE[classKey]];
+            const maxLvl  = xpReqs ? xpReqs.length : 14;
+            const spellLevels = Array.from({length: maxSpellLevel}, (_, i) => i + 1);
+
+            let rows = '';
+            for (let lvl = 1; lvl <= maxLvl; lvl++) {
+                const i = lvl - 1;
+                const slotCells = spellLevels.map(sl => {
+                    const n = slots[sl][lvl - 1];
+                    return `<td>${n > 0 ? n : '—'}</td>`;
+                }).join('');
+                rows += `<tr>
+                    <td>${lvl}</td><td>${hd[i]}</td>
+                    <td>${xpReqs[i].toLocaleString()}</td>
+                    <td class="tohit">${fmt(attacks[i])}</td>
+                    <td>${saves.death[i]}</td><td>${saves.wands[i]}</td>
+                    <td>${saves.paralysis[i]}</td><td>${saves.breath[i]}</td>
+                    <td>${saves.spells[i]}</td>${slotCells}
+                </tr>`;
+            }
+
+            const slotHeaders = spellLevels.map(sl => `<th>${sl}</th>`).join('');
+
+            return `<div class="section-head">Smoothified Progression — Levels 1–14</div>
+                <p class="table-note">Saving throws: <em>lower is better</em> (roll ≥ target). To-hit: <em>higher is better</em> (ascending AC). Rightmost columns: ${spellLabel} slots per day (spell level →).</p>
+                <table>
+                    <thead>
+                        <tr>
+                            <th rowspan="2">Lvl</th>
+                            <th rowspan="2">HD</th>
+                            <th rowspan="2">XP Req.</th>
+                            <th rowspan="2">To-Hit</th>
+                            <th colspan="5">Saving Throws</th>
+                            <th colspan="${maxSpellLevel}">${spellLabel}</th>
+                        </tr>
+                        <tr>
+                            <th title="Death / Poison">Dth</th>
+                            <th title="Wands / Rods / Staves">Wnd</th>
+                            <th title="Paralysis / Petrify">Par</th>
+                            <th title="Breath Attacks">Brt</th>
+                            <th title="Spells / Rods / Staves">SpS</th>
+                            ${slotHeaders}
+                        </tr>
+                    </thead>
+                    <tbody>${rows}</tbody>
+                </table>`;
+        }
+
+        function buildTurnUndeadTable() {
+            const levels = Object.keys(TURN_UNDEAD).map(Number).sort((a, b) => a - b);
+            const types  = Object.keys(TURN_UNDEAD[1]);
+            const headers = types.map(t => `<th>${t}</th>`).join('');
+            let rows = '';
+            for (const lvl of levels) {
+                const cells = types.map(t => {
+                    const v = TURN_UNDEAD[lvl][t];
+                    if (v === null) return '<td>—</td>';
+                    if (v === 'T')  return '<td class="turn-t">T</td>';
+                    if (v === 'D')  return '<td class="turn-d">D</td>';
+                    return `<td>${v}</td>`;
+                }).join('');
+                rows += `<tr><td>${lvl === 11 ? '11+' : lvl}</td>${cells}</tr>`;
+            }
+            return `<div class="section-head">Turn Undead (roll 2d6 ≥ target)</div>
+                <p class="table-note"><span class="turn-t">T</span> = automatic turn &nbsp;·&nbsp; <span class="turn-d">D</span> = automatic destroy &nbsp;·&nbsp; — = cannot turn &nbsp;·&nbsp; *HD = special undead</p>
+                <table>
+                    <thead><tr><th>Cleric Lvl</th>${headers}</tr></thead>
+                    <tbody>${rows}</tbody>
+                </table>`;
+        }
+
+        function buildThiefSkillsTable() {
+            let rows = '';
+            for (let lvl = 1; lvl <= 14; lvl++) {
+                const ts = PROGRESSION_TABLES.smoothprog.getThiefSkills(lvl);
+                rows += `<tr>
+                    <td>${lvl}</td>
+                    <td>${ts.climbSheerSurfaces}</td><td>${ts.findRemoveTraps}</td>
+                    <td>${ts.hearNoise}</td><td>${ts.hideInShadows}</td>
+                    <td>${ts.moveSilently}</td><td>${ts.openLocks}</td>
+                    <td>${ts.pickPockets}</td>
+                </tr>`;
+            }
+            return `<div class="section-head">Thief Skills <span style="font-size:7.5pt;font-weight:normal;color:#888;">(Smoothified)</span></div>
+                <p class="table-note">CS = Climb Sheer Surfaces · TR = Find/Remove Traps · HN = Hear Noise · HS = Hide in Shadows · MS = Move Silently · OL = Open Locks · PP = Pick Pockets. Skills start higher at low levels in Smoothified mode and converge to standard OSE values by level 14.</p>
+                <table>
+                    <thead><tr>
+                        <th>Lvl</th>
+                        <th title="Climb Sheer Surfaces">CS</th>
+                        <th title="Find or Remove Treasure Traps">TR</th>
+                        <th title="Hear Noise">HN</th>
+                        <th title="Hide in Shadows">HS</th>
+                        <th title="Move Silently">MS</th>
+                        <th title="Open Locks">OL</th>
+                        <th title="Pick Pockets">PP</th>
+                    </tr></thead>
+                    <tbody>${rows}</tbody>
+                </table>`;
+        }
+
+        function buildCombinedProgressionThiefTable(classKey) {
+            const saves   = SAVING_THROWS[classKey];
+            const scale   = ATTACK_BONUS_SCALE[classKey];
+            const attacks = ATTACK_BONUS_PROGRESSIONS[scale];
+            const xpReqs  = XP_REQUIREMENTS[classKey];
+            const hd      = HIT_DICE_PROGRESSIONS[HIT_DICE_SCALE[classKey]];
+            const maxLvl  = xpReqs ? xpReqs.length : 14;
+
+            let rows = '';
+            for (let lvl = 1; lvl <= maxLvl; lvl++) {
+                const i  = lvl - 1;
+                const ts = PROGRESSION_TABLES.smoothprog.getThiefSkills(lvl);
+                rows += `<tr>
+                    <td>${lvl}</td><td>${hd[i]}</td>
+                    <td>${xpReqs[i].toLocaleString()}</td>
+                    <td class="tohit">${fmt(attacks[i])}</td>
+                    <td>${saves.death[i]}</td><td>${saves.wands[i]}</td>
+                    <td>${saves.paralysis[i]}</td><td>${saves.breath[i]}</td>
+                    <td>${saves.spells[i]}</td>
+                    <td>${ts.climbSheerSurfaces}</td><td>${ts.findRemoveTraps}</td>
+                    <td>${ts.hearNoise}</td><td>${ts.hideInShadows}</td>
+                    <td>${ts.moveSilently}</td><td>${ts.openLocks}</td>
+                    <td>${ts.pickPockets}</td>
+                </tr>`;
+            }
+
+            return `<div class="section-head">Smoothified Progression — Levels 1–14</div>
+                <p class="table-note">Saving throws: <em>lower is better</em> (roll ≥ target). To-hit: <em>higher is better</em> (ascending AC). CS&nbsp;=&nbsp;Climb Sheer Surfaces · TR&nbsp;=&nbsp;Find/Remove Traps · HN&nbsp;=&nbsp;Hear Noise · HS&nbsp;=&nbsp;Hide in Shadows · MS&nbsp;=&nbsp;Move Silently · OL&nbsp;=&nbsp;Open Locks · PP&nbsp;=&nbsp;Pick Pockets.</p>
+                <table>
+                    <thead>
+                        <tr>
+                            <th rowspan="2">Lvl</th>
+                            <th rowspan="2">HD</th>
+                            <th rowspan="2">XP Req.</th>
+                            <th rowspan="2">To-Hit</th>
+                            <th colspan="5">Saving Throws</th>
+                            <th colspan="7">Thief Skills</th>
+                        </tr>
+                        <tr>
+                            <th title="Death / Poison">Dth</th>
+                            <th title="Wands / Rods / Staves">Wnd</th>
+                            <th title="Paralysis / Petrify">Par</th>
+                            <th title="Breath Attacks">Brt</th>
+                            <th title="Spells / Rods / Staves">SpS</th>
+                            <th title="Climb Sheer Surfaces">CS</th>
+                            <th title="Find or Remove Treasure Traps">TR</th>
+                            <th title="Hear Noise">HN</th>
+                            <th title="Hide in Shadows">HS</th>
+                            <th title="Move Silently">MS</th>
+                            <th title="Open Locks">OL</th>
+                            <th title="Pick Pockets">PP</th>
+                        </tr>
+                    </thead>
+                    <tbody>${rows}</tbody>
+                </table>`;
+        }
+
+        function buildClassMeta(info) {
+            const parts = [
+                `<strong>Prime Req.:</strong> ${info.primeRequisite}`,
+                `<strong>HD:</strong> ${info.hitDieType}`,
+                `<strong>Armour:</strong> ${info.armorDescription}`,
+                `<strong>Weapons:</strong> ${info.weaponDescription}`,
+            ];
+            const reqScores = info.requirements ? Object.values(info.requirements)[0] || {} : {};
+            const minScores = Object.entries(reqScores).map(([s, v]) => `${s} ${v}+`).join(', ');
+            if (minScores) parts.push(`<strong>Min. Scores:</strong> ${minScores}`);
+            return `<div class="class-meta">${parts.join('&nbsp; · &nbsp;')}</div>`;
+        }
+
+        function abilityItem(a) {
+            let text;
+            if (a.languages) {
+                text = `<strong>Languages:</strong> ${a.languages.join(', ')}.`;
+            } else if (a.includeName) {
+                text = `<strong>${a.name}:</strong> ${a.description}`;
+            } else {
+                text = a.description;
+            }
+            const note = a.availableAt > 1
+                ? ` <span class="lvl-note">(level ${a.availableAt}+)</span>` : '';
+            return `<li>${text}${note}</li>`;
+        }
+
+        function buildAbilitiesList(info, excludeSet = null) {
+            const abs = (info.abilities || [])
+                .filter(a => (a.description || a.languages) && (!excludeSet || !excludeSet.has(a.name)));
+            if (!abs.length) return '';
+            return `<ul class="abilities">${abs.map(abilityItem).join('')}</ul>`;
+        }
+
+        function buildElfRacialBox(info) {
+            const racialAbs = (info.abilities || [])
+                .filter(a => ELF_RACIAL.has(a.name) && (a.description || a.languages));
+            const desc = info.description
+                ? `<p style="margin:0 0 4px;font-style:italic;">${info.description}</p>` : '';
+            return `<div class="racial-box">
+                <strong class="racial-head">Elf (Basic Mode)</strong>
+                ${desc}
+                <ul>${racialAbs.map(abilityItem).join('')}</ul>
+            </div>`;
+        }
+
+        // ── Render ───────────────────────────────────────────────────────────
+
+        const classKey  = new URLSearchParams(window.location.search).get('class') || 'Fighter_CLASS';
+        const cls       = CLASSES.find(c => c.key === classKey) || CLASSES[3];
+        const infoKey   = CLASS_INFO_KEY[classKey];
+        const classInfo = infoKey ? CLASS_INFO[infoKey] : null;
+
+        document.title = `OSE — ${cls.name} — Class Reference`;
+        document.getElementById('back-link').href = `classes.html?class=${cls.key}`;
+
+        const isOnFighterScale = ATTACK_BONUS_SCALE[classKey] === "FIGHTER_SMOOTH";
+        const isFighterItself  = classKey === "Fighter_CLASS";
+        const fighterNote = isOnFighterScale ? (isFighterItself ? FIGHTER_NOTES.self : FIGHTER_NOTES.other) : '';
+        const classNote   = CLASS_PRINT_NOTES[classKey] || '';
+        const noteText    = [fighterNote, classNote].filter(Boolean).join(' ');
+        const noteHtml    = noteText ? `<div class="print-note">${noteText}</div>` : '';
+
+        const isElf         = classKey === 'Elf_CLASS';
+        // Elf description goes inside the racial box, not as a standalone paragraph
+        const descHtml      = (!isElf && classInfo?.description)
+            ? `<p class="class-desc">${classInfo.description}</p>` : '';
+        const metaHtml      = classInfo ? buildClassMeta(classInfo) : '';
+        const elfRacialHtml = isElf && classInfo ? buildElfRacialBox(classInfo) : '';
+        // For Elf/Spellblade, use Spellblade's abilities (already phrased as "Spellblades can…")
+        const abilitiesSource = isElf ? CLASS_INFO["Spellblade"] : classInfo;
+        const abilitiesHtml   = abilitiesSource ? buildAbilitiesList(abilitiesSource) : '';
+
+        let inlineSpellHtml = '';
+        let combinedProgressionHtml = '';
+        if (INLINE_SPELL_SLOTS.has(classKey)) {
+            const slotScale = SPELL_SLOT_SCALE[classKey];
+            const slots     = slotScale === 'DIVINE' ? DIVINE_SPELL_SLOTS : ARCANE_SPELL_SLOTS;
+            const maxSL     = Object.keys(slots).length;
+            const label     = slotScale === 'DIVINE' ? 'Spells per Day' : 'Arcane Spells';
+            combinedProgressionHtml = buildCombinedProgressionSpellTable(classKey, slots, maxSL, label);
+        }
+
+        // Two-page classes: move footer inside page-2 so it pins to the bottom of page 2
+        const isTwoPage = TWO_PAGE.has(classKey);
+
+        let page2Html = '';
+        if (isTwoPage) {
+            let p2Content = '';
+            if (classKey === 'Cleric_CLASS') {
+                p2Content = buildSpellSlotsTable(DIVINE_SPELL_SLOTS, 5, 'Cleric Spells per Day')
+                          + `<div style="margin-top:10px;">${buildTurnUndeadTable()}</div>`;
+            } else if (classKey === 'Thief_CLASS') {
+                p2Content = buildThiefSkillsTable();
+            }
+            page2Html = `
+                <div class="page-break-indicator"></div>
+                <div class="page-2">
+                    <div class="page-2-content">${p2Content}</div>
+                    <footer>${FOOTER_TEXT}</footer>
+                </div>`;
+            // Hide the body-level footer since it moved into page-2
+            document.getElementById('main-footer').style.display = 'none';
+        }
+
+        document.getElementById('content').innerHTML = `
+            <h1>${cls.name}</h1>
+            <p class="subtitle">OSE Character Generator · Smoothified (Castle Gygar) Mode</p>
+            ${descHtml}
+            ${metaHtml}
+            ${elfRacialHtml}
+            ${abilitiesHtml}
+            ${noteHtml}
+            ${combinedProgressionHtml
+              || (classKey === 'Thief_CLASS' ? buildCombinedProgressionThiefTable(classKey) : buildMainTable(classKey))}
+            ${page2Html}
+        `;
+    </script>
+</body>
+</html>

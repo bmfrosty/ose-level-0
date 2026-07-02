@@ -675,7 +675,7 @@ export function renderCharacterSheetHTML(sheet) {
             @media print {
                 /* Match letter paper content area (11in − 0.5in top − 0.5in bottom = 10in) */
                 .ose-page1 { height: 10in; }
-                .ose-page2 { height: 10in; break-before: page !important; page-break-before: always !important; }
+                .ose-page2 { height: 10in; break-before: page !important; page-break-before: always !important; padding-top: 0.5in; }
                 .ose-page-break-indicator { display: none !important; }
             }
         </style>

@@ -157,9 +157,9 @@
             #level-up-panel  { display: none !important; }
             nav              { display: none !important; }
             footer           { display: none !important; }
-            body, body.dark-mode { background: white !important; color: #000 !important; margin: 0; padding: 0; }
+            body, body.dark-mode { background: white !important; color: #000 !important; margin: 0; padding: 0.5in; box-sizing: border-box; width: 100%; max-width: none; }
             #sheet-content { padding: 0 !important; border-radius: 0 !important; }
-            @page { size: letter; margin: 0.5in; }
+            @page { size: letter; margin: 0; }
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
         }
     </style>
@@ -184,7 +184,7 @@
         <button class="btn-levelup" id="toggleLevelUpBtn" style="display:none">⬆ Level Up</button>
         <a class="btn-generator" id="backToGeneratorBtn" href="generator.html" style="display:none">🎲 Back to Generator</a>
         <button class="btn-close" onclick="window.close()">✕ Close</button>
-        <span class="print-hint">Tip: In the print dialog, choose "Save as PDF" and set margins to None or Minimum</span>
+        <span class="print-hint">Tip: In the print dialog, choose "Save as PDF" and leave margins on Default</span>
     </div>
 
     <!-- Level Up panel — level selector + display options only -->
