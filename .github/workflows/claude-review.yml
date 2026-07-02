@@ -1,0 +1,40 @@
+name: Claude PR Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+  id-token: write
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Claude PR Review
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          use_sticky_comment: true
+          prompt: |
+            Review this pull request for an OSE (Old-School Essentials) character generator.
+            The codebase is vanilla JavaScript/HTML/CSS — no framework.
+
+            Focus on:
+            - JavaScript bugs, logic errors, and off-by-one mistakes
+            - Data consistency: race vs. class separation (Basic mode race-as-class vs.
+              Advanced mode separate race+class), correct level ranges (availableAt /
+              availableThrough), and correct mode flags (basicMode, advancedMode)
+            - CSS print layout issues (margin, page-break, box-sizing)
+            - Anything that could cause a character sheet or class print page to render
+              incorrectly or overflow a page
+
+            Skip style nits (indentation, naming) unless they cause a real bug.
+            Post your findings as a single summary comment on the PR.
