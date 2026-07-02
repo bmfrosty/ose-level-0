@@ -185,7 +185,7 @@
                 margin: 0; padding: 0.75in; box-shadow: none; min-height: 11in;
             }
             .page-break-indicator { display: none; }
-            .page-2 { break-before: page; min-height: 9.5in; }
+            .page-2 { break-before: page; min-height: 9.5in; padding-top: 0.75in; }
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
         }
     </style>
@@ -193,7 +193,7 @@
 <body>
     <div id="print-controls">
         <button class="btn-print" onclick="window.print()">🖨 Print / Save as PDF</button>
-        <span class="print-hint">Tip: set margins to None or Minimum in the print dialog for best fit.</span>
+        <span class="print-hint">Tip: leave margins on Default in the print dialog for best fit.</span>
         <a id="back-link" class="btn-back" href="classes.html">← Class Tables</a>
     </div>
 
@@ -400,35 +400,6 @@
                 </table>`;
         }
 
-        function buildThiefSkillsTable() {
-            let rows = '';
-            for (let lvl = 1; lvl <= 14; lvl++) {
-                const ts = PROGRESSION_TABLES.smoothprog.getThiefSkills(lvl);
-                rows += `<tr>
-                    <td>${lvl}</td>
-                    <td>${ts.climbSheerSurfaces}</td><td>${ts.findRemoveTraps}</td>
-                    <td>${ts.hearNoise}</td><td>${ts.hideInShadows}</td>
-                    <td>${ts.moveSilently}</td><td>${ts.openLocks}</td>
-                    <td>${ts.pickPockets}</td>
-                </tr>`;
-            }
-            return `<div class="section-head">Thief Skills <span style="font-size:7.5pt;font-weight:normal;color:#888;">(Smoothified)</span></div>
-                <p class="table-note">CS = Climb Sheer Surfaces · TR = Find/Remove Traps · HN = Hear Noise · HS = Hide in Shadows · MS = Move Silently · OL = Open Locks · PP = Pick Pockets. Skills start higher at low levels in Smoothified mode and converge to standard OSE values by level 14.</p>
-                <table>
-                    <thead><tr>
-                        <th>Lvl</th>
-                        <th title="Climb Sheer Surfaces">CS</th>
-                        <th title="Find or Remove Treasure Traps">TR</th>
-                        <th title="Hear Noise">HN</th>
-                        <th title="Hide in Shadows">HS</th>
-                        <th title="Move Silently">MS</th>
-                        <th title="Open Locks">OL</th>
-                        <th title="Pick Pockets">PP</th>
-                    </tr></thead>
-                    <tbody>${rows}</tbody>
-                </table>`;
-        }
-
         function buildCombinedProgressionThiefTable(classKey) {
             const saves   = SAVING_THROWS[classKey];
             const scale   = ATTACK_BONUS_SCALE[classKey];
@@ -559,7 +530,6 @@
         const abilitiesSource = isElf ? CLASS_INFO["Spellblade"] : classInfo;
         const abilitiesHtml   = abilitiesSource ? buildAbilitiesList(abilitiesSource) : '';
 
-        let inlineSpellHtml = '';
         let combinedProgressionHtml = '';
         if (INLINE_SPELL_SLOTS.has(classKey)) {
             const slotScale = SPELL_SLOT_SCALE[classKey];
@@ -574,13 +544,8 @@
 
         let page2Html = '';
         if (isTwoPage) {
-            let p2Content = '';
-            if (classKey === 'Cleric_CLASS') {
-                p2Content = buildSpellSlotsTable(DIVINE_SPELL_SLOTS, 5, 'Cleric Spells per Day')
+            const p2Content = buildSpellSlotsTable(DIVINE_SPELL_SLOTS, 5, 'Cleric Spells per Day')
                           + `<div style="margin-top:10px;">${buildTurnUndeadTable()}</div>`;
-            } else if (classKey === 'Thief_CLASS') {
-                p2Content = buildThiefSkillsTable();
-            }
             page2Html = `
                 <div class="page-break-indicator"></div>
                 <div class="page-2">
