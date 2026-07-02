@@ -23,15 +23,18 @@ jobs:
         uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          claude_args: "--model claude-sonnet-4-6"
-          use_sticky_comment: true
+          # track_progress loads the GitHub MCP server that provides the
+          # comment-posting tools and creates a tracking comment on the PR.
+          track_progress: true
+          claude_args: |
+            --model claude-sonnet-4-6
+            --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*)"
           prompt: |
+            REPO: ${{ github.repository }}
+            PR NUMBER: ${{ github.event.pull_request.number }}
+
             Review this pull request for an OSE (Old-School Essentials) character generator.
             The codebase is vanilla JavaScript/HTML/CSS — no framework.
-
-            IMPORTANT: Do not invoke any Skill tool or slash commands (including /review).
-            Read the changed files directly using the Read tool, then post your complete
-            findings using the ReportFindings tool.
 
             Focus on:
             - JavaScript bugs, logic errors, and off-by-one mistakes
@@ -43,6 +46,9 @@ jobs:
               incorrectly or overflow a page
 
             Skip style nits (indentation, naming) unless they cause a real bug.
+
+            Provide feedback using inline comments for specific issues, and a top-level
+            comment for the overall summary. Do not ask for input — review directly.
 
       - name: Upload Claude execution log
         if: always()
