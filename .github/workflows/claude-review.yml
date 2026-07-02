@@ -25,7 +25,10 @@ jobs:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           # track_progress loads the GitHub MCP server that provides the
           # comment-posting tools and creates a tracking comment on the PR.
+          # use_sticky_comment makes it find and update that same comment on
+          # subsequent runs instead of creating a new one each push.
           track_progress: true
+          use_sticky_comment: true
           claude_args: |
             --model claude-sonnet-4-6
             --allowedTools "Bash(gh pr diff:*),Bash(gh pr view:*)"
