@@ -168,6 +168,16 @@ export function updateModifiers() {
     });
 }
 
+// Picking a level explicitly should override "By XP" mode — otherwise the
+// click updates selectedLevel but effectiveLevel keeps deriving from XP,
+// making the level buttons appear to do nothing.
+function revertToFixedLevelMode() {
+    if (!xpMode) return;
+    xpMode = false;
+    const fixedRadio = document.getElementById('levelModeFixed');
+    if (fixedRadio) fixedRadio.checked = true;
+}
+
 // ── Level Selection ───────────────────────────────────────────────────────────
 export function initializeLevelSelection() {
     const container = document.getElementById('levelSelection');
@@ -182,6 +192,7 @@ export function initializeLevelSelection() {
         container.querySelectorAll('.level-btn').forEach(b => b.classList.remove('selected'));
         btn0.classList.add('selected');
         selectedLevel = 0;
+        revertToFixedLevelMode();
         updateUI(); saveCurrentSettings();
         if (autoGenerateOnLevelChange) generateCharacter();
     });
@@ -196,6 +207,7 @@ export function initializeLevelSelection() {
             container.querySelectorAll('.level-btn').forEach(b => b.classList.remove('selected'));
             btn.classList.add('selected');
             selectedLevel = parseInt(btn.dataset.level);
+            revertToFixedLevelMode();
             updateUI(); saveCurrentSettings();
             if (autoGenerateOnLevelChange) generateCharacter();
         });
