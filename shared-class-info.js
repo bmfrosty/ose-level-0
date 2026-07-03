@@ -370,6 +370,11 @@ export const CLASS_INFO = {
     armorDescription: "Any, including shields",
     weapons: ["Battle axe", "Club", "Crossbow", "Dagger", "Hand axe", "Javelin", "Lance", "Long bow", "Mace", "Pole arm", "Short bow", "Short sword", "Silver dagger", "Sling", "Spear", "Staff", "Sword", "Torch", "Two-handed sword", "War hammer"],
     weaponDescription: "Any",
+    // NOTE: availableRaces/requirements here are hand-maintained and can drift out of
+    // sync with the real rule (any race with both Fighter and Magic-User access — see
+    // RACE_INFO[...].classLevelLimits, which is kept correct separately). Planned rework:
+    // derive class/race pair viability directly from RACE_INFO's classLevelLimits instead
+    // of duplicating it per-class here.
     availableIn: {
       basic: true,   // Available in Basic Mode (Human only)
       advanced: true // Available in Advanced Mode (Human, Elf)
@@ -424,6 +429,12 @@ export const CLASS_INFO = {
         availableAt: 9,
         availableThrough: 14,
         // includeName: true,
+        // raceOverrides intentionally includes Dwarf/Gnome/Halfling even though they
+        // don't normally qualify for Spellblade (no Magic-User access). This is flavor
+        // text for the case where a referee overrides the normal Fighter+Magic-User
+        // eligibility rule as a house rule — if that race is allowed to take Spellblade
+        // anyway, this gives their Stronghold ability proper race-appropriate text
+        // instead of falling back to generic/Human phrasing.
         raceOverrides: {
           "Human":   { description: "May construct a fortified arcane tower; 3d2 fighters, 1d3 magic-users, and 1d2 spellblades (all L1–2) arrive to serve." },
           "Elf":     { description: "May construct a forest stronghold; 3d2 fighters, 1d3 magic-users, and 1d2 spellblades (all L1–2) arrive. Forest animals become friendly. Elven mercenaries only." },
