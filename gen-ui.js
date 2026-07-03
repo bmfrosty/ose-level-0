@@ -583,6 +583,7 @@ async function runGenerate() {
     const cp = generateCharacterV3({
         mode, level: effectiveLevel,
         race: isAdv ? selectedRace : '',
+        isSeparateRaceClass: isAdv,
         className: selectedClass, progressionMode, raceClassMode,
         minimums: readScoresFromInputs(), primeReqMode: primeRequisiteMode,
         hpMode, includeLevel0HP,
@@ -696,6 +697,7 @@ async function generateZeroLevel(isAdv) {
 
     const cp = generateCharacterV3({
         mode, level: 0, race: selectedRaceForZero,
+        isSeparateRaceClass: isAdv,
         progressionMode, raceClassMode,
         minimums: readScoresFromInputs(), primeReqMode: primeRequisiteMode,
         hpMode, fixedScores: fixedScoresForGen, fixedName,

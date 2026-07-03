@@ -204,6 +204,12 @@ function toMap(results) {
 export function generateCharacterV3(opts = {}) {
     const {
         mode = 'basic', level = 0, race: rawRace = '', className = null,
+        // Caller-supplied: does this character have a separately-selected race
+        // (racial minimums/requirements/ability adjustments apply), or is race
+        // implied/absent (a race-as-class pick, or no race chosen at all)?
+        // Default preserves the old mode-derived behavior for callers not yet
+        // updated to pass this explicitly.
+        isSeparateRaceClass = mode === 'advanced',
         progressionMode = 'ose', raceClassMode = 'strict',
         minimums = {}, primeReqMode = 'user', hpMode = 0,
         includeLevel0HP = false, fixedScores = null, fixedName = '',
@@ -212,7 +218,7 @@ export function generateCharacterV3(opts = {}) {
         noLevel0Equipment = false, classData = null,
     } = opts;
 
-    const isAdvanced = mode === 'advanced';
+    const isAdvanced = isSeparateRaceClass;
     const isSmoothprog = progressionMode === 'smoothprog';
     const humanRacialAbilities = raceClassMode !== 'strict';
 
