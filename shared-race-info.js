@@ -40,6 +40,11 @@ export const RACE_INFO = {
   // ── Human ──────────────────────────────────────────────────────────────────
   "Human_RACE": {
     name: "Human",
+    raceSource: "AFPT",
+    raceLicence: "NONFREE",
+    showInGenerator: true,
+    showButton: false,
+    includeInAvailableTo: true,
     code: "HU",
     page: 86,
     description: "Versatile and ambitious, humans may choose any class and advance without level limits.",
@@ -106,6 +111,11 @@ export const RACE_INFO = {
   // ── Dwarf ──────────────────────────────────────────────────────────────────
   "Dwarf_RACE": {
     name: "Dwarf",
+    raceSource: "AFPT",
+    raceLicence: "NONFREE",
+    showInGenerator: true,
+    showButton: false,
+    includeInAvailableTo: true,
     code: "DW",
     page: 81,
     description: "Stout, bearded underground-dwellers renowned for craftsmanship, stubbornness, and magic resistance.",
@@ -200,6 +210,11 @@ export const RACE_INFO = {
   // ── Elf ────────────────────────────────────────────────────────────────────
   "Elf_RACE": {
     name: "Elf",
+    raceSource: "AFPT",
+    raceLicence: "NONFREE",
+    showInGenerator: true,
+    showButton: false,
+    includeInAvailableTo: true,
     code: "EL",
     page: 82,
     description: "Slender, fey demihumans with keen senses, an affinity for magic, and immunity to ghoul paralysis.",
@@ -272,6 +287,11 @@ export const RACE_INFO = {
   // ── Gnome ──────────────────────────────────────────────────────────────────
   "Gnome_RACE": {
     name: "Gnome",
+    raceSource: "AFPT",
+    raceLicence: "NONFREE",
+    showInGenerator: false,
+    showButton: false,
+    includeInAvailableTo: true,
     code: "GN",
     page: 83,
     description: "",  // TODO: fill in from book p83
@@ -291,6 +311,11 @@ export const RACE_INFO = {
   // ── Halfling ───────────────────────────────────────────────────────────────
   "Halfling_RACE": {
     name: "Halfling",
+    raceSource: "AFPT",
+    raceLicence: "NONFREE",
+    showInGenerator: true,
+    showButton: false,
+    includeInAvailableTo: true,
     code: "HA",
     page: 85,
     description: "Small, rotund, and good-natured folk with keen aim, steady nerves, and a love of home comforts.",
@@ -385,6 +410,11 @@ export const RACE_INFO = {
   // ── Rare / Advanced races (level limits filled; abilities TODO) ──────────
   "Drow_RACE": {
     name: "Drow",
+    raceSource: "AFPT",
+    raceLicence: "NONFREE",
+    showInGenerator: false,
+    showButton: false,
+    includeInAvailableTo: true,
     code: "DR",
     page: 79,
     description: "",  // TODO: fill in from book p79
@@ -404,6 +434,11 @@ export const RACE_INFO = {
 
   "Duergar_RACE": {
     name: "Duergar",
+    raceSource: "AFPT",
+    raceLicence: "NONFREE",
+    showInGenerator: false,
+    showButton: false,
+    includeInAvailableTo: true,
     code: "DG",
     page: 80,
     description: "",  // TODO: fill in from book p80
@@ -421,6 +456,11 @@ export const RACE_INFO = {
 
   "Half-Elf_RACE": {
     name: "Half-Elf",
+    raceSource: "AFPT",
+    raceLicence: "NONFREE",
+    showInGenerator: false,
+    showButton: false,
+    includeInAvailableTo: true,
     code: "HE",
     page: 84,
     description: "",  // TODO: fill in from book p84
@@ -440,6 +480,11 @@ export const RACE_INFO = {
 
   "Half-Orc_RACE": {
     name: "Half-Orc",
+    raceSource: "AFPT",
+    raceLicence: "NONFREE",
+    showInGenerator: false,
+    showButton: false,
+    includeInAvailableTo: true,
     code: "HO",
     page: 86,
     description: "",  // TODO: fill in from book p86
@@ -458,6 +503,11 @@ export const RACE_INFO = {
 
   "Svirfneblin_RACE": {
     name: "Svirfneblin",
+    raceSource: "AFPT",
+    raceLicence: "NONFREE",
+    showInGenerator: false,
+    showButton: false,
+    includeInAvailableTo: true,
     code: "SN",
     page: 87,
     description: "",  // TODO: fill in from book p87

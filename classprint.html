@@ -112,21 +112,6 @@
         }
         .abilities li { margin-bottom: 2px; line-height: 1.4; }
         .lvl-note { color: #888; font-size: 7.5pt; }
-        .racial-box {
-            background: #e8f5e9;
-            border-left: 3px solid #388E3C;
-            padding: 4px 9px;
-            margin-bottom: 6px;
-            font-size: 8.5pt;
-        }
-        .racial-box strong.racial-head {
-            display: block;
-            color: #1b5e20;
-            font-size: 8pt;
-            margin-bottom: 2px;
-        }
-        .racial-box ul { margin: 2px 0 0; padding-left: 14px; }
-        .racial-box li { margin-bottom: 1px; line-height: 1.4; }
 
         table { border-collapse: collapse; width: 100%; }
         th, td {
@@ -228,10 +213,11 @@
         const CLASSES = [
             { key: "Cleric_CLASS",      name: "Cleric" },
             { key: "Dwarf_CLASS",       name: "Dwarf" },
-            { key: "Elf_CLASS",         name: "Elf / Spellblade" },
+            { key: "Elf_CLASS",         name: "Elf" },
             { key: "Fighter_CLASS",     name: "Fighter" },
             { key: "Halfling_CLASS",    name: "Halfling" },
             { key: "Magic-User_CLASS",  name: "Magic-User" },
+            { key: "Spellblade_CLASS",  name: "Spellblade" },
             { key: "Thief_CLASS",       name: "Thief" },
         ];
 
@@ -241,13 +227,7 @@
             "Drow_RACE", "Duergar_RACE", "Half-Elf_RACE", "Half-Orc_RACE", "Svirfneblin_RACE",
         ];
 
-        // Elf abilities that are racial (Basic mode Elf only, not shared with Spellblade)
-        const ELF_RACIAL = new Set([
-            "Languages", "Detect Secret Doors", "Immunity to Ghoul Paralysis",
-            "Infravision", "Listening at Doors"
-        ]);
-
-        // Maps progression key → CLASS_INFO key (SRD content only; Spellblade is not SRD)
+        // Maps progression key → CLASS_INFO key
         const CLASS_INFO_KEY = {
             "Cleric_CLASS":     "Cleric",
             "Dwarf_CLASS":      "Dwarf",
@@ -255,6 +235,7 @@
             "Fighter_CLASS":    "Fighter",
             "Halfling_CLASS":   "Halfling",
             "Magic-User_CLASS": "Magic-User",
+            "Spellblade_CLASS": "Spellblade",
             "Thief_CLASS":      "Thief",
         };
 
@@ -262,14 +243,15 @@
         const TWO_PAGE = new Set(["Cleric_CLASS"]);
 
         // These classes get spell slots inline on page 1
-        const INLINE_SPELL_SLOTS = new Set(["Magic-User_CLASS", "Elf_CLASS"]);
+        const INLINE_SPELL_SLOTS = new Set(["Magic-User_CLASS", "Elf_CLASS", "Spellblade_CLASS"]);
 
         // Pages representing a true Advanced-mode class (as opposed to a Basic-mode
-        // race-as-class page like Dwarf/Halfling/Gnome) show which races can take it.
-        const TRUE_CLASSES = new Set(["Cleric_CLASS", "Fighter_CLASS", "Magic-User_CLASS", "Thief_CLASS"]);
+        // race-as-class page like Dwarf/Halfling/Elf/Gnome) show which races can take it.
+        const TRUE_CLASSES = new Set(["Cleric_CLASS", "Fighter_CLASS", "Magic-User_CLASS", "Thief_CLASS", "Spellblade_CLASS"]);
 
         const CLASS_PRINT_NOTES = {
-            "Elf_CLASS": "Basic Mode — Elf (race-as-class): racial abilities (infravision 60', detect secret doors, ghoul paralysis immunity, elvish languages) are built into the class. Advanced Mode — Spellblade: identical progression, no racial features; any race may take this class.",
+            "Elf_CLASS": "Basic Mode race-as-class: a combined race and class package. See the separate Spellblade page for the Advanced Mode fighter/mage class (no racial features of its own; any race may take it).",
+            "Spellblade_CLASS": "Advanced Mode fighter/mage hybrid class, available to any race (Human, Elf, Dwarf, Gnome, Halfling in Advanced Mode; Human only in Basic Mode). No racial features of its own — pair with a race choice for those.",
         };
 
         const FIGHTER_NOTES = {
@@ -538,18 +520,6 @@
             return `<ul class="abilities">${abs.map(abilityItem).join('')}</ul>`;
         }
 
-        function buildElfRacialBox(info) {
-            const racialAbs = (info.abilities || [])
-                .filter(a => ELF_RACIAL.has(a.name) && (a.description || a.languages));
-            const desc = info.description
-                ? `<p style="margin:0 0 4px;font-style:italic;">${info.description}</p>` : '';
-            return `<div class="racial-box">
-                <strong class="racial-head">Elf (Basic Mode)</strong>
-                ${desc}
-                <ul>${racialAbs.map(abilityItem).join('')}</ul>
-            </div>`;
-        }
-
         // ── Render ───────────────────────────────────────────────────────────
 
         const urlKey    = new URLSearchParams(window.location.search).get('class') || 'Fighter_CLASS';
@@ -568,18 +538,11 @@
         const noteText    = [fighterNote, classNote].filter(Boolean).join(' ');
         const noteHtml    = noteText ? `<div class="print-note">${noteText}</div>` : '';
 
-        const isElf         = classKey === 'Elf_CLASS';
-        // Elf description goes inside the racial box, not as a standalone paragraph
-        const descHtml      = (!isElf && classInfo?.description)
+        const descHtml      = classInfo?.description
             ? `<p class="class-desc">${classInfo.description}</p>` : '';
-        // Elf/Spellblade page shows abilities as Spellblade, so "available to" should too
-        const availRaceClassKey = isElf ? 'Spellblade_CLASS'
-            : TRUE_CLASSES.has(classKey) ? classKey : undefined;
+        const availRaceClassKey = TRUE_CLASSES.has(classKey) ? classKey : undefined;
         const metaHtml      = classInfo ? buildClassMeta(classInfo, availRaceClassKey) : '';
-        const elfRacialHtml = isElf && classInfo ? buildElfRacialBox(classInfo) : '';
-        // For Elf/Spellblade, use Spellblade's abilities (already phrased as "Spellblades can…")
-        const abilitiesSource = isElf ? CLASS_INFO["Spellblade"] : classInfo;
-        const abilitiesHtml   = abilitiesSource ? buildAbilitiesList(abilitiesSource) : '';
+        const abilitiesHtml = classInfo ? buildAbilitiesList(classInfo) : '';
 
         let combinedProgressionHtml = '';
         if (INLINE_SPELL_SLOTS.has(classKey)) {
@@ -612,7 +575,6 @@
             <p class="subtitle">OSE Character Generator · Smoothified (Castle Gygar) Mode</p>
             ${descHtml}
             ${metaHtml}
-            ${elfRacialHtml}
             ${abilitiesHtml}
             ${noteHtml}
             ${combinedProgressionHtml
