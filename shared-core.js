@@ -244,9 +244,20 @@ export function getAbilitiesAtLevel(className, level, { includeLookahead = false
 export function canRaceTakeClass(className, race, mode = "basic") {
   const classInfo = CLASS_INFO[className];
   if (!classInfo) return false;
-  
-  const availableRaces = classInfo.availableRaces[mode] || [];
-  return availableRaces.includes(race);
+
+  if (mode === "basic") {
+    // Basic mode: race-as-class only — the class IS the race (Dwarf/Elf/etc.)
+    // or a human-only class. classLevelLimits is an Advanced-mode concept
+    // and doesn't apply here.
+    return !!classInfo.availableIn?.basic && (classInfo.classType === 'raceAsClass'
+      ? classInfo.name === race
+      : race === 'Human');
+  }
+
+  const raceInfo = getRaceInfo(race);
+  if (!raceInfo?.showInGenerator) return false;
+  return raceInfo.classLevelLimits?.[`${className}_CLASS`] !== undefined
+    && !!CLASS_INFO[className]?.showInGenerator;
 }
 
 // Helper function to check if ability requirements are met
@@ -999,7 +1010,12 @@ export function getAvailableClasses(race, allowNonTraditional = false) {
         return ['Cleric', 'Fighter', 'Magic-User', 'Thief', 'Spellblade'];
     }
     // Accepts bare names ('Elf') or suffixed ('Elf_RACE') — getRaceInfo normalizes both.
-    return getRaceInfo(race)?.availableClasses?.advanced ?? [];
+    const raceInfo = getRaceInfo(race);
+    if (!raceInfo?.showInGenerator) return [];
+    const limits = raceInfo.classLevelLimits ?? {};
+    return Object.keys(limits)
+        .map(key => key.replace(/_CLASS$/, ''))
+        .filter(className => CLASS_INFO[className]?.showInGenerator);
 }
 
 /**

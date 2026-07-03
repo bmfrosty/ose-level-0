@@ -475,8 +475,7 @@
         }
 
         // classLevelLimits is the authoritative per-race/per-class dataset (mirrors the book's
-        // "Available Classes and Max Level" tables). availableClasses is a narrower list used
-        // only to gate "traditional" combos in the interactive generator — not what we want here.
+        // "Available Classes and Max Level" tables).
         function racesWithClass(raceKeys, classKey) {
             return raceKeys
                 .filter(raceKey => RACE_INFO[raceKey]?.includeInAvailableTo

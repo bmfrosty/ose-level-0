@@ -9,7 +9,7 @@ export const CLASS_INFO = {
     classSource: "SRD",
     classLicence: "FREE",
     showInGenerator: true,
-    showButton: true,
+    hasClassPage: true,
     description: "Clerics are adventurers sworn to the service of a deity. They are trained for battle and channel the power of their deity.",
     primeRequisite: "WIS",
     hitDieType: "d6",
@@ -21,10 +21,6 @@ export const CLASS_INFO = {
     availableIn: {
       basic: true,   // Available in Basic Mode (Human only)
       advanced: true // Available in Advanced Mode (Human, Dwarf, Gnome)
-    },
-    availableRaces: {
-      basic: ["Human"],
-      advanced: ["Human", "Dwarf", "Gnome"]
     },
     requirements: {
       Human: {},
@@ -113,7 +109,7 @@ export const CLASS_INFO = {
     classSource: "SRD",
     classLicence: "FREE",
     showInGenerator: true,
-    showButton: true,
+    hasClassPage: true,
     description: "Fighters are adventurers dedicated to mastering the arts of combat and war. In a group of adventurers, the role of fighters is to battle monsters and to defend other characters.",
     primeRequisite: "STR",
     hitDieType: "d8",
@@ -125,10 +121,6 @@ export const CLASS_INFO = {
     availableIn: {
       basic: true,   // Available in Basic Mode (Human only)
       advanced: true // Available in Advanced Mode (all races)
-    },
-    availableRaces: {
-      basic: ["Human"],
-      advanced: ["Human", "Dwarf", "Elf", "Halfling", "Gnome"]
     },
     requirements: {
       Human: {},
@@ -185,7 +177,7 @@ export const CLASS_INFO = {
     classSource: "SRD",
     classLicence: "FREE",
     showInGenerator: true,
-    showButton: true,
+    hasClassPage: true,
     description: "Magic-users are adventurers who study arcane secrets and cast spells. Magic-users are able to cast a greater number of increasingly powerful spells as they advance in level.",
     primeRequisite: "INT",
     hitDieType: "d4",
@@ -197,10 +189,6 @@ export const CLASS_INFO = {
     availableIn: {
       basic: true,   // Available in Basic Mode (Human only)
       advanced: true // Available in Advanced Mode (Human, Elf)
-    },
-    availableRaces: {
-      basic: ["Human"],
-      advanced: ["Human", "Elf"]
     },
     requirements: {
       Human: {},
@@ -267,7 +255,7 @@ export const CLASS_INFO = {
     classSource: "SRD",
     classLicence: "FREE",
     showInGenerator: true,
-    showButton: true,
+    hasClassPage: true,
     description: "Thieves are adventurers who live by their skills of deception and stealth. They have a range of specialised adventuring skills unavailable to other characters.",
     primeRequisite: "DEX",
     hitDieType: "d4",
@@ -279,10 +267,6 @@ export const CLASS_INFO = {
     availableIn: {
       basic: true,   // Available in Basic Mode (Human only)
       advanced: true // Available in Advanced Mode (Human, Halfling, Gnome)
-    },
-    availableRaces: {
-      basic: ["Human"],
-      advanced: ["Human", "Halfling", "Gnome"]
     },
     requirements: {
       Human: {},
@@ -361,7 +345,7 @@ export const CLASS_INFO = {
     classSource: "BMFROSTY",
     classLicence: "FREE",
     showInGenerator: true,
-    showButton: true,
+    hasClassPage: true,
     description: "Spellblades are adventurers who combine martial prowess with arcane magic. They can fight in armor while casting spells, making them versatile combatants.",
     primeRequisite: "INT and STR",
     hitDieType: "d6",
@@ -370,18 +354,16 @@ export const CLASS_INFO = {
     armorDescription: "Any, including shields",
     weapons: ["Battle axe", "Club", "Crossbow", "Dagger", "Hand axe", "Javelin", "Lance", "Long bow", "Mace", "Pole arm", "Short bow", "Short sword", "Silver dagger", "Sling", "Spear", "Staff", "Sword", "Torch", "Two-handed sword", "War hammer"],
     weaponDescription: "Any",
-    // NOTE: availableRaces/requirements here are hand-maintained and can drift out of
-    // sync with the real rule (any race with both Fighter and Magic-User access — see
-    // RACE_INFO[...].classLevelLimits, which is kept correct separately). Planned rework:
-    // derive class/race pair viability directly from RACE_INFO's classLevelLimits instead
-    // of duplicating it per-class here.
+    // NOTE: requirements below is hand-maintained and can drift out of sync with the
+    // real rule (any race with both Fighter and Magic-User access — see
+    // RACE_INFO[...].classLevelLimits, which is kept correct separately, and is
+    // currently: Human, Elf, Drow, Half-Elf). Missing Drow/Half-Elf entries here.
+    // Not yet reworked — canRaceTakeClass()/getAvailableClasses() in shared-core.js
+    // already derive from classLevelLimits directly, but meetsRequirements() (which
+    // reads this field) still doesn't, and has no callers yet either.
     availableIn: {
       basic: true,   // Available in Basic Mode (Human only)
-      advanced: true // Available in Advanced Mode (Human, Elf)
-    },
-    availableRaces: {
-      basic: ["Human"],
-      advanced: ["Human", "Elf"]
+      advanced: true // Available in Advanced Mode (Human, Elf, Drow, Half-Elf)
     },
     requirements: {
       Human: { INT: 9, STR: 9 },
@@ -454,7 +436,7 @@ export const CLASS_INFO = {
     classSource: "SRD",
     classLicence: "FREE",
     showInGenerator: true,
-    showButton: true,
+    hasClassPage: true,
     maxLevel: 12,
     description: "Dwarves are stout, bearded demihumans who average a height of approximately 4' and weigh about 150 pounds. Dwarves typically live in underground strongholds and have a great love of fine craftsmanship, gold, and warfare.",
     primeRequisite: "STR",
@@ -467,10 +449,6 @@ export const CLASS_INFO = {
     availableIn: {
       basic: true,    // Available in Basic Mode (race-as-class)
       advanced: false // NOT available in Advanced Mode (use Dwarf race + other classes)
-    },
-    availableRaces: {
-      basic: ["Dwarf"],
-      advanced: ["Dwarf"]
     },
     requirements: {
       Dwarf: { CON: 9 }
@@ -536,7 +514,7 @@ export const CLASS_INFO = {
     classSource: "SRD",
     classLicence: "FREE",
     showInGenerator: true,
-    showButton: true,
+    hasClassPage: true,
     maxLevel: 10,
     description: "Elves are slender, fey demihumans with pointed ears. They typically weigh about 120 pounds and are between 5 and 5½ feet tall. Elves are seldom met in human settlements, preferring to feast and make merry in the woods.",
     primeRequisite: "INT and STR",
@@ -548,10 +526,6 @@ export const CLASS_INFO = {
     availableIn: {
       basic: true,    // Available in Basic Mode (race-as-class)
       advanced: false // NOT available in Advanced Mode (use Elf race + other classes)
-    },
-    availableRaces: {
-      basic: ["Elf"],
-      advanced: ["Elf"]
     },
     requirements: {
       Elf: { INT: 9 }
@@ -646,7 +620,7 @@ export const CLASS_INFO = {
     classSource: "SRD",
     classLicence: "FREE",
     showInGenerator: true,
-    showButton: true,
+    hasClassPage: true,
     maxLevel: 8,
     description: "Halflings are small, rotund demihumans with curly hair on their heads and feet. They weigh about 60 pounds and are around 3' tall. Halflings are a friendly and welcoming folk. Above all, they love the comforts of home and are not known for their bravery.",
     primeRequisite: "DEX and STR",
@@ -660,10 +634,6 @@ export const CLASS_INFO = {
     availableIn: {
       basic: true,    // Available in Basic Mode (race-as-class)
       advanced: false // NOT available in Advanced Mode (use Halfling race + other classes)
-    },
-    availableRaces: {
-      basic: ["Halfling"],
-      advanced: ["Halfling"]
     },
     requirements: {
       Halfling: { CON: 9, DEX: 9 }
@@ -740,7 +710,7 @@ export const CLASS_INFO = {
     classSource: "AFPT",
     classLicence: "NONFREE",
     showInGenerator: false,
-    showButton: false,
+    hasClassPage: false,
     description: "",        // TODO: fill in from book p28
     primeRequisite: "DEX",
     hitDieType: "d4",
@@ -750,10 +720,6 @@ export const CLASS_INFO = {
     weapons: [],            // TODO: fill in from book p28
     weaponDescription: "",
     availableIn: { basic: true, advanced: true },
-    availableRaces: {
-      basic: ["Human"],
-      advanced: [],         // TODO: fill in from book p28
-    },
     requirements: {},       // TODO: fill in from book p28
     abilities: []           // TODO: fill in from book p28
   },
@@ -766,7 +732,7 @@ export const CLASS_INFO = {
     classSource: "AFPT",
     classLicence: "NONFREE",
     showInGenerator: false,
-    showButton: false,
+    hasClassPage: false,
     description: "",  // TODO: fill in from book p30
     primeRequisite: "DEX",
     hitDieType: "d4",
@@ -776,10 +742,6 @@ export const CLASS_INFO = {
     weapons: [],            // TODO: fill in from book p30
     weaponDescription: "",
     availableIn: { basic: true, advanced: true },
-    availableRaces: {
-      basic: ["Human"],
-      advanced: [],         // TODO: fill in from book p30
-    },
     requirements: {},       // TODO: fill in from book p30
     abilities: []           // TODO: fill in from book p30
   },
@@ -792,7 +754,7 @@ export const CLASS_INFO = {
     classSource: "AFPT",
     classLicence: "NONFREE",
     showInGenerator: false,
-    showButton: false,
+    hasClassPage: false,
     description: "",  // TODO: fill in from book p32
     primeRequisite: "CON and STR",
     hitDieType: "d8",
@@ -802,10 +764,6 @@ export const CLASS_INFO = {
     weapons: [],            // TODO: fill in from book p32
     weaponDescription: "",
     availableIn: { basic: true, advanced: true },
-    availableRaces: {
-      basic: ["Human"],
-      advanced: [],         // TODO: fill in from book p32
-    },
     requirements: {},       // TODO: fill in from book p32
     abilities: []           // TODO: fill in from book p32
   },
@@ -818,7 +776,7 @@ export const CLASS_INFO = {
     classSource: "AFPT",
     classLicence: "NONFREE",
     showInGenerator: false,
-    showButton: false,
+    hasClassPage: false,
     description: "",  // TODO: fill in from book p34
     primeRequisite: "CHA",
     hitDieType: "d6",
@@ -828,10 +786,6 @@ export const CLASS_INFO = {
     weapons: [],            // TODO: fill in from book p34
     weaponDescription: "",
     availableIn: { basic: true, advanced: true },
-    availableRaces: {
-      basic: ["Human"],
-      advanced: [],         // TODO: fill in from book p34
-    },
     requirements: {},       // TODO: fill in from book p34
     abilities: []           // TODO: fill in from book p34
   },
@@ -844,7 +798,7 @@ export const CLASS_INFO = {
     classSource: "AFPT",
     classLicence: "NONFREE",
     showInGenerator: false,
-    showButton: false,
+    hasClassPage: false,
     description: "",  // TODO: fill in from book p40
     primeRequisite: "WIS",
     hitDieType: "d6",
@@ -854,10 +808,6 @@ export const CLASS_INFO = {
     weapons: [],            // TODO: fill in from book p40
     weaponDescription: "",
     availableIn: { basic: true, advanced: true },
-    availableRaces: {
-      basic: ["Human"],
-      advanced: [],         // TODO: fill in from book p40
-    },
     requirements: {},       // TODO: fill in from book p40
     abilities: []           // TODO: fill in from book p40
   },
@@ -870,7 +820,7 @@ export const CLASS_INFO = {
     classSource: "AFPT",
     classLicence: "NONFREE",
     showInGenerator: false,
-    showButton: false,
+    hasClassPage: false,
     description: "",  // TODO: fill in from book p62
     primeRequisite: "INT",
     hitDieType: "d4",
@@ -880,10 +830,6 @@ export const CLASS_INFO = {
     weapons: [],            // TODO: fill in from book p62
     weaponDescription: "",
     availableIn: { basic: true, advanced: true },
-    availableRaces: {
-      basic: ["Human"],
-      advanced: [],         // TODO: fill in from book p62
-    },
     requirements: {},       // TODO: fill in from book p62
     abilities: []           // TODO: fill in from book p62
   },
@@ -896,7 +842,7 @@ export const CLASS_INFO = {
     classSource: "AFPT",
     classLicence: "NONFREE",
     showInGenerator: false,
-    showButton: false,
+    hasClassPage: false,
     description: "",  // TODO: fill in from book p64
     primeRequisite: "STR",
     hitDieType: "d8",
@@ -906,10 +852,6 @@ export const CLASS_INFO = {
     weapons: [],            // TODO: fill in from book p64
     weaponDescription: "",
     availableIn: { basic: true, advanced: true },
-    availableRaces: {
-      basic: ["Human"],
-      advanced: [],         // TODO: fill in from book p64
-    },
     requirements: {},       // TODO: fill in from book p64
     abilities: []           // TODO: fill in from book p64
   },
@@ -922,7 +864,7 @@ export const CLASS_INFO = {
     classSource: "AFPT",
     classLicence: "NONFREE",
     showInGenerator: false,
-    showButton: false,
+    hasClassPage: false,
     description: "",  // TODO: fill in from book p68
     primeRequisite: "STR and WIS",
     hitDieType: "d8",
@@ -932,10 +874,6 @@ export const CLASS_INFO = {
     weapons: [],            // TODO: fill in from book p68
     weaponDescription: "",
     availableIn: { basic: true, advanced: true },
-    availableRaces: {
-      basic: ["Human"],
-      advanced: [],         // TODO: fill in from book p68
-    },
     requirements: {},       // TODO: fill in from book p68
     abilities: []           // TODO: fill in from book p68
   },
@@ -948,7 +886,7 @@ export const CLASS_INFO = {
     classSource: "AFPT",
     classLicence: "NONFREE",
     showInGenerator: false,
-    showButton: false,
+    hasClassPage: false,
     description: "",  // TODO: fill in from book p70
     primeRequisite: "STR",
     hitDieType: "d8",
@@ -958,10 +896,6 @@ export const CLASS_INFO = {
     weapons: [],            // TODO: fill in from book p70
     weaponDescription: "",
     availableIn: { basic: true, advanced: true },
-    availableRaces: {
-      basic: ["Human"],
-      advanced: [],         // TODO: fill in from book p70
-    },
     requirements: {},       // TODO: fill in from book p70
     abilities: []           // TODO: fill in from book p70
   },
@@ -977,7 +911,7 @@ export const CLASS_INFO = {
     classSource: "AFPT",
     classLicence: "NONFREE",
     showInGenerator: false,
-    showButton: false,
+    hasClassPage: false,
     description: "",  // TODO: fill in from book p38
     primeRequisite: "STR and WIS",
     hitDieType: "d6",
@@ -989,10 +923,6 @@ export const CLASS_INFO = {
     availableIn: {
       basic: true,    // race-as-class in Basic mode
       advanced: false // use Drow_RACE + class in Advanced mode
-    },
-    availableRaces: {
-      basic: ["Drow"],
-      advanced: []
     },
     requirements: { Drow: {} },  // TODO: fill in from book p38
     abilities: []                // TODO: fill in from book p38
@@ -1006,7 +936,7 @@ export const CLASS_INFO = {
     classSource: "AFPT",
     classLicence: "NONFREE",
     showInGenerator: false,
-    showButton: false,
+    hasClassPage: false,
     description: "",  // TODO: fill in from book p44
     primeRequisite: "STR",
     hitDieType: "d6",
@@ -1018,10 +948,6 @@ export const CLASS_INFO = {
     availableIn: {
       basic: true,    // race-as-class in Basic mode
       advanced: false // use Duergar_RACE + class in Advanced mode
-    },
-    availableRaces: {
-      basic: ["Duergar"],
-      advanced: []
     },
     requirements: { Duergar: {} },  // TODO: fill in from book p44
     abilities: []                   // TODO: fill in from book p44
@@ -1035,7 +961,7 @@ export const CLASS_INFO = {
     classSource: "AFPT",
     classLicence: "NONFREE",
     showInGenerator: false,
-    showButton: false,
+    hasClassPage: false,
     description: "",        // TODO: fill in from book p52
     primeRequisite: "DEX and INT",
     hitDieType: "d4",
@@ -1045,10 +971,6 @@ export const CLASS_INFO = {
     weapons: [],            // TODO: fill in from book p52
     weaponDescription: "",
     availableIn: { basic: true, advanced: false },
-    availableRaces: {
-      basic: ["Gnome"],
-      advanced: [],         // TODO: fill in from book p52
-    },
     requirements: {},       // TODO: fill in from book p52
     abilities: []           // TODO: fill in from book p52
   },
@@ -1061,7 +983,7 @@ export const CLASS_INFO = {
     classSource: "AFPT",
     classLicence: "NONFREE",
     showInGenerator: false,
-    showButton: false,
+    hasClassPage: false,
     description: "",  // TODO: fill in from book p54
     primeRequisite: "INT and STR",
     hitDieType: "d6",
@@ -1073,10 +995,6 @@ export const CLASS_INFO = {
     availableIn: {
       basic: true,    // race-as-class in Basic mode
       advanced: false // use Half-Elf_RACE + class in Advanced mode
-    },
-    availableRaces: {
-      basic: ["Half-Elf"],
-      advanced: []
     },
     requirements: { "Half-Elf": {} },  // TODO: fill in from book p54
     abilities: []                      // TODO: fill in from book p54
@@ -1090,7 +1008,7 @@ export const CLASS_INFO = {
     classSource: "AFPT",
     classLicence: "NONFREE",
     showInGenerator: false,
-    showButton: false,
+    hasClassPage: false,
     description: "",  // TODO: fill in from book p60
     primeRequisite: "DEX and STR",
     hitDieType: "d6",
@@ -1102,10 +1020,6 @@ export const CLASS_INFO = {
     availableIn: {
       basic: true,    // race-as-class in Basic mode
       advanced: false // use Half-Orc_RACE + class in Advanced mode
-    },
-    availableRaces: {
-      basic: ["Half-Orc"],
-      advanced: []
     },
     requirements: { "Half-Orc": {} },  // TODO: fill in from book p60
     abilities: []                      // TODO: fill in from book p60
@@ -1119,7 +1033,7 @@ export const CLASS_INFO = {
     classSource: "AFPT",
     classLicence: "NONFREE",
     showInGenerator: false,
-    showButton: false,
+    hasClassPage: false,
     description: "",  // TODO: fill in from book p72
     primeRequisite: "STR",
     hitDieType: "d6",
@@ -1131,10 +1045,6 @@ export const CLASS_INFO = {
     availableIn: {
       basic: true,    // race-as-class in Basic mode
       advanced: false // use Svirfneblin_RACE + class in Advanced mode
-    },
-    availableRaces: {
-      basic: ["Svirfneblin"],
-      advanced: []
     },
     requirements: { Svirfneblin: {} },  // TODO: fill in from book p72
     abilities: []                       // TODO: fill in from book p72

@@ -6,15 +6,27 @@
 // Mirrors CLASS_INFO in shared-class-data-shared.js. Every race is a fully
 // self-contained object. Fields:
 //
-//   name              — display name
-//   code              — two-letter race code used in character sheet encoding (e.g. 'HU', 'DW')
-//   description       — short race description
-//   abilityModifiers  — racial ability score adjustments (Advanced mode only; never apply in Basic)
-//   minimums          — minimum ability score requirements to play this race
-//   availableIn       — which modes this race may be selected in
-//   availableClasses  — { advanced: [...] } traditional Advanced mode class combinations
-//   classLevelLimits  — { "Fighter_CLASS": 10, ... } max level per class (Normal mode only)
-//   abilities         — array of ability entries (same structure as CLASS_INFO[].abilities)
+//   name                 — display name
+//   raceSource           — content origin: "SRD" | "AFPT" | other
+//   raceLicence          — "FREE" | "NONFREE" — reproduction rights for raceSource content
+//   showInGenerator      — whether this race is wired up and selectable in the interactive
+//                          generator. Also gates getAvailableClasses()/canRaceTakeClass() in
+//                          shared-core.js — a race with showInGenerator: false never offers
+//                          any classes there, regardless of classLevelLimits.
+//   includeInAvailableTo — whether this race appears in class pages' "Available to" line
+//                          (classprint.html). Kept separate from showInGenerator since a race
+//                          can be documented there before the generator itself is ready.
+//   code                 — two-letter race code used in character sheet encoding (e.g. 'HU', 'DW')
+//   description          — short race description
+//   abilityModifiers     — racial ability score adjustments (Advanced mode only; never apply in Basic)
+//   minimums             — minimum ability score requirements to play this race
+//   availableIn          — which modes this race may be selected in
+//   classLevelLimits     — { "Fighter_CLASS": 10, ... } max level per class (Normal mode only).
+//                          The authoritative source for "which classes can this race take" —
+//                          if a class key exists here, the combination is valid. Also used by
+//                          getMaxLevel(), racesWithClass() (classprint.html), and
+//                          getAvailableClasses()/canRaceTakeClass() (shared-core.js).
+//   abilities            — array of ability entries (same structure as CLASS_INFO[].abilities)
 //
 // abilities entry fields:
 //   name                   — ability name
@@ -43,7 +55,6 @@ export const RACE_INFO = {
     raceSource: "AFPT",
     raceLicence: "NONFREE",
     showInGenerator: true,
-    showButton: false,
     includeInAvailableTo: true,
     code: "HU",
     page: 86,
@@ -51,9 +62,6 @@ export const RACE_INFO = {
     abilityModifiers: { CON: 1, CHA: 1 },  // Advanced mode only; only applied when humanRacialAbilities is on
     minimums: {},
     availableIn: { basic: true, advanced: true },
-    availableClasses: {
-      advanced: ['Cleric', 'Fighter', 'Magic-User', 'Thief', 'Spellblade'],
-    },
     classLevelLimits: {
       // Humans have no level limits — 14 in all classes
       "Acrobat_CLASS": 14, "Assassin_CLASS": 14, "Barbarian_CLASS": 14, "Bard_CLASS": 14,
@@ -114,7 +122,6 @@ export const RACE_INFO = {
     raceSource: "AFPT",
     raceLicence: "NONFREE",
     showInGenerator: true,
-    showButton: false,
     includeInAvailableTo: true,
     code: "DW",
     page: 81,
@@ -122,9 +129,6 @@ export const RACE_INFO = {
     abilityModifiers: { CON: 1, CHA: -1 },
     minimums: { CON: 9 },
     availableIn: { basic: true, advanced: true },
-    availableClasses: {
-      advanced: ['Cleric', 'Fighter', 'Thief'],
-    },
     classLevelLimits: {
       "Assassin_CLASS": 9, "Cleric_CLASS": 8, "Fighter_CLASS": 10, "Thief_CLASS": 9,
     },
@@ -213,7 +217,6 @@ export const RACE_INFO = {
     raceSource: "AFPT",
     raceLicence: "NONFREE",
     showInGenerator: true,
-    showButton: false,
     includeInAvailableTo: true,
     code: "EL",
     page: 82,
@@ -221,9 +224,6 @@ export const RACE_INFO = {
     abilityModifiers: { DEX: 1, CON: -1 },
     minimums: { INT: 9 },
     availableIn: { basic: true, advanced: true },
-    availableClasses: {
-      advanced: ['Fighter', 'Magic-User', 'Spellblade'],
-    },
     classLevelLimits: {
       //       Knight 11th, Magic-User 11th, Ranger 11th, Thief 10th
       "Acrobat_CLASS": 10, "Assassin_CLASS": 10, "Cleric_CLASS": 7, "Druid_CLASS": 8,
@@ -290,7 +290,6 @@ export const RACE_INFO = {
     raceSource: "AFPT",
     raceLicence: "NONFREE",
     showInGenerator: true,
-    showButton: false,
     includeInAvailableTo: true,
     code: "HA",
     page: 85,
@@ -298,9 +297,6 @@ export const RACE_INFO = {
     abilityModifiers: { STR: -1, DEX: 1 },
     minimums: { CON: 9, DEX: 9 },
     availableIn: { basic: true, advanced: true },
-    availableClasses: {
-      advanced: ['Fighter', 'Thief'],
-    },
     classLevelLimits: {
       "Druid_CLASS": 6, "Fighter_CLASS": 6, "Thief_CLASS": 8,
     },
@@ -389,7 +385,6 @@ export const RACE_INFO = {
     raceSource: "AFPT",
     raceLicence: "NONFREE",
     showInGenerator: false,
-    showButton: false,
     includeInAvailableTo: true,
     code: "DR",
     page: 79,
@@ -397,10 +392,6 @@ export const RACE_INFO = {
     abilityModifiers: { CON: -1, DEX: 1 },  // BOOK: "Ability modifiers: –1 CON, +1 DEX"
     minimums: { INT: 9 },  // BOOK: "Requirements: Minimum INT 9"
     availableIn: { basic: true, advanced: false },  // TODO: enable advanced when abilities filled in
-    availableClasses: {
-      // BOOK: "Available Classes: Acrobat, Assassin, Cleric, Fighter, Knight, Magic-user, Ranger, Thief"
-      advanced: ['Acrobat', 'Assassin', 'Cleric', 'Fighter', 'Knight', 'Magic-User', 'Ranger', 'Thief'],
-    },
     classLevelLimits: {
       "Acrobat_CLASS": 10, "Assassin_CLASS": 10, "Cleric_CLASS": 11,
       "Fighter_CLASS": 7, "Knight_CLASS": 9, "Magic-User_CLASS": 9,
@@ -414,7 +405,6 @@ export const RACE_INFO = {
     raceSource: "AFPT",
     raceLicence: "NONFREE",
     showInGenerator: false,
-    showButton: false,
     includeInAvailableTo: true,
     code: "DG",
     page: 80,
@@ -422,10 +412,6 @@ export const RACE_INFO = {
     abilityModifiers: { CHA: -1, CON: 1 },  // BOOK: "Ability modifiers: –1 CHA, +1 CON"
     minimums: { CON: 9, INT: 9 },  // BOOK: "Requirements: Minimum CON 9, minimum INT 9"
     availableIn: { basic: true, advanced: false },  // TODO: enable advanced when abilities filled in
-    availableClasses: {
-      // BOOK: "Available Classes: Assassin, Cleric, Fighter, Thief"
-      advanced: ['Assassin', 'Cleric', 'Fighter', 'Thief'],
-    },
     classLevelLimits: {
       "Assassin_CLASS": 9, "Cleric_CLASS": 8, "Fighter_CLASS": 9, "Thief_CLASS": 9,
     },
@@ -437,7 +423,6 @@ export const RACE_INFO = {
     raceSource: "AFPT",
     raceLicence: "NONFREE",
     showInGenerator: false,
-    showButton: false,
     includeInAvailableTo: true,
     code: "GN",
     page: 83,
@@ -445,10 +430,6 @@ export const RACE_INFO = {
     abilityModifiers: {},  // BOOK: "Ability modifiers: None"
     minimums: { CON: 9, INT: 9 },  // BOOK: "Requirements: Minimum CON 9, minimum INT 9"
     availableIn: { basic: true, advanced: false },  // TODO: enable advanced when abilities filled in
-    availableClasses: {
-      // BOOK: "Available Classes: Assassin, Cleric, Fighter, Illusionist, Thief"
-      advanced: ['Assassin', 'Cleric', 'Fighter', 'Illusionist', 'Thief'],
-    },
     classLevelLimits: {
       "Assassin_CLASS": 6, "Cleric_CLASS": 7, "Fighter_CLASS": 6,
       "Illusionist_CLASS": 7, "Thief_CLASS": 8,
@@ -461,7 +442,6 @@ export const RACE_INFO = {
     raceSource: "AFPT",
     raceLicence: "NONFREE",
     showInGenerator: false,
-    showButton: false,
     includeInAvailableTo: true,
     code: "HE",
     page: 84,
@@ -469,10 +449,6 @@ export const RACE_INFO = {
     abilityModifiers: {},  // BOOK: "Ability modifiers: None"
     minimums: { CHA: 9, CON: 9 },  // BOOK: "Requirements: Minimum CHA 9, minimum CON 9"
     availableIn: { basic: true, advanced: false },  // TODO: enable advanced when abilities filled in
-    availableClasses: {
-      // BOOK: "Available Classes: Acrobat, Assassin, Bard, Cleric, Druid, Fighter, Knight, Magic-user, Paladin, Ranger, Thief"
-      advanced: ['Acrobat', 'Assassin', 'Bard', 'Cleric', 'Druid', 'Fighter', 'Knight', 'Magic-User', 'Paladin', 'Ranger', 'Thief'],
-    },
     classLevelLimits: {
       "Acrobat_CLASS": 12, "Assassin_CLASS": 11, "Bard_CLASS": 12, "Cleric_CLASS": 5,
       "Druid_CLASS": 12, "Fighter_CLASS": 8, "Knight_CLASS": 12, "Magic-User_CLASS": 8,
@@ -486,7 +462,6 @@ export const RACE_INFO = {
     raceSource: "AFPT",
     raceLicence: "NONFREE",
     showInGenerator: false,
-    showButton: false,
     includeInAvailableTo: true,
     code: "HO",
     page: 86,
@@ -494,10 +469,6 @@ export const RACE_INFO = {
     abilityModifiers: { CHA: -2, CON: 1, STR: 1 },  // BOOK: "Ability modifiers: –2 CHA, +1 CON, +1 STR"
     minimums: {},  // BOOK: "Requirements: None"
     availableIn: { basic: true, advanced: false },  // TODO: enable advanced when abilities filled in
-    availableClasses: {
-      // BOOK: "Available Classes: Acrobat, Assassin, Cleric, Fighter, Thief"
-      advanced: ['Acrobat', 'Assassin', 'Cleric', 'Fighter', 'Thief'],
-    },
     classLevelLimits: {
       "Acrobat_CLASS": 8, "Assassin_CLASS": 8, "Cleric_CLASS": 4,
       "Fighter_CLASS": 10, "Thief_CLASS": 8,
@@ -510,7 +481,6 @@ export const RACE_INFO = {
     raceSource: "AFPT",
     raceLicence: "NONFREE",
     showInGenerator: false,
-    showButton: false,
     includeInAvailableTo: true,
     code: "SN",
     page: 87,
@@ -518,10 +488,6 @@ export const RACE_INFO = {
     abilityModifiers: {},  // BOOK: "Ability modifiers: None"
     minimums: { CON: 9 },  // BOOK: "Requirements: Minimum CON 9"
     availableIn: { basic: true, advanced: false },  // TODO: enable advanced when abilities filled in
-    availableClasses: {
-      // BOOK: "Available Classes: Assassin, Cleric, Fighter, Illusionist, Thief"
-      advanced: ['Assassin', 'Cleric', 'Fighter', 'Illusionist', 'Thief'],
-    },
     classLevelLimits: {
       "Assassin_CLASS": 8, "Cleric_CLASS": 7, "Fighter_CLASS": 6,
       "Illusionist_CLASS": 7, "Thief_CLASS": 8,

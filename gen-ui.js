@@ -420,9 +420,6 @@ export function updateUI() {
             const allowNonTraditional = (raceClassMode === 'allow-all');
             const availableClasses = getAvailableClasses(race, allowNonTraditional);
             let isAvailable = availableClasses.includes(className);
-            if (raceClassMode === 'traditional-extended' && className === 'Spellblade') {
-                isAvailable = (race === 'Human' || race === 'Elf');
-            }
             if (isAvailable && (raceClassMode === 'strict' || raceClassMode === 'strict-human') && selectedLevel) {
                 const maxLvl = getMaxLevel(`${race}_RACE`, `${className}_CLASS`, false);
                 if (maxLvl !== null && selectedLevel > maxLvl) isAvailable = false;
