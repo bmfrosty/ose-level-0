@@ -45,11 +45,21 @@
         .intro-box p { margin: 4px 0; }
 
         /* Class selector buttons */
+        .class-group { margin-bottom: 12px; }
+        .class-group-label {
+            display: block;
+            font-size: 0.8em;
+            font-weight: bold;
+            color: #6a1b9a;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-bottom: 6px;
+        }
         .class-buttons {
             display: flex;
             flex-wrap: wrap;
             gap: 8px;
-            margin-bottom: 20px;
+            margin-bottom: 8px;
         }
         .class-btn {
             padding: 8px 14px;
@@ -193,7 +203,7 @@
         #darkModeToggle:hover { border-color: #4CAF50; color: #4CAF50; }
 
         @media print {
-            nav, .class-buttons, .print-bar, .intro-box { display: none; }
+            nav, .class-group, .print-bar, .intro-box { display: none; }
             body { max-width: 100%; padding: 0; font-size: 9px; }
             #class-display { border: none; padding: 4px; }
             th, td { padding: 2px 4px; font-size: 9px; }
@@ -224,8 +234,17 @@
         <p>For official OSE Standard progressions, see the <a href="https://oldschoolessentials.necroticgnome.com/srd/index.php/Main_Page" target="_blank" style="color:#6a1b9a;font-weight:bold;">OSE SRD</a>.</p>
     </div>
 
-    <div class="class-buttons" id="class-buttons">
-        <!-- populated by JS -->
+    <div class="class-group">
+        <span class="class-group-label">Classes</span>
+        <div class="class-buttons" id="class-buttons-plain">
+            <!-- populated by JS -->
+        </div>
+    </div>
+    <div class="class-group">
+        <span class="class-group-label">Race-as-Class</span>
+        <div class="class-buttons" id="class-buttons-race">
+            <!-- populated by JS -->
+        </div>
     </div>
 
     <div class="print-bar">
@@ -245,6 +264,8 @@
             HIT_DICE_PROGRESSIONS
         } from './cs-core.js';
 
+        import { CLASS_INFO } from './shared-class-info.js';
+
         const { ATTACK_BONUS_PROGRESSIONS, ATTACK_BONUS_SCALE, SAVING_THROWS } = PROGRESSION_TABLES.smoothprog;
 
         const CLASSES = [
@@ -257,6 +278,19 @@
             { key: "Spellblade_CLASS",  name: "Spellblade" },
             { key: "Thief_CLASS",       name: "Thief" },
         ];
+
+        // Maps progression key → CLASS_INFO key, so we can read classType (plainClass vs
+        // raceAsClass) to split the buttons into two rows.
+        const CLASS_INFO_KEY = {
+            "Cleric_CLASS":     "Cleric",
+            "Dwarf_CLASS":      "Dwarf",
+            "Elf_CLASS":        "Elf",
+            "Fighter_CLASS":    "Fighter",
+            "Halfling_CLASS":   "Halfling",
+            "Magic-User_CLASS": "Magic-User",
+            "Spellblade_CLASS": "Spellblade",
+            "Thief_CLASS":      "Thief",
+        };
 
         // Extra per-class notes shown at the top of the table
         const CLASS_NOTES = {
@@ -276,9 +310,9 @@
                 fighter/mage class.`
             },
             "Spellblade_CLASS": {
-                text: `<strong>Spellblade</strong> is a fighter/mage hybrid class, available in Advanced Mode to any race —
-                Human, Elf, Dwarf, Gnome, or Halfling — and in Basic Mode to Humans. It has no racial features of its own;
-                racial abilities come from the character's race selection, not the class.<br><br>
+                text: `<strong>Spellblade</strong> is a fighter/mage hybrid class, available in Advanced Mode to Human
+                and Elf, and in Basic Mode to Humans. It has no racial features of its own; racial abilities come
+                from the character's race selection, not the class.<br><br>
                 Spellblade currently shares identical progression tables with the Basic Mode <strong>Elf</strong> class
                 (same attack bonus, saving throws, XP, and spell slots at every level), though they are tracked as
                 separate data.`
@@ -398,15 +432,20 @@
             window.history.replaceState({}, '', url);
         }
 
-        // Build buttons
-        const btnContainer = document.getElementById('class-buttons');
+        // Build buttons — split into "Classes" (plainClass) and "Race-as-Class" rows
+        const plainContainer = document.getElementById('class-buttons-plain');
+        const raceContainer  = document.getElementById('class-buttons-race');
         CLASSES.forEach(cls => {
+            const infoKey   = CLASS_INFO_KEY[cls.key];
+            const classType = CLASS_INFO[infoKey]?.classType;
+            const container = classType === 'raceAsClass' ? raceContainer : plainContainer;
+
             const btn = document.createElement('button');
             btn.className = 'class-btn';
             btn.id = 'btn-' + cls.key;
             btn.textContent = cls.name;
             btn.addEventListener('click', () => showClass(cls.key));
-            btnContainer.appendChild(btn);
+            container.appendChild(btn);
         });
 
         // Load from URL param or default to Fighter

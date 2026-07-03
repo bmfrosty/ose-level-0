@@ -250,8 +250,8 @@
         const TRUE_CLASSES = new Set(["Cleric_CLASS", "Fighter_CLASS", "Magic-User_CLASS", "Thief_CLASS", "Spellblade_CLASS"]);
 
         const CLASS_PRINT_NOTES = {
-            "Elf_CLASS": "Basic Mode race-as-class: a combined race and class package. See the separate Spellblade page for the Advanced Mode fighter/mage class (no racial features of its own; any race may take it).",
-            "Spellblade_CLASS": "Advanced Mode fighter/mage hybrid class, available to any race (Human, Elf, Dwarf, Gnome, Halfling in Advanced Mode; Human only in Basic Mode). No racial features of its own — pair with a race choice for those.",
+            "Elf_CLASS": "Basic Mode race-as-class: a combined race and class package. See the separate Spellblade page for the Advanced Mode fighter/mage class (no racial features of its own).",
+            "Spellblade_CLASS": "Advanced Mode fighter/mage hybrid class, available to Human and Elf (Human only in Basic Mode). No racial features of its own — pair with a race choice for those.",
         };
 
         const FIGHTER_NOTES = {
@@ -479,7 +479,8 @@
         // only to gate "traditional" combos in the interactive generator — not what we want here.
         function racesWithClass(raceKeys, classKey) {
             return raceKeys
-                .filter(raceKey => RACE_INFO[raceKey]?.classLevelLimits?.[classKey] !== undefined)
+                .filter(raceKey => RACE_INFO[raceKey]?.includeInAvailableTo
+                    && RACE_INFO[raceKey]?.classLevelLimits?.[classKey] !== undefined)
                 .map(raceKey => RACE_INFO[raceKey].name);
         }
 
