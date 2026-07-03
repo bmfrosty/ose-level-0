@@ -1007,7 +1007,13 @@ export function checkRacialMinimums(scores, race) {
  */
 export function getAvailableClasses(race, allowNonTraditional = false) {
     if (allowNonTraditional) {
-        return ['Cleric', 'Fighter', 'Magic-User', 'Thief', 'Spellblade'];
+        // Bypasses per-race restrictions entirely: every generator-ready plainClass,
+        // regardless of race. (raceAsClass entries like Dwarf/Elf/Halfling are excluded —
+        // this mode is about which of the 5 core classes any race can take, not about
+        // taking on a different demihuman race-as-class.)
+        return Object.entries(CLASS_INFO)
+            .filter(([, c]) => c.showInGenerator && c.classType !== 'raceAsClass')
+            .map(([name]) => name);
     }
     // Accepts bare names ('Elf') or suffixed ('Elf_RACE') — getRaceInfo normalizes both.
     const raceInfo = getRaceInfo(race);
