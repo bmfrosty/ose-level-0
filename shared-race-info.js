@@ -279,7 +279,7 @@ export const RACE_INFO = {
     minimums: { CON: 9, INT: 9 },
     availableIn: { basic: true, advanced: false },  // TODO: enable advanced when abilities filled in
     availableClasses: {
-      advanced: [],  // TODO: fill in from book p83
+      advanced: ['Cleric', 'Fighter', 'Illusionist', 'Thief'],  // BOOK: "Available Classes: Assassin, Cleric, Fighter, Illusionist, Thief" (p83)
     },
     classLevelLimits: {
       "Assassin_CLASS": 6, "Cleric_CLASS": 7, "Fighter_CLASS": 6,

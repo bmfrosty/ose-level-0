@@ -130,6 +130,26 @@
             font-size: 13px;
         }
 
+        /* Print bar */
+        .print-bar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        .print-btn {
+            padding: 6px 14px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .print-btn:hover { background-color: #388E3C; }
+        .print-hint { color: #666; font-size: 11px; font-style: italic; }
+
         /* Dark mode */
         body.dark-mode { background-color: #1a1a2e; color: #e0e0e0; }
         body.dark-mode nav { background-color: #2d2d44; }
@@ -157,6 +177,7 @@
         body.dark-mode .fighter-note strong:first-child { color: #64b5f6; }
         body.dark-mode .placeholder { color: #777; }
         body.dark-mode footer { border-top-color: #444; color: #666; }
+        body.dark-mode .print-hint { color: #aaa; }
 
         #darkModeToggle {
             background: none;
@@ -172,12 +193,12 @@
         #darkModeToggle:hover { border-color: #4CAF50; color: #4CAF50; }
 
         @media print {
-            nav, .class-buttons, #darkModeToggle, .intro-box { display: none; }
+            nav, .class-buttons, .print-bar, .intro-box { display: none; }
             body { max-width: 100%; padding: 0; font-size: 9px; }
             #class-display { border: none; padding: 4px; }
             th, td { padding: 2px 4px; font-size: 9px; }
             .class-note, .fighter-note { display: none; }
-            @page { size: landscape; margin: 1cm; }
+            @page { size: portrait; margin: 1cm; }
         }
     </style>
 </head>
@@ -205,6 +226,11 @@
 
     <div class="class-buttons" id="class-buttons">
         <!-- populated by JS -->
+    </div>
+
+    <div class="print-bar">
+        <button class="print-btn" id="print-btn">🖨 Print / Save as PDF</button>
+        <span class="print-hint">Opens a print-optimized view for the selected class</span>
     </div>
 
     <div id="class-display">
@@ -379,6 +405,11 @@
         const urlParam = new URLSearchParams(window.location.search).get('class');
         const initial = CLASSES.find(c => c.key === urlParam) ? urlParam : 'Fighter_CLASS';
         showClass(initial);
+
+        document.getElementById('print-btn').addEventListener('click', () => {
+            const key = new URLSearchParams(window.location.search).get('class') || 'Fighter_CLASS';
+            window.open(`classprint.html?class=${key}`, '_blank');
+        });
     </script>
 
     <script>
