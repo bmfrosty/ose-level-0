@@ -56,7 +56,7 @@ export const RACE_INFO = {
     },
     classLevelLimits: {
       // Humans have no level limits — 14 in all classes
-      "Acrobat_CLASS": 14, "Assassin_CLASS": 14, "Bard_CLASS": 14,
+      "Acrobat_CLASS": 14, "Assassin_CLASS": 14, "Barbarian_CLASS": 14, "Bard_CLASS": 14,
       "Cleric_CLASS": 14, "Druid_CLASS": 14, "Fighter_CLASS": 14,
       "Illusionist_CLASS": 14, "Knight_CLASS": 14, "Magic-User_CLASS": 14,
       "Paladin_CLASS": 14, "Ranger_CLASS": 14, "Thief_CLASS": 14, "Spellblade_CLASS": 14,
@@ -284,30 +284,6 @@ export const RACE_INFO = {
     ]
   },
 
-  // ── Gnome ──────────────────────────────────────────────────────────────────
-  "Gnome_RACE": {
-    name: "Gnome",
-    raceSource: "AFPT",
-    raceLicence: "NONFREE",
-    showInGenerator: false,
-    showButton: false,
-    includeInAvailableTo: true,
-    code: "GN",
-    page: 83,
-    description: "",  // TODO: fill in from book p83
-    abilityModifiers: {},
-    minimums: { CON: 9, INT: 9 },
-    availableIn: { basic: true, advanced: false },  // TODO: enable advanced when abilities filled in
-    availableClasses: {
-      advanced: ['Cleric', 'Fighter', 'Illusionist', 'Thief'],  // BOOK: "Available Classes: Assassin, Cleric, Fighter, Illusionist, Thief" (p83)
-    },
-    classLevelLimits: {
-      "Assassin_CLASS": 6, "Cleric_CLASS": 7, "Fighter_CLASS": 6,
-      "Illusionist_CLASS": 7, "Thief_CLASS": 8,
-    },
-    abilities: []  // TODO: fill in from book p83
-  },
-
   // ── Halfling ───────────────────────────────────────────────────────────────
   "Halfling_RACE": {
     name: "Halfling",
@@ -418,11 +394,12 @@ export const RACE_INFO = {
     code: "DR",
     page: 79,
     description: "",  // TODO: fill in from book p79
-    abilityModifiers: {},       // TODO: fill in from book p79
-    minimums: {},               // TODO: fill in from book p79
-    availableIn: { basic: false, advanced: false },  // TODO: enable when abilities are filled in
+    abilityModifiers: { CON: -1, DEX: 1 },  // BOOK: "Ability modifiers: –1 CON, +1 DEX"
+    minimums: { INT: 9 },  // BOOK: "Requirements: Minimum INT 9"
+    availableIn: { basic: true, advanced: false },  // TODO: enable advanced when abilities filled in
     availableClasses: {
-      advanced: [],             // TODO: fill in from book p79
+      // BOOK: "Available Classes: Acrobat, Assassin, Cleric, Fighter, Knight, Magic-user, Ranger, Thief"
+      advanced: ['Acrobat', 'Assassin', 'Cleric', 'Fighter', 'Knight', 'Magic-User', 'Ranger', 'Thief'],
     },
     classLevelLimits: {
       "Acrobat_CLASS": 10, "Assassin_CLASS": 10, "Cleric_CLASS": 11,
@@ -442,16 +419,41 @@ export const RACE_INFO = {
     code: "DG",
     page: 80,
     description: "",  // TODO: fill in from book p80
-    abilityModifiers: {},       // TODO: fill in from book p80
-    minimums: {},               // TODO: fill in from book p80
-    availableIn: { basic: false, advanced: false },  // TODO: enable when abilities are filled in
+    abilityModifiers: { CHA: -1, CON: 1 },  // BOOK: "Ability modifiers: –1 CHA, +1 CON"
+    minimums: { CON: 9, INT: 9 },  // BOOK: "Requirements: Minimum CON 9, minimum INT 9"
+    availableIn: { basic: true, advanced: false },  // TODO: enable advanced when abilities filled in
     availableClasses: {
-      advanced: [],             // TODO: fill in from book p80
+      // BOOK: "Available Classes: Assassin, Cleric, Fighter, Thief"
+      advanced: ['Assassin', 'Cleric', 'Fighter', 'Thief'],
     },
     classLevelLimits: {
       "Assassin_CLASS": 9, "Cleric_CLASS": 8, "Fighter_CLASS": 9, "Thief_CLASS": 9,
     },
     abilities: []               // TODO: fill in from book p80
+  },
+
+  "Gnome_RACE": {
+    name: "Gnome",
+    raceSource: "AFPT",
+    raceLicence: "NONFREE",
+    showInGenerator: false,
+    showButton: false,
+    includeInAvailableTo: true,
+    code: "GN",
+    page: 83,
+    description: "",  // TODO: fill in from book p83
+    abilityModifiers: {},  // BOOK: "Ability modifiers: None"
+    minimums: { CON: 9, INT: 9 },  // BOOK: "Requirements: Minimum CON 9, minimum INT 9"
+    availableIn: { basic: true, advanced: false },  // TODO: enable advanced when abilities filled in
+    availableClasses: {
+      // BOOK: "Available Classes: Assassin, Cleric, Fighter, Illusionist, Thief"
+      advanced: ['Assassin', 'Cleric', 'Fighter', 'Illusionist', 'Thief'],
+    },
+    classLevelLimits: {
+      "Assassin_CLASS": 6, "Cleric_CLASS": 7, "Fighter_CLASS": 6,
+      "Illusionist_CLASS": 7, "Thief_CLASS": 8,
+    },
+    abilities: []  // TODO: fill in from book p83
   },
 
   "Half-Elf_RACE": {
@@ -464,11 +466,12 @@ export const RACE_INFO = {
     code: "HE",
     page: 84,
     description: "",  // TODO: fill in from book p84
-    abilityModifiers: {},       // TODO: fill in from book p84
-    minimums: {},               // TODO: fill in from book p84
-    availableIn: { basic: false, advanced: false },  // TODO: enable when abilities are filled in
+    abilityModifiers: {},  // BOOK: "Ability modifiers: None"
+    minimums: { CHA: 9, CON: 9 },  // BOOK: "Requirements: Minimum CHA 9, minimum CON 9"
+    availableIn: { basic: true, advanced: false },  // TODO: enable advanced when abilities filled in
     availableClasses: {
-      advanced: [],             // TODO: fill in from book p84
+      // BOOK: "Available Classes: Acrobat, Assassin, Bard, Cleric, Druid, Fighter, Knight, Magic-user, Paladin, Ranger, Thief"
+      advanced: ['Acrobat', 'Assassin', 'Bard', 'Cleric', 'Druid', 'Fighter', 'Knight', 'Magic-User', 'Paladin', 'Ranger', 'Thief'],
     },
     classLevelLimits: {
       "Acrobat_CLASS": 12, "Assassin_CLASS": 11, "Bard_CLASS": 12, "Cleric_CLASS": 5,
@@ -488,11 +491,12 @@ export const RACE_INFO = {
     code: "HO",
     page: 86,
     description: "",  // TODO: fill in from book p86
-    abilityModifiers: {},       // TODO: fill in from book p86
-    minimums: {},               // TODO: fill in from book p86
-    availableIn: { basic: false, advanced: false },  // TODO: enable when abilities are filled in
+    abilityModifiers: { CHA: -2, CON: 1, STR: 1 },  // BOOK: "Ability modifiers: –2 CHA, +1 CON, +1 STR"
+    minimums: {},  // BOOK: "Requirements: None"
+    availableIn: { basic: true, advanced: false },  // TODO: enable advanced when abilities filled in
     availableClasses: {
-      advanced: [],             // TODO: fill in from book p86
+      // BOOK: "Available Classes: Acrobat, Assassin, Cleric, Fighter, Thief"
+      advanced: ['Acrobat', 'Assassin', 'Cleric', 'Fighter', 'Thief'],
     },
     classLevelLimits: {
       "Acrobat_CLASS": 8, "Assassin_CLASS": 8, "Cleric_CLASS": 4,
@@ -511,11 +515,12 @@ export const RACE_INFO = {
     code: "SN",
     page: 87,
     description: "",  // TODO: fill in from book p87
-    abilityModifiers: {},       // TODO: fill in from book p87
-    minimums: {},               // TODO: fill in from book p87
-    availableIn: { basic: false, advanced: false },  // TODO: enable when abilities are filled in
+    abilityModifiers: {},  // BOOK: "Ability modifiers: None"
+    minimums: { CON: 9 },  // BOOK: "Requirements: Minimum CON 9"
+    availableIn: { basic: true, advanced: false },  // TODO: enable advanced when abilities filled in
     availableClasses: {
-      advanced: [],             // TODO: fill in from book p87
+      // BOOK: "Available Classes: Assassin, Cleric, Fighter, Illusionist, Thief"
+      advanced: ['Assassin', 'Cleric', 'Fighter', 'Illusionist', 'Thief'],
     },
     classLevelLimits: {
       "Assassin_CLASS": 8, "Cleric_CLASS": 7, "Fighter_CLASS": 6,

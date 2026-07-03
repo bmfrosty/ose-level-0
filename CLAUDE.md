@@ -79,9 +79,10 @@ This is the most important architectural concept. **Do not conflate race and cla
 | "Halfling" | A class (race-as-class). All abilities are class features. No separate racial stat adjustments. | A race only. Gets racial abilities from `Halfling_RACE` including stat adjustments. Needs a separate class. |
 | "Human" | Not a class. Humans choose Cleric/Fighter/MU/Thief/Spellblade. No racial stat adjustments. | A race. Humans have optional racial abilities (Blessed, Decisiveness, Leadership). Has stat adjustments (+1 CON, +1 CHA). |
 
-The Spellblade is an **Advanced mode fighter/magic-user hybrid class**. It is available to Human
-and Elf races in Advanced mode, and to Humans in Basic mode. It is NOT derived from the Basic Elf
-class and is NOT coupled to it. They happen to both use arcane magic but have independent rules.
+The Spellblade is an **Advanced mode fighter/magic-user hybrid class**. It is available in Advanced
+mode to any race with access to both the Fighter and Magic-User classes — currently Human, Elf,
+Drow, and Half-Elf — and to Humans in Basic mode. It is NOT derived from the Basic Elf class and is
+NOT coupled to it. They happen to both use arcane magic but have independent rules.
 
 ---
 
