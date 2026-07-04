@@ -184,11 +184,11 @@ export function initializeLevelSelection() {
 }
 
 // ── Mode Selector ─────────────────────────────────────────────────────────────
-// Looks up the CLASS_INFO entry name for a race's race-as-class package, or
-// null if that race has none (Human, or a race not yet generator-ready).
-function raceAsClassNameFor(bareRace) {
-    const entry = Object.values(CLASS_INFO).find(c => c.classType === 'raceAsClass' && c.name === bareRace);
-    return entry ? entry.name : null;
+// Whether a race has a race-as-class package in CLASS_INFO (false for Human,
+// or a race not yet generator-ready). The race-as-class CLASS_INFO key is
+// always identical to the race name, so callers just reuse bareRace.
+function hasRaceAsClassEntry(bareRace) {
+    return Object.values(CLASS_INFO).some(c => c.classType === 'raceAsClass' && c.name === bareRace);
 }
 
 function setModePreset(newPreset) {
@@ -225,12 +225,14 @@ function initializeModeSelector() {
 }
 
 // ── Level 1+ build selection (shared: race-as-class picks and separate-class picks) ──
-function selectBuild(bareRace, raceAsClass) {
+// The race-as-class CLASS_INFO key always matches the race name (e.g. Dwarf race
+// picks the Dwarf class), so a race-as-class pick only needs the one name.
+function selectBuild(bareRace) {
     document.querySelectorAll('.grid-button:not(.zero-race-btn)').forEach(b => b.classList.remove('selected'));
     document.querySelectorAll('.zero-race-btn').forEach(b => b.classList.remove('selected'));
     isRaceAsClassPick = true;
     selectedRace  = `${bareRace}_RACE`;
-    selectedClass = `${raceAsClass}_CLASS`;
+    selectedClass = `${bareRace}_CLASS`;
 }
 
 function selectSeparateClass(bareRace, bareClass) {
@@ -268,9 +270,8 @@ export function initializeRaceClassGrid() {
                 selectZeroRace(`${bareRace}_RACE`);
                 button.classList.add('selected');
             } else if (isRaceAsClassColumn) {
-                const raceAsClass = raceAsClassNameFor(bareRace);
-                if (!raceAsClass) return; // shouldn't happen — button would be disabled
-                selectBuild(bareRace, raceAsClass);
+                if (!hasRaceAsClassEntry(bareRace)) return; // shouldn't happen — button would be disabled
+                selectBuild(bareRace);
                 button.classList.add('selected');
             } else {
                 selectSeparateClass(bareRace, button.dataset.class);
@@ -372,10 +373,9 @@ export function updateUI() {
             // not a class. Separate-class columns are meaningless before level 1.
             isAvailable = isRaceAsClassColumn;
         } else if (isRaceAsClassColumn) {
-            const raceAsClass = raceAsClassNameFor(bareRace);
-            isAvailable = !!raceAsClass && modePreset !== 'race-class';
+            isAvailable = hasRaceAsClassEntry(bareRace) && modePreset !== 'race-class';
             if (isAvailable && (raceClassMode === 'strict' || raceClassMode === 'strict-human') && selectedLevel) {
-                const maxLvl = CLASS_INFO[raceAsClass]?.maxLevel ?? 14;
+                const maxLvl = CLASS_INFO[bareRace]?.maxLevel ?? 14;
                 if (selectedLevel > maxLvl) isAvailable = false;
             }
         } else {
@@ -399,6 +399,18 @@ export function updateUI() {
         if (!isAvailable && button.classList.contains('selected')) {
             selectedRace = null; selectedClass = null;
             button.classList.remove('selected');
+        }
+
+        // The Race-as-Class column is available at both level 0 (picking a race
+        // for selectedRaceForZero) and level 1+ (picking selectedRace/selectedClass
+        // via isRaceAsClassPick) — two different variables sharing the same button.
+        // Re-sync its 'selected' class to whichever one is relevant at this level
+        // whenever the level changes without a grid click (e.g. a level button click).
+        if (isRaceAsClassColumn && isAvailable) {
+            const isSelected = isZeroLevel
+                ? raceKey === selectedRaceForZero
+                : (isRaceAsClassPick && raceKey === selectedRace);
+            button.classList.toggle('selected', isSelected);
         }
     });
 
@@ -831,8 +843,7 @@ function applySettings(s) {
         if (sr) {
             selectedRace = sr; selectedClass = s.selectedClass;
             const bareRace = sr.replace('_RACE', '');
-            const raceAsClass = raceAsClassNameFor(bareRace);
-            isRaceAsClassPick = !!raceAsClass && `${raceAsClass}_CLASS` === s.selectedClass;
+            isRaceAsClassPick = hasRaceAsClassEntry(bareRace) && `${bareRace}_CLASS` === s.selectedClass;
             document.querySelectorAll('.grid-button:not(.zero-race-btn)').forEach(b=>{
                 const r = b.dataset.race ? `${b.dataset.race}_RACE` : null;
                 const isRaceAsClassColumn = b.dataset.class === 'RaceAsClass';

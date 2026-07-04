@@ -444,8 +444,12 @@ function buildGeneratorURL(cp) {
     const p = new URLSearchParams();
 
     // Mode preset — reconstructed to whichever preset guarantees this exact
-    // race/class combination is clickable, regardless of race.
-    p.set('mode', isAdv ? 'race-class' : 'race-as-class');
+    // race/class combination is clickable, regardless of race. Level 0 always
+    // has isSeparateRaceClass:true (cp.m === 'A') even though no class has been
+    // picked yet, so 'race-class' would needlessly disable the Race-as-Class
+    // column when the character levels up — use 'both' instead so either path
+    // is available.
+    p.set('mode', (cp.l === 0) ? 'both' : (isAdv ? 'race-class' : 'race-as-class'));
 
     // Progression mode (omit if OSE — that's the default)
     const progKey = CODE_TO_PROG_KEY[cp.p] || 'smoothprog';
