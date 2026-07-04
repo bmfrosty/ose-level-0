@@ -12,7 +12,6 @@ import {
     getClassDisplayName,
     getAvailableClasses,
     getClassProgressionData as getProgBasic,
-    getClassProgressionData as getProgAdvanced,
     getClassFeatures,
     getBasicModeClassAbilities as getRacialBasic,
     applyRacialSaveModifiers,
@@ -117,8 +116,6 @@ let isRaceAsClassPick = false;
 function getSettingsKey() { return 'generator'; } // single shared key
 
 function getProgData(className, level, scores, classData, silent = false) {
-    // getProgBasic/getProgAdvanced are both aliases for the same underlying
-    // function — no branching needed.
     return getProgBasic({ className, level, abilityScores: scores, classData, silent });
 }
 
