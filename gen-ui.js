@@ -1,7 +1,6 @@
 /**
  * gen-ui.js
- * Combined UI logic for Basic + Advanced modes on generator.html
- * Replaces basic-ui.js + advanced-ui.js
+ * UI logic for generator.html's unified race/class grid, levels 0–14.
  */
 
 // ── Imports ───────────────────────────────────────────────────────────────────
@@ -16,54 +15,22 @@ import {
     getClassProgressionData as getProgAdvanced,
     getClassFeatures,
     getBasicModeClassAbilities as getRacialBasic,
-    getAdvancedModeRacialAbilities,
     applyRacialSaveModifiers,
     getRaceInfo,
-    applyRacialAdjustments,
-    checkRacialMinimums,
-    getClassRequirements  as _getClassReqs,
     getMaxLevel,
-    calculateModifier, formatModifier, rollAbilities,
+    calculateModifier, formatModifier,
     meetsToughCharactersRequirements, meetsPrimeRequisiteRequirements,
-    getPrimeRequisites,
     rollHitPoints as rollHPBasic,
     rollHitPoints as rollHPAdvanced,
     createCharacter, rollStartingGold, calcStartingGold,
     readAbilityScores as readScoresFromInputs,
-    getClassRequirements,
-    getDemihumanLimits,
     purchaseEquipment,
     getRandomName, getRandomBackground,
     getAllBackgroundTables,
     generateCharacterV3,
+    CLASS_INFO, RACE_INFO,
 } from './gen-core.js';
 import { displayCharacterSheet }                  from './cs-sheet-page.js';
-// ── Advanced helpers (inlined from former shared-advanced-character-gen.js) ────
-
-function getRacialAdvanced(race, raceClassMode = 'strict') {
-    return getAdvancedModeRacialAbilities(race, {
-        isAdvanced: true,
-        humanRacialAbilities: raceClassMode !== 'strict',
-    });
-}
-
-function rollAbilitiesAdvanced(minimumScores, race, className, toughCharacters, primeRequisite13) {
-    let totalAttempts = 0;
-    while (true) {
-        const { scores: baseScores, attempts } = rollAbilities(minimumScores, toughCharacters, className, primeRequisite13);
-        totalAttempts += attempts;
-        if (totalAttempts > 25000) {
-            const err = new Error('Could not satisfy these constraints after 25,000 rolls. Try relaxing your minimum scores or requirements.');
-            err.code = 'TOO_MANY_ATTEMPTS';
-            throw err;
-        }
-        if (!checkRacialMinimums(baseScores, race)) continue;
-        const adjustedScores = applyRacialAdjustments(baseScores, race);
-        const classReqs = _getClassReqs(className, race);
-        if (Object.entries(classReqs).some(([ab, min]) => adjustedScores[ab] < min)) continue;
-        return { baseScores, adjustedScores, attempts: totalAttempts };
-    }
-}
 
 // ── Settings helpers (inlined from gen-settings.js — single-parent leaf) ──────
 const _SETTINGS_PREFIX = 'ose_settings_';
@@ -98,8 +65,12 @@ function handleDarkModeToggle() {
 }
 
 // ── State ─────────────────────────────────────────────────────────────────────
-// Top-level mode toggle
-let mode = 'basic'; // 'basic' | 'advanced'
+// Referee-facing restriction preset — no longer drives generation mechanics,
+// only which grid cells are enabled. See PLAN_RACE_AS_CLASS_IN_ADVANCED.md.
+//   'race-class'    (A) — Race-and-Class Only: separate race+class columns only
+//   'race-as-class' (B) — Race-as-Class Only: Race-as-Class column + Human's separate classes
+//   'both'          (C) — Both: everything enabled
+let modePreset = 'race-as-class';
 
 // Shared state
 let selectedLevel = null;
@@ -110,7 +81,7 @@ let hpRollingMode = 'normal'; // 'normal' | 'healthy' | 'blessed' | '5e'
 let includeLevel0HP = false;
 let useFixedScores = false;
 let showUndeadNames = false;
-let hideHumanRace   = false;   // Advanced mode: show "Fighter" instead of "Human Fighter"
+let hideHumanRace   = false;   // show "Fighter" instead of "Human Fighter" for separate-class Human picks
 let showQRCode = true;
 let basicAbilityOrdering = true;
 let characterName = '';
@@ -131,27 +102,24 @@ let _scoreRollAttempts = 1;  // set each time rollAbilities / rollAbilitiesAdvan
 let xpMode = false;     // true → derive level from xpAmount for each class
 let xpAmount = null;    // XP value when xpMode is true
 
-// Basic-only state
-let demihumanLimits = 'standard';
-
-// Advanced-only state
+// Selected race for a level 1+ pick — set for both race-as-class picks
+// (e.g. selectedClass = "Dwarf_CLASS", selectedRace = "Dwarf_RACE") and
+// separate-class picks (e.g. selectedRace = "Human_RACE", selectedClass = "Fighter_CLASS").
 let selectedRace = null;
 let raceClassMode = 'strict';
+
+// True when the currently-selected class is a race-as-class pick (CLASS_INFO
+// classType === 'raceAsClass'), i.e. the Race-as-Class grid column was clicked
+// rather than a separate class column. Drives isSeparateRaceClass for generation.
+let isRaceAsClassPick = false;
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function getSettingsKey() { return 'generator'; } // single shared key
 
-/** Derive effective demihuman level limits from raceClassMode in basic mode */
-function getEffectiveDemihumanLimits() {
-    return (mode === 'basic')
-        ? (raceClassMode === 'traditional-extended' ? 'extended' : 'standard')
-        : demihumanLimits;
-}
-
 function getProgData(className, level, scores, classData, silent = false) {
-    return mode === 'basic'
-        ? getProgBasic({ className, level, abilityScores: scores, classData, silent })
-        : getProgAdvanced({ className, level, abilityScores: scores, classData, silent });
+    // getProgBasic/getProgAdvanced are both aliases for the same underlying
+    // function — no branching needed.
+    return getProgBasic({ className, level, abilityScores: scores, classData, silent });
 }
 
 function getClassDataForMode(pm) {
@@ -216,75 +184,71 @@ export function initializeLevelSelection() {
 }
 
 // ── Mode Selector ─────────────────────────────────────────────────────────────
-function switchMode(newMode) {
-    mode = newMode;
-    // Show/hide mode-specific sections
-    const basicSections  = document.querySelectorAll('.basic-only');
-    const advSections    = document.querySelectorAll('.advanced-only');
-    basicSections.forEach(el => el.style.display = (mode === 'basic')    ? '' : 'none');
-    advSections.forEach(el   => el.style.display = (mode === 'advanced') ? '' : 'none');
+// Looks up the CLASS_INFO entry name for a race's race-as-class package, or
+// null if that race has none (Human, or a race not yet generator-ready).
+function raceAsClassNameFor(bareRace) {
+    const entry = Object.values(CLASS_INFO).find(c => c.classType === 'raceAsClass' && c.name === bareRace);
+    return entry ? entry.name : null;
+}
+
+function setModePreset(newPreset) {
+    modePreset = newPreset;
     const hideHumanRaceOption = document.getElementById('hideHumanRaceOption');
     if (hideHumanRaceOption) {
-        hideHumanRaceOption.classList.toggle('section-greyed', mode === 'basic');
+        const disabled = modePreset === 'race-as-class';
+        hideHumanRaceOption.classList.toggle('section-greyed', disabled);
         const cb = document.getElementById('hideHumanRace');
-        if (cb) cb.disabled = (mode === 'basic');
+        if (cb) cb.disabled = disabled;
     }
-    // Swap accent colour on the container
+    // Swap accent colour on the container — green for race-as-class-only, purple otherwise
     const container = document.getElementById('generatorContainer');
     if (container) {
-        container.classList.toggle('mode-basic',    mode === 'basic');
-        container.classList.toggle('mode-advanced', mode === 'advanced');
+        container.classList.toggle('mode-basic',    modePreset === 'race-as-class');
+        container.classList.toggle('mode-advanced', modePreset !== 'race-as-class');
     }
 
-    // Load this mode's saved settings, then re-init character selector.
-    // If no saved settings exist (e.g. after a reset), still sync the current
-    // raceClassMode variable to the correct radio for the new mode.
+    // Load saved settings, then sync the current raceClassMode to its radio.
     const _saved = loadSettings(getSettingsKey());
     applySettings(_saved);
     if (!_saved) applySettings({ raceClassMode });
 
-    if (mode === 'basic') {
-        initializeClassSelection();
-    } else {
-        initializeRaceClassGrid();
-    }
     updateUI();
 }
 
 function initializeModeSelector() {
     document.querySelectorAll('input[name="mode"]').forEach(radio => {
         radio.addEventListener('change', (e) => {
-            switchMode(e.target.value);
+            setModePreset(e.target.value);
             saveCurrentSettings();
         });
     });
 }
 
-// ── Basic: Class Selection ────────────────────────────────────────────────────
-export function initializeClassSelection() {
-    const buttons = document.querySelectorAll('.class-button');
-    // Remove old listeners by cloning
-    buttons.forEach(btn => {
-        const fresh = btn.cloneNode(true);
-        btn.parentNode.replaceChild(fresh, btn);
-    });
-    document.querySelectorAll('.class-button').forEach(button => {
-        button.addEventListener('click', () => {
-            if (button.disabled) return;
-            document.querySelectorAll('.class-button').forEach(b => b.classList.remove('selected'));
-            button.classList.add('selected');
-            selectedClass = button.dataset.class;
-            if (selectedClass && !selectedClass.endsWith('_CLASS')) selectedClass += '_CLASS';
-            updateUI(); saveCurrentSettings();
-            if (autoGenerateOnClassChange) generateCharacter();
-        });
-    });
-    // Default: Fighter
-    const fighter = document.querySelector('.class-button[data-class="Fighter"]');
-    if (fighter) { fighter.classList.add('selected'); selectedClass = 'Fighter_CLASS'; }
+// ── Level 1+ build selection (shared: race-as-class picks and separate-class picks) ──
+function selectBuild(bareRace, raceAsClass) {
+    document.querySelectorAll('.grid-button:not(.zero-race-btn)').forEach(b => b.classList.remove('selected'));
+    document.querySelectorAll('.zero-race-btn').forEach(b => b.classList.remove('selected'));
+    isRaceAsClassPick = true;
+    selectedRace  = `${bareRace}_RACE`;
+    selectedClass = `${raceAsClass}_CLASS`;
 }
 
-// ── Advanced: Race/Class Grid ─────────────────────────────────────────────────
+function selectSeparateClass(bareRace, bareClass) {
+    document.querySelectorAll('.grid-button:not(.zero-race-btn)').forEach(b => b.classList.remove('selected'));
+    document.querySelectorAll('.zero-race-btn').forEach(b => b.classList.remove('selected'));
+    isRaceAsClassPick = false;
+    selectedRace  = `${bareRace}_RACE`;
+    selectedClass = `${bareClass}_CLASS`;
+}
+
+// ── Level 0 race selection (shared: grid's first column and the Random shortcuts) ──
+function selectZeroRace(raceValue) {
+    document.querySelectorAll('.grid-button:not(.zero-race-btn)').forEach(b => b.classList.remove('selected'));
+    document.querySelectorAll('.zero-race-btn').forEach(b => b.classList.remove('selected'));
+    selectedRaceForZero = raceValue;
+}
+
+// ── Race/Class Grid ────────────────────────────────────────────────────────────
 export function initializeRaceClassGrid() {
     const buttons = document.querySelectorAll('.grid-button:not(.zero-race-btn)');
     buttons.forEach(btn => {
@@ -294,12 +258,24 @@ export function initializeRaceClassGrid() {
     document.querySelectorAll('.grid-button:not(.zero-race-btn)').forEach(button => {
         button.addEventListener('click', () => {
             if (button.disabled) return;
-            document.querySelectorAll('.grid-button:not(.zero-race-btn)').forEach(b => b.classList.remove('selected'));
-            button.classList.add('selected');
-            selectedRace = button.dataset.race;
-            selectedClass = button.dataset.class;
-            if (selectedRace && !selectedRace.endsWith('_RACE'))   selectedRace  += '_RACE';
-            if (selectedClass && !selectedClass.endsWith('_CLASS')) selectedClass += '_CLASS';
+            const bareRace = button.dataset.race;
+            const isRaceAsClassColumn = button.dataset.class === 'RaceAsClass';
+
+            if (!xpMode && selectedLevel === 0) {
+                // First column at level 0: pick this race (no class yet).
+                // Other columns are disabled at level 0 (see updateUI), so only
+                // the Race-as-Class column is ever clickable here.
+                selectZeroRace(`${bareRace}_RACE`);
+                button.classList.add('selected');
+            } else if (isRaceAsClassColumn) {
+                const raceAsClass = raceAsClassNameFor(bareRace);
+                if (!raceAsClass) return; // shouldn't happen — button would be disabled
+                selectBuild(bareRace, raceAsClass);
+                button.classList.add('selected');
+            } else {
+                selectSeparateClass(bareRace, button.dataset.class);
+                button.classList.add('selected');
+            }
             updateUI(); saveCurrentSettings();
             if (autoGenerateOnClassChange) generateCharacter();
         });
@@ -308,7 +284,7 @@ export function initializeRaceClassGrid() {
     const humanFighter = document.querySelector('.grid-button[data-race="Human"][data-class="Fighter"]');
     if (humanFighter) {
         humanFighter.classList.add('selected');
-        selectedRace = 'Human_RACE'; selectedClass = 'Fighter_CLASS';
+        selectSeparateClass('Human', 'Fighter');
     }
 }
 
@@ -318,9 +294,8 @@ function initializeZeroLevelRaceSelection() {
     if (!container) return;
     container.querySelectorAll('.zero-race-btn').forEach(btn => {
         btn.addEventListener('click', () => {
-            container.querySelectorAll('.zero-race-btn').forEach(b => b.classList.remove('selected'));
+            selectZeroRace(btn.dataset.race);
             btn.classList.add('selected');
-            selectedRaceForZero = btn.dataset.race;
             saveCurrentSettings();
             if (autoGenerateOnClassChange) generateCharacter();
         });
@@ -357,10 +332,7 @@ function updateXPPreview() {
     if (!el) return;
     if (!xpMode || xpAmount === null || xpAmount < 0) { el.textContent = ''; return; }
     const classData = getClassDataForMode(progressionMode);
-    if (mode === 'basic' && selectedClass) {
-        const lvl = classData.getLevelFromXP(selectedClass, xpAmount);
-        el.textContent = `→ Level ${lvl}`;
-    } else if (mode === 'advanced' && selectedClass) {
+    if (selectedClass) {
         const lvl = classData.getLevelFromXP(selectedClass, xpAmount);
         el.textContent = `→ Level ${lvl}`;
     } else {
@@ -386,63 +358,49 @@ export function updateUI() {
     const zeroSec = document.getElementById('zeroLevelSection');
     if (zeroSec) zeroSec.classList.toggle('section-greyed', !isZeroLevel);
 
-    if (mode === 'basic') {
-        // Basic: classSection + demihumanLimitSection
-        const classSec = document.getElementById('classSection');
-        if (classSec) classSec.classList.toggle('section-greyed', isZeroLevel);
-        // Note: demihumanLimitSection is intentionally NOT greyed — the setting must
-        // remain accessible at level 0 so it carries through to the character sheet.
+    // One grid, always shown. Each cell's enabled/disabled state is computed from:
+    // modePreset (A/B/C), raceClassMode restrictions, isZeroLevel, and CLASS_INFO/
+    // RACE_INFO data — never from a mode-specific code path.
+    document.querySelectorAll('.grid-button:not(.zero-race-btn)').forEach(button => {
+        const bareRace = button.dataset.race;
+        const raceKey  = `${bareRace}_RACE`;
+        const isRaceAsClassColumn = button.dataset.class === 'RaceAsClass';
+        let isAvailable;
 
-        // Enforce demihuman level limits on class buttons
-        const limits = getDemihumanLimits();
-        if (getEffectiveDemihumanLimits() === 'standard' && selectedLevel) {
-            document.querySelectorAll('.class-button').forEach(button => {
-                const cn = button.dataset.class;
-                const limit = limits[cn];
-                if (limit && selectedLevel > limit) {
-                    button.disabled = true;
-                    if (selectedClass === `${cn}_CLASS`) {
-                        selectedClass = 'Fighter_CLASS';
-                        const fb = document.querySelector('.class-button[data-class="Fighter"]');
-                        if (fb) { button.classList.remove('selected'); fb.classList.add('selected'); }
-                    }
-                } else {
-                    button.disabled = false;
-                }
-            });
-        } else {
-            document.querySelectorAll('.class-button').forEach(b => { b.disabled = false; });
-        }
-    } else {
-        // Advanced: raceClassSection
-        const rcSec = document.getElementById('raceClassSection');
-        if (rcSec) rcSec.classList.toggle('section-greyed', isZeroLevel);
-
-        // Spellblade column always visible in Advanced
-        const sbHeader = document.getElementById('spellbladeHeader');
-        if (sbHeader) sbHeader.style.display = '';
-        document.querySelectorAll('[data-class="Spellblade"]').forEach(btn => {
-            if (btn.parentElement) btn.parentElement.style.display = '';
-        });
-
-        // Enable/disable grid buttons based on raceClassMode + level limits
-        document.querySelectorAll('.grid-button:not(.zero-race-btn)').forEach(button => {
-            const race = button.dataset.race;
-            const className = button.dataset.class;
-            const allowNonTraditional = (raceClassMode === 'allow-all');
-            const availableClasses = getAvailableClasses(race, allowNonTraditional);
-            let isAvailable = availableClasses.includes(className);
+        if (isZeroLevel) {
+            // Only the Race-as-Class column matters at level 0 — it picks the race,
+            // not a class. Separate-class columns are meaningless before level 1.
+            isAvailable = isRaceAsClassColumn;
+        } else if (isRaceAsClassColumn) {
+            const raceAsClass = raceAsClassNameFor(bareRace);
+            isAvailable = !!raceAsClass && modePreset !== 'race-class';
             if (isAvailable && (raceClassMode === 'strict' || raceClassMode === 'strict-human') && selectedLevel) {
-                const maxLvl = getMaxLevel(`${race}_RACE`, `${className}_CLASS`, false);
-                if (maxLvl !== null && selectedLevel > maxLvl) isAvailable = false;
+                const maxLvl = CLASS_INFO[raceAsClass]?.maxLevel ?? 14;
+                if (selectedLevel > maxLvl) isAvailable = false;
             }
-            button.disabled = !isAvailable;
-            if (!isAvailable && selectedRace === `${race}_RACE` && selectedClass === `${className}_CLASS`) {
-                selectedRace = null; selectedClass = null;
-                button.classList.remove('selected');
+        } else {
+            // Separate-class columns: available to any race under presets A/C.
+            // Under preset B (race-as-class only), only Human's separate classes work.
+            const className = button.dataset.class;
+            if (modePreset === 'race-as-class' && bareRace !== 'Human') {
+                isAvailable = false;
+            } else {
+                const allowNonTraditional = (raceClassMode === 'allow-all');
+                const availableClasses = getAvailableClasses(bareRace, allowNonTraditional);
+                isAvailable = availableClasses.includes(className);
+                if (isAvailable && (raceClassMode === 'strict' || raceClassMode === 'strict-human') && selectedLevel) {
+                    const maxLvl = getMaxLevel(raceKey, `${className}_CLASS`, false);
+                    if (maxLvl !== null && selectedLevel > maxLvl) isAvailable = false;
+                }
             }
-        });
-    }
+        }
+
+        button.disabled = !isAvailable;
+        if (!isAvailable && button.classList.contains('selected')) {
+            selectedRace = null; selectedClass = null;
+            button.classList.remove('selected');
+        }
+    });
 
     // ── Common: Starting Wealth section ──
     const wealthSection = document.getElementById('startingWealthSection');
@@ -477,55 +435,17 @@ export function updateUI() {
     const generateButton = document.getElementById('generateButton');
     if (generateButton) {
         const levelReady = xpMode
-            ? (xpAmount !== null && xpAmount >= 0 && (mode === 'basic' ? !!selectedClass : !!(selectedRace && selectedClass)))
-            : (selectedLevel !== null && (selectedLevel === 0 || (mode === 'basic' ? !!selectedClass : !!(selectedRace && selectedClass))));
+            ? (xpAmount !== null && xpAmount >= 0 && !!(selectedRace && selectedClass))
+            : (selectedLevel !== null && (selectedLevel === 0 || !!(selectedRace && selectedClass)));
         generateButton.disabled = !levelReady;
-    }
-}
-
-// ── Roll Abilities ────────────────────────────────────────────────────────────
-function handleRollAbilities(silent = false) {
-    const userMins = readScoresFromInputs();
-    const classReqs = selectedClass ? getClassRequirements(selectedClass) : {};
-    const effMins = { ...userMins };
-    Object.keys(classReqs).forEach(a => { effMins[a] = Math.max(effMins[a] || 3, classReqs[a]); });
-
-    if (primeRequisiteMode !== 'user' && selectedClass) {
-        const prMin = parseInt(primeRequisiteMode);
-        getPrimeRequisites(selectedClass).forEach(a => { effMins[a] = Math.max(effMins[a] || 3, prMin); });
-    }
-
-    if (mode === 'basic') {
-        const { scores, attempts } = rollAbilities(effMins, false, selectedClass, primeRequisiteMode !== 'user' ? parseInt(primeRequisiteMode) : false);
-        abilityScores = scores;
-        _scoreRollAttempts = attempts;
-        if (!silent) {
-            ['STR','INT','WIS','DEX','CON','CHA'].forEach(a => { document.getElementById(`score${a}`).value = scores[a]; });
-            updateModifiers();
-        }
-    } else {
-        const { baseScores, adjustedScores, attempts } = rollAbilitiesAdvanced(effMins, selectedRace, selectedClass, false, false);
-        abilityScores = adjustedScores;
-        _scoreRollAttempts = attempts;
-        if (!silent) {
-            ['STR','INT','WIS','DEX','CON','CHA'].forEach(a => { document.getElementById(`score${a}`).value = baseScores[a]; });
-            updateModifiers();
-        }
     }
 }
 
 // ── Random Name ───────────────────────────────────────────────────────────────
 function handleRandomName() {
-    let race = 'Human';
-    if (mode === 'basic' && selectedClass) {
-        const classToRace = {
-            'Dwarf_CLASS':'Dwarf','Elf_CLASS':'Elf','Halfling_CLASS':'Halfling','Gnome_CLASS':'Gnome',
-            'Cleric_CLASS':'Human','Fighter_CLASS':'Human','Magic-User_CLASS':'Human','Thief_CLASS':'Human','Spellblade_CLASS':'Human'
-        };
-        race = classToRace[selectedClass] || 'Human';
-    } else if (mode === 'advanced' && selectedRace) {
-        race = selectedRace.replace('_RACE', '');
-    }
+    const isZeroLevel = !xpMode && selectedLevel === 0;
+    const raceKey = isZeroLevel ? selectedRaceForZero : selectedRace;
+    const race = (raceKey && raceKey !== 'Demihuman_RACE') ? raceKey.replace('_RACE', '') : 'Human';
     const name = getRandomName(race);
     document.getElementById('characterName').value = name;
     characterName = name;
@@ -552,22 +472,21 @@ export function generateCharacter() {
 }
 
 async function runGenerate() {
-    const isAdv = mode === 'advanced';
     document.getElementById('charGenError')?.remove();
 
-    if (!xpMode && selectedLevel === 0) { await generateZeroLevel(isAdv); return; }
+    if (!xpMode && selectedLevel === 0) { await generateZeroLevel(); return; }
 
+    // A race is always chosen alongside a class now — via the Race-as-Class
+    // column or a separate-class column — so both are required to generate.
+    const isSeparateRaceClass = !isRaceAsClassPick;
     if (!selectedClass) { alert('Please select a class first!'); return; }
-    if (isAdv && !selectedRace) { alert('Please select a race first!'); return; }
+    if (!selectedRace) { alert('Please select a race first!'); return; }
     if (xpMode && (xpAmount === null || xpAmount < 0)) { alert('Please enter an XP amount.'); return; }
     if (!xpMode && !selectedLevel) { alert('Please select a level first!'); return; }
 
     const classData = getClassDataForMode(progressionMode);
     const effectiveLevel = xpMode ? classData.getLevelFromXP(selectedClass, xpAmount) : selectedLevel;
-    const DEMIHUMAN_CLASSES = ['Dwarf_CLASS','Elf_CLASS','Halfling_CLASS','Gnome_CLASS'];
-    const hasBlessed = isAdv
-        ? selectedRace === 'Human_RACE' && raceClassMode !== 'strict'
-        : !DEMIHUMAN_CLASSES.includes(selectedClass) && raceClassMode !== 'strict';
+    const hasBlessed = selectedRace === 'Human_RACE' && raceClassMode !== 'strict';
     const hpMode = hpRollingMode === '5e' ? 2
         : (hpRollingMode === 'blessed' || hasBlessed) ? 1
         : hpRollingMode === 'healthy' ? 3 : 0;
@@ -581,9 +500,9 @@ async function runGenerate() {
         : (xpMode && xpAmount !== null && effectiveLevel > 1) ? calcStartingGold(xpAmount, wealthPct)
         : null;
     const cp = generateCharacterV3({
-        mode, level: effectiveLevel,
-        race: isAdv ? selectedRace : '',
-        isSeparateRaceClass: isAdv,
+        level: effectiveLevel,
+        race: selectedRace,
+        isSeparateRaceClass,
         className: selectedClass, progressionMode, raceClassMode,
         minimums: readScoresFromInputs(), primeReqMode: primeRequisiteMode,
         hpMode, includeLevel0HP,
@@ -609,14 +528,13 @@ async function runGenerate() {
         un: showUndeadNames?1:0, qr: showQRCode?1:0, ao: basicAbilityOrdering?1:0,
         wp: wealthPct, prm: primeRequisiteMode==='user'?0:parseInt(primeRequisiteMode),
         sm: ['STR','DEX','CON','INT','WIS','CHA'].map(a => readScoresFromInputs()[a] || 3),
-        ...(!isAdv ? { dl: getEffectiveDemihumanLimits()==='extended'?1:0 } : {}),
-        ...(isAdv && hideHumanRace ? { hhr: 1 } : {}),
+        ...(isSeparateRaceClass && hideHumanRace ? { hhr: 1 } : {}),
         ...(adm != null ? { adm } : {}),
     };
 
     const SCRS = ['STR','DEX','CON','INT','WIS','CHA'];
     const rawScores = cp.s || [10,10,10,10,10,10];
-    const racialMods = isAdv ? (getRaceInfo(selectedRace)?.abilityModifiers ?? {}) : {};
+    const racialMods = isSeparateRaceClass ? (getRaceInfo(selectedRace)?.abilityModifiers ?? {}) : {};
     const saArr = cp.sa || Array(6).fill(0);
     const totalAdj = SCRS.map((a, i) => (racialMods[a] || 0) + saArr[i]);
     const conIdx = SCRS.indexOf('CON');
@@ -632,23 +550,12 @@ async function runGenerate() {
         hpRolls: cp.hr || [], hpDice: cp.hd || [], startingGold: cp.g || 0,
         includeLevel0HP, showUndeadNames, showQRCode,
         conModifier: calculateModifier(rawScores[conIdx] + totalAdj[conIdx]),
-        extraSections: isAdv ? [
+        extraSections: [
             { label:'6. Race/Class Restrictions', name:'editRaceClassMode', options:[
                 { value:'strict',               label:'Strict OSE',                checked: raceClassMode==='strict' },
                 { value:'strict-human',         label:'Strict + Human Abilities',  checked: raceClassMode==='strict-human' },
                 { value:'traditional-extended', label:'Traditional Extended',       checked: raceClassMode==='traditional-extended' },
                 { value:'allow-all',            label:'Allow All',                 checked: raceClassMode==='allow-all' },
-            ]},
-            { label:'7. AC Display Mode', name:'editACDisplayMode', options:[
-                { value:'aac',        label:'Ascending Armor Class (AAC)',         checked: acDisplayMode==='aac' },
-                { value:'dac-matrix', label:'Descending AC with Attack Matrix',    checked: acDisplayMode==='dac-matrix' },
-                { value:'dual',       label:'Dual Format (AAC and DAC)',           checked: acDisplayMode==='dual' },
-                { value:'dual-matrix',label:'Dual Format with Attack Matrix',      checked: acDisplayMode==='dual-matrix' },
-            ]},
-        ] : [
-            { label:'6. Demihuman Level Limits', name:'editDemihumanLimits', options:[
-                { value:'standard', label:'Standard Limits',       checked: demihumanLimits==='standard' },
-                { value:'extended', label:'Extended to Level 14',  checked: demihumanLimits==='extended' },
             ]},
             { label:'7. AC Display Mode', name:'editACDisplayMode', options:[
                 { value:'aac',        label:'Ascending Armor Class (AAC)',         checked: acDisplayMode==='aac' },
@@ -663,13 +570,8 @@ async function runGenerate() {
         abilityScores={STR:values.STR,INT:values.INT,WIS:values.WIS,DEX:values.DEX,CON:values.CON,CHA:values.CHA};
         const _adjVals={STR:values.adjSTR||0,INT:values.adjINT||0,WIS:values.adjWIS||0,DEX:values.adjDEX||0,CON:values.adjCON||0,CHA:values.adjCHA||0};
         fixedAdjustments=Object.values(_adjVals).some(v=>v!==0)?_adjVals:null;
-        if (isAdv) {
-            if (values.editRaceClassMode) raceClassMode=values.editRaceClassMode;
-            document.querySelectorAll('input[name="raceClassMode"]').forEach(r=>{r.checked=r.value===raceClassMode;});
-        } else {
-            if (values.editDemihumanLimits) demihumanLimits=values.editDemihumanLimits;
-            document.querySelectorAll('input[name="demihumanLimits"]').forEach(r=>{r.checked=r.value===demihumanLimits;});
-        }
+        if (values.editRaceClassMode) raceClassMode=values.editRaceClassMode;
+        document.querySelectorAll('input[name="raceClassMode"]').forEach(r=>{r.checked=r.value===raceClassMode;});
         if (values.editACDisplayMode) { acDisplayMode=values.editACDisplayMode; document.querySelectorAll('input[name="acDisplayMode"]').forEach(r=>{r.checked=r.value===acDisplayMode;}); }
         includeLevel0HP=values.includeLevel0HP||false; showUndeadNames=values.showUndeadNames||false; showQRCode=values.showQRCode??true;
         fixedHPRolls=values.hpRolls?.length?[...values.hpRolls]:null;
@@ -688,16 +590,18 @@ async function runGenerate() {
 }
 
 // ── Level-0 generation ────────────────────────────────────────────────────────
-async function generateZeroLevel(isAdv) {
+async function generateZeroLevel() {
     const fixedScoresForGen = useFixedScores ? readScoresFromInputs() : null;
     const fixedName   = document.getElementById('characterName')?.value.trim() || '';
     const _fixedAdj   = fixedAdjustments;
     fixedAdjustments  = null;
     const hpMode = hpRollingMode === 'healthy' ? 3 : hpRollingMode === 'blessed' ? 1 : 0;
 
+    // Level 0 always has racial ability adjustments and minimums applied — a
+    // race is always separately chosen at level 0 (no class yet to imply it).
     const cp = generateCharacterV3({
-        mode, level: 0, race: selectedRaceForZero,
-        isSeparateRaceClass: isAdv,
+        level: 0, race: selectedRaceForZero,
+        isSeparateRaceClass: true,
         progressionMode, raceClassMode,
         minimums: readScoresFromInputs(), primeReqMode: primeRequisiteMode,
         hpMode, fixedScores: fixedScoresForGen, fixedName,
@@ -714,13 +618,12 @@ async function generateZeroLevel(isAdv) {
         un: showUndeadNames?1:0, qr: showQRCode?1:0, ao: basicAbilityOrdering?1:0,
         prm: primeRequisiteMode==='user'?0:parseInt(primeRequisiteMode),
         sm: ['STR','DEX','CON','INT','WIS','CHA'].map(a => readScoresFromInputs()[a] || 3),
-        ...(!isAdv ? { dl: getEffectiveDemihumanLimits()==='extended'?1:0 } : {}),
         ...(adm != null ? { adm } : {}),
     };
 
     const SCRS = ['STR','DEX','CON','INT','WIS','CHA'];
     const rawScores = cp.s || [10,10,10,10,10,10];
-    const racialMods = isAdv ? (getRaceInfo(selectedRaceForZero || 'Human_RACE')?.abilityModifiers ?? {}) : {};
+    const racialMods = getRaceInfo(selectedRaceForZero || 'Human_RACE')?.abilityModifiers ?? {};
     const saArr = cp.sa || Array(6).fill(0);
     const totalAdj = SCRS.map((a, i) => (racialMods[a] || 0) + saArr[i]);
     const base0 = Object.fromEntries(SCRS.map((a, i) => [a, rawScores[i]]));
@@ -769,7 +672,7 @@ function sheetOpts() {
 // ── Settings Persistence ──────────────────────────────────────────────────────
 function saveCurrentSettings() {
     saveSettings(getSettingsKey(), {
-        mode, acDisplayMode,
+        mode: modePreset, acDisplayMode,
         progressionMode, primeRequisiteMode, hpRollingMode, includeLevel0HP,
         useFixedScores, showUndeadNames, hideHumanRace, basicAbilityOrdering, wealthPct,
         wealthRollAsLevel1, noLevel0Equipment, xpMode, xpAmount,
@@ -781,8 +684,7 @@ function saveCurrentSettings() {
         scoreDEX: parseInt(document.getElementById('scoreDEX')?.value)||3,
         scoreCON: parseInt(document.getElementById('scoreCON')?.value)||6,
         scoreCHA: parseInt(document.getElementById('scoreCHA')?.value)||3,
-        // Both mode-specific fields always saved so switching modes preserves them
-        demihumanLimits, raceClassMode, selectedRace, selectedRaceForZero,
+        raceClassMode, selectedRace, selectedRaceForZero,
     });
     syncURLParams();
 }
@@ -790,18 +692,17 @@ function saveCurrentSettings() {
 // ── URL Sync ──────────────────────────────────────────────────────────────────
 function syncURLParams() {
     const p = new URLSearchParams();
-    p.set('mode', mode);
+    p.set('mode', modePreset);
     if (progressionMode !== 'ose')                                 p.set('p', progressionMode);
     if (selectedLevel !== null)                                    p.set('l', String(selectedLevel));
     if (selectedClass)                                             p.set('c', selectedClass.replace('_CLASS',''));
-    if (mode === 'advanced' && selectedRace)                       p.set('r', selectedRace.replace('_RACE',''));
-    if (mode === 'basic' && demihumanLimits !== 'standard')        p.set('dl', demihumanLimits);
-    if (mode === 'advanced' && raceClassMode !== 'strict')         p.set('rcm', raceClassMode);
+    if (selectedRace)                                              p.set('r', selectedRace.replace('_RACE',''));
+    if (raceClassMode !== 'strict')                                p.set('rcm', raceClassMode);
     if (primeRequisiteMode !== 'user')                             p.set('prm', primeRequisiteMode);
     if (hpRollingMode !== 'normal')                                p.set('hpm', hpRollingMode);
     if (includeLevel0HP)                                           p.set('il', '1');
     if (showUndeadNames)                                           p.set('un', '1');
-    if (hideHumanRace && mode === 'advanced')                      p.set('hhr', '1');
+    if (hideHumanRace)                                             p.set('hhr', '1');
     if (!basicAbilityOrdering)                                     p.set('ao', '0');
     if (wealthPct !== 50)                                          p.set('wp', String(wealthPct));
     if (wealthRollAsLevel1)                                        p.set('l1w', '1');
@@ -887,14 +788,11 @@ function showShareQR() {
 function applySettings(s) {
     if (!s) return;
     if (s.progressionMode) { progressionMode=s.progressionMode; document.querySelectorAll('input[name="progressionMode"]').forEach(r=>{r.checked=r.value===s.progressionMode;}); }
-    if (s.demihumanLimits) { demihumanLimits=s.demihumanLimits; document.querySelectorAll('input[name="demihumanLimits"]').forEach(r=>{r.checked=r.value===s.demihumanLimits;}); }
     if (s.raceClassMode) {
         raceClassMode = s.raceClassMode;
-        // Basic + Advanced share name="raceClassMode" — set all false, then check active section's radio
+        const RCM_IDS = {strict:'strictOSE','strict-human':'strictOSEHuman','traditional-extended':'traditionalExtended','allow-all':'allowAll'};
         document.querySelectorAll('input[name="raceClassMode"]').forEach(r=>{r.checked=false;});
-        const RCM_IDS_BASIC = {strict:'basicStrict','strict-human':'basicStrictHuman','traditional-extended':'basicTraditionalExtended'};
-        const RCM_IDS_ADV   = {strict:'strictOSE','strict-human':'strictOSEHuman','traditional-extended':'traditionalExtended','allow-all':'allowAll'};
-        const _id = (mode==='basic' ? RCM_IDS_BASIC : RCM_IDS_ADV)[s.raceClassMode];
+        const _id = RCM_IDS[s.raceClassMode];
         if (_id) { const el=document.getElementById(_id); if(el) el.checked=true; }
     }
     if (s.primeRequisiteMode!==undefined) { primeRequisiteMode=s.primeRequisiteMode; document.querySelectorAll('input[name="primeRequisiteMode"]').forEach(r=>{r.checked=r.value===s.primeRequisiteMode;}); }
@@ -922,15 +820,33 @@ function applySettings(s) {
         document.querySelectorAll('.level-btn').forEach(b=>b.classList.toggle('selected',parseInt(b.dataset.level)===s.selectedLevel));
     }
     if (s.selectedClass) {
-        selectedClass=s.selectedClass;
-        document.querySelectorAll('.class-button').forEach(b=>{ const c=b.dataset.class?`${b.dataset.class}_CLASS`:null; b.classList.toggle('selected',c===s.selectedClass); });
-    }
-    if (s.selectedRace&&s.selectedClass) {
-        selectedRace=s.selectedRace; selectedClass=s.selectedClass;
-        document.querySelectorAll('.grid-button:not(.zero-race-btn)').forEach(b=>{
-            const r=b.dataset.race?`${b.dataset.race}_RACE`:null, c=b.dataset.class?`${b.dataset.class}_CLASS`:null;
-            b.classList.toggle('selected',r===s.selectedRace&&c===s.selectedClass);
-        });
+        let sr = s.selectedRace;
+        if (!sr) {
+            // No race given — only safe to fill in if the class unambiguously
+            // implies one (a race-as-class pick). A separate class alone
+            // (e.g. Fighter) could belong to any race — don't guess.
+            const bareClass = s.selectedClass.replace('_CLASS', '');
+            sr = (CLASS_INFO[bareClass]?.classType === 'raceAsClass') ? `${bareClass}_RACE` : null;
+        }
+        if (sr) {
+            selectedRace = sr; selectedClass = s.selectedClass;
+            const bareRace = sr.replace('_RACE', '');
+            const raceAsClass = raceAsClassNameFor(bareRace);
+            isRaceAsClassPick = !!raceAsClass && `${raceAsClass}_CLASS` === s.selectedClass;
+            document.querySelectorAll('.grid-button:not(.zero-race-btn)').forEach(b=>{
+                const r = b.dataset.race ? `${b.dataset.race}_RACE` : null;
+                const isRaceAsClassColumn = b.dataset.class === 'RaceAsClass';
+                const matches = isRaceAsClassColumn
+                    ? (isRaceAsClassPick && r===sr)
+                    : (!isRaceAsClassPick && r===sr && `${b.dataset.class}_CLASS`===s.selectedClass);
+                b.classList.toggle('selected', matches);
+            });
+        } else {
+            // Ambiguous partial state — don't pair a new class with a stale
+            // race/pick-type from a previous selection.
+            selectedRace = null; selectedClass = null; isRaceAsClassPick = false;
+            document.querySelectorAll('.grid-button:not(.zero-race-btn)').forEach(b=>b.classList.remove('selected'));
+        }
     }
     if (s.selectedRaceForZero!==undefined) {
         selectedRaceForZero=s.selectedRaceForZero;
@@ -944,8 +860,8 @@ function applySettings(s) {
 }
 
 function applyPreset(overrides) {
-    document.querySelectorAll('input[name="mode"]').forEach(r => { r.checked = r.value === 'advanced'; });
-    switchMode('advanced');
+    document.querySelectorAll('input[name="mode"]').forEach(r => { r.checked = r.value === 'both'; });
+    setModePreset('both');
     applySettings({
         progressionMode: 'ose', primeRequisiteMode: 'user',
         hpRollingMode: 'normal', includeLevel0HP: false,
@@ -966,7 +882,7 @@ function handleConventionMode() {
 
 function handleResetSettings() {
     clearSettings(getSettingsKey());
-    progressionMode='ose'; primeRequisiteMode='user'; demihumanLimits='standard'; raceClassMode='strict';
+    progressionMode='ose'; primeRequisiteMode='user'; raceClassMode='strict';
     hpRollingMode='normal'; includeLevel0HP=false; useFixedScores=false; showUndeadNames=false; hideHumanRace=false;
     basicAbilityOrdering=true; wealthPct=50; acDisplayMode='aac';
     document.querySelectorAll('input[name="hpRollingMode"]').forEach(r=>{r.checked=r.value==='normal';});
@@ -974,11 +890,8 @@ function handleResetSettings() {
     autoGenerateOnLevelChange=false; autoGenerateOnClassChange=false; autoGenerateOnLoad=false;
     xpMode=false; xpAmount=null; const _lmR=document.getElementById('levelModeFixed'); if(_lmR) _lmR.checked=true; const _xaR=document.getElementById('xpAmount'); if(_xaR) _xaR.value='';
     document.querySelectorAll('input[name="progressionMode"]').forEach(r=>{r.checked=r.value==='ose';});
-    document.querySelectorAll('input[name="demihumanLimits"]').forEach(r=>{r.checked=r.value==='standard';});
-    // Basic + Advanced share name="raceClassMode" — set all to false first, then check only the active section's radio
     document.querySelectorAll('input[name="raceClassMode"]').forEach(r=>{r.checked=false;});
-    const _rcmId = mode==='basic' ? 'basicStrict' : 'strictOSE';
-    const _rcmEl = document.getElementById(_rcmId); if(_rcmEl) _rcmEl.checked=true;
+    const _rcmEl = document.getElementById('strictOSE'); if(_rcmEl) _rcmEl.checked=true;
     document.querySelectorAll('input[name="primeRequisiteMode"]').forEach(r=>{r.checked=r.value==='user';});
     wealthPct=50; wealthRollAsLevel1=false; const _wpR=document.getElementById('wealthPctInput'); if(_wpR) _wpR.value=50; const _wmR=document.getElementById('wealthModePct'); if(_wmR) _wmR.checked=true;
     noLevel0Equipment=false;
@@ -989,8 +902,8 @@ function handleResetSettings() {
     const _nameEl=document.getElementById('characterName'); if(_nameEl) _nameEl.value='';
     characterName='';
     updateModifiers();
-    document.querySelectorAll('input[name="mode"]').forEach(r => { r.checked = r.value === 'advanced'; });
-    switchMode('advanced');
+    document.querySelectorAll('input[name="mode"]').forEach(r => { r.checked = r.value === 'race-as-class'; });
+    setModePreset('race-as-class');
     // Clear the URL back to bare pathname — no stale params after reset
     window.history.replaceState({}, '', window.location.pathname);
 }
@@ -1005,7 +918,6 @@ function readURLParams() {
     if (p.has('l'))     s.selectedLevel = parseInt(p.get('l'));
     if (p.has('c'))     s.selectedClass = p.get('c') + '_CLASS';
     if (p.has('r'))     s.selectedRace  = p.get('r') + '_RACE';
-    if (p.has('dl'))    s.demihumanLimits = p.get('dl');
     if (p.has('rcm'))   s.raceClassMode = p.get('rcm');
     if (p.has('prm'))   { const v=p.get('prm'); s.primeRequisiteMode = v==='0'?'user':v; }
     if (p.has('hpm'))   s.hpRollingMode = p.get('hpm');
@@ -1036,11 +948,7 @@ export function initializeEventListeners() {
     document.querySelectorAll('input[name="progressionMode"]').forEach(r=>{
         r.addEventListener('change',(e)=>{ progressionMode=e.target.value; updateUI(); saveCurrentSettings(); });
     });
-    // Demihuman limits (basic)
-    document.querySelectorAll('input[name="demihumanLimits"]').forEach(r=>{
-        r.addEventListener('change',(e)=>{ demihumanLimits=e.target.value; updateUI(); saveCurrentSettings(); });
-    });
-    // Race/class mode (advanced)
+    // Race/class mode
     document.querySelectorAll('input[name="raceClassMode"]').forEach(r=>{
         r.addEventListener('change',(e)=>{ raceClassMode=e.target.value; updateUI(); saveCurrentSettings(); });
     });
@@ -1120,27 +1028,31 @@ export function initializeEventListeners() {
 }
 
 // ── Initialize ────────────────────────────────────────────────────────────────
-export function initialize() {
-    // Detect mode from URL first, then localStorage, default 'basic'
-    const urlMode = new URLSearchParams(window.location.search).get('mode');
-    if (urlMode === 'basic' || urlMode === 'advanced') mode = urlMode;
+const VALID_MODE_PRESETS = ['race-class', 'race-as-class', 'both'];
 
-    // Apply mode radio
-    document.querySelectorAll('input[name="mode"]').forEach(r => { r.checked = r.value === mode; });
-    switchMode(mode); // shows/hides sections, loads saved settings, inits char selector
+export function initialize() {
+    // Detect mode preset from URL first, then localStorage, default 'race-as-class'
+    const urlMode = new URLSearchParams(window.location.search).get('mode');
+    const savedSettings = loadSettings(getSettingsKey());
+    if (VALID_MODE_PRESETS.includes(urlMode)) modePreset = urlMode;
+    else if (savedSettings && VALID_MODE_PRESETS.includes(savedSettings.mode)) modePreset = savedSettings.mode;
+
+    document.querySelectorAll('input[name="mode"]').forEach(r => { r.checked = r.value === modePreset; });
 
     initializeLevelSelection();
+    initializeRaceClassGrid();
     initializeZeroLevelRaceSelection();
     initializeEventListeners();
     initializeModeSelector();
     updateModifiers();
 
-    // URL params override localStorage (applied after applySettings inside switchMode)
+    setModePreset(modePreset); // toggles UI, loads saved settings, updates grid enablement
+
+    // URL params override localStorage
     const urlParams = readURLParams();
-    if (urlParams.mode && urlParams.mode !== mode) {
-        mode = urlParams.mode;
-        document.querySelectorAll('input[name="mode"]').forEach(r => { r.checked = r.value === mode; });
-        switchMode(mode);
+    if (VALID_MODE_PRESETS.includes(urlParams.mode) && urlParams.mode !== modePreset) {
+        document.querySelectorAll('input[name="mode"]').forEach(r => { r.checked = r.value === urlParams.mode; });
+        setModePreset(urlParams.mode);
     }
     if (Object.keys(urlParams).length) applySettings(urlParams);
 

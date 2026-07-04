@@ -40,7 +40,7 @@ const PROG_TO_CODE = { ose:'O', smoothprog:'S', ll:'L' };
 
 /**
  * Merge Languages entries from class abilities into the racial Languages string.
- * For Advanced mode: Languages belongs solely in the racial abilities section.
+ * For a separate-class pick: Languages belongs solely in the racial abilities section.
  * Class languages are merged in, sorted alphabetically, deduplicated.
  * Language entries are then removed from classAbilities.
  * Mutates both arrays in place.
@@ -346,7 +346,7 @@ export async function expandCompactV3(cp, precomp = {}, { silent = false } = {})
                     { name: 'Leadership',   description: 'Retainers/mercenaries +1 loyalty and morale' },
                 ];
                 character.classAbilities = [...(character.classAbilities || []), ...humanAbilities];
-                console.log('\nHuman Racial Abilities (Basic mode):');
+                console.log('\nHuman Racial Abilities (race-as-class pick):');
                 humanAbilities.forEach(a => console.log(`  - ${a.name}: ${a.description}`));
             }
         }
@@ -429,7 +429,7 @@ export async function expandCompactV3(cp, precomp = {}, { silent = false } = {})
  * generate this character, so the user can go back and roll another.
  *
  * @param {Object} cp - Decoded compact params object (post-decodeCompactParams)
- * @returns {string} URL string like "generator.html?mode=basic&p=ose&l=1&c=Fighter…"
+ * @returns {string} URL string like "generator.html?mode=race-as-class&p=ose&l=1&c=Fighter…"
  */
 function buildGeneratorURL(cp) {
     const CODE_TO_PROG_KEY   = { O:'ose', S:'smoothprog', L:'ll' };
@@ -443,8 +443,9 @@ function buildGeneratorURL(cp) {
     const isAdv = cp.m === 'A';
     const p = new URLSearchParams();
 
-    // Mode
-    p.set('mode', isAdv ? 'advanced' : 'basic');
+    // Mode preset — reconstructed to whichever preset guarantees this exact
+    // race/class combination is clickable, regardless of race.
+    p.set('mode', isAdv ? 'race-class' : 'race-as-class');
 
     // Progression mode (omit if OSE — that's the default)
     const progKey = CODE_TO_PROG_KEY[cp.p] || 'smoothprog';
@@ -459,8 +460,9 @@ function buildGeneratorURL(cp) {
         if (cn) p.set('c', cn);
     }
 
-    // Race (advanced mode, level 1+ only)
-    if (isAdv && cp.r && cp.l !== 0) {
+    // Race — always required alongside a class at level 1+, for both a
+    // race-as-class pick and a separately-chosen race.
+    if (cp.r && cp.l !== 0) {
         const rn = CODE_TO_RACE_NAME[cp.r];
         if (rn) p.set('r', rn);
     }
@@ -470,9 +472,6 @@ function buildGeneratorURL(cp) {
         const rn = CODE_TO_RACE_NAME[cp.r];
         if (rn) p.set('zr', rn);
     }
-
-    // Basic: demihuman limits
-    if (!isAdv && cp.dl) p.set('dl', 'extended');
 
     // Race/class mode (omit if strict — that's the default)
     if (cp.rcm) {
