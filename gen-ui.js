@@ -25,7 +25,7 @@ import {
     createCharacter, rollStartingGold, calcStartingGold,
     readAbilityScores as readScoresFromInputs,
     purchaseEquipment,
-    getRandomName, getRandomBackground,
+    getRandomBackground,
     getAllBackgroundTables,
     generateCharacterV3,
     CLASS_INFO, RACE_INFO,
@@ -470,16 +470,6 @@ export function updateUI() {
             : (selectedLevel !== null && (selectedLevel === 0 || !!(selectedRace && selectedClass)));
         generateButton.disabled = !levelReady;
     }
-}
-
-// ── Random Name ───────────────────────────────────────────────────────────────
-function handleRandomName() {
-    const isZeroLevel = !xpMode && selectedLevel === 0;
-    const raceKey = isZeroLevel ? selectedRaceForZero : selectedRace;
-    const race = (raceKey && raceKey !== 'Demihuman_RACE') ? raceKey.replace('_RACE', '') : 'Human';
-    const name = getRandomName(race);
-    document.getElementById('characterName').value = name;
-    characterName = name;
 }
 
 // ── Generate Character (entry point) ─────────────────────────────────────────
@@ -1045,7 +1035,6 @@ export function initializeEventListeners() {
     });
     // Buttons
     document.getElementById('characterName')?.addEventListener('change', ()=>saveCurrentSettings());
-    document.getElementById('randomNameButton')?.addEventListener('click', handleRandomName);
     document.getElementById('resetSettingsButton')?.addEventListener('click', handleResetSettings);
     document.getElementById('authorPreferredButton')?.addEventListener('click', handleAuthorPreferred);
     document.getElementById('conventionModeButton')?.addEventListener('click', handleConventionMode);
