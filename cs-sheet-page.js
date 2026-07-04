@@ -24,7 +24,7 @@ import {
     PROGRESSION_TABLES, calculateModifier, getModifierEffects,
     getAdvancedModeRacialAbilities, getRaceDisplayName, getClassDisplayName,
     getClassProgressionData, getClassFeatures, getBasicModeClassAbilities,
-    getRaceInfo, CLASS_INFO,
+    getRaceInfo, CLASS_INFO, getAvailableClasses,
     createCharacter, calculateXPBonus, getPrimeRequisites,
     encodeCompactParams, decodeCompactParams,
     parseHitDice, HIT_DICE_PROGRESSIONS, HIT_DICE_SCALE,
@@ -739,8 +739,9 @@ function initEditPanel(decoded) {
         // signal, not a restriction on which class-up path is offered — a level-0
         // Dwarf can level up as a Dwarf (race-as-class) or as a separate class.
         const raceCode = decoded.r || 'HU';
+        const CODE_TO_RACE_NAME_LU = { HU:'Human', DW:'Dwarf', EL:'Elf', HA:'Halfling', GN:'Gnome' };
 
-        const separateClasses = [
+        const allSeparateClasses = [
             { code:'FI', name:'Fighter',    sides:8 },
             { code:'CL', name:'Cleric',     sides:6 },
             { code:'MU', name:'Magic-User', sides:4 },
@@ -753,6 +754,13 @@ function initEditPanel(decoded) {
             HA:[{ code:'HA', name:'Halfling', sides:6 }],
             GN:[{ code:'GN', name:'Gnome',    sides:4 }],
         };
+
+        // Only offer separate classes this race can actually take (e.g. Dwarf/Halfling
+        // can't take Spellblade or, in Halfling's case, most of the caster classes).
+        const allowNonTraditional = decoded.rcm === 'AL';
+        const raceName = CODE_TO_RACE_NAME_LU[raceCode] || 'Human';
+        const permittedClassNames = new Set(getAvailableClasses(raceName, allowNonTraditional));
+        const separateClasses = allSeparateClasses.filter(c => permittedClassNames.has(c.name));
 
         const availableClasses = [...(basicDemihumanClass[raceCode] || []), ...separateClasses];
 
@@ -797,7 +805,7 @@ function initEditPanel(decoded) {
             };
             const hdStr = getHdStr(className, 1);
             const hd    = parseHitDice(hdStr);
-            const sides = hd.sides || CLASS_HD[selectedClassCode] || 6;
+            const sides = hd.sides || CLASS_HD[className] || 6;
 
             const hpMode0 = decoded.hm || 0;
             const DEMIHUMAN_CODES_L01 = new Set(['DW','EL','HA','GN']);

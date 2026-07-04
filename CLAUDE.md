@@ -12,7 +12,10 @@ this codebase correctly.
 
 `generator.html` shows **one grid**, always, regardless of any preset:
 
-- **Rows** = races (Human, Dwarf, Elf, Halfling — the SRD/generator-ready races).
+- **Rows** = races (Human, Dwarf, Elf, Halfling — the SRD/generator-ready races). **Gnome has full
+  `CLASS_INFO`/`RACE_INFO` data support (requirements, armour, magic-item level, etc.) but is
+  intentionally not given a grid row right now** — this is a deliberate scope decision, not an
+  oversight, so don't "fix" it by adding one without checking first.
 - **Columns** = **Race-as-Class** (leftmost), then Cleric, Fighter, Magic-User, Thief, Spellblade.
 
 A cell's clickable/disabled state depends on the selected level and the **mode preset** (below) —

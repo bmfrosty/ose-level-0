@@ -28,7 +28,7 @@ import {
     getRandomBackground,
     getAllBackgroundTables,
     generateCharacterV3,
-    CLASS_INFO, RACE_INFO,
+    CLASS_INFO,
 } from './gen-core.js';
 import { displayCharacterSheet }                  from './cs-sheet-page.js';
 
