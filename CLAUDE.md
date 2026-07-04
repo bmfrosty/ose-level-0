@@ -1,107 +1,141 @@
 # OSE Level-0 Character Generator — Project Guide for Claude
 
-This project is an **Old-School Essentials (OSE) character generator** with two modes: **Basic**
-and **Advanced**. Each mode spans **levels 0–14**. Understanding the difference between these
-modes — and the strict separation between race and class — is essential to working on this
-codebase correctly.
+This project is an **Old-School Essentials (OSE) character generator**, levels 0–14. Race and
+class selection live in a **single unified grid**; there is no longer a hard "Basic vs Advanced"
+mode split in the generation mechanics. Understanding the grid, the referee-facing restriction
+preset, and the race-as-class vs separate-race-and-class distinction is essential to working on
+this codebase correctly.
 
 ---
 
-## The Two Modes
+## The Unified Grid
 
-### Basic Mode (levels 0–14)
+`generator.html` shows **one grid**, always, regardless of any preset:
 
-**Race and class are the same thing.** The demihuman "classes" (Dwarf, Elf, Gnome, Halfling) ARE
-the race. A "Dwarf" character in Basic mode is simultaneously a dwarf by race and a Fighter-ish
-class by function. Human characters choose from: Cleric, Fighter, Magic-User, Thief, Spellblade.
+- **Rows** = races (Human, Dwarf, Elf, Halfling — the SRD/generator-ready races). **Gnome has full
+  `CLASS_INFO`/`RACE_INFO` data support (requirements, armour, magic-item level, etc.) but is
+  intentionally not given a grid row right now** — this is a deliberate scope decision, not an
+  oversight, so don't "fix" it by adding one without checking first.
+- **Columns** = **Race-as-Class** (leftmost), then Cleric, Fighter, Magic-User, Thief, Spellblade.
 
-At **level 0** in Basic mode:
-- Characters have a race but no class yet.
-- They have a **background/profession** instead of class abilities.
-- HP is rolled on 1d4 + CON modifier.
-- Racial abilities (languages, infravision, etc.) are displayed — `basicAvailableAt: 0`.
-- **Racial ability score adjustments do NOT apply in Basic mode.** Race-as-class demihumans
-  do not get separate racial stat modifiers. The class IS the full package.
-- At level 1, Basic mode demihumans LOSE racial abilities and GAIN class abilities from
-  `CLASS_ABILITIES`. This is why `basicAvailableThrough: 0` for demihuman racial abilities.
+A cell's clickable/disabled state depends on the selected level and the **mode preset** (below) —
+never on a hardcoded "Basic" or "Advanced" code path.
 
-Key rules for Basic mode:
-- **Demihuman classes** (Dwarf, Elf, Gnome, Halfling) are race-as-class. Their `CLASS_ABILITIES`
-  contain everything — both what would be racial abilities and class abilities combined into one
-  package specific to that class.
-- The Gnome class and the Elf class are **independent classes with their own rules**. The fact
-  that both have a "Magical Research" ability does not mean they are coupled or that one mirrors
-  the other. The Gnome class creates magic items at 8th level; the Elf class at 9th. These are
-  separate rules.
-- Human classes have `includeName: false` (default) for most abilities — the class name is
-  rendered separately by the UI.
-- `getBasicModeClassAbilities(className)` in `shared-class-progression.js` is the function that
-  reads `CLASS_ABILITIES` and returns the formatted ability list for Basic mode demihuman sheets.
-  It filters out entries with `basicMode: false`.
+### Level 0
 
-### Advanced Mode (levels 0–14)
+Clicking a race in the **Race-as-Class column** at level 0 picks that race for a level-0
+character: a background/profession, no class yet, HP rolled on 1d4 + CON modifier. All other
+columns are disabled at level 0 (a class can't be chosen before level 1). **Racial ability score
+adjustments and racial minimums always apply at level 0**, unconditionally — a race is always
+separately chosen at level 0 since there's no class yet to imply one.
 
-**Race and class are completely separate.** A character has both a race (with racial abilities)
-and a class (with class abilities). These are entirely independent.
+### Level 1+
 
-At **level 0** in Advanced mode:
-- Characters have a race and a background/profession, but no class yet.
-- HP is rolled on 1d4 + CON modifier.
-- **Racial ability score adjustments DO apply** (e.g. Elf: +1 DEX, -1 CON).
-- Racial abilities are displayed — `advancedAvailableAt: 0`.
-- At level 1, the character picks a class and gains class abilities on top of racial abilities.
-  Racial abilities remain throughout all levels (`advancedAvailableThrough: 14`).
+Two ways to fill a class in the grid:
 
-Key rules for Advanced mode:
-- **Races**: Human, Dwarf, Elf, Gnome, Halfling (and rarer races like Drow, Duergar, etc. for
-  NPC use — see `RACIAL_CLASS_LEVEL_LIMITS` in `shared-racial-abilities.js`)
-- **Classes**: Cleric, Fighter, Magic-User, Thief, Spellblade, plus the Advanced Fantasy expanded
-  classes (Acrobat, Assassin, Bard, Druid, Illusionist, Knight, Paladin, Ranger)
-- An Elf character in Advanced mode gets **Elf_RACE** racial abilities from `shared-racial-abilities.js`
-  **plus** whatever class abilities come from their chosen class (e.g. Fighter, Magic-User).
-- There is **no "Elf class" in Advanced mode**. The Basic "Elf class" and the Advanced "Elf race"
-  are completely different things. Do not confuse them or assume they share abilities.
-- Racial abilities come from `getAdvancedModeRacialAbilities()` in `shared-racial-abilities.js`.
-- Class abilities come from `CLASS_ABILITIES` in `shared-class-data-shared.js`.
-- Racial class level limits apply in Normal mode (not Smoothified/Gygar mode).
+- **Race-as-Class column** — clicking a race here (Dwarf, Elf, Halfling) picks that race's
+  `CLASS_INFO` race-as-class package: one class that bundles racial *and* class features
+  together (the old "Basic mode" demihuman classes). No separate racial stat adjustments apply —
+  the class is the full package. Human has no entry in this column (no "Human class").
+- **Separate class columns** (Cleric/Fighter/Magic-User/Thief/Spellblade) — clicking a
+  race + class cell here picks a race and a class independently. Racial ability score
+  adjustments (e.g. Elf: +1 DEX, −1 CON) and racial minimums apply, and the race's own
+  racial abilities (languages, infravision, etc.) are gained alongside the class's abilities.
+
+Ability scores rolled/adjusted at whatever level the character was created are **never re-rolled
+or reversed** when leveling up or changing which button was picked later — only the ability set
+and progression table change.
+
+---
+
+## Mode Preset — Referee Restriction, Not a Mechanics Switch
+
+The "mode" radio group above the grid is a **three-way referee-facing restriction preset**. It
+only controls which grid cells are enabled — it has no effect on generation mechanics.
+
+| Value | Label | Effect |
+|-------|-------|--------|
+| `race-class` | A — Race-and-Class Only | Only the separate class columns are enabled (any race). Race-as-Class column disabled. |
+| `race-as-class` | B — Race-as-Class Only (default) | Race-as-Class column enabled; separate class columns enabled **only for Human** (Human has no race-as-class entry, so this is how Human still picks Cleric/Fighter/Magic-User/Thief/Spellblade). |
+| `both` | C — Both | Everything enabled — a referee/player can pick race-as-class *or* a separate race+class, per character. |
+
+This preset is what the old `mode` variable (`'basic'` / `'advanced'`) used to be, but it no
+longer drives `generateCharacterV3`. In `gen-ui.js` it is held in the `modePreset` variable and
+persisted/URL-synced under the `mode` param (values above), separately from `raceClassMode` (the
+Strict OSE / Human Abilities / Traditional Extended / Allow All restriction, which now applies
+uniformly to any pick, race-as-class or separate).
+
+---
+
+## What Actually Drives Mechanics: `isSeparateRaceClass`
+
+`generateCharacterV3(opts)` in `gen-core.js` takes an explicit `isSeparateRaceClass` boolean —
+**not** a mode string:
+
+- `true` — a race was explicitly, separately selected (a separate class column was clicked, or
+  it's level 0). Racial minimums, racial ability adjustments, and class requirements-by-race all
+  apply.
+- `false` — a race-as-class pick (the Race-as-Class column was clicked at level 1+). Race is
+  implied by the class package (`staticRace`, derived from the class name); no separate racial
+  stat mechanics apply.
+
+In `gen-ui.js`, this is derived from **which grid column was clicked**, tracked in the
+`isRaceAsClassPick` variable (`isSeparateRaceClass = !isRaceAsClassPick`) — never from the mode
+preset. `selectedRace` is always populated once a level-1+ pick is made, for both pick types
+(e.g. a Dwarf race-as-class pick sets `selectedRace = 'Dwarf_RACE'` too), which is what lets most
+downstream logic (Blessed HP eligibility, `hideHumanRace`, wiring race into `generateCharacterV3`)
+stay unconditional instead of branching on pick type.
+
+The `mCode` field baked into every generated character's compact params (`cp.m`, `'A'` or `'B'`)
+records `isSeparateRaceClass` at creation time and is carried forward unchanged through leveling —
+it means "this character has separately-applied racial adjustments," not "which UI screen created
+it." `expandCompactV3` re-derives the actual adjustment *values* from `mCode` + race on every
+decode; ability scores are stored raw, never pre-adjusted.
 
 ---
 
 ## Race vs. Class — The Critical Distinction
 
-This is the most important architectural concept. **Do not conflate race and class.**
+Do not conflate race and class.
 
-| Concept | Basic Mode | Advanced Mode |
-|---------|-----------|---------------|
-| "Elf" | A class (race-as-class). All abilities are class features. No separate racial stat adjustments. | A race only. Gets racial abilities from `Elf_RACE` including stat adjustments. Needs a separate class. |
-| "Dwarf" | A class (race-as-class). All abilities are class features. No separate racial stat adjustments. | A race only. Gets racial abilities from `Dwarf_RACE` including stat adjustments. Needs a separate class. |
-| "Gnome" | A class (race-as-class). All abilities are class features. No separate racial stat adjustments. | A race only. Gets racial abilities from `Gnome_RACE` including stat adjustments. Needs a separate class. |
-| "Halfling" | A class (race-as-class). All abilities are class features. No separate racial stat adjustments. | A race only. Gets racial abilities from `Halfling_RACE` including stat adjustments. Needs a separate class. |
-| "Human" | Not a class. Humans choose Cleric/Fighter/MU/Thief/Spellblade. No racial stat adjustments. | A race. Humans have optional racial abilities (Blessed, Decisiveness, Leadership). Has stat adjustments (+1 CON, +1 CHA). |
+| Concept | Race-as-Class pick | Separate-class pick |
+|---------|--------------------|-----------------------|
+| "Dwarf" / "Elf" / "Halfling" | A class (race-as-class): all abilities are class features, no separate racial stat adjustments — the class is the full package. | A race only: gets racial abilities from `RACE_INFO` including stat adjustments. Paired with any class the race has access to. |
+| "Human" | No race-as-class entry — column is always disabled for Human. | The common case: Human + Cleric/Fighter/Magic-User/Thief/Spellblade. Optional racial abilities (Blessed, Decisiveness, Leadership) when enabled. |
 
-The Spellblade is an **Advanced mode fighter/magic-user hybrid class**. It is available in Advanced
-mode to any race with access to both the Fighter and Magic-User classes — currently Human, Elf,
-Drow, and Half-Elf — and to Humans in Basic mode. It is NOT derived from the Basic Elf class and is
-NOT coupled to it. They happen to both use arcane magic but have independent rules.
+The Gnome class and the Elf class are **independent classes with their own rules** even though
+both have a "Magical Research"-style ability — the Gnome class creates magic items at 8th level,
+the Elf class at 9th. Not coupled.
 
----
-
-## Current Bug: Racial Stat Adjustments in Basic Mode
-
-`gen-0level-gen.js` currently calls `applyRaceAdjustments()` from `gen-race-adjustments.js`
-unconditionally — it applies racial ability score modifiers to all level-0 characters regardless
-of mode. **This is wrong.** Racial stat adjustments should only apply in Advanced mode. In Basic
-mode, race-as-class demihumans do not get separate racial stat modifiers.
-
-This will be fixed as part of the generator merger (see Planned Architecture Changes below).
+The Spellblade is a fighter/magic-user hybrid class, available to any race with access to both
+Fighter and Magic-User (currently Human, Elf, Drow, Half-Elf) as a separate-class pick, and to
+Human as one of the always-available separate classes under the `race-as-class` preset. It is
+**not** derived from the Elf race-as-class package and is not coupled to it — they both use
+arcane magic but have independent rules.
 
 ---
 
 ## Key Data Structures
 
-### `CLASS_ABILITIES` (`shared-class-data-shared.js`)
+### `CLASS_INFO` (`shared-class-info.js`)
 
-The authoritative source for all class features. One array per class. Each entry:
+One entry per class (`Cleric`, `Dwarf`, `Elf`, `Fighter`, `Gnome`, `Halfling`, `Magic-User`,
+`Spellblade`, `Thief`, plus Advanced Fantasy expanded classes). Key fields:
+
+- `classType`: `"plainClass"` (Cleric/Fighter/Magic-User/Thief/Spellblade/etc.) or
+  `"raceAsClass"` (Dwarf/Elf/Halfling/Gnome).
+- `hasClassPage`: whether this class gets a `classprint.html` reference page and a button on
+  `classes.html`.
+- `showInGenerator`: whether the generator's grid should offer this class at all (gates rarer/
+  not-yet-ready classes without deleting their data).
+- `requirements`: per-race ability-score minimums for taking this class (Advanced/separate-class
+  only — race-as-class packages have their own flat requirements).
+- `CLASS_ABILITIES` (the feature list) lives alongside each entry; see below.
+
+### `CLASS_ABILITIES`
+
+The authoritative source for class features (one array per class entry in `CLASS_INFO`). Each
+entry:
 
 ```js
 {
@@ -111,7 +145,7 @@ The authoritative source for all class features. One array per class. Each entry
   availableThrough: 14,     // last level this entry displays (default 14)
   includeName: true,        // if present and true: renders as "Name: description"
                             // if absent/commented out: renders description standalone
-  raceOverrides: {            // Advanced mode only — optional map of race name → partial entry
+  raceOverrides: {            // separate-class picks only — optional map of race name → partial entry
     "Human": { description: "...", availableAt: 11 },  // any fields; merged over base entry
     "Elf":   { description: "..." }
   },
@@ -127,39 +161,44 @@ The authoritative source for all class features. One array per class. Each entry
 - When an ability changes at a level (e.g. gains a new power at 9th), use `availableThrough` on
   the earlier entry and create a new entry with higher `availableAt`.
 - `CLASS_ABILITIES` contains **class features only**. Racial features do not belong here, even
-  if a demihuman class has an ability with the same name as a racial ability. Resilience
+  if a race-as-class package has an ability with the same name as a racial ability. Resilience
   (the CON-based save bonus for Dwarf and Halfling) is a racial feature — it lives in
-  `RACIAL_ABILITIES`, not `CLASS_ABILITIES`.
+  `RACE_INFO[race].abilities`, not `CLASS_ABILITIES`.
 
-### `RACIAL_ABILITIES` (`shared-racial-abilities.js`)
+### `RACE_INFO` (`shared-race-info.js`)
 
-Currently a flat string array **inside** `getAdvancedModeRacialAbilities()`. This is the target of
-a planned refactor (see `PLAN_RACE_ABILITIES_AUDIT.md`) to extract it as a top-level `export const`
-with the same structured format as `CLASS_ABILITIES`, plus additional fields:
+One entry per race. Key fields:
 
 ```js
 {
-  name: "...",
-  description: "...",
-  basicAvailableAt: 0,       // level range for Basic mode display
-  basicAvailableThrough: 0,  // 0 = shown at level 0 only; replaced by class abilities at level 1
-  advancedAvailableAt: 0,    // level range for Advanced mode display
-  advancedAvailableThrough: 14,
-  applyOnly: true,           // if true: mechanic-only, never printed on sheet
-  abilityModifiers: { STR: 0, DEX: 1, CON: -1, ... },  // Advanced mode only — never applied in Basic
-  saveModifier: { formula: "CON_RESILIENCE", appliesTo: ["Death", "Wands", "Spells"] },
-  humanOnly: true,           // if true: only shown when "human racial abilities" option enabled
+  code: "DW",                       // compact-params race code
+  classLevelLimits: { Fighter_CLASS: 9, ... },  // Normal-mode level caps per class (separate-class picks)
+  abilityModifiers: { STR: 0, DEX: 0, CON: 1, ... },  // separate-class picks only — never applied for a race-as-class pick
+  minimums: { CON: 9 },              // racial ability-score minimums — separate-class picks only
+  abilities: [ /* structured entries, same shape as CLASS_ABILITIES, plus: */
+    {
+      basicAvailableAt: 0, basicAvailableThrough: 0,      // race-as-class-pick display window
+      advancedAvailableAt: 0, advancedAvailableThrough: 14, // separate-class-pick display window
+      applyOnly: true,        // mechanic-only, never printed on the sheet
+      abilityModifiers: {...},// same shape as above, entry-scoped
+      saveModifier: { formula: "CON_RESILIENCE", appliesTo: ["Death","Wands","Spells"] },
+      humanOnly: true,        // only shown when "human racial abilities" option enabled
+    },
+  ],
+  showInGenerator: true,
 }
 ```
 
-**Key policy decisions (already made):**
-- `abilityModifiers` entries are **Advanced mode only**. They must never be applied in Basic mode.
+**Key policy decisions:**
+- `abilityModifiers` (whole-race or per-ability-entry) are **separate-class-pick only**. Never
+  apply them for a race-as-class pick — the class package already includes everything.
 - All racial abilities have `basicAvailableAt: 0` and `advancedAvailableAt: 0` (races are chosen
-  at level 0; all abilities apply immediately).
-- **Exception**: Blessed has `availableAt: 1` because it governs HP rolling at level 1 (roll
-  twice, take best), not at level 0.
-- Basic mode demihuman racial abilities have `basicAvailableThrough: 0` — they are replaced by
-  class abilities at level 1. Advanced mode keeps them through level 14.
+  at level 0 or paired at level 1; abilities apply immediately either way).
+  **Exception**: Blessed has `availableAt: 1` because it governs HP rolling at level 1 (roll
+  twice, take best), not level 0.
+- Race-as-class packages' own racial-flavor abilities have `basicAvailableThrough: 0` — the
+  race-as-class class's own `CLASS_ABILITIES` take over at level 1. Separate-class picks keep
+  the racial abilities through level 14 (`advancedAvailableThrough: 14`).
 
 ---
 
@@ -167,66 +206,36 @@ with the same structured format as `CLASS_ABILITIES`, plus additional fields:
 
 | File | Role |
 |------|------|
-| `shared-class-data-shared.js` | `CLASS_ABILITIES`, `CLASS_INFO`, XP tables, HD tables, spell slots, thief skills, turn undead. Authoritative source for all class data. |
-| `shared-racial-abilities.js` | `RACIAL_ABILITIES` (currently inside function; planned refactor), `getDwarfResilienceBonus()` etc., `calculateSavingThrows()`, `calculateAttackBonus()`. |
-| `shared-class-progression.js` | `getBasicModeClassAbilities()`, `getClassProgressionData()`, `getClassFeatures()`. Reads from `CLASS_ABILITIES`. |
-| `shared-basic-character-gen.js` | Wrappers for Basic mode character generation. |
-| `shared-advanced-character-gen.js` | Wrappers for Advanced mode character generation. |
-| `gen-0level-gen.js` | Level-0 character generation. Currently a separate file — to be merged into the unified generator. **Known bug**: applies racial stat adjustments regardless of mode; should be Advanced only. |
-| `gen-race-adjustments.js` | `RACE_ADJUSTMENTS` (ability score deltas), `RACE_MINIMUMS`. Only caller: `gen-0level-gen.js`. Planned to be merged into `RACIAL_ABILITIES`. Advanced mode only. |
-| `shared-class-data-ose.js` | Level-dependent progression data for OSE standard classes (saves, attack bonuses, spell slots). |
-| `shared-class-data-gygar.js` | Level-dependent data for Gygar/Smoothified mode (Castle Gygar house rules). |
-| `shared-class-data-ll.js` | Level-dependent data for Low-Level mode. |
-| `gen-ui.js` | Basic mode UI generation. |
+| `shared-core.js` | Consolidated data + logic: re-exports `CLASS_INFO`/`RACE_INFO`, XP/HD/spell-slot/thief-skill/turn-undead tables, `getClassProgressionData()`, `getClassFeatures()`, `getRaceAbilitiesAtLevel()`, `applyRacialAdjustments()`, `checkRacialMinimums()`, `calculateSavingThrows()`, `calculateAttackBonus()`, equipment tables, `createCharacter()`. |
+| `shared-class-info.js` | `CLASS_INFO` + per-class `CLASS_ABILITIES` definitions. |
+| `shared-race-info.js` | `RACE_INFO` + per-race `abilities` definitions. |
 | `shared-race-names.js` | `LEGACY_RACE_NAMES`, `normalizeRaceName()` — normalizes race name variants to canonical `Name_RACE` format. |
-| `SRD/CLASSES/` | Verbatim SRD source text for each Basic class (cleric, dwarf, elf, fighter, halfling, magic-user, thief). Reference only. |
+| `gen-core.js` | Generator-only logic: DOM helpers, name/background tables, equipment purchasing, `generateCharacterV3(opts)` (levels 0–14, explicit `isSeparateRaceClass`). Re-exports all of `shared-core.js`. |
+| `gen-ui.js` | `generator.html`'s UI logic: the unified grid, the 3-way mode preset, settings persistence, URL sync. |
+| `cs-core.js` | Character-sheet-side shared logic: progression tables, `buildOptionsLine()` (compact-params → human-readable settings summary). |
+| `cs-sheet-page.js` | `charactersheet.html`'s rendering logic: `expandCompactV3()` (decodes a character's compact params, re-deriving racial adjustments from `mCode` + race on every decode), `buildGeneratorURL()` (reconstructs a `generator.html` link to regenerate/edit a character), the level-0→1 "class up" flow. |
+| `SRD/CLASSES/` | Verbatim SRD source text for each class (cleric, dwarf, elf, fighter, halfling, magic-user, thief). Reference only. |
 | `COPYRIGHTED-*.txt` | Verbatim text from OSE Advanced Fantasy book. **Do not reproduce in code.** Reword all descriptions. SRD text may be used verbatim where it applies. |
 
 ---
 
-## Modes and Settings
+## Other Settings
 
 ### Normal vs. Smoothified (Gygar) Mode
 
-- **Normal mode**: Traditional OSE rules. Racial level limits apply. Level 0 characters have a
-  -1 attack penalty. Uses OSE saving throw tables.
+- **Normal mode**: Traditional OSE rules. Racial level limits apply (`raceClassMode: 'strict'` or
+  `'strict-human'`). Level 0 characters have a -1 attack penalty. Uses OSE saving throw tables.
 - **Smoothified/Gygar mode** (Castle Gygar house rules): No racial level limits. No attack penalty
-  at level 0. Uses Gygar-specific tables from `shared-class-data-gygar.js`.
+  at level 0. Uses Gygar-specific progression tables (`progressionMode: 'smoothprog'`).
 
-### Human Racial Abilities (Optional, Advanced Mode Only)
+### Human Racial Abilities (Optional)
 
-When the "human racial abilities" checkbox is enabled in Advanced mode, Humans gain:
+When `raceClassMode` is anything other than `'strict'`, Humans additionally gain:
 - **Blessed**: Roll HP twice, take best at each level (does not apply at level 0).
 - **Decisiveness**: Act first on tied initiative (+1 individual initiative).
 - **Leadership**: Retainers/mercenaries +1 loyalty and morale.
 
-These are suppressed by default and enabled by the `humanOnly: true` flag on those `RACIAL_ABILITIES`
-entries (planned; currently handled inline in the UI).
-
----
-
-## Planned Architecture Changes
-
-See `PLAN_RACE_ABILITIES_AUDIT.md` for the full plan. Summary:
-
-1. **Collapse to two modes**: Basic and Advanced, each supporting levels 0–14. The current
-   separate "0-level generator" (`gen-0level-gen.js`) is to be merged into each mode's generator.
-2. **Fix racial stat adjustments**: Currently applied unconditionally in `gen-0level-gen.js`.
-   Must be gated to Advanced mode only.
-3. **Extract `RACIAL_ABILITIES`** from inside `getAdvancedModeRacialAbilities()` to a top-level
-   `export const` with the same structured format as `CLASS_ABILITIES`.
-4. **Fold `gen-race-adjustments.js`** into `RACIAL_ABILITIES` via `applyOnly: true` entries with
-   `abilityModifiers` fields. These entries only apply in Advanced mode.
-5. **Replace the three `getDwarfResilienceBonus()` etc. functions** with `saveModifier` fields
-   on displayable `RACIAL_ABILITIES` entries.
-6. **Merge files**: `shared-class-data-shared.js` + `shared-class-progression.js` +
-   `shared-racial-abilities.js` + `gen-race-adjustments.js` → `shared-abilities.js` (data) +
-   `shared-generator.js` (logic).
-7. **Merge generators**: Basic (0–14) and Advanced (0–14) as two clean paths within one generator.
-   - Basic level 0: shows racial abilities; no stat adjustments.
-   - Basic level 1+: shows class abilities; racial abilities replaced.
-   - Advanced level 0: shows racial abilities; applies stat adjustments.
-   - Advanced level 1+: shows both racial abilities and class abilities.
+These come from `RACE_INFO.Human_RACE.abilities` entries flagged `humanOnly: true`.
 
 ---
 
@@ -240,16 +249,19 @@ See `PLAN_RACE_ABILITIES_AUDIT.md` for the full plan. Summary:
 - Fighter has a separate **Baron Title** entry at `availableAt: 9` (from the SRD "After Reaching
   9th Level" section) distinct from the Stronghold ability.
 - Dwarf and Halfling `Resilience` (CON-based save bonus) is a **racial feature**, not a class
-  feature. It does not belong in `CLASS_ABILITIES`. It will be defined in `RACIAL_ABILITIES`
-  with a `saveModifier` field. It is already mechanically applied via `calculateSavingThrows()`
-  in `shared-racial-abilities.js`.
+  feature. It lives in `RACE_INFO[race].abilities` with a `saveModifier` field, mechanically
+  applied via `calculateSavingThrows()` in `shared-core.js`.
 - `CLASS_ABILITIES` entries for the Gnome class use `// BOOK:` comments (not `// SRD:`) because
   the Gnome class is not in the free OSE SRD — it is from OSE Advanced Fantasy.
 - Gnome class **requirements**: CON 9 minimum only. DEX and INT are prime requisites (XP bonus),
   not minimums.
 - Gnome class **armour**: Leather and shields only (not chain mail or plate).
-- All `RACIAL_ABILITIES` use `advancedAvailableAt: 0` except **Blessed** (`availableAt: 1`).
-- The Spellblade is a house-rules Advanced mode fighter/magic-user hybrid. It is NOT derived from
-  the Basic Elf class. Racial abilities for an Elf Spellblade come from `Elf_RACE`, not the class.
-- **Racial ability score adjustments are Advanced mode only.** Never apply `abilityModifiers`
-  from `RACIAL_ABILITIES` (or `RACE_ADJUSTMENTS` from `gen-race-adjustments.js`) in Basic mode.
+- The Spellblade is a house-rules fighter/magic-user hybrid. It is NOT derived from the Elf
+  race-as-class package. Racial abilities for a separate-class Elf Spellblade come from
+  `RACE_INFO.Elf_RACE`, not the class.
+- **Racial ability score adjustments only apply for a separate-class pick** (`isSeparateRaceClass:
+  true`). Never apply `abilityModifiers` from `RACE_INFO` for a race-as-class pick.
+- **Level 0 always applies racial ability adjustments and racial minimums**, unconditionally —
+  a race is always separately chosen at level 0 (no class yet to imply one). This differs from
+  the old Basic-mode level-0 behavior, which applied none; it was a deliberate design change made
+  when the grid was unified (see git history around the `race-as-class-grid-unification` branch).

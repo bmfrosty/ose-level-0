@@ -84,34 +84,7 @@
         .level-btn:hover { background-color: var(--accent-bg); }
         .level-btn.selected { background-color: var(--accent); color: white; }
 
-        /* ── Class buttons (basic mode) ────────────────────────────────────── */
-        .class-selection {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-top: 10px;
-        }
-        .class-button {
-            padding: 5px 9px;
-            font-size: 11px;
-            font-weight: bold;
-            border: 2px solid var(--accent);
-            border-radius: 3px;
-            background-color: white;
-            color: var(--accent);
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .class-button:hover:not(:disabled) { background-color: var(--accent-bg); }
-        .class-button.selected { background-color: var(--accent); color: white; }
-        .class-button:disabled {
-            opacity: 0.3;
-            cursor: not-allowed;
-            border-color: #ccc;
-            color: #ccc;
-        }
-
-        /* ── Race/Class Grid (advanced mode) ───────────────────────────────── */
+        /* ── Race/Class Grid ────────────────────────────────────────────────── */
         .race-class-grid {
             margin-top: 15px;
             overflow-x: auto;
@@ -274,15 +247,12 @@
         body.dark-mode .generator-container .ability-label { color: #ddd; }
         body.dark-mode .generator-container .control-section { border-bottom-color: #444; }
         body.dark-mode .generator-container .level-btn,
-        body.dark-mode .generator-container .class-button,
         body.dark-mode .generator-container .grid-button,
         body.dark-mode .generator-container .roll-button { background-color: #2a2a3e; color: var(--accent); }
         body.dark-mode .generator-container .level-btn:hover,
-        body.dark-mode .generator-container .class-button:hover:not(:disabled),
         body.dark-mode .generator-container .grid-button:hover:not(:disabled),
         body.dark-mode .generator-container .roll-button:hover:not(:disabled) { background-color: #3a3a4e; }
         body.dark-mode .generator-container .level-btn.selected,
-        body.dark-mode .generator-container .class-button.selected,
         body.dark-mode .generator-container .grid-button.selected { background-color: var(--accent); color: white; }
         body.dark-mode .generator-container .ability-input,
         body.dark-mode .generator-container input[type="number"],
@@ -353,17 +323,25 @@
             <h3>1. Select Mode &amp; Level</h3>
             <div class="mode-option">
                 <label>
-                    <input type="radio" name="mode" value="basic" checked>
+                    <input type="radio" name="mode" value="race-class">
                     <span>
-                        <strong>Basic</strong> — Race-as-class (Dwarf, Elf, Halfling are classes)
+                        <strong>A — Race-and-Class Only</strong> — Race and class are always chosen separately
                     </span>
                 </label>
             </div>
             <div class="mode-option">
                 <label>
-                    <input type="radio" name="mode" value="advanced">
+                    <input type="radio" name="mode" value="race-as-class" checked>
                     <span>
-                        <strong>Advanced</strong> — Separate race and class selection
+                        <strong>B — Race-as-Class Only</strong> — Dwarf, Elf, Halfling are classes; Human picks Cleric/Fighter/Magic-User/Thief/Spellblade
+                    </span>
+                </label>
+            </div>
+            <div class="mode-option">
+                <label>
+                    <input type="radio" name="mode" value="both">
+                    <span>
+                        <strong>C — Both</strong> — Choose race-as-class or a separate race and class, per character
                     </span>
                 </label>
             </div>
@@ -495,7 +473,7 @@
             <div class="checkbox-option" id="hideHumanRaceOption">
                 <label>
                     <input type="checkbox" id="hideHumanRace">
-                    <span><strong>Hide "Human" prefix for Human characters</strong> in Advanced mode &mdash; show "Fighter" instead of "Human Fighter"</span>
+                    <span><strong>Hide "Human" prefix for Human characters</strong> &mdash; show "Fighter" instead of "Human Fighter"</span>
                 </label>
             </div>
 
@@ -626,41 +604,11 @@
             </div>
         </div>
 
-        <!-- 6a. Demihuman Level Limits + Human Racial Abilities (basic-only) -->
-        <div class="control-section basic-only" id="demihumanLimitSection">
-            <h3>6. Demihuman Level Limits &amp; Human Racial Abilities</h3>
-            <div class="radio-option">
-                <label>
-                    <input type="radio" name="raceClassMode" id="basicStrict" value="strict" checked>
-                    <span>
-                        <strong>Strict OSE Rules</strong> - Standard demihuman level limits, no human racial abilities
-                        <br><small style="margin-left: 30px;">Dwarf max 12, Elf max 10, Halfling max 8</small>
-                    </span>
-                </label>
-            </div>
-            <div class="radio-option">
-                <label>
-                    <input type="radio" name="raceClassMode" id="basicStrictHuman" value="strict-human">
-                    <span>
-                        <strong>Strict OSE + Human Racial Abilities</strong> - Standard demihuman level limits, humans gain racial abilities
-                        <br><small style="margin-left: 30px;">Dwarf max 12, Elf max 10, Halfling max 8</small>
-                        <br><small style="margin-left: 30px;"><em>Humans gain: Blessed (best of 2 HP rolls), Decisiveness (+1 initiative on ties), Leadership (+1 retainer loyalty/morale)</em></small>
-                    </span>
-                </label>
-            </div>
-            <div class="radio-option">
-                <label>
-                    <input type="radio" name="raceClassMode" id="basicTraditionalExtended" value="traditional-extended">
-                    <span>
-                        <strong>Extended Levels + Human Racial Abilities</strong> - All demihumans reach level 14, humans gain racial abilities
-                        <br><small style="margin-left: 30px;"><em>Humans gain: Blessed (best of 2 HP rolls), Decisiveness (+1 initiative on ties), Leadership (+1 retainer loyalty/morale)</em></small>
-                    </span>
-                </label>
-            </div>
-        </div>
-
-        <!-- 6b. Race/Class Restrictions (advanced-only) -->
-        <div class="control-section advanced-only" id="raceClassRestrictionSection" style="display:none;">
+        <!-- 6. Race/Class Restrictions — one panel, applies to the grid regardless of
+             which Mode preset (A/B/C) is active. Same restriction concept for both
+             race-as-class picks (caps at that class's own maxLevel) and separate-class
+             picks (caps per classLevelLimits), computed in gen-ui.js. -->
+        <div class="control-section" id="raceClassRestrictionSection">
             <h3>6. Race/Class Restrictions</h3>
             <div class="radio-option">
                 <label>
@@ -707,47 +655,26 @@
         <div class="control-section">
             <h3>7. Generate Character</h3>
 
-            <!-- Level 0: race selection (shared — shown when level 0) -->
+            <!-- Level 0: random-pick shortcuts (not tied to a specific grid cell) -->
             <div id="zeroLevelSection">
-                <div style="margin-bottom: 10px;"><strong>Race:</strong></div>
+                <div style="margin-bottom: 10px;"><strong>Race (or pick a cell in the grid below):</strong></div>
                 <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:10px;" id="zeroRaceButtons">
                     <button class="grid-button zero-race-btn selected" style="width:auto;padding:5px 9px;" data-race="">Random</button>
-                    <button class="grid-button zero-race-btn" style="width:auto;padding:5px 9px;" data-race="Human_RACE">Human</button>
                     <button class="grid-button zero-race-btn" style="width:auto;padding:5px 9px;" data-race="Demihuman_RACE">Random Demihuman</button>
-                    <button class="grid-button zero-race-btn" style="width:auto;padding:5px 9px;" data-race="Dwarf_RACE">Dwarf</button>
-                    <button class="grid-button zero-race-btn" style="width:auto;padding:5px 9px;" data-race="Elf_RACE">Elf</button>
-                    <button class="grid-button zero-race-btn" style="width:auto;padding:5px 9px;" data-race="Halfling_RACE">Halfling</button>
                 </div>
             </div>
 
-            <!-- Level 1+: Class buttons (basic-only) -->
-            <div id="classSection" class="basic-only">
-                <div style="margin-bottom: 10px;">
-                    <strong>Human Classes:</strong>
-                </div>
-                <div class="class-selection">
-                    <button class="class-button" data-class="Cleric">Cleric</button>
-                    <button class="class-button" data-class="Fighter">Fighter</button>
-                    <button class="class-button" data-class="Magic-User">Magic-User</button>
-                    <button class="class-button" data-class="Thief">Thief</button>
-                </div>
-                <div style="margin-top: 15px; margin-bottom: 10px;">
-                    <strong>Demihuman Classes:</strong>
-                </div>
-                <div class="class-selection">
-                    <button class="class-button" data-class="Dwarf">Dwarf</button>
-                    <button class="class-button" data-class="Elf">Elf</button>
-                    <button class="class-button" data-class="Halfling">Halfling</button>
-                </div>
-            </div>
-
-            <!-- Level 1+: Race/Class grid (advanced-only) -->
-            <div id="raceClassSection" class="advanced-only" style="display:none;">
+            <!-- One grid, always shown. First column is Race-as-Class: at level 0 it picks
+                 that race (background/profession, no class); at level 1+ it picks that
+                 race's race-as-class package. Which cells are enabled depends on the
+                 Mode preset (A/B/C) and Race/Class Restrictions, computed in gen-ui.js. -->
+            <div id="raceClassSection">
                 <div class="race-class-grid">
                     <table id="raceClassGrid">
                         <thead>
                             <tr>
-                                <th>Race \ Class</th>
+                                <th>Race \ Build</th>
+                                <th id="raceAsClassHeader">Race-as-Class</th>
                                 <th>Cleric</th>
                                 <th>Fighter</th>
                                 <th>Magic-User</th>
@@ -758,6 +685,7 @@
                         <tbody>
                             <tr>
                                 <td class="race-label">Human</td>
+                                <td><button class="grid-button" data-race="Human" data-class="RaceAsClass">Human</button></td>
                                 <td><button class="grid-button" data-race="Human" data-class="Cleric">Cleric</button></td>
                                 <td><button class="grid-button" data-race="Human" data-class="Fighter">Fighter</button></td>
                                 <td><button class="grid-button" data-race="Human" data-class="Magic-User">Magic-User</button></td>
@@ -766,6 +694,7 @@
                             </tr>
                             <tr>
                                 <td class="race-label">Dwarf</td>
+                                <td><button class="grid-button" data-race="Dwarf" data-class="RaceAsClass">Dwarf</button></td>
                                 <td><button class="grid-button" data-race="Dwarf" data-class="Cleric">Cleric</button></td>
                                 <td><button class="grid-button" data-race="Dwarf" data-class="Fighter">Fighter</button></td>
                                 <td><button class="grid-button" data-race="Dwarf" data-class="Magic-User">Magic-User</button></td>
@@ -774,6 +703,7 @@
                             </tr>
                             <tr>
                                 <td class="race-label">Elf</td>
+                                <td><button class="grid-button" data-race="Elf" data-class="RaceAsClass">Elf</button></td>
                                 <td><button class="grid-button" data-race="Elf" data-class="Cleric">Cleric</button></td>
                                 <td><button class="grid-button" data-race="Elf" data-class="Fighter">Fighter</button></td>
                                 <td><button class="grid-button" data-race="Elf" data-class="Magic-User">Magic-User</button></td>
@@ -782,6 +712,7 @@
                             </tr>
                             <tr>
                                 <td class="race-label">Halfling</td>
+                                <td><button class="grid-button" data-race="Halfling" data-class="RaceAsClass">Halfling</button></td>
                                 <td><button class="grid-button" data-race="Halfling" data-class="Cleric">Cleric</button></td>
                                 <td><button class="grid-button" data-race="Halfling" data-class="Fighter">Fighter</button></td>
                                 <td><button class="grid-button" data-race="Halfling" data-class="Magic-User">Magic-User</button></td>

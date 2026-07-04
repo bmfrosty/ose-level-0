@@ -196,12 +196,10 @@ export async function decompressFromBase64Url(b64url) {
  * ac      number      Starting AC (before DEX modifier)
  *
  * ── Generation options (preserved for level-up / regeneration) ────────────────
- * rcm     2-char code Race/class mode (Advanced only): ST SH TE AL
+ * rcm     2-char code Race/class restriction preset, applies to any pick: ST SH TE AL
  *                       ST=strict, SH=strict+human, TE=traditional-extended, AL=allow-all
- * bl      0|1         Basic and L0: character has human racial abilities (Blessed, Decisiveness,
- *                     Leadership displayed on sheet).  Also written for L0 characters in both
- *                     modes.  Does NOT encode HP rolling mode (see hm).
- * dl      0|1         Basic mode: demihuman level limits — 0=standard OSE, 1=extended to 14
+ * bl      —           Retired. Legacy field from old v2 links only; decodeCompactParams
+ *                     upgrades it to rcm ('SH' or 'ST') and deletes it. Never written now.
  * wp      number      wealthPct — starting gold % of XP-for-level for level 2+ chars (0–100)
  * prm     0|9|13      primeRequisiteMode — 0=user choice, 9=require ≥9, 13=require ≥13
  *
@@ -362,13 +360,8 @@ export function buildOptionsLine(cp) {
     const lvl = cp.l ?? 0;
     const progLabel = { O: 'OSE Standard', S: 'Smoothified', L: 'Labyrinth Lord' };
     parts.push(progLabel[cp.p] || 'OSE Standard');
-    if (cp.m === 'A') {
-        const rcmLabel = { ST:'Strict OSE', SH:'Human Racial Abilities', TE:'Extended Levels + Human Abilities', AL:'Allow All Classes' };
-        parts.push(rcmLabel[cp.rcm] || 'Strict OSE');
-    } else if (cp.m === 'B') {
-        parts.push(cp.bl ? 'Human Racial Abilities' : 'Strict OSE');
-        parts.push(cp.dl ? 'Extended Levels' : 'Standard Level Limits');
-    }
+    const rcmLabel = { ST:'Strict OSE', SH:'Human Racial Abilities', TE:'Extended Levels + Human Abilities', AL:'Allow All Classes' };
+    parts.push(rcmLabel[cp.rcm] || 'Strict OSE');
     if (cp.hm === 2)      parts.push('5e HP (max L1 / avg L2+)');
     else if (cp.hm === 1) parts.push('Blessed HP');
     if (cp.hm === 3)      parts.push('Re-roll 1s and 2s');

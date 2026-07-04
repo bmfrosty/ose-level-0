@@ -24,7 +24,7 @@ import {
     PROGRESSION_TABLES, calculateModifier, getModifierEffects,
     getAdvancedModeRacialAbilities, getRaceDisplayName, getClassDisplayName,
     getClassProgressionData, getClassFeatures, getBasicModeClassAbilities,
-    getRaceInfo, CLASS_INFO,
+    getRaceInfo, CLASS_INFO, getAvailableClasses,
     createCharacter, calculateXPBonus, getPrimeRequisites,
     encodeCompactParams, decodeCompactParams,
     parseHitDice, HIT_DICE_PROGRESSIONS, HIT_DICE_SCALE,
@@ -40,7 +40,7 @@ const PROG_TO_CODE = { ose:'O', smoothprog:'S', ll:'L' };
 
 /**
  * Merge Languages entries from class abilities into the racial Languages string.
- * For Advanced mode: Languages belongs solely in the racial abilities section.
+ * For a separate-class pick: Languages belongs solely in the racial abilities section.
  * Class languages are merged in, sorted alphabetically, deduplicated.
  * Language entries are then removed from classAbilities.
  * Mutates both arrays in place.
@@ -346,7 +346,7 @@ export async function expandCompactV3(cp, precomp = {}, { silent = false } = {})
                     { name: 'Leadership',   description: 'Retainers/mercenaries +1 loyalty and morale' },
                 ];
                 character.classAbilities = [...(character.classAbilities || []), ...humanAbilities];
-                console.log('\nHuman Racial Abilities (Basic mode):');
+                console.log('\nHuman Racial Abilities (race-as-class pick):');
                 humanAbilities.forEach(a => console.log(`  - ${a.name}: ${a.description}`));
             }
         }
@@ -429,7 +429,7 @@ export async function expandCompactV3(cp, precomp = {}, { silent = false } = {})
  * generate this character, so the user can go back and roll another.
  *
  * @param {Object} cp - Decoded compact params object (post-decodeCompactParams)
- * @returns {string} URL string like "generator.html?mode=basic&p=ose&l=1&c=Fighter…"
+ * @returns {string} URL string like "generator.html?mode=race-as-class&p=ose&l=1&c=Fighter…"
  */
 function buildGeneratorURL(cp) {
     const CODE_TO_PROG_KEY   = { O:'ose', S:'smoothprog', L:'ll' };
@@ -443,8 +443,13 @@ function buildGeneratorURL(cp) {
     const isAdv = cp.m === 'A';
     const p = new URLSearchParams();
 
-    // Mode
-    p.set('mode', isAdv ? 'advanced' : 'basic');
+    // Mode preset — reconstructed to whichever preset guarantees this exact
+    // race/class combination is clickable, regardless of race. Level 0 always
+    // has isSeparateRaceClass:true (cp.m === 'A') even though no class has been
+    // picked yet, so 'race-class' would needlessly disable the Race-as-Class
+    // column when the character levels up — use 'both' instead so either path
+    // is available.
+    p.set('mode', (cp.l === 0) ? 'both' : (isAdv ? 'race-class' : 'race-as-class'));
 
     // Progression mode (omit if OSE — that's the default)
     const progKey = CODE_TO_PROG_KEY[cp.p] || 'smoothprog';
@@ -459,20 +464,20 @@ function buildGeneratorURL(cp) {
         if (cn) p.set('c', cn);
     }
 
-    // Race (advanced mode, level 1+ only)
-    if (isAdv && cp.r && cp.l !== 0) {
+    // Race — always required alongside a class at level 1+, for both a
+    // race-as-class pick and a separately-chosen race.
+    if (cp.r && cp.l !== 0) {
         const rn = CODE_TO_RACE_NAME[cp.r];
         if (rn) p.set('r', rn);
     }
 
-    // Zero-level race selection
+    // Zero-level race selection. Unlike 'r' (whose reader appends '_RACE'
+    // itself), readURLParams stores 'zr' verbatim into selectedRaceForZero,
+    // which is expected in the full '..._RACE' form everywhere it's used.
     if (cp.l === 0 && cp.r) {
         const rn = CODE_TO_RACE_NAME[cp.r];
-        if (rn) p.set('zr', rn);
+        if (rn) p.set('zr', `${rn}_RACE`);
     }
-
-    // Basic: demihuman limits
-    if (!isAdv && cp.dl) p.set('dl', 'extended');
 
     // Race/class mode (omit if strict — that's the default)
     if (cp.rcm) {
@@ -729,22 +734,19 @@ function initEditPanel(decoded) {
 
     // ── Level Up panel ─────────────────────────────────────────────────────────
     if (isZeroLevel) {
-        // Level 0 → 1: class selection required
-        const isAdv    = decoded.m === 'A';
+        // Level 0 → 1: class selection required. Racial ability adjustments always
+        // apply at level 0 now (decoded.m is always 'A'), but that's a mechanics
+        // signal, not a restriction on which class-up path is offered — a level-0
+        // Dwarf can level up as a Dwarf (race-as-class) or as a separate class.
         const raceCode = decoded.r || 'HU';
+        const CODE_TO_RACE_NAME_LU = { HU:'Human', DW:'Dwarf', EL:'Elf', HA:'Halfling', GN:'Gnome' };
 
-        const advHumanClasses = [
+        const allSeparateClasses = [
             { code:'FI', name:'Fighter',    sides:8 },
             { code:'CL', name:'Cleric',     sides:6 },
             { code:'MU', name:'Magic-User', sides:4 },
             { code:'TH', name:'Thief',      sides:4 },
             { code:'SB', name:'Spellblade', sides:6 },
-        ];
-        const basicHumanClasses = [
-            { code:'FI', name:'Fighter',    sides:8 },
-            { code:'CL', name:'Cleric',     sides:6 },
-            { code:'MU', name:'Magic-User', sides:4 },
-            { code:'TH', name:'Thief',      sides:4 },
         ];
         const basicDemihumanClass = {
             DW:[{ code:'DW', name:'Dwarf',    sides:8 }],
@@ -753,9 +755,14 @@ function initEditPanel(decoded) {
             GN:[{ code:'GN', name:'Gnome',    sides:4 }],
         };
 
-        const availableClasses = isAdv
-            ? advHumanClasses
-            : (basicDemihumanClass[raceCode] || basicHumanClasses);
+        // Only offer separate classes this race can actually take (e.g. Dwarf/Halfling
+        // can't take Spellblade or, in Halfling's case, most of the caster classes).
+        const allowNonTraditional = decoded.rcm === 'AL';
+        const raceName = CODE_TO_RACE_NAME_LU[raceCode] || 'Human';
+        const permittedClassNames = new Set(getAvailableClasses(raceName, allowNonTraditional));
+        const separateClasses = allSeparateClasses.filter(c => permittedClassNames.has(c.name));
+
+        const availableClasses = [...(basicDemihumanClass[raceCode] || []), ...separateClasses];
 
         const lupLevelBtns = document.getElementById('lup-level-btns');
         lupLevelBtns.innerHTML =
@@ -798,12 +805,14 @@ function initEditPanel(decoded) {
             };
             const hdStr = getHdStr(className, 1);
             const hd    = parseHitDice(hdStr);
-            const sides = hd.sides || CLASS_HD[selectedClassCode] || 6;
+            const sides = hd.sides || CLASS_HD[className] || 6;
 
             const hpMode0 = decoded.hm || 0;
             const DEMIHUMAN_CODES_L01 = new Set(['DW','EL','HA','GN']);
-            const hasBlessed0 = decoded.rcm && decoded.rcm !== 'ST'
-                && (decoded.m === 'A' ? decoded.r === 'HU' : !DEMIHUMAN_CODES_L01.has(selectedClassCode));
+            // Race never changes at this level-up step (decoded.r is carried forward
+            // regardless of which class button was picked), so Blessed eligibility
+            // only depends on race — matching hasBlessed's check in gen-ui.js.
+            const hasBlessed0 = decoded.rcm && decoded.rcm !== 'ST' && decoded.r === 'HU';
             const effMode0 = hasBlessed0 ? 1 : hpMode0;
             const roll = () => Math.floor(Math.random() * sides) + 1;
 
@@ -824,7 +833,10 @@ function initEditPanel(decoded) {
                 } while (l1HP < l0HP);
             }
 
-            const newMode = isAdv ? 'A' : 'B';
+            // Whichever class button was picked determines the mechanics mode —
+            // a race-as-class pick (the demihuman code matching decoded.r) means
+            // no separate racial adjustments; any of the 5 separate classes does.
+            const newMode = DEMIHUMAN_CODES_L01.has(selectedClassCode) ? 'B' : 'A';
             const lupProg = decoded.p === 'S' ? 'smoothprog' : 'ose';
             const newCp = {
                 v:3, m: newMode, p: decoded.p || 'O', r: decoded.r || 'HU',
@@ -887,9 +899,9 @@ function initEditPanel(decoded) {
             if (newLevel > curLevel) {
                 const l0HP   = newHpRolls[0] || 1;
                 const hpMode = decoded.hm || 0;
-                const DEMIHUMAN_CODES_BL = new Set(['DW','EL','HA','GN']);
-                const hasBlessed = decoded.rcm && decoded.rcm !== 'ST'
-                    && (decoded.m === 'A' ? decoded.r === 'HU' : !DEMIHUMAN_CODES_BL.has(decoded.c));
+                // Race never changes across levels, so Blessed eligibility only
+                // depends on race — matches the hasBlessed0 fix at the level-0→1 step.
+                const hasBlessed = decoded.rcm && decoded.rcm !== 'ST' && decoded.r === 'HU';
                 const effectiveHpMode = hasBlessed ? 1 : hpMode;
                 const roll   = sides => Math.floor(Math.random() * sides) + 1;
 
