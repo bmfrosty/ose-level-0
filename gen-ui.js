@@ -281,7 +281,15 @@ export function initializeRaceClassGrid() {
             if (autoGenerateOnClassChange) generateCharacter();
         });
     });
-    // Default: Human Fighter
+    // Default: Human Fighter. selectedRace/selectedClass are set to Human/Fighter
+    // either way, but the DOM order matters: initialize() runs this while the page
+    // still defaults to level 0 (selectedLevel is set to 0 by initializeLevelSelection()
+    // before this runs), where Human Fighter is unavailable — a subsequent updateUI()
+    // call would otherwise see this button both 'selected' and unavailable and null out
+    // selectedRace/selectedClass entirely (its stale-selection cleanup path). Adding
+    // 'selected' first and letting selectSeparateClass() immediately clear it again
+    // avoids that: the variables end up set, the button ends up correctly unselected
+    // at level 0, and switching to level 1+ leaves the (still-correct) variables intact.
     const humanFighter = document.querySelector('.grid-button[data-race="Human"][data-class="Fighter"]');
     if (humanFighter) {
         humanFighter.classList.add('selected');
@@ -412,6 +420,17 @@ export function updateUI() {
                 : (isRaceAsClassPick && raceKey === selectedRace);
             button.classList.toggle('selected', isSelected);
         }
+    });
+
+    // The zero-race-btn shortcuts (Random / Random Demihuman) share selectedRaceForZero
+    // with the grid's Race-as-Class column, but selectBuild()/selectSeparateClass()
+    // unconditionally clear their 'selected' class when making a level-1+ grid pick.
+    // Always re-sync (not just when isZeroLevel) — updateUI() can run once with a
+    // stale intermediate selectedLevel during initialize(), before URL params/saved
+    // settings apply the real level, so a one-sided "only set when zero" sync could
+    // leave a shortcut stuck 'selected' from that earlier pass.
+    document.querySelectorAll('.zero-race-btn').forEach(b => {
+        b.classList.toggle('selected', isZeroLevel && b.dataset.race === selectedRaceForZero);
     });
 
     // ── Common: Starting Wealth section ──
