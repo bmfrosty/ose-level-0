@@ -3,6 +3,12 @@
     "additionalDirectories": [
       "/home/bmfrosty/.claude/projects/-var-home-bmfrosty-git-ose-level-0",
       "/var/home/bmfrosty/.claude/projects/-var-home-bmfrosty-git-ose-level-0"
+    ],
+    "allow": [
+      "Bash(node --check *)",
+      "Bash(node --input-type=module -e *)",
+      "Bash(qbt torrent list*)",
+      "Bash(curl -s http://localhost:*)"
     ]
   }
 }
