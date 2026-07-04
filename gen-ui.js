@@ -1064,12 +1064,10 @@ export function initialize() {
 
     setModePreset(modePreset); // toggles UI, loads saved settings, updates grid enablement
 
-    // URL params override localStorage
+    // URL params (read from the same window.location.search already consulted
+    // above for modePreset, so its own 'mode' value can never differ) override
+    // localStorage for everything else.
     const urlParams = readURLParams();
-    if (VALID_MODE_PRESETS.includes(urlParams.mode) && urlParams.mode !== modePreset) {
-        document.querySelectorAll('input[name="mode"]').forEach(r => { r.checked = r.value === urlParams.mode; });
-        setModePreset(urlParams.mode);
-    }
     if (Object.keys(urlParams).length) applySettings(urlParams);
 
     applyDarkMode();
