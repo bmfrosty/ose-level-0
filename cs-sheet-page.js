@@ -899,9 +899,9 @@ function initEditPanel(decoded) {
             if (newLevel > curLevel) {
                 const l0HP   = newHpRolls[0] || 1;
                 const hpMode = decoded.hm || 0;
-                const DEMIHUMAN_CODES_BL = new Set(['DW','EL','HA','GN']);
-                const hasBlessed = decoded.rcm && decoded.rcm !== 'ST'
-                    && (decoded.m === 'A' ? decoded.r === 'HU' : !DEMIHUMAN_CODES_BL.has(decoded.c));
+                // Race never changes across levels, so Blessed eligibility only
+                // depends on race — matches the hasBlessed0 fix at the level-0→1 step.
+                const hasBlessed = decoded.rcm && decoded.rcm !== 'ST' && decoded.r === 'HU';
                 const effectiveHpMode = hasBlessed ? 1 : hpMode;
                 const roll   = sides => Math.floor(Math.random() * sides) + 1;
 
