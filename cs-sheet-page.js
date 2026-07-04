@@ -471,10 +471,12 @@ function buildGeneratorURL(cp) {
         if (rn) p.set('r', rn);
     }
 
-    // Zero-level race selection
+    // Zero-level race selection. Unlike 'r' (whose reader appends '_RACE'
+    // itself), readURLParams stores 'zr' verbatim into selectedRaceForZero,
+    // which is expected in the full '..._RACE' form everywhere it's used.
     if (cp.l === 0 && cp.r) {
         const rn = CODE_TO_RACE_NAME[cp.r];
-        if (rn) p.set('zr', rn);
+        if (rn) p.set('zr', `${rn}_RACE`);
     }
 
     // Race/class mode (omit if strict — that's the default)
@@ -732,22 +734,18 @@ function initEditPanel(decoded) {
 
     // ── Level Up panel ─────────────────────────────────────────────────────────
     if (isZeroLevel) {
-        // Level 0 → 1: class selection required
-        const isAdv    = decoded.m === 'A';
+        // Level 0 → 1: class selection required. Racial ability adjustments always
+        // apply at level 0 now (decoded.m is always 'A'), but that's a mechanics
+        // signal, not a restriction on which class-up path is offered — a level-0
+        // Dwarf can level up as a Dwarf (race-as-class) or as a separate class.
         const raceCode = decoded.r || 'HU';
 
-        const advHumanClasses = [
+        const separateClasses = [
             { code:'FI', name:'Fighter',    sides:8 },
             { code:'CL', name:'Cleric',     sides:6 },
             { code:'MU', name:'Magic-User', sides:4 },
             { code:'TH', name:'Thief',      sides:4 },
             { code:'SB', name:'Spellblade', sides:6 },
-        ];
-        const basicHumanClasses = [
-            { code:'FI', name:'Fighter',    sides:8 },
-            { code:'CL', name:'Cleric',     sides:6 },
-            { code:'MU', name:'Magic-User', sides:4 },
-            { code:'TH', name:'Thief',      sides:4 },
         ];
         const basicDemihumanClass = {
             DW:[{ code:'DW', name:'Dwarf',    sides:8 }],
@@ -756,9 +754,7 @@ function initEditPanel(decoded) {
             GN:[{ code:'GN', name:'Gnome',    sides:4 }],
         };
 
-        const availableClasses = isAdv
-            ? advHumanClasses
-            : (basicDemihumanClass[raceCode] || basicHumanClasses);
+        const availableClasses = [...(basicDemihumanClass[raceCode] || []), ...separateClasses];
 
         const lupLevelBtns = document.getElementById('lup-level-btns');
         lupLevelBtns.innerHTML =
@@ -805,8 +801,10 @@ function initEditPanel(decoded) {
 
             const hpMode0 = decoded.hm || 0;
             const DEMIHUMAN_CODES_L01 = new Set(['DW','EL','HA','GN']);
-            const hasBlessed0 = decoded.rcm && decoded.rcm !== 'ST'
-                && (decoded.m === 'A' ? decoded.r === 'HU' : !DEMIHUMAN_CODES_L01.has(selectedClassCode));
+            // Race never changes at this level-up step (decoded.r is carried forward
+            // regardless of which class button was picked), so Blessed eligibility
+            // only depends on race — matching hasBlessed's check in gen-ui.js.
+            const hasBlessed0 = decoded.rcm && decoded.rcm !== 'ST' && decoded.r === 'HU';
             const effMode0 = hasBlessed0 ? 1 : hpMode0;
             const roll = () => Math.floor(Math.random() * sides) + 1;
 
@@ -827,7 +825,10 @@ function initEditPanel(decoded) {
                 } while (l1HP < l0HP);
             }
 
-            const newMode = isAdv ? 'A' : 'B';
+            // Whichever class button was picked determines the mechanics mode —
+            // a race-as-class pick (the demihuman code matching decoded.r) means
+            // no separate racial adjustments; any of the 5 separate classes does.
+            const newMode = DEMIHUMAN_CODES_L01.has(selectedClassCode) ? 'B' : 'A';
             const lupProg = decoded.p === 'S' ? 'smoothprog' : 'ose';
             const newCp = {
                 v:3, m: newMode, p: decoded.p || 'O', r: decoded.r || 'HU',
