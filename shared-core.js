@@ -1470,6 +1470,23 @@ export const RAP_CODE = {
     always:'AA', 'separate-only':'SO', never:'NV', 'from-separate':'FS', 'from-level-1':'F1'
 };
 
+/**
+ * Single source of truth for the Racial Adjustment Policy's level 1+ formula —
+ * used identically for direct level 1+ generation (gen-ui.js) and the level
+ * 0 -> 1 transition (cs-sheet-page.js), so the two paths can't silently diverge
+ * if a 6th policy is ever added. Keyed on the persisted 2-char RAP_CODE value.
+ * @param {string} rapCode - one of RAP_CODE's values (AA/SO/NV/FS/F1)
+ * @param {boolean} isRaceAsClassPick - true if the race-as-class column/button was picked
+ * @returns {boolean} isSeparateRaceClass for that pick under that policy
+ */
+export function isSeparateRaceClassForPolicy(rapCode, isRaceAsClassPick) {
+    switch (rapCode) {
+        case 'AA': case 'F1': return true;
+        case 'NV': return false;
+        case 'SO': case 'FS': default: return !isRaceAsClassPick;
+    }
+}
+
 // ── Class Progression Tables ───────────────────────────────────────────────────
 
 const OSE_ATTACK_BONUS_PROGRESSIONS = {

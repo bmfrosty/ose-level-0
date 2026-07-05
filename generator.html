@@ -88,6 +88,8 @@
             margin-bottom: 20px;
         }
         body.dark-mode .referee-cluster { border-color: #6a3fa0; }
+        .cluster-reset-label { font-size: 11px; font-weight: bold; color: #666; margin-bottom: 4px; }
+        body.dark-mode .cluster-reset-label { color: #aaa; }
 
         /* ── Level buttons ─────────────────────────────────────────────────── */
         .level-selection {
@@ -339,8 +341,10 @@
         <!-- Reset Referee Settings + Presets + Share — these apply to the Referee
              cluster only (Author Preferred / Convention Mode already only ever
              touch referee-scoped fields; Share/QR isn't a settings action). -->
+        <div class="cluster-reset-label">Referee Resets</div>
         <div style="margin-bottom: 10px; display:flex; gap:8px; flex-wrap:wrap;">
-            <button class="roll-button" id="resetSettingsButton" style="font-size:10px;padding:4px 10px;margin-top:0;">Reset settings to default</button>
+            <button class="roll-button" id="basicModeResetButton" style="font-size:10px;padding:4px 10px;margin-top:0;">Basic Mode Reset</button>
+            <button class="roll-button" id="advancedModeResetButton" style="font-size:10px;padding:4px 10px;margin-top:0;">Advanced Mode Reset</button>
             <button class="roll-button" id="authorPreferredButton" style="font-size:10px;padding:4px 10px;margin-top:0;">Author Preferred Settings</button>
             <button class="roll-button" id="conventionModeButton" style="font-size:10px;padding:4px 10px;margin-top:0;">Convention Mode</button>
             <button class="roll-button" id="shareButton" style="font-size:10px;padding:4px 10px;margin-top:0;">📱 Share / QR</button>
@@ -658,6 +662,7 @@
         </div>
 
         <!-- Reset Player Settings — applies to the Player cluster only -->
+        <div class="cluster-reset-label">Player Resets</div>
         <div style="margin-bottom: 10px; display:flex; gap:8px; flex-wrap:wrap;">
             <button class="roll-button" id="resetPlayerSettingsButton" style="font-size:10px;padding:4px 10px;margin-top:0;">Reset settings to default</button>
         </div>

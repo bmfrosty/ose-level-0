@@ -43,6 +43,7 @@ function loadSettings(pageKey) {
 }
 import { expandCompactV3, mergeAdvancedLanguages } from './cs-sheet-page.js';
 import { PROG_CODE, CLS_CODE, RACE_CODE, RCM_CODE, progModeLabel } from './gen-core.js';
+import { RAP_CODE, isSeparateRaceClassForPolicy } from './gen-core.js';
 
 // ── Dark mode (persisted separately — never reset by settings reset) ──────────
 let darkMode = localStorage.getItem('theme') === 'dark'; // default light
@@ -113,16 +114,6 @@ let isRaceAsClassPick = false;
 // 'always' | 'separate-only' (default) | 'never' | 'from-separate' | 'from-level-1'.
 let racialAdjustmentPolicy = 'separate-only';
 
-// Shared 3-shape formula driving isSeparateRaceClass at level 1+ (direct generation
-// or via the level 0 -> 1 transition) for a given policy + which pick was made.
-// Mirrored in cs-sheet-page.js keyed by the persisted 2-char rap code instead.
-const RAP_L1PLUS_FORMULA = {
-    always: () => true,
-    'from-level-1': () => true,
-    never: () => false,
-    'separate-only': (isRaceAsClassPickArg) => !isRaceAsClassPickArg,
-    'from-separate': (isRaceAsClassPickArg) => !isRaceAsClassPickArg,
-};
 // Which policies apply the adjustment at level 0 itself (before any class is picked).
 const L0_ADJUSTED_POLICIES = new Set(['always', 'separate-only']);
 
@@ -506,8 +497,9 @@ async function runGenerate() {
     // isSeparateRaceClass is policy-driven (not just !isRaceAsClassPick) so a
     // referee's Racial Adjustment Policy applies identically whether a character
     // is built directly at level 1+ or arrives there via the level 0 -> 1 step.
-    const isSeparateRaceClass =
-        (RAP_L1PLUS_FORMULA[racialAdjustmentPolicy] ?? RAP_L1PLUS_FORMULA['separate-only'])(isRaceAsClassPick);
+    // Shared with cs-sheet-page.js's level-up transition via shared-core.js so
+    // the two paths can't silently diverge if a 6th policy is ever added.
+    const isSeparateRaceClass = isSeparateRaceClassForPolicy(RAP_CODE[racialAdjustmentPolicy], isRaceAsClassPick);
     if (!selectedClass) { alert('Please select a class first!'); return; }
     if (!selectedRace) { alert('Please select a race first!'); return; }
     if (xpMode && (xpAmount === null || xpAmount < 0)) { alert('Please enter an XP amount.'); return; }
@@ -901,13 +893,14 @@ function applySettings(s) {
     updateModifiers();
 }
 
-function applyPreset(overrides) {
-    document.querySelectorAll('input[name="mode"]').forEach(r => { r.checked = r.value === 'both'; });
-    setModePreset('both');
+function applyPreset(modeValue, overrides) {
+    document.querySelectorAll('input[name="mode"]').forEach(r => { r.checked = r.value === modeValue; });
+    setModePreset(modeValue);
     applySettings({
         progressionMode: 'ose', primeRequisiteMode: 'user',
         hpRollingMode: 'normal', includeLevel0HP: false,
         scoreSTR:3, scoreINT:3, scoreWIS:3, scoreDEX:3, scoreCON:6, scoreCHA:3,
+        useFixedScores: false, noLevel0Equipment: true,
         ...overrides,
     });
     saveCurrentSettings();
@@ -915,11 +908,11 @@ function applyPreset(overrides) {
 }
 
 function handleAuthorPreferred() {
-    applyPreset({ progressionMode: 'smoothprog', primeRequisiteMode: '9', hpRollingMode: 'healthy', scoreCON: 9, wealthPct: 20, wealthRollAsLevel1: false, raceClassMode: 'traditional-extended' });
+    applyPreset('race-class', { progressionMode: 'smoothprog', primeRequisiteMode: '9', hpRollingMode: 'healthy', scoreCON: 9, wealthPct: 20, wealthRollAsLevel1: false, raceClassMode: 'traditional-extended', racialAdjustmentPolicy: 'always' });
 }
 
 function handleConventionMode() {
-    applyPreset({ progressionMode: 'smoothprog', primeRequisiteMode: '13', hpRollingMode: 'healthy', includeLevel0HP: true, scoreCON: 9, wealthPct: 20, wealthRollAsLevel1: false, raceClassMode: 'allow-all' });
+    applyPreset('both', { progressionMode: 'smoothprog', primeRequisiteMode: '13', hpRollingMode: 'healthy', includeLevel0HP: true, scoreCON: 9, wealthPct: 20, wealthRollAsLevel1: false, raceClassMode: 'allow-all', racialAdjustmentPolicy: 'always' });
 }
 
 // Resets only the Referee cluster (sections 1-6: mode preset, progression mode,
@@ -927,36 +920,49 @@ function handleConventionMode() {
 // racial adjustment policy, and the other referee options). Does not touch
 // Player-cluster fields or their saved values — each reset button only affects
 // its own cluster, so scoped resets are additive saves, never a storage wipe.
-function handleResetRefereeSettings() {
+// Shared by the two mode-flavored reset buttons below, which only differ in
+// modePresetValue and racialAdjustmentPolicyValue.
+function applyRefereeModeReset(modePresetValue, racialAdjustmentPolicyValue) {
     progressionMode='ose'; primeRequisiteMode='user'; raceClassMode='strict';
-    hpRollingMode='normal'; includeLevel0HP=false; useFixedScores=false; noLevel0Equipment=false;
+    hpRollingMode='normal'; includeLevel0HP=false; useFixedScores=false; noLevel0Equipment=true;
     document.querySelectorAll('input[name="hpRollingMode"]').forEach(r=>{r.checked=r.value==='normal';});
     xpMode=false; xpAmount=null; const _lmR=document.getElementById('levelModeFixed'); if(_lmR) _lmR.checked=true; const _xaR=document.getElementById('xpAmount'); if(_xaR) _xaR.value='';
     document.querySelectorAll('input[name="progressionMode"]').forEach(r=>{r.checked=r.value==='ose';});
     document.querySelectorAll('input[name="raceClassMode"]').forEach(r=>{r.checked=false;});
     const _rcmEl = document.getElementById('strictOSE'); if(_rcmEl) _rcmEl.checked=true;
-    racialAdjustmentPolicy='separate-only';
-    document.querySelectorAll('input[name="racialAdjustmentPolicy"]').forEach(r=>{r.checked=r.value==='separate-only';});
-    document.querySelectorAll('input[name="rapTier1"]').forEach(r=>{r.checked=r.value==='applied';});
-    const _rapAppliedEl = document.getElementById('rapTier2Applied'); if(_rapAppliedEl) _rapAppliedEl.classList.remove('section-greyed');
-    const _rapNotAppliedEl = document.getElementById('rapTier2NotApplied'); if(_rapNotAppliedEl) _rapNotAppliedEl.classList.add('section-greyed');
+    racialAdjustmentPolicy = racialAdjustmentPolicyValue;
+    document.querySelectorAll('input[name="racialAdjustmentPolicy"]').forEach(r=>{r.checked=r.value===racialAdjustmentPolicyValue;});
+    const tier1Value = L0_ADJUSTED_POLICIES.has(racialAdjustmentPolicyValue) ? 'applied' : 'not-applied';
+    document.querySelectorAll('input[name="rapTier1"]').forEach(r=>{r.checked=r.value===tier1Value;});
+    const _rapAppliedEl = document.getElementById('rapTier2Applied'); if(_rapAppliedEl) _rapAppliedEl.classList.toggle('section-greyed', tier1Value !== 'applied');
+    const _rapNotAppliedEl = document.getElementById('rapTier2NotApplied'); if(_rapNotAppliedEl) _rapNotAppliedEl.classList.toggle('section-greyed', tier1Value !== 'not-applied');
     document.querySelectorAll('input[name="primeRequisiteMode"]').forEach(r=>{r.checked=r.value==='user';});
-    wealthPct=50; wealthRollAsLevel1=false; const _wpR=document.getElementById('wealthPctInput'); if(_wpR) _wpR.value=50; const _wmR=document.getElementById('wealthModePct'); if(_wmR) _wmR.checked=true;
-    ['useFixedScores','noLevel0Equipment'].forEach(id=>{const el=document.getElementById(id);if(el)el.checked=false;});
+    wealthPct=20; wealthRollAsLevel1=false; const _wpR=document.getElementById('wealthPctInput'); if(_wpR) _wpR.value=20; const _wmR=document.getElementById('wealthModePct'); if(_wmR) _wmR.checked=true;
+    const _ufsEl=document.getElementById('useFixedScores'); if(_ufsEl) _ufsEl.checked=false;
+    const _nl0eEl=document.getElementById('noLevel0Equipment'); if(_nl0eEl) _nl0eEl.checked=true;
     ['STR','INT','WIS','DEX','CON','CHA'].forEach(a=>{const el=document.getElementById(`score${a}`);if(el)el.value=3;});
     updateModifiers();
     // Reset the mode preset radio + hideHumanRaceOption greying directly rather
     // than via setModePreset(), which would reload (and re-clobber with) whatever
     // is still saved for this cluster before saveCurrentSettings() below runs.
-    modePreset = 'race-as-class';
-    document.querySelectorAll('input[name="mode"]').forEach(r => { r.checked = r.value === 'race-as-class'; });
+    modePreset = modePresetValue;
+    document.querySelectorAll('input[name="mode"]').forEach(r => { r.checked = r.value === modePresetValue; });
     const hideHumanRaceOption = document.getElementById('hideHumanRaceOption');
     if (hideHumanRaceOption) {
-        hideHumanRaceOption.classList.add('section-greyed');
-        const cb = document.getElementById('hideHumanRace'); if (cb) cb.disabled = true;
+        const disabled = modePresetValue === 'race-as-class';
+        hideHumanRaceOption.classList.toggle('section-greyed', disabled);
+        const cb = document.getElementById('hideHumanRace'); if (cb) cb.disabled = disabled;
     }
     updateUI();
     saveCurrentSettings();
+}
+
+function handleBasicModeReset() {
+    applyRefereeModeReset('race-as-class', 'never');
+}
+
+function handleAdvancedModeReset() {
+    applyRefereeModeReset('race-class', 'separate-only');
 }
 
 // Resets only the Player cluster (sections 7-8: character name and the
@@ -1100,7 +1106,8 @@ export function initializeEventListeners() {
     });
     // Buttons
     document.getElementById('characterName')?.addEventListener('change', ()=>saveCurrentSettings());
-    document.getElementById('resetSettingsButton')?.addEventListener('click', handleResetRefereeSettings);
+    document.getElementById('basicModeResetButton')?.addEventListener('click', handleBasicModeReset);
+    document.getElementById('advancedModeResetButton')?.addEventListener('click', handleAdvancedModeReset);
     document.getElementById('resetPlayerSettingsButton')?.addEventListener('click', handleResetPlayerSettings);
     document.getElementById('authorPreferredButton')?.addEventListener('click', handleAuthorPreferred);
     document.getElementById('conventionModeButton')?.addEventListener('click', handleConventionMode);

@@ -30,6 +30,7 @@ import {
     parseHitDice, HIT_DICE_PROGRESSIONS, HIT_DICE_SCALE,
     ARMOR, purchaseEquipment, getBackgroundByProfession,
     calculateSavingThrows, rollStartingGold,
+    isSeparateRaceClassForPolicy,
 } from './cs-core.js';
 
 export { compressToBase32 } from './cs-core.js';
@@ -835,18 +836,11 @@ function initEditPanel(decoded) {
 
             // The mechanics mode at level 1 is governed by the referee's Racial
             // Adjustment Policy (decoded.rap), not just which class button was
-            // picked — see PLAN_RACIAL_ADJUSTMENT_POLICY.md. Mirrors
-            // RAP_L1PLUS_FORMULA in gen-ui.js, keyed by the persisted 2-char
-            // rap code here instead of the live policy string.
-            const RAP_TO_L1_FORMULA = {
-                AA: () => 'A',
-                F1: () => 'A',
-                NV: () => 'B',
-                SO: (isRaceAsClass) => isRaceAsClass ? 'B' : 'A',
-                FS: (isRaceAsClass) => isRaceAsClass ? 'B' : 'A',
-            };
+            // picked — see PLAN_RACIAL_ADJUSTMENT_POLICY.md. Uses the same shared
+            // formula as gen-ui.js's direct level 1+ generation (shared-core.js),
+            // so the two paths can't silently diverge.
             const isRaceAsClassPick = DEMIHUMAN_CODES_L01.has(selectedClassCode);
-            const newMode = (RAP_TO_L1_FORMULA[decoded.rap] ?? RAP_TO_L1_FORMULA.SO)(isRaceAsClassPick);
+            const newMode = isSeparateRaceClassForPolicy(decoded.rap, isRaceAsClassPick) ? 'A' : 'B';
             const lupProg = decoded.p === 'S' ? 'smoothprog' : 'ose';
             const newCp = {
                 v:3, m: newMode, p: decoded.p || 'O', r: decoded.r || 'HU',
