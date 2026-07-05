@@ -24,7 +24,7 @@ import { WEAPONS, ARMOR, calculateModifier, rollDice,
     rollHitPoints as rollHPLeveled, rollStartingGold, calcStartingGold,
     getBackgroundByProfession, getRandomBackground,
     getClassRequirements, getPrimeRequisites,
-    CLS_CODE, RACE_CODE, RCM_CODE, PROG_CODE,
+    CLS_CODE, RACE_CODE, RCM_CODE, PROG_CODE, RAP_CODE,
 } from './shared-core.js';
 import * as ClassDataShared from './shared-core.js';
 
@@ -210,6 +210,12 @@ export function generateCharacterV3(opts = {}) {
         // Default preserves the old mode-derived behavior for callers not yet
         // updated to pass this explicitly.
         isSeparateRaceClass = mode === 'advanced',
+        // Referee setting governing whether/when racial ability adjustments apply
+        // across the level 0 -> 1 boundary. Only recorded on level-0 characters
+        // (as cp.rap) so a later level-up step can re-derive the right formula —
+        // it doesn't change anything else generateCharacterV3 does with the
+        // isSeparateRaceClass flag the caller already resolved.
+        racialAdjustmentPolicy = 'separate-only',
         progressionMode = 'ose', raceClassMode = 'strict',
         minimums = {}, primeReqMode = 'user', hpMode = 0,
         includeLevel0HP = false, fixedScores = null, fixedName = '',
@@ -367,6 +373,7 @@ export function generateCharacterV3(opts = {}) {
             n: name, bg: background?.profession ?? '',
             g: startingGold, rr: attempts,
             rcm: rcmCode,
+            rap: RAP_CODE[racialAdjustmentPolicy] ?? 'SO',
             ...(noLevel0Equipment ? { nl0: 1 } : {}),
         };
     }

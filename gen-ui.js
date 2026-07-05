@@ -41,10 +41,6 @@ function loadSettings(pageKey) {
     try { const raw = localStorage.getItem(_SETTINGS_PREFIX + pageKey); return raw ? JSON.parse(raw) : null; }
     catch (e) { console.warn('OSE: could not load settings:', e); return null; }
 }
-function clearSettings(pageKey) {
-    try { localStorage.removeItem(_SETTINGS_PREFIX + pageKey); }
-    catch (e) { console.warn('OSE: could not clear settings:', e); }
-}
 import { expandCompactV3, mergeAdvancedLanguages } from './cs-sheet-page.js';
 import { PROG_CODE, CLS_CODE, RACE_CODE, RCM_CODE, progModeLabel } from './gen-core.js';
 
@@ -111,6 +107,24 @@ let raceClassMode = 'strict';
 // classType === 'raceAsClass'), i.e. the Race-as-Class grid column was clicked
 // rather than a separate class column. Drives isSeparateRaceClass for generation.
 let isRaceAsClassPick = false;
+
+// Referee setting: whether/when racial ability score adjustments apply across
+// the level 0 -> 1 boundary. See PLAN_RACIAL_ADJUSTMENT_POLICY.md. Values:
+// 'always' | 'separate-only' (default) | 'never' | 'from-separate' | 'from-level-1'.
+let racialAdjustmentPolicy = 'separate-only';
+
+// Shared 3-shape formula driving isSeparateRaceClass at level 1+ (direct generation
+// or via the level 0 -> 1 transition) for a given policy + which pick was made.
+// Mirrored in cs-sheet-page.js keyed by the persisted 2-char rap code instead.
+const RAP_L1PLUS_FORMULA = {
+    always: () => true,
+    'from-level-1': () => true,
+    never: () => false,
+    'separate-only': (isRaceAsClassPickArg) => !isRaceAsClassPickArg,
+    'from-separate': (isRaceAsClassPickArg) => !isRaceAsClassPickArg,
+};
+// Which policies apply the adjustment at level 0 itself (before any class is picked).
+const L0_ADJUSTED_POLICIES = new Set(['always', 'separate-only']);
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function getSettingsKey() { return 'generator'; } // single shared key
@@ -197,13 +211,6 @@ function setModePreset(newPreset) {
         const cb = document.getElementById('hideHumanRace');
         if (cb) cb.disabled = disabled;
     }
-    // Swap accent colour on the container — green for race-as-class-only, purple otherwise
-    const container = document.getElementById('generatorContainer');
-    if (container) {
-        container.classList.toggle('mode-basic',    modePreset === 'race-as-class');
-        container.classList.toggle('mode-advanced', modePreset !== 'race-as-class');
-    }
-
     // Load saved settings, then sync the current raceClassMode to its radio.
     const _saved = loadSettings(getSettingsKey());
     applySettings(_saved);
@@ -496,7 +503,11 @@ async function runGenerate() {
 
     // A race is always chosen alongside a class now — via the Race-as-Class
     // column or a separate-class column — so both are required to generate.
-    const isSeparateRaceClass = !isRaceAsClassPick;
+    // isSeparateRaceClass is policy-driven (not just !isRaceAsClassPick) so a
+    // referee's Racial Adjustment Policy applies identically whether a character
+    // is built directly at level 1+ or arrives there via the level 0 -> 1 step.
+    const isSeparateRaceClass =
+        (RAP_L1PLUS_FORMULA[racialAdjustmentPolicy] ?? RAP_L1PLUS_FORMULA['separate-only'])(isRaceAsClassPick);
     if (!selectedClass) { alert('Please select a class first!'); return; }
     if (!selectedRace) { alert('Please select a race first!'); return; }
     if (xpMode && (xpAmount === null || xpAmount < 0)) { alert('Please enter an XP amount.'); return; }
@@ -569,13 +580,13 @@ async function runGenerate() {
         includeLevel0HP, showUndeadNames, showQRCode,
         conModifier: calculateModifier(rawScores[conIdx] + totalAdj[conIdx]),
         extraSections: [
-            { label:'6. Race/Class Restrictions', name:'editRaceClassMode', options:[
+            { label:'Race/Class Restrictions', name:'editRaceClassMode', options:[
                 { value:'strict',               label:'Strict OSE',                checked: raceClassMode==='strict' },
                 { value:'strict-human',         label:'Strict + Human Abilities',  checked: raceClassMode==='strict-human' },
                 { value:'traditional-extended', label:'Traditional Extended',       checked: raceClassMode==='traditional-extended' },
                 { value:'allow-all',            label:'Allow All',                 checked: raceClassMode==='allow-all' },
             ]},
-            { label:'7. AC Display Mode', name:'editACDisplayMode', options:[
+            { label:'AC Display Mode', name:'editACDisplayMode', options:[
                 { value:'aac',        label:'Ascending Armor Class (AAC)',         checked: acDisplayMode==='aac' },
                 { value:'dac-matrix', label:'Descending AC with Attack Matrix',    checked: acDisplayMode==='dac-matrix' },
                 { value:'dual',       label:'Dual Format (AAC and DAC)',           checked: acDisplayMode==='dual' },
@@ -615,11 +626,12 @@ async function generateZeroLevel() {
     fixedAdjustments  = null;
     const hpMode = hpRollingMode === 'healthy' ? 3 : hpRollingMode === 'blessed' ? 1 : 0;
 
-    // Level 0 always has racial ability adjustments and minimums applied — a
-    // race is always separately chosen at level 0 (no class yet to imply it).
+    // Whether level 0 itself shows racial ability adjustments/minimums is now
+    // governed by the referee's Racial Adjustment Policy (previously always true).
     const cp = generateCharacterV3({
         level: 0, race: selectedRaceForZero,
-        isSeparateRaceClass: true,
+        isSeparateRaceClass: L0_ADJUSTED_POLICIES.has(racialAdjustmentPolicy),
+        racialAdjustmentPolicy,
         progressionMode, raceClassMode,
         minimums: readScoresFromInputs(), primeReqMode: primeRequisiteMode,
         hpMode, fixedScores: fixedScoresForGen, fixedName,
@@ -641,7 +653,9 @@ async function generateZeroLevel() {
 
     const SCRS = ['STR','DEX','CON','INT','WIS','CHA'];
     const rawScores = cp.s || [10,10,10,10,10,10];
-    const racialMods = getRaceInfo(selectedRaceForZero || 'Human_RACE')?.abilityModifiers ?? {};
+    const racialMods = L0_ADJUSTED_POLICIES.has(racialAdjustmentPolicy)
+        ? (getRaceInfo(selectedRaceForZero || 'Human_RACE')?.abilityModifiers ?? {})
+        : {};
     const saArr = cp.sa || Array(6).fill(0);
     const totalAdj = SCRS.map((a, i) => (racialMods[a] || 0) + saArr[i]);
     const base0 = Object.fromEntries(SCRS.map((a, i) => [a, rawScores[i]]));
@@ -702,7 +716,7 @@ function saveCurrentSettings() {
         scoreDEX: parseInt(document.getElementById('scoreDEX')?.value)||3,
         scoreCON: parseInt(document.getElementById('scoreCON')?.value)||6,
         scoreCHA: parseInt(document.getElementById('scoreCHA')?.value)||3,
-        raceClassMode, selectedRace, selectedRaceForZero,
+        raceClassMode, selectedRace, selectedRaceForZero, racialAdjustmentPolicy,
     });
     syncURLParams();
 }
@@ -716,6 +730,7 @@ function syncURLParams() {
     if (selectedClass)                                             p.set('c', selectedClass.replace('_CLASS',''));
     if (selectedRace)                                              p.set('r', selectedRace.replace('_RACE',''));
     if (raceClassMode !== 'strict')                                p.set('rcm', raceClassMode);
+    if (racialAdjustmentPolicy !== 'separate-only')                p.set('rap', racialAdjustmentPolicy);
     if (primeRequisiteMode !== 'user')                             p.set('prm', primeRequisiteMode);
     if (hpRollingMode !== 'normal')                                p.set('hpm', hpRollingMode);
     if (includeLevel0HP)                                           p.set('il', '1');
@@ -813,6 +828,16 @@ function applySettings(s) {
         const _id = RCM_IDS[s.raceClassMode];
         if (_id) { const el=document.getElementById(_id); if(el) el.checked=true; }
     }
+    if (s.racialAdjustmentPolicy) {
+        racialAdjustmentPolicy = s.racialAdjustmentPolicy;
+        document.querySelectorAll('input[name="racialAdjustmentPolicy"]').forEach(r=>{r.checked=r.value===s.racialAdjustmentPolicy;});
+        const tier1Value = L0_ADJUSTED_POLICIES.has(s.racialAdjustmentPolicy) ? 'applied' : 'not-applied';
+        document.querySelectorAll('input[name="rapTier1"]').forEach(r=>{r.checked=r.value===tier1Value;});
+        const appliedGroup = document.getElementById('rapTier2Applied');
+        const notAppliedGroup = document.getElementById('rapTier2NotApplied');
+        if (appliedGroup)    appliedGroup.classList.toggle('section-greyed', tier1Value !== 'applied');
+        if (notAppliedGroup) notAppliedGroup.classList.toggle('section-greyed', tier1Value !== 'not-applied');
+    }
     if (s.primeRequisiteMode!==undefined) { primeRequisiteMode=s.primeRequisiteMode; document.querySelectorAll('input[name="primeRequisiteMode"]').forEach(r=>{r.checked=r.value===s.primeRequisiteMode;}); }
     const setBool = (k, id) => { if(s[k]!==undefined){ const el=document.getElementById(id); if(el) el.checked=s[k]; }};
     if (s.hpRollingMode!==undefined) { hpRollingMode=s.hpRollingMode; document.querySelectorAll('input[name="hpRollingMode"]').forEach(r=>{r.checked=r.value===s.hpRollingMode;}); }
@@ -897,32 +922,56 @@ function handleConventionMode() {
     applyPreset({ progressionMode: 'smoothprog', primeRequisiteMode: '13', hpRollingMode: 'healthy', includeLevel0HP: true, scoreCON: 9, wealthPct: 20, wealthRollAsLevel1: false, raceClassMode: 'allow-all' });
 }
 
-function handleResetSettings() {
-    clearSettings(getSettingsKey());
+// Resets only the Referee cluster (sections 1-6: mode preset, progression mode,
+// minimum ability scores + "use these scores" toggle, race/class restrictions,
+// racial adjustment policy, and the other referee options). Does not touch
+// Player-cluster fields or their saved values — each reset button only affects
+// its own cluster, so scoped resets are additive saves, never a storage wipe.
+function handleResetRefereeSettings() {
     progressionMode='ose'; primeRequisiteMode='user'; raceClassMode='strict';
-    hpRollingMode='normal'; includeLevel0HP=false; useFixedScores=false; showUndeadNames=false; hideHumanRace=false;
-    basicAbilityOrdering=true; wealthPct=50; acDisplayMode='aac';
+    hpRollingMode='normal'; includeLevel0HP=false; useFixedScores=false; noLevel0Equipment=false;
     document.querySelectorAll('input[name="hpRollingMode"]').forEach(r=>{r.checked=r.value==='normal';});
-    document.querySelectorAll('input[name="acDisplayMode"]').forEach(r=>{r.checked=r.value==='aac';});
-    autoGenerateOnLevelChange=false; autoGenerateOnClassChange=false; autoGenerateOnLoad=false;
     xpMode=false; xpAmount=null; const _lmR=document.getElementById('levelModeFixed'); if(_lmR) _lmR.checked=true; const _xaR=document.getElementById('xpAmount'); if(_xaR) _xaR.value='';
     document.querySelectorAll('input[name="progressionMode"]').forEach(r=>{r.checked=r.value==='ose';});
     document.querySelectorAll('input[name="raceClassMode"]').forEach(r=>{r.checked=false;});
     const _rcmEl = document.getElementById('strictOSE'); if(_rcmEl) _rcmEl.checked=true;
+    racialAdjustmentPolicy='separate-only';
+    document.querySelectorAll('input[name="racialAdjustmentPolicy"]').forEach(r=>{r.checked=r.value==='separate-only';});
+    document.querySelectorAll('input[name="rapTier1"]').forEach(r=>{r.checked=r.value==='applied';});
+    const _rapAppliedEl = document.getElementById('rapTier2Applied'); if(_rapAppliedEl) _rapAppliedEl.classList.remove('section-greyed');
+    const _rapNotAppliedEl = document.getElementById('rapTier2NotApplied'); if(_rapNotAppliedEl) _rapNotAppliedEl.classList.add('section-greyed');
     document.querySelectorAll('input[name="primeRequisiteMode"]').forEach(r=>{r.checked=r.value==='user';});
     wealthPct=50; wealthRollAsLevel1=false; const _wpR=document.getElementById('wealthPctInput'); if(_wpR) _wpR.value=50; const _wmR=document.getElementById('wealthModePct'); if(_wmR) _wmR.checked=true;
-    noLevel0Equipment=false;
-    ['useFixedScores','showUndeadNames','hideHumanRace','openInNewTab','noLevel0Equipment'].forEach(id=>{const el=document.getElementById(id);if(el)el.checked=false;});
+    ['useFixedScores','noLevel0Equipment'].forEach(id=>{const el=document.getElementById(id);if(el)el.checked=false;});
+    ['STR','INT','WIS','DEX','CON','CHA'].forEach(a=>{const el=document.getElementById(`score${a}`);if(el)el.value=3;});
+    updateModifiers();
+    // Reset the mode preset radio + hideHumanRaceOption greying directly rather
+    // than via setModePreset(), which would reload (and re-clobber with) whatever
+    // is still saved for this cluster before saveCurrentSettings() below runs.
+    modePreset = 'race-as-class';
+    document.querySelectorAll('input[name="mode"]').forEach(r => { r.checked = r.value === 'race-as-class'; });
+    const hideHumanRaceOption = document.getElementById('hideHumanRaceOption');
+    if (hideHumanRaceOption) {
+        hideHumanRaceOption.classList.add('section-greyed');
+        const cb = document.getElementById('hideHumanRace'); if (cb) cb.disabled = true;
+    }
+    updateUI();
+    saveCurrentSettings();
+}
+
+// Resets only the Player cluster (sections 7-8: character name and the
+// display/workflow options). Does not touch Referee-cluster fields.
+function handleResetPlayerSettings() {
+    showUndeadNames=false; hideHumanRace=false; basicAbilityOrdering=true; acDisplayMode='aac';
+    autoGenerateOnLevelChange=false; autoGenerateOnClassChange=false; autoGenerateOnLoad=false;
+    document.querySelectorAll('input[name="acDisplayMode"]').forEach(r=>{r.checked=r.value==='aac';});
+    ['showUndeadNames','hideHumanRace','openInNewTab'].forEach(id=>{const el=document.getElementById(id);if(el)el.checked=false;});
     ['autoGenerateOnLevelChange','autoGenerateOnClassChange','autoGenerateOnLoad'].forEach(id=>{const el=document.getElementById(id);if(el)el.checked=false;});
     const aoEl=document.getElementById('basicAbilityOrdering'); if(aoEl) aoEl.checked=true;
-    ['STR','INT','WIS','DEX','CON','CHA'].forEach(a=>{const el=document.getElementById(`score${a}`);if(el)el.value=3;});
     const _nameEl=document.getElementById('characterName'); if(_nameEl) _nameEl.value='';
     characterName='';
-    updateModifiers();
-    document.querySelectorAll('input[name="mode"]').forEach(r => { r.checked = r.value === 'race-as-class'; });
-    setModePreset('race-as-class');
-    // Clear the URL back to bare pathname — no stale params after reset
-    window.history.replaceState({}, '', window.location.pathname);
+    updateUI();
+    saveCurrentSettings();
 }
 
 // ── URL Params ────────────────────────────────────────────────────────────────
@@ -936,6 +985,7 @@ function readURLParams() {
     if (p.has('c'))     s.selectedClass = p.get('c') + '_CLASS';
     if (p.has('r'))     s.selectedRace  = p.get('r') + '_RACE';
     if (p.has('rcm'))   s.raceClassMode = p.get('rcm');
+    if (p.has('rap'))   s.racialAdjustmentPolicy = p.get('rap');
     if (p.has('prm'))   { const v=p.get('prm'); s.primeRequisiteMode = v==='0'?'user':v; }
     if (p.has('hpm'))   s.hpRollingMode = p.get('hpm');
     if (p.has('il'))    s.includeLevel0HP = p.get('il')==='1';
@@ -968,6 +1018,24 @@ export function initializeEventListeners() {
     // Race/class mode
     document.querySelectorAll('input[name="raceClassMode"]').forEach(r=>{
         r.addEventListener('change',(e)=>{ raceClassMode=e.target.value; updateUI(); saveCurrentSettings(); });
+    });
+    // Racial Adjustment Policy — Tier 1 (does level 0 get it) toggles which
+    // Tier-2 sub-group is enabled and picks that sub-group's first option.
+    document.querySelectorAll('input[name="rapTier1"]').forEach(r=>{
+        r.addEventListener('change',(e)=>{
+            const applied = e.target.value === 'applied';
+            const appliedGroup = document.getElementById('rapTier2Applied');
+            const notAppliedGroup = document.getElementById('rapTier2NotApplied');
+            if (appliedGroup)    appliedGroup.classList.toggle('section-greyed', !applied);
+            if (notAppliedGroup) notAppliedGroup.classList.toggle('section-greyed', applied);
+            racialAdjustmentPolicy = applied ? 'separate-only' : 'never';
+            document.querySelectorAll('input[name="racialAdjustmentPolicy"]').forEach(cb=>{cb.checked=cb.value===racialAdjustmentPolicy;});
+            saveCurrentSettings();
+        });
+    });
+    // Racial Adjustment Policy — Tier 2 (the actual persisted value)
+    document.querySelectorAll('input[name="racialAdjustmentPolicy"]').forEach(r=>{
+        r.addEventListener('change',(e)=>{ racialAdjustmentPolicy=e.target.value; saveCurrentSettings(); });
     });
     // Prime requisite mode
     document.querySelectorAll('input[name="primeRequisiteMode"]').forEach(r=>{
@@ -1032,7 +1100,8 @@ export function initializeEventListeners() {
     });
     // Buttons
     document.getElementById('characterName')?.addEventListener('change', ()=>saveCurrentSettings());
-    document.getElementById('resetSettingsButton')?.addEventListener('click', handleResetSettings);
+    document.getElementById('resetSettingsButton')?.addEventListener('click', handleResetRefereeSettings);
+    document.getElementById('resetPlayerSettingsButton')?.addEventListener('click', handleResetPlayerSettings);
     document.getElementById('authorPreferredButton')?.addEventListener('click', handleAuthorPreferred);
     document.getElementById('conventionModeButton')?.addEventListener('click', handleConventionMode);
     document.getElementById('darkModeToggle')?.addEventListener('click', handleDarkModeToggle);

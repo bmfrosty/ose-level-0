@@ -37,22 +37,15 @@
         nav a:hover { color: #4CAF50; }
         nav a.active { color: #4CAF50; }
 
-        /* ── Accent colour — switches with mode ────────────────────────────── */
+        /* ── Accent colour — fixed green, no longer swaps with mode preset ──── */
         .generator-container {
-            --accent:      #4CAF50;   /* green  = basic  (default) */
+            --accent:      #4CAF50;
             --accent-bg:   #f1f8e9;
             --accent-bg2:  #e8f5e9;
             background-color: #f8f9fa;
-            border: 2px solid var(--accent);
             border-radius: 5px;
             padding: 30px;
             margin: 20px 0;
-            transition: border-color 0.3s;
-        }
-        .generator-container.mode-advanced {
-            --accent:     #9C27B0;    /* purple = advanced */
-            --accent-bg:  #f3e5f5;
-            --accent-bg2: #ede7f6;
         }
 
         .control-section {
@@ -62,6 +55,39 @@
         }
         .control-section:last-child { border-bottom: none; }
         .control-section h3 { margin-top: 0; color: #333; }
+        .control-section h4 { margin: 14px 0 6px; color: #333; font-size: 0.95em; }
+
+        /* ── Referee vs Player section tags ────────────────────────────────── */
+        /* Referee reuses the old "Advanced" purple as a dedicated, non-swapping
+           tag color; Player reuses var(--accent) so it blends with the page's
+           normal (green) theme. */
+        .section-tag {
+            display: inline-block;
+            font-size: 0.6em;
+            font-weight: normal;
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+        .section-tag-referee { background: #9C27B0; color: #fff; }
+        .section-tag-player  { background: var(--accent); color: #fff; }
+        body.dark-mode .section-tag-referee { background: #6a3fa0; }
+
+        /* ── Referee / Player cluster outlines ───────────────────────────────── */
+        .referee-cluster {
+            border: 2px solid #9C27B0;
+            border-radius: 5px;
+            padding: 10px 15px;
+            margin-bottom: 20px;
+        }
+        .player-cluster {
+            border: 2px solid var(--accent);
+            border-radius: 5px;
+            padding: 10px 15px;
+            margin-bottom: 20px;
+        }
+        body.dark-mode .referee-cluster { border-color: #6a3fa0; }
 
         /* ── Level buttons ─────────────────────────────────────────────────── */
         .level-selection {
@@ -308,19 +334,22 @@
 
     <h1>OSE Character Generator (Levels 0–14)</h1>
 
-    <div class="generator-container mode-basic" id="generatorContainer">
+    <div class="generator-container" id="generatorContainer">
 
-        <!-- Reset Settings + Presets + Share -->
+        <!-- Reset Referee Settings + Presets + Share — these apply to the Referee
+             cluster only (Author Preferred / Convention Mode already only ever
+             touch referee-scoped fields; Share/QR isn't a settings action). -->
         <div style="margin-bottom: 10px; display:flex; gap:8px; flex-wrap:wrap;">
-            <button class="roll-button" id="resetSettingsButton" style="font-size:10px;padding:4px 10px;margin-top:0;">Reset Saved Settings</button>
+            <button class="roll-button" id="resetSettingsButton" style="font-size:10px;padding:4px 10px;margin-top:0;">Reset settings to default</button>
             <button class="roll-button" id="authorPreferredButton" style="font-size:10px;padding:4px 10px;margin-top:0;">Author Preferred Settings</button>
             <button class="roll-button" id="conventionModeButton" style="font-size:10px;padding:4px 10px;margin-top:0;">Convention Mode</button>
             <button class="roll-button" id="shareButton" style="font-size:10px;padding:4px 10px;margin-top:0;">📱 Share / QR</button>
         </div>
 
+        <div class="referee-cluster">
         <!-- 1. Select Mode & Level -->
         <div class="control-section" id="modeLevelSection">
-            <h3>1. Select Mode &amp; Level</h3>
+            <h3>1. Select Mode &amp; Level <span class="section-tag section-tag-referee">Referee</span></h3>
             <div class="mode-option">
                 <label>
                     <input type="radio" name="mode" value="race-class">
@@ -365,7 +394,7 @@
 
         <!-- 2. Progression Mode -->
         <div class="control-section">
-            <h3>2. Attack &amp; Saving Throw Progressions</h3>
+            <h3>2. Attack &amp; Saving Throw Progressions <span class="section-tag section-tag-referee">Referee</span></h3>
             <div class="radio-option">
                 <label>
                     <input type="radio" name="progressionMode" id="progressionSmooth" value="smoothprog">
@@ -392,14 +421,162 @@
             </div>
         </div>
 
-        <!-- 3. Options -->
+
+        <!-- 3. Minimum Ability Scores -->
         <div class="control-section">
-            <h3>3. Options</h3>
+            <h3>3. Minimum Ability Scores <span class="section-tag section-tag-referee">Referee</span></h3>
+            <div class="ability-grid">
+                <div class="ability-box">
+                    <label class="ability-label" for="scoreSTR">STR</label>
+                    <input type="number" class="ability-input" id="scoreSTR" value="3" min="3" max="18">
+                    <span class="ability-modifier" id="modSTR">+0</span>
+                </div>
+                <div class="ability-box">
+                    <label class="ability-label" for="scoreINT">INT</label>
+                    <input type="number" class="ability-input" id="scoreINT" value="3" min="3" max="18">
+                    <span class="ability-modifier" id="modINT">+0</span>
+                </div>
+                <div class="ability-box">
+                    <label class="ability-label" for="scoreWIS">WIS</label>
+                    <input type="number" class="ability-input" id="scoreWIS" value="3" min="3" max="18">
+                    <span class="ability-modifier" id="modWIS">+0</span>
+                </div>
+                <div class="ability-box">
+                    <label class="ability-label" for="scoreDEX">DEX</label>
+                    <input type="number" class="ability-input" id="scoreDEX" value="3" min="3" max="18">
+                    <span class="ability-modifier" id="modDEX">+0</span>
+                </div>
+                <div class="ability-box">
+                    <label class="ability-label" for="scoreCON">CON</label>
+                    <input type="number" class="ability-input" id="scoreCON" value="6" min="3" max="18">
+                    <span class="ability-modifier" id="modCON">+0</span>
+                </div>
+                <div class="ability-box">
+                    <label class="ability-label" for="scoreCHA">CHA</label>
+                    <input type="number" class="ability-input" id="scoreCHA" value="3" min="3" max="18">
+                    <span class="ability-modifier" id="modCHA">+0</span>
+                </div>
+            </div>
+            <div class="checkbox-option" style="margin-top: 10px;">
+                <label>
+                    <input type="checkbox" id="useFixedScores">
+                    <span><strong>Use the ability scores specified above</strong> (unchecked = roll abilities with minimums)</span>
+                </label>
+            </div>
+        </div>
+
+
+        <!-- 4. Race/Class Restrictions — one panel, applies to the grid regardless of
+             which Mode preset (A/B/C) is active. Same restriction concept for both
+             race-as-class picks (caps at that class's own maxLevel) and separate-class
+             picks (caps per classLevelLimits), computed in gen-ui.js. -->
+        <div class="control-section" id="raceClassRestrictionSection">
+            <h3>4. Race/Class Restrictions <span class="section-tag section-tag-referee">Referee</span></h3>
+            <div class="radio-option">
+                <label>
+                    <input type="radio" name="raceClassMode" id="strictOSE" value="strict" checked>
+                    <span>
+                        <strong>Strict OSE Rules</strong> - Traditional combinations only, OSE level limits, no human racial abilities
+                        <br><small style="margin-left: 30px;">Example: Dwarf Fighter max 10, Elf Magic-User max 11, Halfling Thief max 8</small>
+                    </span>
+                </label>
+            </div>
+            <div class="radio-option">
+                <label>
+                    <input type="radio" name="raceClassMode" id="strictOSEHuman" value="strict-human">
+                    <span>
+                        <strong>Strict OSE + Human Racial Abilities</strong> - Traditional combinations, OSE level limits, humans gain racial abilities
+                        <br><small style="margin-left: 30px;">Example: Dwarf Fighter max 10, Elf Magic-User max 11, Halfling Thief max 8</small>
+                        <br><small style="margin-left: 30px;"><em>Humans gain racial abilities (Blessed, Decisiveness, Leadership)</em></small>
+                    </span>
+                </label>
+            </div>
+            <div class="radio-option">
+                <label>
+                    <input type="radio" name="raceClassMode" id="traditionalExtended" value="traditional-extended">
+                    <span>
+                        <strong>Traditional Combinations, Extended Levels</strong> - Traditional combinations only, all to level 14
+                        <br><small style="margin-left: 30px;">Example: Dwarf Fighter max 14, Elf Magic-User max 14, Halfling Thief max 14</small>
+                        <br><small style="margin-left: 30px;"><em>Humans gain racial abilities (Blessed, Decisiveness, Leadership)</em></small>
+                    </span>
+                </label>
+            </div>
+            <div class="radio-option">
+                <label>
+                    <input type="radio" name="raceClassMode" id="allowAll" value="allow-all">
+                    <span>
+                        <strong>Allow All Combinations (House Rules)</strong> - Any race/class combo, all to level 14
+                        <br><small style="margin-left: 30px;">Example: Dwarf Magic-User max 14, Halfling Cleric max 14</small>
+                        <br><small style="margin-left: 30px;"><em>Humans gain racial abilities (Blessed, Decisiveness, Leadership)</em></small>
+                    </span>
+                </label>
+            </div>
+        </div>
+
+
+        <!-- 5. Racial Adjustment Policy — governs whether/when racial ability score
+             adjustments apply across the level 0 -> 1 boundary. See
+             PLAN_RACIAL_ADJUSTMENT_POLICY.md. Independent of Race/Class Restrictions
+             above (which governs allowed combinations and human racial abilities). -->
+        <div class="control-section" id="racialAdjustmentPolicySection">
+            <h3>5. Racial Adjustment Policy <span class="section-tag section-tag-referee">Referee</span></h3>
+            <div class="radio-option">
+                <label>
+                    <input type="radio" name="rapTier1" id="rapApplied" value="applied" checked>
+                    <span><strong>Applied at level 0</strong> — a level-0 character's racial ability adjustments show immediately</span>
+                </label>
+            </div>
+            <div id="rapTier2Applied" style="margin-left: 24px;">
+                <div class="radio-option">
+                    <label>
+                        <input type="radio" name="racialAdjustmentPolicy" id="rapSeparateOnly" value="separate-only" checked>
+                        <span><strong>Keep it only for a separate race + class pick</strong> — lost if the level-1 pick is race-as-class</span>
+                    </label>
+                </div>
+                <div class="radio-option">
+                    <label>
+                        <input type="radio" name="racialAdjustmentPolicy" id="rapAlways" value="always">
+                        <span><strong>Keep it always</strong> — regardless of which level-1 class is picked</span>
+                    </label>
+                </div>
+            </div>
+            <div class="radio-option">
+                <label>
+                    <input type="radio" name="rapTier1" id="rapNotApplied" value="not-applied">
+                    <span><strong>Not applied at level 0</strong> — a level-0 character's racial ability adjustments do not show</span>
+                </label>
+            </div>
+            <div id="rapTier2NotApplied" class="section-greyed" style="margin-left: 24px;">
+                <div class="radio-option">
+                    <label>
+                        <input type="radio" name="racialAdjustmentPolicy" id="rapNever" value="never">
+                        <span><strong>Never apply it</strong> — not at level 0, not ever at level 1+</span>
+                    </label>
+                </div>
+                <div class="radio-option">
+                    <label>
+                        <input type="radio" name="racialAdjustmentPolicy" id="rapFromSeparate" value="from-separate">
+                        <span><strong>Gain it only for a separate race + class pick</strong> — race-as-class picks stay unadjusted</span>
+                    </label>
+                </div>
+                <div class="radio-option">
+                    <label>
+                        <input type="radio" name="racialAdjustmentPolicy" id="rapFromLevel1" value="from-level-1">
+                        <span><strong>Gain it at level 1 regardless of pick</strong> — race-as-class or separate, both get it</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- 6. Referee Options — the referee-facing half of the old "3. Options" -->
+        <div class="control-section">
+            <h3>6. Referee Options <span class="section-tag section-tag-referee">Referee</span></h3>
             <div class="radio-option">
                 <label>
                     <input type="radio" name="primeRequisiteMode" id="primeReqUser" value="user" checked>
                     <span>
-                        <strong>User Minimums Only</strong> - Use ability score minimums from Step 5 only
+                        <strong>User Minimums Only</strong> - Use ability score minimums from Step 3 only
                     </span>
                 </label>
             </div>
@@ -458,6 +635,46 @@
                     <span><strong>No Level 0 Equipment</strong> - Skip background weapon/armor/items (level 1+)</span>
                 </label>
             </div>
+
+            <div id="startingWealthSection" style="margin-top: 12px; border-top: 1px solid #ddd; padding-top: 10px;">
+                <strong>Starting Wealth (level 2+):</strong>
+                <span style="color:#555; font-size:0.95em;"> — % of minimum XP for level, in gp</span>
+                <div style="display:flex; align-items:center; gap:12px; margin-top:6px; flex-wrap:wrap;">
+                    <label style="display:flex;align-items:center;gap:4px;">
+                        <input type="radio" name="wealthMode" id="wealthModePct" value="pct" checked>
+                        <input type="number" id="wealthPctInput" value="50" min="0" max="1000" style="width:60px; padding:2px 4px; font-size:14px;">
+                        <span>%</span>
+                    </label>
+                    <label style="display:flex;align-items:center;gap:4px;cursor:pointer;">
+                        <input type="radio" name="wealthMode" id="wealthModeLevel1" value="level1">
+                        <span><strong>Roll as Level 1</strong> &mdash; 3d6&times;10 gp regardless of level</span>
+                    </label>
+                </div>
+                <div id="wealthPreview" style="margin-top:6px; color:#555; font-size:0.9em;"></div>
+            </div>
+
+        </div>
+
+        </div>
+
+        <!-- Reset Player Settings — applies to the Player cluster only -->
+        <div style="margin-bottom: 10px; display:flex; gap:8px; flex-wrap:wrap;">
+            <button class="roll-button" id="resetPlayerSettingsButton" style="font-size:10px;padding:4px 10px;margin-top:0;">Reset settings to default</button>
+        </div>
+
+        <div class="player-cluster">
+        <!-- 7. Character Name -->
+        <div class="control-section">
+            <h3>7. Character Name <span class="section-tag section-tag-player">Player</span></h3>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <input type="text" id="characterName" placeholder="Enter character name..." style="flex: 1; padding: 8px; font-size: 14px; border: 2px solid #ccc; border-radius: 3px;">
+            </div>
+        </div>
+
+
+        <!-- 8. Player Options — the player-facing half of the old "3. Options" -->
+        <div class="control-section">
+            <h3>8. Player Options <span class="section-tag section-tag-player">Player</span></h3>
             <div class="checkbox-option">
                 <label>
                     <input type="checkbox" id="showUndeadNames">
@@ -507,30 +724,7 @@
                 </div>
             </div>
 
-            <div id="startingWealthSection" style="margin-top: 12px; border-top: 1px solid #ddd; padding-top: 10px;">
-                <strong>Starting Wealth (level 2+):</strong>
-                <span style="color:#555; font-size:0.95em;"> — % of minimum XP for level, in gp</span>
-                <div style="display:flex; align-items:center; gap:12px; margin-top:6px; flex-wrap:wrap;">
-                    <label style="display:flex;align-items:center;gap:4px;">
-                        <input type="radio" name="wealthMode" id="wealthModePct" value="pct" checked>
-                        <input type="number" id="wealthPctInput" value="50" min="0" max="1000" style="width:60px; padding:2px 4px; font-size:14px;">
-                        <span>%</span>
-                    </label>
-                    <label style="display:flex;align-items:center;gap:4px;cursor:pointer;">
-                        <input type="radio" name="wealthMode" id="wealthModeLevel1" value="level1">
-                        <span><strong>Roll as Level 1</strong> &mdash; 3d6&times;10 gp regardless of level</span>
-                    </label>
-                </div>
-                <div id="wealthPreview" style="margin-top:6px; color:#555; font-size:0.9em;"></div>
-            </div>
-
             <div style="margin-top: 12px; border-top: 1px solid #ddd; padding-top: 10px;">
-                <div class="checkbox-option">
-                    <label>
-                        <input type="checkbox" id="useFixedScores">
-                        <span><strong>Use the ability scores specified in Step 4</strong> (unchecked = roll abilities with minimums)</span>
-                    </label>
-                </div>
                 <div class="checkbox-option">
                     <label>
                         <input type="checkbox" id="autoGenerateOnLevelChange">
@@ -556,104 +750,13 @@
                     </label>
                 </div>
             </div>
+        </div>
 
         </div>
 
-        <!-- 4. Character Name -->
+        <!-- 9. Generate Character -->
         <div class="control-section">
-            <h3>4. Character Name</h3>
-            <div style="display: flex; gap: 10px; align-items: center;">
-                <input type="text" id="characterName" placeholder="Enter character name..." style="flex: 1; padding: 8px; font-size: 14px; border: 2px solid #ccc; border-radius: 3px;">
-            </div>
-        </div>
-
-        <!-- 5. Minimum Ability Scores -->
-        <div class="control-section">
-            <h3>5. Minimum Ability Scores</h3>
-            <div class="ability-grid">
-                <div class="ability-box">
-                    <label class="ability-label" for="scoreSTR">STR</label>
-                    <input type="number" class="ability-input" id="scoreSTR" value="3" min="3" max="18">
-                    <span class="ability-modifier" id="modSTR">+0</span>
-                </div>
-                <div class="ability-box">
-                    <label class="ability-label" for="scoreINT">INT</label>
-                    <input type="number" class="ability-input" id="scoreINT" value="3" min="3" max="18">
-                    <span class="ability-modifier" id="modINT">+0</span>
-                </div>
-                <div class="ability-box">
-                    <label class="ability-label" for="scoreWIS">WIS</label>
-                    <input type="number" class="ability-input" id="scoreWIS" value="3" min="3" max="18">
-                    <span class="ability-modifier" id="modWIS">+0</span>
-                </div>
-                <div class="ability-box">
-                    <label class="ability-label" for="scoreDEX">DEX</label>
-                    <input type="number" class="ability-input" id="scoreDEX" value="3" min="3" max="18">
-                    <span class="ability-modifier" id="modDEX">+0</span>
-                </div>
-                <div class="ability-box">
-                    <label class="ability-label" for="scoreCON">CON</label>
-                    <input type="number" class="ability-input" id="scoreCON" value="6" min="3" max="18">
-                    <span class="ability-modifier" id="modCON">+0</span>
-                </div>
-                <div class="ability-box">
-                    <label class="ability-label" for="scoreCHA">CHA</label>
-                    <input type="number" class="ability-input" id="scoreCHA" value="3" min="3" max="18">
-                    <span class="ability-modifier" id="modCHA">+0</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- 6. Race/Class Restrictions — one panel, applies to the grid regardless of
-             which Mode preset (A/B/C) is active. Same restriction concept for both
-             race-as-class picks (caps at that class's own maxLevel) and separate-class
-             picks (caps per classLevelLimits), computed in gen-ui.js. -->
-        <div class="control-section" id="raceClassRestrictionSection">
-            <h3>6. Race/Class Restrictions</h3>
-            <div class="radio-option">
-                <label>
-                    <input type="radio" name="raceClassMode" id="strictOSE" value="strict" checked>
-                    <span>
-                        <strong>Strict OSE Rules</strong> - Traditional combinations only, OSE level limits, no human racial abilities
-                        <br><small style="margin-left: 30px;">Example: Dwarf Fighter max 10, Elf Magic-User max 11, Halfling Thief max 8</small>
-                    </span>
-                </label>
-            </div>
-            <div class="radio-option">
-                <label>
-                    <input type="radio" name="raceClassMode" id="strictOSEHuman" value="strict-human">
-                    <span>
-                        <strong>Strict OSE + Human Racial Abilities</strong> - Traditional combinations, OSE level limits, humans gain racial abilities
-                        <br><small style="margin-left: 30px;">Example: Dwarf Fighter max 10, Elf Magic-User max 11, Halfling Thief max 8</small>
-                        <br><small style="margin-left: 30px;"><em>Humans gain racial abilities (Blessed, Decisiveness, Leadership)</em></small>
-                    </span>
-                </label>
-            </div>
-            <div class="radio-option">
-                <label>
-                    <input type="radio" name="raceClassMode" id="traditionalExtended" value="traditional-extended">
-                    <span>
-                        <strong>Traditional Combinations, Extended Levels</strong> - Traditional combinations only, all to level 14
-                        <br><small style="margin-left: 30px;">Example: Dwarf Fighter max 14, Elf Magic-User max 14, Halfling Thief max 14</small>
-                        <br><small style="margin-left: 30px;"><em>Humans gain racial abilities (Blessed, Decisiveness, Leadership)</em></small>
-                    </span>
-                </label>
-            </div>
-            <div class="radio-option">
-                <label>
-                    <input type="radio" name="raceClassMode" id="allowAll" value="allow-all">
-                    <span>
-                        <strong>Allow All Combinations (House Rules)</strong> - Any race/class combo, all to level 14
-                        <br><small style="margin-left: 30px;">Example: Dwarf Magic-User max 14, Halfling Cleric max 14</small>
-                        <br><small style="margin-left: 30px;"><em>Humans gain racial abilities (Blessed, Decisiveness, Leadership)</em></small>
-                    </span>
-                </label>
-            </div>
-        </div>
-
-        <!-- 7. Generate Character -->
-        <div class="control-section">
-            <h3>7. Generate Character</h3>
+            <h3>9. Generate Character</h3>
 
             <!-- Level 0: random-pick shortcuts (not tied to a specific grid cell) -->
             <div id="zeroLevelSection">

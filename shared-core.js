@@ -1463,6 +1463,13 @@ export const RCM_CODE = {
     strict:'ST', 'strict-human':'SH', 'traditional-extended':'TE', 'allow-all':'AL'
 };
 
+// Racial Adjustment Policy — governs whether/when racial ability score
+// adjustments apply across the level 0 -> 1 boundary. Only recorded on
+// level-0 characters (cp.rap); see PLAN_RACIAL_ADJUSTMENT_POLICY.md.
+export const RAP_CODE = {
+    always:'AA', 'separate-only':'SO', never:'NV', 'from-separate':'FS', 'from-level-1':'F1'
+};
+
 // ── Class Progression Tables ───────────────────────────────────────────────────
 
 const OSE_ATTACK_BONUS_PROGRESSIONS = {

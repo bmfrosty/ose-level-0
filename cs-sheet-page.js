@@ -833,10 +833,20 @@ function initEditPanel(decoded) {
                 } while (l1HP < l0HP);
             }
 
-            // Whichever class button was picked determines the mechanics mode —
-            // a race-as-class pick (the demihuman code matching decoded.r) means
-            // no separate racial adjustments; any of the 5 separate classes does.
-            const newMode = DEMIHUMAN_CODES_L01.has(selectedClassCode) ? 'B' : 'A';
+            // The mechanics mode at level 1 is governed by the referee's Racial
+            // Adjustment Policy (decoded.rap), not just which class button was
+            // picked — see PLAN_RACIAL_ADJUSTMENT_POLICY.md. Mirrors
+            // RAP_L1PLUS_FORMULA in gen-ui.js, keyed by the persisted 2-char
+            // rap code here instead of the live policy string.
+            const RAP_TO_L1_FORMULA = {
+                AA: () => 'A',
+                F1: () => 'A',
+                NV: () => 'B',
+                SO: (isRaceAsClass) => isRaceAsClass ? 'B' : 'A',
+                FS: (isRaceAsClass) => isRaceAsClass ? 'B' : 'A',
+            };
+            const isRaceAsClassPick = DEMIHUMAN_CODES_L01.has(selectedClassCode);
+            const newMode = (RAP_TO_L1_FORMULA[decoded.rap] ?? RAP_TO_L1_FORMULA.SO)(isRaceAsClassPick);
             const lupProg = decoded.p === 'S' ? 'smoothprog' : 'ose';
             const newCp = {
                 v:3, m: newMode, p: decoded.p || 'O', r: decoded.r || 'HU',
