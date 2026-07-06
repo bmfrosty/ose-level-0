@@ -795,7 +795,7 @@ function syncURLParams() {
     if (n) p.set('n', n);
     // Ability score minimums — only emit when any differ from defaults
     const scoreOrder = ['STR','INT','WIS','DEX','CON','CHA'];
-    const scoreDefs  = { STR:3, INT:3, WIS:3, DEX:3, CON:6, CHA:3 };
+    const scoreDefs  = { STR:3, INT:3, WIS:3, DEX:3, CON:3, CHA:3 };
     const scoreVals  = scoreOrder.map(a => parseInt(document.getElementById(`score${a}`)?.value) || scoreDefs[a]);
     if (scoreVals.some((v, i) => v !== scoreDefs[scoreOrder[i]])) {
         p.set('s', scoreVals.join(','));
