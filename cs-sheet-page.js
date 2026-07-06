@@ -29,7 +29,7 @@ import {
     encodeCompactParams, decodeCompactParams,
     parseHitDice, HIT_DICE_PROGRESSIONS, HIT_DICE_SCALE,
     ARMOR, purchaseEquipment, getBackgroundByProfession,
-    calculateSavingThrows, rollDiceGold,
+    calculateSavingThrows,
     isSeparateRaceClassForPolicy,
 } from './cs-core.js';
 
@@ -847,13 +847,10 @@ function initEditPanel(decoded) {
                 s: decoded.s || [10,10,10,10,10,10],
                 h: l1HP, hr: [l0HP, l1HP], il: 0,
                 n: decoded.n||'', bg: decoded.bg||'',
-                // Starting gold's dice count/sides/mult are now explicit referee
-                // settings, not derived from progression mode. The level-up panel
-                // has no live UI settings to read (a decoded character sheet may be
-                // opened from a shared link), so it defaults to 3d6x10 — the same
-                // effective roll this call site always produced before (decoded.p
-                // never resolved to Labyrinth Lord's d8 here anyway).
-                g: rollDiceGold(3, 6, 10),
+                // No fresh starting-wealth roll here — in play, gold comes from
+                // adventuring, not from the act of leveling up. Carry the level-0
+                // character's existing gold forward unchanged.
+                g: decoded.g || 0,
                 un: document.getElementById('lup-undead').checked ? 1 : 0,
                 qr: document.getElementById('lup-qr').checked    ? 1 : 0,
                 rcm: decoded.rcm || 'ST',
