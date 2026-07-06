@@ -742,7 +742,7 @@ function saveCurrentSettings() {
         scoreINT: parseInt(document.getElementById('scoreINT')?.value)||3,
         scoreWIS: parseInt(document.getElementById('scoreWIS')?.value)||3,
         scoreDEX: parseInt(document.getElementById('scoreDEX')?.value)||3,
-        scoreCON: parseInt(document.getElementById('scoreCON')?.value)||6,
+        scoreCON: parseInt(document.getElementById('scoreCON')?.value)||3,
         scoreCHA: parseInt(document.getElementById('scoreCHA')?.value)||3,
         raceClassMode, selectedRace, selectedRaceForZero, racialAdjustmentPolicy,
     });
@@ -973,7 +973,7 @@ function applyPreset(modeValue, overrides) {
     applySettings({
         progressionMode: 'ose', primeRequisiteMode: 'user',
         hpRollingMode: 'normal', includeLevel0HP: false,
-        scoreSTR:3, scoreINT:3, scoreWIS:3, scoreDEX:3, scoreCON:6, scoreCHA:3,
+        scoreSTR:3, scoreINT:3, scoreWIS:3, scoreDEX:3, scoreCON:3, scoreCHA:3,
         useFixedScores: false, noLevel0Equipment: true,
         ...overrides,
     });
