@@ -358,8 +358,8 @@ export function decodeCompactParams(cp) {
 export function buildOptionsLine(cp) {
     const parts = [];
     const lvl = cp.l ?? 0;
-    const progLabel = { O: 'OSE Standard', S: 'Smoothified', L: 'Labyrinth Lord' };
-    parts.push(progLabel[cp.p] || 'OSE Standard');
+    const progLabel = { O: 'Standard B/X', S: 'Smoothified', L: 'Labyrinth Lord' };
+    parts.push(progLabel[cp.p] || 'Standard B/X');
     const rcmLabel = { ST:'Strict OSE', SH:'Human Racial Abilities', TE:'Extended Levels + Human Abilities', AL:'Allow All Classes' };
     parts.push(rcmLabel[cp.rcm] || 'Strict OSE');
     // Racial Adjustment Policy — only meaningful on a level-0 sheet; by level 1+
@@ -776,7 +776,7 @@ export function renderCharacterSheetHTML(sheet) {
             ${(() => {
                 const modeLabel  = progModeLabel(sheet.cp?.p || 'O');
                 const modPfx     = sheet.cp?.mx ? 'Modified ' : '';
-                const identity   = `${modPfx}${sheet.footerLabel} &nbsp;·&nbsp; ${modeLabel} Mode`;
+                const identity   = `${modPfx}${sheet.footerLabel} &nbsp;·&nbsp; ${modeLabel}`;
                 const optParts   = buildOptionsLine(sheet.cp).split(' &nbsp;·&nbsp; ').filter(Boolean);
                 let afterBreak = false;
                 const optSpans = optParts.map((p, i) => {

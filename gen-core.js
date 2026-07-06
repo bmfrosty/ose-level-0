@@ -382,6 +382,7 @@ export function generateCharacterV3(opts = {}) {
             rcm: rcmCode,
             rap: RAP_CODE[racialAdjustmentPolicy] ?? 'SO',
             ...(noLevel0Equipment ? { nl0: 1 } : {}),
+            ...(fixedScores ? { fs: 1 } : {}),
         };
     }
 
@@ -437,6 +438,7 @@ export function generateCharacterV3(opts = {}) {
         rcm: rcmCode,
         ...(noLevel0Equipment ? { nl0: 1 } : {}),
         ...(hpMode > 0 ? { hm: hpMode } : {}),
+        ...(fixedScores ? { fs: 1 } : {}),
     };
 }
 

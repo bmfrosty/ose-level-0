@@ -218,7 +218,7 @@ export async function expandCompactV3(cp, precomp = {}, { silent = false } = {})
     const isAdv     = mode === 'A';
     const modeLabel = progModeLabel(cp.p || 'O');
     const title     = isAdv ? 'OLD-SCHOOL ESSENTIALS ADVANCED' : 'OLD-SCHOOL ESSENTIALS';
-    const subtitle  = `RETRO ADVENTURE GAME &nbsp;·&nbsp; ${modeLabel} Mode`;
+    const subtitle  = `RETRO ADVENTURE GAME &nbsp;·&nbsp; ${modeLabel}`;
     const footerLabel = (identity) => ({ footerLabel: identity });
 
     // ── Level 0 ──────────────────────────────────────────────────────────────
