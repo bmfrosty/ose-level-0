@@ -362,6 +362,14 @@ export function buildOptionsLine(cp) {
     parts.push(progLabel[cp.p] || 'OSE Standard');
     const rcmLabel = { ST:'Strict OSE', SH:'Human Racial Abilities', TE:'Extended Levels + Human Abilities', AL:'Allow All Classes' };
     parts.push(rcmLabel[cp.rcm] || 'Strict OSE');
+    // Racial Adjustment Policy — only meaningful on a level-0 sheet; by level 1+
+    // its effect is already baked into m/mCode, same as rcm isn't re-justified.
+    if (lvl === 0 && cp.rap) {
+        const rapLabel = { AA:'Racial Adj: Always', SO:'Racial Adj: Kept for Separate Class',
+                            NV:'Racial Adj: Never', FS:'Racial Adj: Gained for Separate Class',
+                            F1:'Racial Adj: Gained at Level 1' };
+        if (rapLabel[cp.rap]) parts.push(rapLabel[cp.rap]);
+    }
     if (cp.hm === 2)      parts.push('5e HP (max L1 / avg L2+)');
     else if (cp.hm === 1) parts.push('Blessed HP');
     if (cp.hm === 3)      parts.push('Re-roll 1s and 2s');

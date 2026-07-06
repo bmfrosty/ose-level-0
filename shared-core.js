@@ -1213,17 +1213,18 @@ export function rollHitPoints(options) {
 // ── Character object creation ─────────────────────────────────────────────────
 
 /**
- * Roll starting gold for a level 1 character.
- * OSE Standard / Smoothified: 3d6 × 10 gp
- * Labyrinth Lord: 3d8 × 10 gp
- * @param {string} progression - 'ose', 'smooth', or 'll'
+ * Roll starting gold as NdSides × mult gp — the general dice-roll formula
+ * shared by the Level 0, Level 1, and Level 2+ "Dice roll" wealth methods.
+ * Each tier configures its own count/sides/mult independently (no more
+ * hardcoded dice count or implicit progression-mode coupling).
+ * @param {number} count - number of dice to roll
+ * @param {number} sides - die type (4, 6, 8, 10, or 12)
+ * @param {number} mult  - multiplier applied to the total roll
  * @returns {number} Starting gold in gp
  */
-export function rollStartingGold(progression) {
-    const roll = (n, sides) =>
-        Array.from({ length: n }, () => Math.ceil(Math.random() * sides))
-             .reduce((a, b) => a + b, 0);
-    return (progression === 'll' ? roll(3, 8) : roll(3, 6)) * 10;
+export function rollDiceGold(count = 3, sides = 6, mult = 1) {
+    const roll = Array.from({ length: count }, () => Math.ceil(Math.random() * sides)).reduce((a, b) => a + b, 0);
+    return roll * mult;
 }
 
 /**
@@ -1462,6 +1463,30 @@ export const RACE_CODE = Object.fromEntries(
 export const RCM_CODE = {
     strict:'ST', 'strict-human':'SH', 'traditional-extended':'TE', 'allow-all':'AL'
 };
+
+// Racial Adjustment Policy — governs whether/when racial ability score
+// adjustments apply across the level 0 -> 1 boundary. Only recorded on
+// level-0 characters (cp.rap); see PLAN_RACIAL_ADJUSTMENT_POLICY.md.
+export const RAP_CODE = {
+    always:'AA', 'separate-only':'SO', never:'NV', 'from-separate':'FS', 'from-level-1':'F1'
+};
+
+/**
+ * Single source of truth for the Racial Adjustment Policy's level 1+ formula —
+ * used identically for direct level 1+ generation (gen-ui.js) and the level
+ * 0 -> 1 transition (cs-sheet-page.js), so the two paths can't silently diverge
+ * if a 6th policy is ever added. Keyed on the persisted 2-char RAP_CODE value.
+ * @param {string} rapCode - one of RAP_CODE's values (AA/SO/NV/FS/F1)
+ * @param {boolean} isRaceAsClassPick - true if the race-as-class column/button was picked
+ * @returns {boolean} isSeparateRaceClass for that pick under that policy
+ */
+export function isSeparateRaceClassForPolicy(rapCode, isRaceAsClassPick) {
+    switch (rapCode) {
+        case 'AA': case 'F1': return true;
+        case 'NV': return false;
+        case 'SO': case 'FS': default: return !isRaceAsClassPick;
+    }
+}
 
 // ── Class Progression Tables ───────────────────────────────────────────────────
 

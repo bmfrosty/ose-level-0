@@ -29,7 +29,8 @@ import {
     encodeCompactParams, decodeCompactParams,
     parseHitDice, HIT_DICE_PROGRESSIONS, HIT_DICE_SCALE,
     ARMOR, purchaseEquipment, getBackgroundByProfession,
-    calculateSavingThrows, rollStartingGold,
+    calculateSavingThrows,
+    isSeparateRaceClassForPolicy,
 } from './cs-core.js';
 
 export { compressToBase32 } from './cs-core.js';
@@ -833,18 +834,23 @@ function initEditPanel(decoded) {
                 } while (l1HP < l0HP);
             }
 
-            // Whichever class button was picked determines the mechanics mode —
-            // a race-as-class pick (the demihuman code matching decoded.r) means
-            // no separate racial adjustments; any of the 5 separate classes does.
-            const newMode = DEMIHUMAN_CODES_L01.has(selectedClassCode) ? 'B' : 'A';
-            const lupProg = decoded.p === 'S' ? 'smoothprog' : 'ose';
+            // The mechanics mode at level 1 is governed by the referee's Racial
+            // Adjustment Policy (decoded.rap), not just which class button was
+            // picked — see PLAN_RACIAL_ADJUSTMENT_POLICY.md. Uses the same shared
+            // formula as gen-ui.js's direct level 1+ generation (shared-core.js),
+            // so the two paths can't silently diverge.
+            const isRaceAsClassPick = DEMIHUMAN_CODES_L01.has(selectedClassCode);
+            const newMode = isSeparateRaceClassForPolicy(decoded.rap, isRaceAsClassPick) ? 'A' : 'B';
             const newCp = {
                 v:3, m: newMode, p: decoded.p || 'O', r: decoded.r || 'HU',
                 c: selectedClassCode, l: 1,
                 s: decoded.s || [10,10,10,10,10,10],
                 h: l1HP, hr: [l0HP, l1HP], il: 0,
                 n: decoded.n||'', bg: decoded.bg||'',
-                g: rollStartingGold(lupProg),
+                // No fresh starting-wealth roll here — in play, gold comes from
+                // adventuring, not from the act of leveling up. Carry the level-0
+                // character's existing gold forward unchanged.
+                g: decoded.g || 0,
                 un: document.getElementById('lup-undead').checked ? 1 : 0,
                 qr: document.getElementById('lup-qr').checked    ? 1 : 0,
                 rcm: decoded.rcm || 'ST',
