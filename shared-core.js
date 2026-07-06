@@ -1213,17 +1213,18 @@ export function rollHitPoints(options) {
 // ── Character object creation ─────────────────────────────────────────────────
 
 /**
- * Roll starting gold for a level 1 character.
- * OSE Standard / Smoothified: 3d6 × 10 gp
- * Labyrinth Lord: 3d8 × 10 gp
- * @param {string} progression - 'ose', 'smooth', or 'll'
+ * Roll starting gold as NdSides × mult gp — the general dice-roll formula
+ * shared by the Level 0, Level 1, and Level 2+ "Dice roll" wealth methods.
+ * Each tier configures its own count/sides/mult independently (no more
+ * hardcoded dice count or implicit progression-mode coupling).
+ * @param {number} count - number of dice to roll
+ * @param {number} sides - die type (4, 6, 8, 10, or 12)
+ * @param {number} mult  - multiplier applied to the total roll
  * @returns {number} Starting gold in gp
  */
-export function rollStartingGold(progression) {
-    const roll = (n, sides) =>
-        Array.from({ length: n }, () => Math.ceil(Math.random() * sides))
-             .reduce((a, b) => a + b, 0);
-    return (progression === 'll' ? roll(3, 8) : roll(3, 6)) * 10;
+export function rollDiceGold(count = 3, sides = 6, mult = 1) {
+    const roll = Array.from({ length: count }, () => Math.ceil(Math.random() * sides)).reduce((a, b) => a + b, 0);
+    return roll * mult;
 }
 
 /**

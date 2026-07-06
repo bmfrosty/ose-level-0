@@ -21,7 +21,7 @@ import {
     meetsToughCharactersRequirements, meetsPrimeRequisiteRequirements,
     rollHitPoints as rollHPBasic,
     rollHitPoints as rollHPAdvanced,
-    createCharacter, rollStartingGold, calcStartingGold,
+    createCharacter, rollDiceGold, calcStartingGold,
     readAbilityScores as readScoresFromInputs,
     purchaseEquipment,
     getRandomBackground,
@@ -81,9 +81,28 @@ let hideHumanRace   = false;   // show "Fighter" instead of "Human Fighter" for 
 let showQRCode = true;
 let basicAbilityOrdering = true;
 let characterName = '';
-let wealthPct = 50;
-let wealthRollAsLevel1 = false;
-let noLevel0Equipment = false;
+// Default matches the Basic Mode Reset button — a brand-new visit (no saved
+// settings, no URL params) should look identical to hitting that button.
+let wealthPct = 20;
+
+// Referee settings: per-tier starting-wealth method. See PLAN_STARTING_WEALTH_OVERHAUL.md.
+// Each "dice" method is a general NdSides x mult roll (count/sides/mult all
+// independently configurable per tier — no hardcoded dice count or implicit
+// progression-mode coupling).
+let l0WealthMethod = 'dice';       // 'dice' | 'fixed'
+let l0DiceCount = 3, l0DiceSides = 6, l0DiceMult = 1;
+let l0FixedGold = 0;
+let l1WealthMethod = 'dice';       // 'dice' | 'fixed'
+let l1DiceCount = 3, l1DiceSides = 6, l1DiceMult = 10;
+let l1FixedGold = 0;
+let l2PlusWealthMethod = 'xp-pct'; // 'xp-pct' | 'fixed' | 'dice'
+let l2PlusDiceCount = 3, l2PlusDiceSides = 6, l2PlusDiceMult = 10;
+let l2PlusFixedGold = 0;
+let byXpWealthMethod = 'xp-pct';   // 'xp-pct' | 'fixed' | 'dice'
+let byXpDiceCount = 3, byXpDiceSides = 6, byXpDiceMult = 10;
+let byXpFixedGold = 0;
+
+let noLevel0Equipment = true;
 let autoGenerateOnLevelChange = false;
 let autoGenerateOnClassChange = false;
 let autoGenerateOnLoad = false;
@@ -111,8 +130,9 @@ let isRaceAsClassPick = false;
 
 // Referee setting: whether/when racial ability score adjustments apply across
 // the level 0 -> 1 boundary. See PLAN_RACIAL_ADJUSTMENT_POLICY.md. Values:
-// 'always' | 'separate-only' (default) | 'never' | 'from-separate' | 'from-level-1'.
-let racialAdjustmentPolicy = 'separate-only';
+// 'always' | 'separate-only' | 'never' (default, matches Basic Mode Reset) |
+// 'from-separate' | 'from-level-1'.
+let racialAdjustmentPolicy = 'never';
 
 // Which policies apply the adjustment at level 0 itself (before any class is picked).
 const L0_ADJUSTED_POLICIES = new Set(['always', 'separate-only']);
@@ -428,19 +448,19 @@ export function updateUI() {
         b.classList.toggle('selected', isZeroLevel && b.dataset.race === selectedRaceForZero);
     });
 
-    // ── Common: Starting Wealth section ──
-    const wealthSection = document.getElementById('startingWealthSection');
+    // ── Common: Starting Wealth section ── configurable at any level; no longer
+    // greyed based on the currently selected character level.
     const wealthPreview = document.getElementById('wealthPreview');
-    if (wealthSection && wealthPreview) {
-        const showWealth = selectedLevel && selectedLevel >= 2;
-        wealthSection.classList.toggle('section-greyed', !showWealth);
-        if (showWealth && selectedClass) {
+    if (wealthPreview) {
+        if (selectedLevel && selectedLevel >= 2 && selectedClass) {
             try {
                 const classData = getClassDataForMode(progressionMode);
                 const progData  = getProgData(selectedClass, selectedLevel, { STR:10,INT:10,WIS:10,DEX:10,CON:10,CHA:10 }, classData, true);
                 const xpForLevel = progData?.xpForCurrentLevel || 0;
-                if (wealthRollAsLevel1) {
-                    wealthPreview.textContent = `= 3d6\u00d710 gp (rolled at generation, like Level\u00a01)`;
+                if (l2PlusWealthMethod === 'fixed') {
+                    wealthPreview.textContent = `= ${l2PlusFixedGold.toLocaleString()} gp (fixed)`;
+                } else if (l2PlusWealthMethod === 'dice') {
+                    wealthPreview.textContent = `= ${l2PlusDiceCount}d${l2PlusDiceSides}\u00d7${l2PlusDiceMult} gp (rolled at generation)`;
                 } else {
                     wealthPreview.textContent = (xpForLevel > 0 && wealthPct > 0)
                         ? `= ${calcStartingGold(xpForLevel, wealthPct).toLocaleString()} gp (${wealthPct}% of ${xpForLevel.toLocaleString()} XP)`
@@ -516,9 +536,17 @@ async function runGenerate() {
     const _fixedAdj = fixedAdjustments;
     fixedAdjustments = null;
 
+    // Direct level 2+ generation dispatches on l2PlusWealthMethod inside
+    // generateCharacterV3 itself (xp-pct/fixed/dice all handled there). By XP
+    // is its own independent tier (own dice/fixed/xp-pct, not borrowed from
+    // Level 1 or Level 2+), computed here since it depends on the typed XP
+    // value rather than a derived level's XP threshold.
     const _goldOverride = (fixedStartingGold !== null) ? fixedStartingGold
-        : (wealthRollAsLevel1 && effectiveLevel > 1) ? rollStartingGold(progressionMode)
-        : (xpMode && xpAmount !== null && effectiveLevel > 1) ? calcStartingGold(xpAmount, wealthPct)
+        : (xpMode && xpAmount !== null && byXpWealthMethod === 'dice')
+            ? rollDiceGold(byXpDiceCount, byXpDiceSides, byXpDiceMult)
+        : (xpMode && xpAmount !== null && byXpWealthMethod === 'fixed')
+            ? byXpFixedGold
+        : (xpMode && xpAmount !== null) ? calcStartingGold(xpAmount, wealthPct)
         : null;
     const cp = generateCharacterV3({
         level: effectiveLevel,
@@ -533,6 +561,9 @@ async function runGenerate() {
         fixedOccupation: document.getElementById('zeroOccupation')?.value || null,
         wealthPct, fixedHPRolls, noLevel0Equipment, classData,
         fixedStartingGold: _goldOverride,
+        l0WealthMethod, l0DiceCount, l0DiceSides, l0DiceMult, l0FixedGold,
+        l1WealthMethod, l1DiceCount, l1DiceSides, l1DiceMult, l1FixedGold,
+        l2PlusWealthMethod, l2PlusDiceCount, l2PlusDiceSides, l2PlusDiceMult, l2PlusFixedGold,
     });
     fixedHPRolls = null; fixedStartingGold = null;
     _scoreRollAttempts = cp.rr || 1;
@@ -630,6 +661,7 @@ async function generateZeroLevel() {
         fixedOccupation: document.getElementById('zeroOccupation')?.value || null,
         fixedAdjustments: _fixedAdj,
         fixedStartingGold,
+        l0WealthMethod, l0DiceCount, l0DiceSides, l0DiceMult, l0FixedGold,
     });
     fixedStartingGold = null;
     _scoreRollAttempts = cp.rr || 1;
@@ -699,7 +731,11 @@ function saveCurrentSettings() {
         mode: modePreset, acDisplayMode,
         progressionMode, primeRequisiteMode, hpRollingMode, includeLevel0HP,
         useFixedScores, showUndeadNames, hideHumanRace, basicAbilityOrdering, wealthPct,
-        wealthRollAsLevel1, noLevel0Equipment, xpMode, xpAmount,
+        noLevel0Equipment, xpMode, xpAmount,
+        l0WealthMethod, l0DiceCount, l0DiceSides, l0DiceMult, l0FixedGold,
+        l1WealthMethod, l1DiceCount, l1DiceSides, l1DiceMult, l1FixedGold,
+        l2PlusWealthMethod, l2PlusDiceCount, l2PlusDiceSides, l2PlusDiceMult, l2PlusFixedGold,
+        byXpWealthMethod, byXpDiceCount, byXpDiceSides, byXpDiceMult, byXpFixedGold,
         autoGenerateOnLevelChange, autoGenerateOnClassChange, autoGenerateOnLoad,
         selectedLevel, selectedClass, characterName: document.getElementById('characterName')?.value||'',
         scoreSTR: parseInt(document.getElementById('scoreSTR')?.value)||3,
@@ -722,16 +758,35 @@ function syncURLParams() {
     if (selectedClass)                                             p.set('c', selectedClass.replace('_CLASS',''));
     if (selectedRace)                                              p.set('r', selectedRace.replace('_RACE',''));
     if (raceClassMode !== 'strict')                                p.set('rcm', raceClassMode);
-    if (racialAdjustmentPolicy !== 'separate-only')                p.set('rap', racialAdjustmentPolicy);
+    if (racialAdjustmentPolicy !== 'never')                        p.set('rap', racialAdjustmentPolicy);
     if (primeRequisiteMode !== 'user')                             p.set('prm', primeRequisiteMode);
     if (hpRollingMode !== 'normal')                                p.set('hpm', hpRollingMode);
     if (includeLevel0HP)                                           p.set('il', '1');
     if (showUndeadNames)                                           p.set('un', '1');
     if (hideHumanRace)                                             p.set('hhr', '1');
     if (!basicAbilityOrdering)                                     p.set('ao', '0');
-    if (wealthPct !== 50)                                          p.set('wp', String(wealthPct));
-    if (wealthRollAsLevel1)                                        p.set('l1w', '1');
-    if (noLevel0Equipment)                                         p.set('nl0e', '1');
+    if (wealthPct !== 20)                                          p.set('wp', String(wealthPct));
+    if (l0WealthMethod !== 'dice')                                 p.set('l0wm', l0WealthMethod);
+    if (l0DiceCount !== 3)                                         p.set('l0dc', String(l0DiceCount));
+    if (l0DiceSides !== 6)                                         p.set('l0ds', String(l0DiceSides));
+    if (l0DiceMult !== 1)                                          p.set('l0dm', String(l0DiceMult));
+    if (l0FixedGold !== 0)                                         p.set('l0fg', String(l0FixedGold));
+    if (l1WealthMethod !== 'dice')                                 p.set('l1wm', l1WealthMethod);
+    if (l1DiceCount !== 3)                                         p.set('l1dc', String(l1DiceCount));
+    if (l1DiceSides !== 6)                                         p.set('l1ds', String(l1DiceSides));
+    if (l1DiceMult !== 10)                                         p.set('l1dm', String(l1DiceMult));
+    if (l1FixedGold !== 0)                                         p.set('l1fg', String(l1FixedGold));
+    if (l2PlusWealthMethod !== 'xp-pct')                           p.set('l2wm', l2PlusWealthMethod);
+    if (l2PlusDiceCount !== 3)                                     p.set('l2dc', String(l2PlusDiceCount));
+    if (l2PlusDiceSides !== 6)                                     p.set('l2ds', String(l2PlusDiceSides));
+    if (l2PlusDiceMult !== 10)                                     p.set('l2dm', String(l2PlusDiceMult));
+    if (l2PlusFixedGold !== 0)                                     p.set('l2fg', String(l2PlusFixedGold));
+    if (byXpWealthMethod !== 'xp-pct')                             p.set('xwm', byXpWealthMethod);
+    if (byXpDiceCount !== 3)                                       p.set('xdc', String(byXpDiceCount));
+    if (byXpDiceSides !== 6)                                       p.set('xds', String(byXpDiceSides));
+    if (byXpDiceMult !== 10)                                       p.set('xdm', String(byXpDiceMult));
+    if (byXpFixedGold !== 0)                                       p.set('xfg', String(byXpFixedGold));
+    if (!noLevel0Equipment)                                        p.set('nl0e', '0');
     if (selectedLevel === 0 && selectedRaceForZero)                p.set('zr', selectedRaceForZero);
     if (autoGenerateOnLevelChange)                                 p.set('agl', '1');
     if (autoGenerateOnClassChange)                                 p.set('agc', '1');
@@ -842,8 +897,27 @@ function applySettings(s) {
     if (s.autoGenerateOnLevelChange!==undefined) { autoGenerateOnLevelChange=s.autoGenerateOnLevelChange; setBool('autoGenerateOnLevelChange','autoGenerateOnLevelChange'); }
     if (s.autoGenerateOnClassChange!==undefined) { autoGenerateOnClassChange=s.autoGenerateOnClassChange; setBool('autoGenerateOnClassChange','autoGenerateOnClassChange'); }
     if (s.autoGenerateOnLoad!==undefined)        { autoGenerateOnLoad=s.autoGenerateOnLoad;               setBool('autoGenerateOnLoad','autoGenerateOnLoad'); }
-    if (s.wealthPct!==undefined)          { wealthPct=s.wealthPct; const _wp=document.getElementById('wealthPctInput'); if(_wp) _wp.value=s.wealthPct; }
-    if (s.wealthRollAsLevel1!==undefined) { wealthRollAsLevel1=s.wealthRollAsLevel1; const _wm=document.getElementById(s.wealthRollAsLevel1?'wealthModeLevel1':'wealthModePct'); if(_wm) _wm.checked=true; }
+    if (s.wealthPct!==undefined)          { wealthPct=s.wealthPct; const _wp=document.getElementById('wealthPctInput'); if(_wp) _wp.value=s.wealthPct; const _xwp=document.getElementById('xpWealthPctInput'); if(_xwp) _xwp.value=s.wealthPct; }
+    if (s.l0WealthMethod!==undefined) { l0WealthMethod=s.l0WealthMethod; document.querySelectorAll('input[name="l0WealthMethod"]').forEach(r=>{r.checked=r.value===s.l0WealthMethod;}); }
+    if (s.l0DiceCount!==undefined) { l0DiceCount=s.l0DiceCount; const _el=document.getElementById('l0DiceCount'); if(_el) _el.value=s.l0DiceCount; }
+    if (s.l0DiceSides!==undefined) { l0DiceSides=s.l0DiceSides; const _el=document.getElementById('l0DiceSides'); if(_el) _el.value=s.l0DiceSides; }
+    if (s.l0DiceMult!==undefined)  { l0DiceMult=s.l0DiceMult;   const _el=document.getElementById('l0DiceMult');  if(_el) _el.value=s.l0DiceMult; }
+    if (s.l0FixedGold!==undefined) { l0FixedGold=s.l0FixedGold; const _el=document.getElementById('l0FixedGold'); if(_el) _el.value=s.l0FixedGold; }
+    if (s.l1WealthMethod!==undefined) { l1WealthMethod=s.l1WealthMethod; document.querySelectorAll('input[name="l1WealthMethod"]').forEach(r=>{r.checked=r.value===s.l1WealthMethod;}); }
+    if (s.l1DiceCount!==undefined) { l1DiceCount=s.l1DiceCount; const _el=document.getElementById('l1DiceCount'); if(_el) _el.value=s.l1DiceCount; }
+    if (s.l1DiceSides!==undefined) { l1DiceSides=s.l1DiceSides; const _el=document.getElementById('l1DiceSides'); if(_el) _el.value=s.l1DiceSides; }
+    if (s.l1DiceMult!==undefined)  { l1DiceMult=s.l1DiceMult;   const _el=document.getElementById('l1DiceMult');  if(_el) _el.value=s.l1DiceMult; }
+    if (s.l1FixedGold!==undefined) { l1FixedGold=s.l1FixedGold; const _el=document.getElementById('l1FixedGold'); if(_el) _el.value=s.l1FixedGold; }
+    if (s.l2PlusWealthMethod!==undefined) { l2PlusWealthMethod=s.l2PlusWealthMethod; document.querySelectorAll('input[name="l2WealthMethod"]').forEach(r=>{r.checked=r.value===s.l2PlusWealthMethod;}); }
+    if (s.l2PlusDiceCount!==undefined) { l2PlusDiceCount=s.l2PlusDiceCount; const _el=document.getElementById('l2DiceCount'); if(_el) _el.value=s.l2PlusDiceCount; }
+    if (s.l2PlusDiceSides!==undefined) { l2PlusDiceSides=s.l2PlusDiceSides; const _el=document.getElementById('l2DiceSides'); if(_el) _el.value=s.l2PlusDiceSides; }
+    if (s.l2PlusDiceMult!==undefined)  { l2PlusDiceMult=s.l2PlusDiceMult;   const _el=document.getElementById('l2DiceMult');  if(_el) _el.value=s.l2PlusDiceMult; }
+    if (s.l2PlusFixedGold!==undefined) { l2PlusFixedGold=s.l2PlusFixedGold; const _el=document.getElementById('l2FixedGold'); if(_el) _el.value=s.l2PlusFixedGold; }
+    if (s.byXpWealthMethod!==undefined)   { byXpWealthMethod=s.byXpWealthMethod; document.querySelectorAll('input[name="byXpWealthMethod"]').forEach(r=>{r.checked=r.value===s.byXpWealthMethod;}); }
+    if (s.byXpDiceCount!==undefined) { byXpDiceCount=s.byXpDiceCount; const _el=document.getElementById('xpDiceCount'); if(_el) _el.value=s.byXpDiceCount; }
+    if (s.byXpDiceSides!==undefined) { byXpDiceSides=s.byXpDiceSides; const _el=document.getElementById('xpDiceSides'); if(_el) _el.value=s.byXpDiceSides; }
+    if (s.byXpDiceMult!==undefined)  { byXpDiceMult=s.byXpDiceMult;   const _el=document.getElementById('xpDiceMult');  if(_el) _el.value=s.byXpDiceMult; }
+    if (s.byXpFixedGold!==undefined) { byXpFixedGold=s.byXpFixedGold; const _el=document.getElementById('xpFixedGold'); if(_el) _el.value=s.byXpFixedGold; }
     if (s.noLevel0Equipment!==undefined)  { noLevel0Equipment=s.noLevel0Equipment;   setBool('noLevel0Equipment','noLevel0Equipment'); }
     if (s.xpMode!==undefined) {
         xpMode=s.xpMode;
@@ -907,12 +981,19 @@ function applyPreset(modeValue, overrides) {
     updateUI();
 }
 
+const WEALTH_METHOD_DEFAULTS = {
+    l0WealthMethod: 'dice', l0DiceCount: 3, l0DiceSides: 6, l0DiceMult: 1, l0FixedGold: 0,
+    l1WealthMethod: 'dice', l1DiceCount: 3, l1DiceSides: 6, l1DiceMult: 10, l1FixedGold: 0,
+    l2PlusWealthMethod: 'xp-pct', l2PlusDiceCount: 3, l2PlusDiceSides: 6, l2PlusDiceMult: 10, l2PlusFixedGold: 0,
+    byXpWealthMethod: 'xp-pct', byXpDiceCount: 3, byXpDiceSides: 6, byXpDiceMult: 10, byXpFixedGold: 0,
+};
+
 function handleAuthorPreferred() {
-    applyPreset('race-class', { progressionMode: 'smoothprog', primeRequisiteMode: '9', hpRollingMode: 'healthy', scoreCON: 9, wealthPct: 20, wealthRollAsLevel1: false, raceClassMode: 'traditional-extended', racialAdjustmentPolicy: 'always' });
+    applyPreset('race-class', { progressionMode: 'smoothprog', primeRequisiteMode: '9', hpRollingMode: 'healthy', scoreCON: 9, wealthPct: 20, raceClassMode: 'traditional-extended', racialAdjustmentPolicy: 'always', ...WEALTH_METHOD_DEFAULTS });
 }
 
 function handleConventionMode() {
-    applyPreset('both', { progressionMode: 'smoothprog', primeRequisiteMode: '13', hpRollingMode: 'healthy', includeLevel0HP: true, scoreCON: 9, wealthPct: 20, wealthRollAsLevel1: false, raceClassMode: 'allow-all', racialAdjustmentPolicy: 'always' });
+    applyPreset('both', { progressionMode: 'smoothprog', primeRequisiteMode: '13', hpRollingMode: 'healthy', includeLevel0HP: true, scoreCON: 9, wealthPct: 20, raceClassMode: 'allow-all', racialAdjustmentPolicy: 'always', ...WEALTH_METHOD_DEFAULTS });
 }
 
 // Resets only the Referee cluster (sections 1-6: mode preset, progression mode,
@@ -937,7 +1018,31 @@ function applyRefereeModeReset(modePresetValue, racialAdjustmentPolicyValue) {
     const _rapAppliedEl = document.getElementById('rapTier2Applied'); if(_rapAppliedEl) _rapAppliedEl.classList.toggle('section-greyed', tier1Value !== 'applied');
     const _rapNotAppliedEl = document.getElementById('rapTier2NotApplied'); if(_rapNotAppliedEl) _rapNotAppliedEl.classList.toggle('section-greyed', tier1Value !== 'not-applied');
     document.querySelectorAll('input[name="primeRequisiteMode"]').forEach(r=>{r.checked=r.value==='user';});
-    wealthPct=20; wealthRollAsLevel1=false; const _wpR=document.getElementById('wealthPctInput'); if(_wpR) _wpR.value=20; const _wmR=document.getElementById('wealthModePct'); if(_wmR) _wmR.checked=true;
+    wealthPct=20; const _wpR=document.getElementById('wealthPctInput'); if(_wpR) _wpR.value=20; const _xwpR=document.getElementById('xpWealthPctInput'); if(_xwpR) _xwpR.value=20;
+    l0WealthMethod='dice'; l0DiceCount=3; l0DiceSides=6; l0DiceMult=1; l0FixedGold=0;
+    l1WealthMethod='dice'; l1DiceCount=3; l1DiceSides=6; l1DiceMult=10; l1FixedGold=0;
+    l2PlusWealthMethod='xp-pct'; l2PlusDiceCount=3; l2PlusDiceSides=6; l2PlusDiceMult=10; l2PlusFixedGold=0;
+    byXpWealthMethod='xp-pct'; byXpDiceCount=3; byXpDiceSides=6; byXpDiceMult=10; byXpFixedGold=0;
+    document.querySelectorAll('input[name="l0WealthMethod"]').forEach(r=>{r.checked=r.value==='dice';});
+    document.querySelectorAll('input[name="l1WealthMethod"]').forEach(r=>{r.checked=r.value==='dice';});
+    document.querySelectorAll('input[name="l2WealthMethod"]').forEach(r=>{r.checked=r.value==='xp-pct';});
+    document.querySelectorAll('input[name="byXpWealthMethod"]').forEach(r=>{r.checked=r.value==='xp-pct';});
+    const _l0dc=document.getElementById('l0DiceCount'); if(_l0dc) _l0dc.value=3;
+    const _l0ds=document.getElementById('l0DiceSides'); if(_l0ds) _l0ds.value=6;
+    const _l0dm=document.getElementById('l0DiceMult');  if(_l0dm) _l0dm.value=1;
+    const _l0fg=document.getElementById('l0FixedGold'); if(_l0fg) _l0fg.value=0;
+    const _l1dc=document.getElementById('l1DiceCount'); if(_l1dc) _l1dc.value=3;
+    const _l1ds=document.getElementById('l1DiceSides'); if(_l1ds) _l1ds.value=6;
+    const _l1dm=document.getElementById('l1DiceMult');  if(_l1dm) _l1dm.value=10;
+    const _l1fg=document.getElementById('l1FixedGold'); if(_l1fg) _l1fg.value=0;
+    const _l2dc=document.getElementById('l2DiceCount'); if(_l2dc) _l2dc.value=3;
+    const _l2ds=document.getElementById('l2DiceSides'); if(_l2ds) _l2ds.value=6;
+    const _l2dm=document.getElementById('l2DiceMult');  if(_l2dm) _l2dm.value=10;
+    const _l2fg=document.getElementById('l2FixedGold'); if(_l2fg) _l2fg.value=0;
+    const _xdc=document.getElementById('xpDiceCount');  if(_xdc) _xdc.value=3;
+    const _xds=document.getElementById('xpDiceSides');  if(_xds) _xds.value=6;
+    const _xdm=document.getElementById('xpDiceMult');   if(_xdm) _xdm.value=10;
+    const _xfg=document.getElementById('xpFixedGold');  if(_xfg) _xfg.value=0;
     const _ufsEl=document.getElementById('useFixedScores'); if(_ufsEl) _ufsEl.checked=false;
     const _nl0eEl=document.getElementById('noLevel0Equipment'); if(_nl0eEl) _nl0eEl.checked=true;
     ['STR','INT','WIS','DEX','CON','CHA'].forEach(a=>{const el=document.getElementById(`score${a}`);if(el)el.value=3;});
@@ -999,8 +1104,29 @@ function readURLParams() {
     if (p.has('hhr'))   s.hideHumanRace = p.get('hhr')==='1';
     if (p.has('ao'))    s.basicAbilityOrdering = p.get('ao')==='1';
     if (p.has('wp'))    s.wealthPct = parseInt(p.get('wp'));
-    if (p.has('l1w'))   s.wealthRollAsLevel1 = p.get('l1w') === '1';
-    if (p.has('nl0e'))  s.noLevel0Equipment  = p.get('nl0e') === '1';
+    if (p.has('l0wm'))  s.l0WealthMethod = p.get('l0wm');
+    if (p.has('l0dc'))  s.l0DiceCount = parseInt(p.get('l0dc'));
+    if (p.has('l0ds'))  s.l0DiceSides = parseInt(p.get('l0ds'));
+    if (p.has('l0dm'))  s.l0DiceMult = parseInt(p.get('l0dm'));
+    if (p.has('l0fg'))  s.l0FixedGold = parseInt(p.get('l0fg'));
+    if (p.has('l1wm'))  s.l1WealthMethod = p.get('l1wm');
+    if (p.has('l1dc'))  s.l1DiceCount = parseInt(p.get('l1dc'));
+    if (p.has('l1ds'))  s.l1DiceSides = parseInt(p.get('l1ds'));
+    if (p.has('l1dm'))  s.l1DiceMult = parseInt(p.get('l1dm'));
+    if (p.has('l1fg'))  s.l1FixedGold = parseInt(p.get('l1fg'));
+    if (p.has('l2wm'))  s.l2PlusWealthMethod = p.get('l2wm');
+    if (p.has('l2dc'))  s.l2PlusDiceCount = parseInt(p.get('l2dc'));
+    if (p.has('l2ds'))  s.l2PlusDiceSides = parseInt(p.get('l2ds'));
+    if (p.has('l2dm'))  s.l2PlusDiceMult = parseInt(p.get('l2dm'));
+    if (p.has('l2fg'))  s.l2PlusFixedGold = parseInt(p.get('l2fg'));
+    if (p.has('xwm'))   s.byXpWealthMethod = p.get('xwm');
+    if (p.has('xdc'))   s.byXpDiceCount = parseInt(p.get('xdc'));
+    if (p.has('xds'))   s.byXpDiceSides = parseInt(p.get('xds'));
+    if (p.has('xdm'))   s.byXpDiceMult = parseInt(p.get('xdm'));
+    if (p.has('xfg'))   s.byXpFixedGold = parseInt(p.get('xfg'));
+    // Default flipped to true (matches Basic Mode Reset) — only '0' (explicitly
+    // off) needs encoding now, but old links with 'nl0e=1' still parse correctly.
+    if (p.has('nl0e'))  s.noLevel0Equipment  = p.get('nl0e') !== '0';
     if (p.has('agl'))   s.autoGenerateOnLevelChange = p.get('agl')==='1';
     if (p.has('agc'))   s.autoGenerateOnClassChange = p.get('agc')==='1';
     if (p.has('ago'))   s.autoGenerateOnLoad = p.get('ago')==='1';
@@ -1059,20 +1185,77 @@ export function initializeEventListeners() {
         xpAmount = isNaN(v) ? null : Math.max(0, v);
         updateUI(); saveCurrentSettings();
     });
-    // Wealth % — number input + roll-as-level-1 radio pair
+    // Starting Wealth — shared dice-config wiring (count/sides/mult), one call
+    // per tier (Level 0, Level 1, Level 2+ all use the same NdSides x mult shape).
+    function wireDiceConfig(prefix, setCount, setSides, setMult) {
+        document.getElementById(`${prefix}DiceCount`)?.addEventListener('change', (e) => {
+            const v = Math.max(1, parseInt(e.target.value) || 1);
+            e.target.value = v; setCount(v); updateUI(); saveCurrentSettings();
+        });
+        document.getElementById(`${prefix}DiceSides`)?.addEventListener('change', (e) => {
+            setSides(parseInt(e.target.value)); updateUI(); saveCurrentSettings();
+        });
+        document.getElementById(`${prefix}DiceMult`)?.addEventListener('change', (e) => {
+            const v = Math.max(1, parseInt(e.target.value) || 1);
+            e.target.value = v; setMult(v); updateUI(); saveCurrentSettings();
+        });
+    }
+    // Starting Wealth — Level 0
+    document.querySelectorAll('input[name="l0WealthMethod"]').forEach(r => {
+        r.addEventListener('change', (e) => { l0WealthMethod = e.target.value; saveCurrentSettings(); });
+    });
+    wireDiceConfig('l0', v=>l0DiceCount=v, v=>l0DiceSides=v, v=>l0DiceMult=v);
+    document.getElementById('l0FixedGold')?.addEventListener('change', (e) => {
+        l0FixedGold = Math.max(0, parseInt(e.target.value) || 0);
+        e.target.value = l0FixedGold;
+        saveCurrentSettings();
+    });
+    // Starting Wealth — Level 1
+    document.querySelectorAll('input[name="l1WealthMethod"]').forEach(r => {
+        r.addEventListener('change', (e) => { l1WealthMethod = e.target.value; saveCurrentSettings(); });
+    });
+    wireDiceConfig('l1', v=>l1DiceCount=v, v=>l1DiceSides=v, v=>l1DiceMult=v);
+    document.getElementById('l1FixedGold')?.addEventListener('change', (e) => {
+        l1FixedGold = Math.max(0, parseInt(e.target.value) || 0);
+        e.target.value = l1FixedGold;
+        saveCurrentSettings();
+    });
+    // Starting Wealth — Level 2+ (wealthPct is shared with By XP's %-of-XP
+    // option below — both number inputs mirror the same underlying value).
     document.getElementById('wealthPctInput')?.addEventListener('change', () => {
         wealthPct = Math.max(0, parseInt(document.getElementById('wealthPctInput').value) || 0);
         document.getElementById('wealthPctInput').value = wealthPct;
-        document.getElementById('wealthModePct').checked = true;
-        wealthRollAsLevel1 = false;
+        const _xwp = document.getElementById('xpWealthPctInput'); if (_xwp) _xwp.value = wealthPct;
+        document.getElementById('l2WealthXpPct').checked = true;
+        l2PlusWealthMethod = 'xp-pct';
         updateUI(); saveCurrentSettings();
     });
-    document.querySelectorAll('input[name="wealthMode"]').forEach(r => {
-        r.addEventListener('change', (e) => {
-            wealthRollAsLevel1 = e.target.value === 'level1';
-            if (!wealthRollAsLevel1) wealthPct = Math.max(0, parseInt(document.getElementById('wealthPctInput')?.value) || 50);
-            updateUI(); saveCurrentSettings();
-        });
+    document.querySelectorAll('input[name="l2WealthMethod"]').forEach(r => {
+        r.addEventListener('change', (e) => { l2PlusWealthMethod = e.target.value; updateUI(); saveCurrentSettings(); });
+    });
+    wireDiceConfig('l2', v=>l2PlusDiceCount=v, v=>l2PlusDiceSides=v, v=>l2PlusDiceMult=v);
+    document.getElementById('l2FixedGold')?.addEventListener('change', (e) => {
+        l2PlusFixedGold = Math.max(0, parseInt(e.target.value) || 0);
+        e.target.value = l2PlusFixedGold;
+        updateUI(); saveCurrentSettings();
+    });
+    // Starting Wealth — By XP
+    document.querySelectorAll('input[name="byXpWealthMethod"]').forEach(r => {
+        r.addEventListener('change', (e) => { byXpWealthMethod = e.target.value; saveCurrentSettings(); });
+    });
+    wireDiceConfig('xp', v=>byXpDiceCount=v, v=>byXpDiceSides=v, v=>byXpDiceMult=v);
+    document.getElementById('xpFixedGold')?.addEventListener('change', (e) => {
+        byXpFixedGold = Math.max(0, parseInt(e.target.value) || 0);
+        e.target.value = byXpFixedGold;
+        saveCurrentSettings();
+    });
+    document.getElementById('xpWealthPctInput')?.addEventListener('change', () => {
+        wealthPct = Math.max(0, parseInt(document.getElementById('xpWealthPctInput').value) || 0);
+        document.getElementById('xpWealthPctInput').value = wealthPct;
+        document.getElementById('wealthPctInput').value = wealthPct;
+        document.getElementById('xpWealthPct').checked = true;
+        byXpWealthMethod = 'xp-pct';
+        updateUI(); saveCurrentSettings();
     });
     // AC Display Mode
     document.querySelectorAll('input[name="acDisplayMode"]').forEach(r=>{
@@ -1090,7 +1273,6 @@ export function initializeEventListeners() {
         ['showUndeadNames',          v=>{ showUndeadNames=v;            }],
         ['hideHumanRace',            v=>{ hideHumanRace=v;              }],
         ['basicAbilityOrdering',     v=>{ basicAbilityOrdering=v;       }],
-        // wealthRollAsLevel1 is now a radio button — handled by wealthMode listener above
         ['autoGenerateOnLevelChange',v=>{ autoGenerateOnLevelChange=v;  }],
         ['autoGenerateOnClassChange',v=>{ autoGenerateOnClassChange=v;  }],
         ['autoGenerateOnLoad',       v=>{ autoGenerateOnLoad=v;         }],

@@ -29,7 +29,7 @@ import {
     encodeCompactParams, decodeCompactParams,
     parseHitDice, HIT_DICE_PROGRESSIONS, HIT_DICE_SCALE,
     ARMOR, purchaseEquipment, getBackgroundByProfession,
-    calculateSavingThrows, rollStartingGold,
+    calculateSavingThrows, rollDiceGold,
     isSeparateRaceClassForPolicy,
 } from './cs-core.js';
 
@@ -841,14 +841,19 @@ function initEditPanel(decoded) {
             // so the two paths can't silently diverge.
             const isRaceAsClassPick = DEMIHUMAN_CODES_L01.has(selectedClassCode);
             const newMode = isSeparateRaceClassForPolicy(decoded.rap, isRaceAsClassPick) ? 'A' : 'B';
-            const lupProg = decoded.p === 'S' ? 'smoothprog' : 'ose';
             const newCp = {
                 v:3, m: newMode, p: decoded.p || 'O', r: decoded.r || 'HU',
                 c: selectedClassCode, l: 1,
                 s: decoded.s || [10,10,10,10,10,10],
                 h: l1HP, hr: [l0HP, l1HP], il: 0,
                 n: decoded.n||'', bg: decoded.bg||'',
-                g: rollStartingGold(lupProg),
+                // Starting gold's dice count/sides/mult are now explicit referee
+                // settings, not derived from progression mode. The level-up panel
+                // has no live UI settings to read (a decoded character sheet may be
+                // opened from a shared link), so it defaults to 3d6x10 — the same
+                // effective roll this call site always produced before (decoded.p
+                // never resolved to Labyrinth Lord's d8 here anyway).
+                g: rollDiceGold(3, 6, 10),
                 un: document.getElementById('lup-undead').checked ? 1 : 0,
                 qr: document.getElementById('lup-qr').checked    ? 1 : 0,
                 rcm: decoded.rcm || 'ST',

@@ -452,7 +452,7 @@
                 </div>
                 <div class="ability-box">
                     <label class="ability-label" for="scoreCON">CON</label>
-                    <input type="number" class="ability-input" id="scoreCON" value="6" min="3" max="18">
+                    <input type="number" class="ability-input" id="scoreCON" value="3" min="3" max="18">
                     <span class="ability-modifier" id="modCON">+0</span>
                 </div>
                 <div class="ability-box">
@@ -526,47 +526,62 @@
             <h3>5. Racial Adjustment Policy <span class="section-tag section-tag-referee">Referee</span></h3>
             <div class="radio-option">
                 <label>
-                    <input type="radio" name="rapTier1" id="rapApplied" value="applied" checked>
+                    <input type="radio" name="rapTier1" id="rapApplied" value="applied">
                     <span><strong>Applied at level 0</strong> — a level-0 character's racial ability adjustments show immediately</span>
                 </label>
             </div>
-            <div id="rapTier2Applied" style="margin-left: 24px;">
+            <div id="rapTier2Applied" class="section-greyed" style="margin-left: 24px;">
                 <div class="radio-option">
                     <label>
-                        <input type="radio" name="racialAdjustmentPolicy" id="rapSeparateOnly" value="separate-only" checked>
-                        <span><strong>Keep it only for a separate race + class pick</strong> — lost if the level-1 pick is race-as-class</span>
+                        <input type="radio" name="racialAdjustmentPolicy" id="rapSeparateOnly" value="separate-only">
+                        <span>
+                            <strong>Keep it only for a separate race + class pick</strong> — lost if the level-1 pick is race-as-class
+                            <br><small style="margin-left: 30px;">Generating a level 1+ character: adjustments apply only to a separate race + class pick — a race-as-class pick gets none.</small>
+                        </span>
                     </label>
                 </div>
                 <div class="radio-option">
                     <label>
                         <input type="radio" name="racialAdjustmentPolicy" id="rapAlways" value="always">
-                        <span><strong>Keep it always</strong> — regardless of which level-1 class is picked</span>
+                        <span>
+                            <strong>Keep it always</strong> — regardless of which level-1 class is picked
+                            <br><small style="margin-left: 30px;">Generating a level 1+ character: adjustments always apply, whether picked as race-as-class or as a separate race + class.</small>
+                        </span>
                     </label>
                 </div>
             </div>
             <div class="radio-option">
                 <label>
-                    <input type="radio" name="rapTier1" id="rapNotApplied" value="not-applied">
+                    <input type="radio" name="rapTier1" id="rapNotApplied" value="not-applied" checked>
                     <span><strong>Not applied at level 0</strong> — a level-0 character's racial ability adjustments do not show</span>
                 </label>
             </div>
-            <div id="rapTier2NotApplied" class="section-greyed" style="margin-left: 24px;">
+            <div id="rapTier2NotApplied" style="margin-left: 24px;">
                 <div class="radio-option">
                     <label>
-                        <input type="radio" name="racialAdjustmentPolicy" id="rapNever" value="never">
-                        <span><strong>Never apply it</strong> — not at level 0, not ever at level 1+</span>
+                        <input type="radio" name="racialAdjustmentPolicy" id="rapNever" value="never" checked>
+                        <span>
+                            <strong>Never apply it</strong> — not at level 0, not ever at level 1+
+                            <br><small style="margin-left: 30px;">Generating a level 1+ character: adjustments never apply, whether picked as race-as-class or as a separate race + class.</small>
+                        </span>
                     </label>
                 </div>
                 <div class="radio-option">
                     <label>
                         <input type="radio" name="racialAdjustmentPolicy" id="rapFromSeparate" value="from-separate">
-                        <span><strong>Gain it only for a separate race + class pick</strong> — race-as-class picks stay unadjusted</span>
+                        <span>
+                            <strong>Gain it only for a separate race + class pick</strong> — race-as-class picks stay unadjusted
+                            <br><small style="margin-left: 30px;">Generating a level 1+ character: adjustments apply only to a separate race + class pick — a race-as-class pick gets none.</small>
+                        </span>
                     </label>
                 </div>
                 <div class="radio-option">
                     <label>
                         <input type="radio" name="racialAdjustmentPolicy" id="rapFromLevel1" value="from-level-1">
-                        <span><strong>Gain it at level 1 regardless of pick</strong> — race-as-class or separate, both get it</span>
+                        <span>
+                            <strong>Gain it at level 1 regardless of pick</strong> — race-as-class or separate, both get it
+                            <br><small style="margin-left: 30px;">Generating a level 1+ character: adjustments always apply, whether picked as race-as-class or as a separate race + class.</small>
+                        </span>
                     </label>
                 </div>
             </div>
@@ -635,26 +650,133 @@
             </div>
             <div class="checkbox-option">
                 <label>
-                    <input type="checkbox" id="noLevel0Equipment">
+                    <input type="checkbox" id="noLevel0Equipment" checked>
                     <span><strong>No Level 0 Equipment</strong> - Skip background weapon/armor/items (level 1+)</span>
                 </label>
             </div>
 
-            <div id="startingWealthSection" style="margin-top: 12px; border-top: 1px solid #ddd; padding-top: 10px;">
-                <strong>Starting Wealth (level 2+):</strong>
-                <span style="color:#555; font-size:0.95em;"> — % of minimum XP for level, in gp</span>
-                <div style="display:flex; align-items:center; gap:12px; margin-top:6px; flex-wrap:wrap;">
-                    <label style="display:flex;align-items:center;gap:4px;">
-                        <input type="radio" name="wealthMode" id="wealthModePct" value="pct" checked>
-                        <input type="number" id="wealthPctInput" value="50" min="0" max="1000" style="width:60px; padding:2px 4px; font-size:14px;">
-                        <span>%</span>
-                    </label>
-                    <label style="display:flex;align-items:center;gap:4px;cursor:pointer;">
-                        <input type="radio" name="wealthMode" id="wealthModeLevel1" value="level1">
-                        <span><strong>Roll as Level 1</strong> &mdash; 3d6&times;10 gp regardless of level</span>
-                    </label>
+            <div style="margin-top: 12px; border-top: 1px solid #ddd; padding-top: 10px;">
+                <strong>Starting Wealth</strong>
+                <span style="color:#555; font-size:0.95em;"> — independent method per tier</span>
+
+                <div style="margin-top:8px;">
+                    <strong>Level 0:</strong>
+                    <div style="display:flex; align-items:center; gap:12px; margin-top:4px; flex-wrap:wrap;">
+                        <label style="display:flex;align-items:center;gap:4px;">
+                            <input type="radio" name="l0WealthMethod" id="l0WealthDice" value="dice" checked>
+                            <span>Dice roll:</span>
+                            <input type="number" id="l0DiceCount" value="3" min="1" style="width:44px; padding:2px 4px; font-size:14px;">
+                            <select id="l0DiceSides" style="padding:2px 4px; font-size:14px;">
+                                <option value="4">d4</option>
+                                <option value="6" selected>d6</option>
+                                <option value="8">d8</option>
+                                <option value="10">d10</option>
+                                <option value="12">d12</option>
+                            </select>
+                            <span>&times;</span>
+                            <input type="number" id="l0DiceMult" value="1" min="1" style="width:44px; padding:2px 4px; font-size:14px;">
+                            <span>Gold</span>
+                        </label>
+                        <label style="display:flex;align-items:center;gap:4px;">
+                            <input type="radio" name="l0WealthMethod" id="l0WealthFixed" value="fixed">
+                            <span>Fixed:</span>
+                            <input type="number" id="l0FixedGold" value="0" min="0" style="width:70px; padding:2px 4px; font-size:14px;">
+                            <span>gp</span>
+                        </label>
+                    </div>
                 </div>
-                <div id="wealthPreview" style="margin-top:6px; color:#555; font-size:0.9em;"></div>
+
+                <div style="margin-top:10px;">
+                    <strong>Level 1:</strong>
+                    <div style="display:flex; align-items:center; gap:12px; margin-top:4px; flex-wrap:wrap;">
+                        <label style="display:flex;align-items:center;gap:4px;">
+                            <input type="radio" name="l1WealthMethod" id="l1WealthDice" value="dice" checked>
+                            <span>Dice roll:</span>
+                            <input type="number" id="l1DiceCount" value="3" min="1" style="width:44px; padding:2px 4px; font-size:14px;">
+                            <select id="l1DiceSides" style="padding:2px 4px; font-size:14px;">
+                                <option value="4">d4</option>
+                                <option value="6" selected>d6</option>
+                                <option value="8">d8</option>
+                                <option value="10">d10</option>
+                                <option value="12">d12</option>
+                            </select>
+                            <span>&times;</span>
+                            <input type="number" id="l1DiceMult" value="10" min="1" style="width:44px; padding:2px 4px; font-size:14px;">
+                            <span>Gold</span>
+                        </label>
+                        <label style="display:flex;align-items:center;gap:4px;">
+                            <input type="radio" name="l1WealthMethod" id="l1WealthFixed" value="fixed">
+                            <span>Fixed:</span>
+                            <input type="number" id="l1FixedGold" value="0" min="0" style="width:70px; padding:2px 4px; font-size:14px;">
+                            <span>gp</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div style="margin-top:10px;">
+                    <strong>Level 2+:</strong>
+                    <div style="display:flex; align-items:center; gap:12px; margin-top:4px; flex-wrap:wrap;">
+                        <label style="display:flex;align-items:center;gap:4px;">
+                            <input type="radio" name="l2WealthMethod" id="l2WealthDice" value="dice">
+                            <span>Dice roll:</span>
+                            <input type="number" id="l2DiceCount" value="3" min="1" style="width:44px; padding:2px 4px; font-size:14px;">
+                            <select id="l2DiceSides" style="padding:2px 4px; font-size:14px;">
+                                <option value="4">d4</option>
+                                <option value="6" selected>d6</option>
+                                <option value="8">d8</option>
+                                <option value="10">d10</option>
+                                <option value="12">d12</option>
+                            </select>
+                            <span>&times;</span>
+                            <input type="number" id="l2DiceMult" value="10" min="1" style="width:44px; padding:2px 4px; font-size:14px;">
+                            <span>Gold</span>
+                        </label>
+                        <label style="display:flex;align-items:center;gap:4px;">
+                            <input type="radio" name="l2WealthMethod" id="l2WealthFixed" value="fixed">
+                            <span>Fixed:</span>
+                            <input type="number" id="l2FixedGold" value="0" min="0" style="width:70px; padding:2px 4px; font-size:14px;">
+                            <span>gp</span>
+                        </label>
+                        <label style="display:flex;align-items:center;gap:4px;">
+                            <input type="radio" name="l2WealthMethod" id="l2WealthXpPct" value="xp-pct" checked>
+                            <input type="number" id="wealthPctInput" value="20" min="0" max="1000" style="width:60px; padding:2px 4px; font-size:14px;">
+                            <span>% of min XP for level</span>
+                        </label>
+                    </div>
+                    <div id="wealthPreview" style="margin-top:6px; color:#555; font-size:0.9em;"></div>
+                </div>
+
+                <div style="margin-top:10px;">
+                    <strong>By XP:</strong>
+                    <div style="display:flex; align-items:center; gap:12px; margin-top:4px; flex-wrap:wrap;">
+                        <label style="display:flex;align-items:center;gap:4px;">
+                            <input type="radio" name="byXpWealthMethod" id="xpWealthDice" value="dice">
+                            <span>Dice roll:</span>
+                            <input type="number" id="xpDiceCount" value="3" min="1" style="width:44px; padding:2px 4px; font-size:14px;">
+                            <select id="xpDiceSides" style="padding:2px 4px; font-size:14px;">
+                                <option value="4">d4</option>
+                                <option value="6" selected>d6</option>
+                                <option value="8">d8</option>
+                                <option value="10">d10</option>
+                                <option value="12">d12</option>
+                            </select>
+                            <span>&times;</span>
+                            <input type="number" id="xpDiceMult" value="10" min="1" style="width:44px; padding:2px 4px; font-size:14px;">
+                            <span>Gold</span>
+                        </label>
+                        <label style="display:flex;align-items:center;gap:4px;">
+                            <input type="radio" name="byXpWealthMethod" id="xpWealthFixed" value="fixed">
+                            <span>Fixed:</span>
+                            <input type="number" id="xpFixedGold" value="0" min="0" style="width:70px; padding:2px 4px; font-size:14px;">
+                            <span>gp</span>
+                        </label>
+                        <label style="display:flex;align-items:center;gap:4px;">
+                            <input type="radio" name="byXpWealthMethod" id="xpWealthPct" value="xp-pct" checked>
+                            <input type="number" id="xpWealthPctInput" value="20" min="0" max="1000" style="width:60px; padding:2px 4px; font-size:14px;">
+                            <span>% of assigned XP</span>
+                        </label>
+                    </div>
+                </div>
             </div>
 
         </div>

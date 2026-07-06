@@ -16,12 +16,12 @@
  *   mode string is passed to getRaceAbilitiesAtLevel — no conditional needed
  */
 
-import { WEAPONS, ARMOR, calculateModifier, rollDice,
+import { WEAPONS, ARMOR, calculateModifier,
     calculateSavingThrows,
     applyRacialAdjustments, applyRacialSaveModifiers, checkRacialMinimums,
     getRaceInfo, getRaceAbilitiesAtLevel, getClassProgressionData,
     getClassFeatures, getBasicModeClassAbilities, CLASS_INFO,
-    rollHitPoints as rollHPLeveled, rollStartingGold, calcStartingGold,
+    rollHitPoints as rollHPLeveled, rollDiceGold, calcStartingGold,
     getBackgroundByProfession, getRandomBackground,
     getClassRequirements, getPrimeRequisites,
     CLS_CODE, RACE_CODE, RCM_CODE, PROG_CODE, RAP_CODE,
@@ -222,6 +222,11 @@ export function generateCharacterV3(opts = {}) {
         fixedOccupation = null, fixedStartingGold = null,
         fixedAdjustments = null, wealthPct = 100, fixedHPRolls = null,
         noLevel0Equipment = false, classData = null,
+        // Per-tier starting-wealth method settings (Starting Wealth Overhaul).
+        // Defaults reproduce the pre-overhaul behavior for callers not yet updated.
+        l0WealthMethod = 'dice', l0DiceCount = 3, l0DiceSides = 6, l0DiceMult = 1, l0FixedGold = 0,
+        l1WealthMethod = 'dice', l1DiceCount = 3, l1DiceSides = 6, l1DiceMult = 10, l1FixedGold = 0,
+        l2PlusWealthMethod = 'xp-pct', l2PlusDiceCount = 3, l2PlusDiceSides = 6, l2PlusDiceMult = 10, l2PlusFixedGold = 0,
     } = opts;
 
     const isAdvanced = isSeparateRaceClass;
@@ -365,7 +370,9 @@ export function generateCharacterV3(opts = {}) {
         const background = fixedOccupation
             ? (getBackgroundByProfession(fixedOccupation) || getRandomBackground(hp0.backgroundHP))
             : getRandomBackground(hp0.backgroundHP);
-        const startingGold = fixedStartingGold !== null ? fixedStartingGold : rollDice(3, 6);
+        const startingGold = fixedStartingGold !== null ? fixedStartingGold
+            : l0WealthMethod === 'fixed' ? l0FixedGold
+            : rollDiceGold(l0DiceCount, l0DiceSides, l0DiceMult);
         return {
             v: 3, m: mCode, p: pCode, r: raceCode, l: 0,
             s: rawArr, ...(saArr ? { sa: saArr } : {}),
@@ -408,10 +415,16 @@ export function generateCharacterV3(opts = {}) {
     const progressionData = getClassProgressionData({ className, level, abilityScores: adjScores, classData });
 
     let startingGold;
-    if (fixedStartingGold !== null)   { startingGold = fixedStartingGold; }
-    else if (level === 1)              { startingGold = rollStartingGold(isSmoothprog ? 'smoothprog' : 'ose'); }
-    else                               { startingGold = calcStartingGold(progressionData.xpForCurrentLevel, wealthPct); }
-
+    if (fixedStartingGold !== null) { startingGold = fixedStartingGold; }
+    else if (level === 1) {
+        startingGold = l1WealthMethod === 'fixed' ? l1FixedGold : rollDiceGold(l1DiceCount, l1DiceSides, l1DiceMult);
+    } else if (l2PlusWealthMethod === 'fixed') {
+        startingGold = l2PlusFixedGold;
+    } else if (l2PlusWealthMethod === 'dice') {
+        startingGold = rollDiceGold(l2PlusDiceCount, l2PlusDiceSides, l2PlusDiceMult);
+    } else {
+        startingGold = calcStartingGold(progressionData.xpForCurrentLevel, wealthPct);
+    }
     const clsCode = CLS_CODE[className] ?? 'FI';
 
     return {
