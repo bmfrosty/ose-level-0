@@ -358,8 +358,7 @@ export function decodeCompactParams(cp) {
 export function buildOptionsLine(cp) {
     const parts = [];
     const lvl = cp.l ?? 0;
-    const progLabel = { O: 'Standard B/X', S: 'Smoothified', L: 'Labyrinth Lord' };
-    parts.push(progLabel[cp.p] || 'Standard B/X');
+    parts.push(progModeLabel(cp.p || 'O'));
     const rcmLabel = { ST:'Strict OSE', SH:'Human Racial Abilities', TE:'Extended Levels + Human Abilities', AL:'Allow All Classes' };
     parts.push(rcmLabel[cp.rcm] || 'Strict OSE');
     // Racial Adjustment Policy — only meaningful on a level-0 sheet; by level 1+
