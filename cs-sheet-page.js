@@ -446,6 +446,7 @@ function buildGeneratorURL(cp) {
     };
     const CODE_TO_RACE_NAME  = { HU:'Human', DW:'Dwarf', EL:'Elf', HA:'Halfling', GN:'Gnome' };
     const CODE_TO_RCM        = { ST:'strict', SH:'strict-human', TE:'traditional-extended', AL:'allow-all' };
+    const CODE_TO_RAP        = { AA:'always', SO:'separate-only', NV:'never', FS:'from-separate', F1:'from-level-1' };
 
     const isAdv = cp.m === 'A';
     const p = new URLSearchParams();
@@ -534,8 +535,13 @@ function buildGeneratorURL(cp) {
     // to reproduce this character, only to reconstruct the referee's full
     // ruleset for the "Back to Generator" link.
     if (cp.esb === 0) p.set('esb', '0');
-    if (cp.rap)        p.set('rap', cp.rap);
-    if (cp.nl0e === 0) p.set('nl0e', '0');
+    // cp.rap is the 2-char RAP_CODE (generateCharacterV3 already writes this
+    // for level-0 characters; buildCampaignRulesetCp writes the same code for
+    // level 1+) — map back to the raw racialAdjustmentPolicy string readURLParams expects.
+    if (cp.rap && CODE_TO_RAP[cp.rap]) p.set('rap', CODE_TO_RAP[cp.rap]);
+    // cp.nl0 is written unconditionally by generateCharacterV3 whenever
+    // noLevel0Equipment was true — no separate field needed here.
+    if (cp.nl0 !== 1) p.set('nl0e', '0');
     if (cp.l0wm)          p.set('l0wm', cp.l0wm);
     if (cp.l0dc != null)  p.set('l0dc', String(cp.l0dc));
     if (cp.l0ds != null)  p.set('l0ds', String(cp.l0ds));

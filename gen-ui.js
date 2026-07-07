@@ -523,11 +523,17 @@ export function generateCharacter() {
 // to Generator") can reconstruct the referee's full ruleset later. Omitted
 // when equal to the setting's own default, mirroring syncURLParams()'s
 // omission thresholds so the encoding stays consistent either way.
+//
+// rap reuses the same RAP_CODE 2-char encoding generateCharacterV3() already
+// writes for level-0 characters (cp.rap) — not the raw racialAdjustmentPolicy
+// string — so both write paths agree on one field/format instead of the
+// level-1+ path silently overwriting level 0's value with a different shape.
+// No new field is needed for No Level 0 Equipment either: generateCharacterV3
+// already writes cp.nl0 (1 when true, omitted when false) at both levels.
 function buildCampaignRulesetCp() {
     return {
         ...(!excludeSpellblade ? { esb: 0 } : {}),
-        ...(racialAdjustmentPolicy !== 'never' ? { rap: racialAdjustmentPolicy } : {}),
-        ...(!noLevel0Equipment ? { nl0e: 0 } : {}),
+        ...(racialAdjustmentPolicy !== 'never' ? { rap: RAP_CODE[racialAdjustmentPolicy] } : {}),
         ...(l0WealthMethod !== 'dice' ? { l0wm: l0WealthMethod } : {}),
         ...(l0DiceCount !== 3 ? { l0dc: l0DiceCount } : {}),
         ...(l0DiceSides !== 6 ? { l0ds: l0DiceSides } : {}),

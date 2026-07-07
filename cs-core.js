@@ -203,14 +203,23 @@ export async function decompressFromBase64Url(b64url) {
  * wp      number      wealthPct — starting gold % of XP-for-level for level 2+ chars (0–100)
  * prm     0|9|13      primeRequisiteMode — 0=user choice, 9=require ≥9, 13=require ≥13
  *
+ * nl0     0|1         noLevel0Equipment — 1 = level 0 characters get no starting equipment;
+ *                     omitted (falsy) when false. Written by generateCharacterV3 at both
+ *                     level 0 and level 1+; also read directly by cs-sheet-page.js to skip
+ *                     background-derived starting gear on display.
+ * sa      number[6]   Post-generation ability adjustments beyond racial modifiers (e.g. a
+ *                     referee-granted fixed adjustment) — omitted when all zero
+ *
  * ── Referee ruleset (not needed for this character; carried only so ─────────
  * ── buildGeneratorURL()'s "Back to Generator" link can reconstruct the ──────
  * ── full Campaign-tier settings — see gen-ui.js's buildCampaignRulesetCp()) ─
  * esb     0|1         excludeSpellblade — omitted when true (the default); 0 = Spellblade
  *                     allowed in the grid
- * rap     string      racialAdjustmentPolicy — omitted when 'never' (the default)
- * nl0e    0|1         noLevel0Equipment — omitted when true (the default); 0 = level 0
- *                     characters get starting equipment
+ * rap     2-char code racialAdjustmentPolicy, same RAP_CODE as above — written
+ *                     unconditionally at level 0 (by generateCharacterV3) and at level 1+
+ *                     when non-'never' (by buildCampaignRulesetCp); both write paths use
+ *                     the same field/encoding so neither overwrites the other with a
+ *                     different shape
  * l0wm/l1wm/l2wm/xwm       string   Starting Wealth method per tier (Level 0 / Level 1 /
  *                                   Level 2+ / By XP) — 'dice'|'fixed'|'xp-pct', omitted
  *                                   when equal to that tier's default method
