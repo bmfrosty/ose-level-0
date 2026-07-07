@@ -79,6 +79,8 @@ let useFixedScores = false;
 let showUndeadNames = false;
 let hideHumanRace   = false;   // show "Fighter" instead of "Human Fighter" for separate-class Human picks
 let showQRCode = true;
+// Purely cosmetic character-sheet branding — doesn't affect any game mechanics.
+let sheetBranding = 'ose';     // 'ose' | 'dnd'
 let basicAbilityOrdering = true;
 let characterName = '';
 // Default matches the Basic Mode Reset button — a brand-new visit (no saved
@@ -587,6 +589,7 @@ async function runGenerate() {
     const fullCp = {
         ...cp,
         un: showUndeadNames?1:0, qr: showQRCode?1:0, ao: basicAbilityOrdering?1:0,
+        ...(sheetBranding === 'dnd' ? { sb: 1 } : {}),
         wp: wealthPct, prm: primeRequisiteMode==='user'?0:parseInt(primeRequisiteMode),
         sm: ['STR','DEX','CON','INT','WIS','CHA'].map(a => readScoresFromInputs()[a] || 3),
         ...(isSeparateRaceClass && hideHumanRace ? { hhr: 1 } : {}),
@@ -679,6 +682,7 @@ async function generateZeroLevel() {
     const fullCp = {
         ...cp,
         un: showUndeadNames?1:0, qr: showQRCode?1:0, ao: basicAbilityOrdering?1:0,
+        ...(sheetBranding === 'dnd' ? { sb: 1 } : {}),
         prm: primeRequisiteMode==='user'?0:parseInt(primeRequisiteMode),
         sm: ['STR','DEX','CON','INT','WIS','CHA'].map(a => readScoresFromInputs()[a] || 3),
         ...(adm != null ? { adm } : {}),
@@ -739,7 +743,7 @@ function saveCurrentSettings() {
     saveSettings(getSettingsKey(), {
         mode: modePreset, acDisplayMode,
         progressionMode, primeRequisiteMode, hpRollingMode, includeLevel0HP,
-        useFixedScores, showUndeadNames, hideHumanRace, basicAbilityOrdering, wealthPct,
+        useFixedScores, showUndeadNames, hideHumanRace, basicAbilityOrdering, sheetBranding, wealthPct,
         noLevel0Equipment, xpMode, xpAmount,
         l0WealthMethod, l0DiceCount, l0DiceSides, l0DiceMult, l0FixedGold,
         l1WealthMethod, l1DiceCount, l1DiceSides, l1DiceMult, l1FixedGold,
@@ -775,6 +779,7 @@ function syncURLParams() {
     if (showUndeadNames)                                           p.set('un', '1');
     if (hideHumanRace)                                             p.set('hhr', '1');
     if (!basicAbilityOrdering)                                     p.set('ao', '0');
+    if (sheetBranding !== 'ose')                                   p.set('sb', sheetBranding);
     if (wealthPct !== 20)                                          p.set('wp', String(wealthPct));
     if (l0WealthMethod !== 'dice')                                 p.set('l0wm', l0WealthMethod);
     if (l0DiceCount !== 3)                                         p.set('l0dc', String(l0DiceCount));
@@ -905,6 +910,7 @@ function applySettings(s) {
     if (s.hideHumanRace!==undefined)             { hideHumanRace=s.hideHumanRace;                       setBool('hideHumanRace','hideHumanRace'); }
     if (s.acDisplayMode!==undefined) { acDisplayMode=s.acDisplayMode; document.querySelectorAll('input[name="acDisplayMode"]').forEach(r=>{r.checked=r.value===s.acDisplayMode;}); }
     if (s.basicAbilityOrdering!==undefined)      { basicAbilityOrdering=s.basicAbilityOrdering;           setBool('basicAbilityOrdering','basicAbilityOrdering'); }
+    if (s.sheetBranding!==undefined) { sheetBranding=s.sheetBranding; document.querySelectorAll('input[name="sheetBranding"]').forEach(r=>{r.checked=r.value===s.sheetBranding;}); }
     if (s.autoGenerateOnLevelChange!==undefined) { autoGenerateOnLevelChange=s.autoGenerateOnLevelChange; setBool('autoGenerateOnLevelChange','autoGenerateOnLevelChange'); }
     if (s.autoGenerateOnClassChange!==undefined) { autoGenerateOnClassChange=s.autoGenerateOnClassChange; setBool('autoGenerateOnClassChange','autoGenerateOnClassChange'); }
     if (s.autoGenerateOnLoad!==undefined)        { autoGenerateOnLoad=s.autoGenerateOnLoad;               setBool('autoGenerateOnLoad','autoGenerateOnLoad'); }
@@ -1084,12 +1090,14 @@ function handleAdvancedModeReset() {
 
 // Resets only the Player cluster (sections 7-8: character name and the
 // display/workflow options). Does not touch Referee-cluster fields. Shared by
-// the two Player reset buttons below, which only differ in acDisplayModeValue
-// and basicAbilityOrderingValue.
-function applyPlayerModeReset(acDisplayModeValue, basicAbilityOrderingValue) {
+// the two Player reset buttons below, which only differ in acDisplayModeValue,
+// basicAbilityOrderingValue, and sheetBrandingValue.
+function applyPlayerModeReset(acDisplayModeValue, basicAbilityOrderingValue, sheetBrandingValue) {
     showUndeadNames=false; hideHumanRace=false; basicAbilityOrdering=basicAbilityOrderingValue; acDisplayMode=acDisplayModeValue;
+    sheetBranding=sheetBrandingValue;
     autoGenerateOnLevelChange=false; autoGenerateOnClassChange=false; autoGenerateOnLoad=false;
     document.querySelectorAll('input[name="acDisplayMode"]').forEach(r=>{r.checked=r.value===acDisplayModeValue;});
+    document.querySelectorAll('input[name="sheetBranding"]').forEach(r=>{r.checked=r.value===sheetBrandingValue;});
     ['showUndeadNames','hideHumanRace','openInNewTab'].forEach(id=>{const el=document.getElementById(id);if(el)el.checked=false;});
     ['autoGenerateOnLevelChange','autoGenerateOnClassChange','autoGenerateOnLoad'].forEach(id=>{const el=document.getElementById(id);if(el)el.checked=false;});
     const aoEl=document.getElementById('basicAbilityOrdering'); if(aoEl) aoEl.checked=basicAbilityOrderingValue;
@@ -1100,14 +1108,15 @@ function applyPlayerModeReset(acDisplayModeValue, basicAbilityOrderingValue) {
 }
 
 function handleResetPlayerSettings() {
-    applyPlayerModeReset('aac', false);
+    applyPlayerModeReset('aac', false, 'ose');
 }
 
 // 1981 B/X Mode Reset — Descending AC (with attack matrix, matching B/X's
-// THAC0-and-tables play) and the classic 1977 ability score ordering, since
-// that's the order the original Basic/Expert rulebooks present abilities in.
+// THAC0-and-tables play), the classic 1977 ability score ordering, and
+// Dungeons & Dragons sheet branding, since that's the era and game this reset
+// is meant to evoke.
 function handleBXModeReset() {
-    applyPlayerModeReset('dac-matrix', true);
+    applyPlayerModeReset('dac-matrix', true, 'dnd');
 }
 
 // ── URL Params ────────────────────────────────────────────────────────────────
@@ -1129,6 +1138,7 @@ function readURLParams() {
     if (p.has('un'))    s.showUndeadNames = p.get('un')==='1';
     if (p.has('hhr'))   s.hideHumanRace = p.get('hhr')==='1';
     if (p.has('ao'))    s.basicAbilityOrdering = p.get('ao')==='1';
+    if (p.has('sb'))    s.sheetBranding = p.get('sb');
     if (p.has('wp'))    s.wealthPct = parseInt(p.get('wp'));
     if (p.has('l0wm'))  s.l0WealthMethod = p.get('l0wm');
     if (p.has('l0dc'))  s.l0DiceCount = parseInt(p.get('l0dc'));
@@ -1290,6 +1300,10 @@ export function initializeEventListeners() {
     // AC Display Mode
     document.querySelectorAll('input[name="acDisplayMode"]').forEach(r=>{
         r.addEventListener('change',(e)=>{ acDisplayMode=e.target.value; saveCurrentSettings(); });
+    });
+    // Character Sheet Branding
+    document.querySelectorAll('input[name="sheetBranding"]').forEach(r=>{
+        r.addEventListener('change',(e)=>{ sheetBranding=e.target.value; saveCurrentSettings(); });
     });
     // HP Rolling Mode
     document.querySelectorAll('input[name="hpRollingMode"]').forEach(r=>{

@@ -18,8 +18,8 @@ import { WEAPONS, progModeLabel } from './shared-core.js';
  *
  * Sheet object format:
  * {
- *   title: string,          // e.g. "OLD-SCHOOL ESSENTIALS ADVANCED"
- *   subtitle: string,       // e.g. "RETRO ADVENTURE GAME · Smoothified Mode"
+ *   title: string,          // e.g. "OLD-SCHOOL ESSENTIALS" or "DUNGEONS & DRAGONS"
+ *   subtitle: string,       // e.g. "RETRO ADVENTURE GAME · Smoothified Progressions"
  *   header: {
  *     columns: [{ label, value, flex, center }]  // flexible header columns
  *   },
