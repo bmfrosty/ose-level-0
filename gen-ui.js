@@ -819,8 +819,22 @@ function syncURLParams() {
 }
 
 // ── Share / QR Code ───────────────────────────────────────────────────────────
+
+/**
+ * Build a Campaign Profile link: the current generator.html URL with every
+ * Character-tier param (level, class, race, name, zero-level race) stripped,
+ * so the shared link always carries just the referee's ruleset — never a
+ * specific character-in-progress, regardless of what's currently selected
+ * in the grid or name field.
+ */
+function buildCampaignProfileURL() {
+    const url = new URL(window.location.href);
+    ['l', 'c', 'r', 'n', 'zr'].forEach(key => url.searchParams.delete(key));
+    return url.toString();
+}
+
 function showShareQR() {
-    const url = window.location.href;
+    const url = buildCampaignProfileURL();
     const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(url)}`;
 
     document.getElementById('shareModal')?.remove();

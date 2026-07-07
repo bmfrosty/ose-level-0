@@ -527,6 +527,22 @@ function buildGeneratorURL(cp) {
     return `generator.html?${p.toString()}`;
 }
 
+/**
+ * Build a Campaign Profile link from this character's compact params: the
+ * same URL as buildGeneratorURL(), but with every Character-tier param
+ * stripped (level, class, race, name, zero-level race), so a player
+ * following it lands on the referee's ruleset with nothing pre-selected —
+ * not a copy of this specific character.
+ *
+ * @param {Object} cp - Decoded compact params object (post-decodeCompactParams)
+ * @returns {string} URL string like "generator.html?mode=race-as-class&p=ose…"
+ */
+function buildCampaignURL(cp) {
+    const url = new URL(buildGeneratorURL(cp), window.location.href);
+    ['l', 'c', 'r', 'n', 'zr'].forEach(key => url.searchParams.delete(key));
+    return `generator.html?${url.searchParams.toString()}`;
+}
+
 // ── initEditPanel ──────────────────────────────────────────────────────────────
 
 /**
@@ -1057,6 +1073,14 @@ export async function initCharacterSheet() {
                 if (genBtn) {
                     genBtn.href = buildGeneratorURL(decodedCp);
                     genBtn.style.display = '';
+                }
+
+                // Wire up "Back to Campaign" link — same settings, minus this
+                // specific character's level/class/race/name
+                const campaignBtn = document.getElementById('backToCampaignBtn');
+                if (campaignBtn) {
+                    campaignBtn.href = buildCampaignURL(decodedCp);
+                    campaignBtn.style.display = '';
                 }
 
                 // Show level-up HP notice if one was stored by the previous page
