@@ -431,7 +431,9 @@ export async function expandCompactV3(cp, precomp = {}, { silent = false } = {})
 
 /**
  * Reconstruct a generator.html URL with the settings that were used to
- * generate this character, so the user can go back and roll another.
+ * generate this character, including this exact race/class/level/name.
+ * Internal helper for buildCampaignURL() — not wired to a button of its
+ * own.
  *
  * @param {Object} cp - Decoded compact params object (post-decodeCompactParams)
  * @returns {string} URL string like "generator.html?mode=race-as-class&p=ose&l=1&c=Fighter…"
@@ -528,8 +530,8 @@ function buildGeneratorURL(cp) {
 }
 
 /**
- * Build a Campaign Profile link from this character's compact params: the
- * same URL as buildGeneratorURL(), but with every Character-tier param
+ * Build the "Back to Generator" link from this character's compact params:
+ * the same URL as buildGeneratorURL(), but with every Character-tier param
  * stripped (level, class, race, name, zero-level race), so a player
  * following it lands on the referee's ruleset with nothing pre-selected —
  * not a copy of this specific character.
@@ -1068,19 +1070,12 @@ export async function initCharacterSheet() {
                 await renderFromCompactParams(decodedCp, contentEl,
                     { initEditPanels: true });
 
-                // Wire up "Back to Generator" link with settings from this character
+                // Wire up "Back to Generator" link — the referee's ruleset
+                // settings, minus this specific character's level/class/race/name
                 const genBtn = document.getElementById('backToGeneratorBtn');
                 if (genBtn) {
-                    genBtn.href = buildGeneratorURL(decodedCp);
+                    genBtn.href = buildCampaignURL(decodedCp);
                     genBtn.style.display = '';
-                }
-
-                // Wire up "Back to Campaign" link — same settings, minus this
-                // specific character's level/class/race/name
-                const campaignBtn = document.getElementById('backToCampaignBtn');
-                if (campaignBtn) {
-                    campaignBtn.href = buildCampaignURL(decodedCp);
-                    campaignBtn.style.display = '';
                 }
 
                 // Show level-up HP notice if one was stored by the previous page
