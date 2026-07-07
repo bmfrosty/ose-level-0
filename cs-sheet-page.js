@@ -503,8 +503,11 @@ function buildGeneratorURL(cp) {
     // Ability ordering (default 1 = 1977 order → only emit when 0 = modern)
     if (cp.ao === 0) p.set('ao', '0');
 
-    // Wealth percent (default 50 → omit)
-    if (cp.wp != null && cp.wp !== 50) p.set('wp', String(cp.wp));
+    // Character Sheet Branding (default 'ose' → only emit when D&D)
+    if (cp.sb === 1) p.set('sb', 'dnd');
+
+    // Wealth percent (default 20 → omit)
+    if (cp.wp != null && cp.wp !== 20) p.set('wp', String(cp.wp));
 
     // HP mode → hpm generator URL param (0=normal=omit, 1=blessed, 2=5e, 3=reroll12)
     if (cp.hm === 1) p.set('hpm', 'blessed');
