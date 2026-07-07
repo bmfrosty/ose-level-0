@@ -1439,9 +1439,9 @@ export const PROG_CODE = { ose:'O', smoothprog:'S', ll:'L' };
  * Accepts either a mode key ('ose', 'smooth', 'll') or a compact code ('O', 'S', 'L').
  */
 export function progModeLabel(mode) {
-    if (mode === 'ose'    || mode === 'O') return 'OSE Standard';
-    if (mode === 'smoothprog' || mode === 'S') return 'Smoothified';
-    if (mode === 'll'     || mode === 'L') return 'Labyrinth Lord';
+    if (mode === 'ose'    || mode === 'O') return 'Standard B/X Progressions';
+    if (mode === 'smoothprog' || mode === 'S') return 'Smoothified Progressions';
+    if (mode === 'll'     || mode === 'L') return 'Labyrinth Lord Progressions';
     return mode;
 }
 

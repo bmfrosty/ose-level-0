@@ -79,6 +79,8 @@ let useFixedScores = false;
 let showUndeadNames = false;
 let hideHumanRace   = false;   // show "Fighter" instead of "Human Fighter" for separate-class Human picks
 let showQRCode = true;
+// Purely cosmetic character-sheet branding — doesn't affect any game mechanics.
+let sheetBranding = 'ose';     // 'ose' | 'dnd'
 let basicAbilityOrdering = true;
 let characterName = '';
 // Default matches the Basic Mode Reset button — a brand-new visit (no saved
@@ -122,6 +124,9 @@ let xpAmount = null;    // XP value when xpMode is true
 // separate-class picks (e.g. selectedRace = "Human_RACE", selectedClass = "Fighter_CLASS").
 let selectedRace = null;
 let raceClassMode = 'strict';
+// Spellblade is a house-rules fighter/magic-user hybrid, not part of Basic or
+// Advanced core OSE — excluded by default so Basic Mode Reset is genuinely basic.
+let excludeSpellblade = true;
 
 // True when the currently-selected class is a race-as-class pick (CLASS_INFO
 // classType === 'raceAsClass'), i.e. the Race-as-Class grid column was clicked
@@ -407,6 +412,12 @@ export function updateUI() {
             const className = button.dataset.class;
             if (modePreset === 'race-as-class' && bareRace !== 'Human') {
                 isAvailable = false;
+            } else if (className === 'Spellblade' && excludeSpellblade) {
+                // Referee-configurable: Spellblade is a house-rules hybrid, not part
+                // of Basic or Advanced core OSE — Human's separate-class columns are
+                // otherwise always available under preset B, so this needs its own
+                // check rather than relying on modePreset/raceClassMode alone.
+                isAvailable = false;
             } else {
                 const allowNonTraditional = (raceClassMode === 'allow-all');
                 const availableClasses = getAvailableClasses(bareRace, allowNonTraditional);
@@ -578,6 +589,7 @@ async function runGenerate() {
     const fullCp = {
         ...cp,
         un: showUndeadNames?1:0, qr: showQRCode?1:0, ao: basicAbilityOrdering?1:0,
+        ...(sheetBranding === 'dnd' ? { sb: 1 } : {}),
         wp: wealthPct, prm: primeRequisiteMode==='user'?0:parseInt(primeRequisiteMode),
         sm: ['STR','DEX','CON','INT','WIS','CHA'].map(a => readScoresFromInputs()[a] || 3),
         ...(isSeparateRaceClass && hideHumanRace ? { hhr: 1 } : {}),
@@ -670,6 +682,7 @@ async function generateZeroLevel() {
     const fullCp = {
         ...cp,
         un: showUndeadNames?1:0, qr: showQRCode?1:0, ao: basicAbilityOrdering?1:0,
+        ...(sheetBranding === 'dnd' ? { sb: 1 } : {}),
         prm: primeRequisiteMode==='user'?0:parseInt(primeRequisiteMode),
         sm: ['STR','DEX','CON','INT','WIS','CHA'].map(a => readScoresFromInputs()[a] || 3),
         ...(adm != null ? { adm } : {}),
@@ -730,7 +743,7 @@ function saveCurrentSettings() {
     saveSettings(getSettingsKey(), {
         mode: modePreset, acDisplayMode,
         progressionMode, primeRequisiteMode, hpRollingMode, includeLevel0HP,
-        useFixedScores, showUndeadNames, hideHumanRace, basicAbilityOrdering, wealthPct,
+        useFixedScores, showUndeadNames, hideHumanRace, basicAbilityOrdering, sheetBranding, wealthPct,
         noLevel0Equipment, xpMode, xpAmount,
         l0WealthMethod, l0DiceCount, l0DiceSides, l0DiceMult, l0FixedGold,
         l1WealthMethod, l1DiceCount, l1DiceSides, l1DiceMult, l1FixedGold,
@@ -744,7 +757,7 @@ function saveCurrentSettings() {
         scoreDEX: parseInt(document.getElementById('scoreDEX')?.value)||3,
         scoreCON: parseInt(document.getElementById('scoreCON')?.value)||3,
         scoreCHA: parseInt(document.getElementById('scoreCHA')?.value)||3,
-        raceClassMode, selectedRace, selectedRaceForZero, racialAdjustmentPolicy,
+        raceClassMode, excludeSpellblade, selectedRace, selectedRaceForZero, racialAdjustmentPolicy,
     });
     syncURLParams();
 }
@@ -758,6 +771,7 @@ function syncURLParams() {
     if (selectedClass)                                             p.set('c', selectedClass.replace('_CLASS',''));
     if (selectedRace)                                              p.set('r', selectedRace.replace('_RACE',''));
     if (raceClassMode !== 'strict')                                p.set('rcm', raceClassMode);
+    if (!excludeSpellblade)                                        p.set('esb', '0');
     if (racialAdjustmentPolicy !== 'never')                        p.set('rap', racialAdjustmentPolicy);
     if (primeRequisiteMode !== 'user')                             p.set('prm', primeRequisiteMode);
     if (hpRollingMode !== 'normal')                                p.set('hpm', hpRollingMode);
@@ -765,6 +779,7 @@ function syncURLParams() {
     if (showUndeadNames)                                           p.set('un', '1');
     if (hideHumanRace)                                             p.set('hhr', '1');
     if (!basicAbilityOrdering)                                     p.set('ao', '0');
+    if (sheetBranding !== 'ose')                                   p.set('sb', sheetBranding);
     if (wealthPct !== 20)                                          p.set('wp', String(wealthPct));
     if (l0WealthMethod !== 'dice')                                 p.set('l0wm', l0WealthMethod);
     if (l0DiceCount !== 3)                                         p.set('l0dc', String(l0DiceCount));
@@ -875,6 +890,7 @@ function applySettings(s) {
         const _id = RCM_IDS[s.raceClassMode];
         if (_id) { const el=document.getElementById(_id); if(el) el.checked=true; }
     }
+    if (s.excludeSpellblade!==undefined) { excludeSpellblade=s.excludeSpellblade; const _el=document.getElementById('excludeSpellblade'); if(_el) _el.checked=s.excludeSpellblade; }
     if (s.racialAdjustmentPolicy) {
         racialAdjustmentPolicy = s.racialAdjustmentPolicy;
         document.querySelectorAll('input[name="racialAdjustmentPolicy"]').forEach(r=>{r.checked=r.value===s.racialAdjustmentPolicy;});
@@ -894,6 +910,7 @@ function applySettings(s) {
     if (s.hideHumanRace!==undefined)             { hideHumanRace=s.hideHumanRace;                       setBool('hideHumanRace','hideHumanRace'); }
     if (s.acDisplayMode!==undefined) { acDisplayMode=s.acDisplayMode; document.querySelectorAll('input[name="acDisplayMode"]').forEach(r=>{r.checked=r.value===s.acDisplayMode;}); }
     if (s.basicAbilityOrdering!==undefined)      { basicAbilityOrdering=s.basicAbilityOrdering;           setBool('basicAbilityOrdering','basicAbilityOrdering'); }
+    if (s.sheetBranding!==undefined) { sheetBranding=s.sheetBranding; document.querySelectorAll('input[name="sheetBranding"]').forEach(r=>{r.checked=r.value===s.sheetBranding;}); }
     if (s.autoGenerateOnLevelChange!==undefined) { autoGenerateOnLevelChange=s.autoGenerateOnLevelChange; setBool('autoGenerateOnLevelChange','autoGenerateOnLevelChange'); }
     if (s.autoGenerateOnClassChange!==undefined) { autoGenerateOnClassChange=s.autoGenerateOnClassChange; setBool('autoGenerateOnClassChange','autoGenerateOnClassChange'); }
     if (s.autoGenerateOnLoad!==undefined)        { autoGenerateOnLoad=s.autoGenerateOnLoad;               setBool('autoGenerateOnLoad','autoGenerateOnLoad'); }
@@ -974,7 +991,7 @@ function applyPreset(modeValue, overrides) {
         progressionMode: 'ose', primeRequisiteMode: 'user',
         hpRollingMode: 'normal', includeLevel0HP: false,
         scoreSTR:3, scoreINT:3, scoreWIS:3, scoreDEX:3, scoreCON:3, scoreCHA:3,
-        useFixedScores: false, noLevel0Equipment: true,
+        useFixedScores: false, noLevel0Equipment: true, excludeSpellblade: false,
         ...overrides,
     });
     saveCurrentSettings();
@@ -1002,10 +1019,11 @@ function handleConventionMode() {
 // Player-cluster fields or their saved values — each reset button only affects
 // its own cluster, so scoped resets are additive saves, never a storage wipe.
 // Shared by the two mode-flavored reset buttons below, which only differ in
-// modePresetValue and racialAdjustmentPolicyValue.
-function applyRefereeModeReset(modePresetValue, racialAdjustmentPolicyValue) {
+// modePresetValue, racialAdjustmentPolicyValue, and excludeSpellbladeValue.
+function applyRefereeModeReset(modePresetValue, racialAdjustmentPolicyValue, excludeSpellbladeValue) {
     progressionMode='ose'; primeRequisiteMode='user'; raceClassMode='strict';
     hpRollingMode='normal'; includeLevel0HP=false; useFixedScores=false; noLevel0Equipment=true;
+    excludeSpellblade=excludeSpellbladeValue; const _esbEl=document.getElementById('excludeSpellblade'); if(_esbEl) _esbEl.checked=excludeSpellbladeValue;
     document.querySelectorAll('input[name="hpRollingMode"]').forEach(r=>{r.checked=r.value==='normal';});
     xpMode=false; xpAmount=null; const _lmR=document.getElementById('levelModeFixed'); if(_lmR) _lmR.checked=true; const _xaR=document.getElementById('xpAmount'); if(_xaR) _xaR.value='';
     document.querySelectorAll('input[name="progressionMode"]').forEach(r=>{r.checked=r.value==='ose';});
@@ -1063,26 +1081,42 @@ function applyRefereeModeReset(modePresetValue, racialAdjustmentPolicyValue) {
 }
 
 function handleBasicModeReset() {
-    applyRefereeModeReset('race-as-class', 'never');
+    applyRefereeModeReset('race-as-class', 'never', true);
 }
 
 function handleAdvancedModeReset() {
-    applyRefereeModeReset('race-class', 'separate-only');
+    applyRefereeModeReset('race-class', 'separate-only', false);
 }
 
 // Resets only the Player cluster (sections 7-8: character name and the
-// display/workflow options). Does not touch Referee-cluster fields.
-function handleResetPlayerSettings() {
-    showUndeadNames=false; hideHumanRace=false; basicAbilityOrdering=true; acDisplayMode='aac';
+// display/workflow options). Does not touch Referee-cluster fields. Shared by
+// the two Player reset buttons below, which only differ in acDisplayModeValue,
+// basicAbilityOrderingValue, and sheetBrandingValue.
+function applyPlayerModeReset(acDisplayModeValue, basicAbilityOrderingValue, sheetBrandingValue) {
+    showUndeadNames=false; hideHumanRace=false; basicAbilityOrdering=basicAbilityOrderingValue; acDisplayMode=acDisplayModeValue;
+    sheetBranding=sheetBrandingValue;
     autoGenerateOnLevelChange=false; autoGenerateOnClassChange=false; autoGenerateOnLoad=false;
-    document.querySelectorAll('input[name="acDisplayMode"]').forEach(r=>{r.checked=r.value==='aac';});
+    document.querySelectorAll('input[name="acDisplayMode"]').forEach(r=>{r.checked=r.value===acDisplayModeValue;});
+    document.querySelectorAll('input[name="sheetBranding"]').forEach(r=>{r.checked=r.value===sheetBrandingValue;});
     ['showUndeadNames','hideHumanRace','openInNewTab'].forEach(id=>{const el=document.getElementById(id);if(el)el.checked=false;});
     ['autoGenerateOnLevelChange','autoGenerateOnClassChange','autoGenerateOnLoad'].forEach(id=>{const el=document.getElementById(id);if(el)el.checked=false;});
-    const aoEl=document.getElementById('basicAbilityOrdering'); if(aoEl) aoEl.checked=true;
+    const aoEl=document.getElementById('basicAbilityOrdering'); if(aoEl) aoEl.checked=basicAbilityOrderingValue;
     const _nameEl=document.getElementById('characterName'); if(_nameEl) _nameEl.value='';
     characterName='';
     updateUI();
     saveCurrentSettings();
+}
+
+function handleResetPlayerSettings() {
+    applyPlayerModeReset('aac', false, 'ose');
+}
+
+// 1981 B/X Mode Reset — Descending AC (with attack matrix, matching B/X's
+// THAC0-and-tables play), the classic 1977 ability score ordering, and
+// Dungeons & Dragons sheet branding, since that's the era and game this reset
+// is meant to evoke.
+function handleBXModeReset() {
+    applyPlayerModeReset('dac-matrix', true, 'dnd');
 }
 
 // ── URL Params ────────────────────────────────────────────────────────────────
@@ -1096,6 +1130,7 @@ function readURLParams() {
     if (p.has('c'))     s.selectedClass = p.get('c') + '_CLASS';
     if (p.has('r'))     s.selectedRace  = p.get('r') + '_RACE';
     if (p.has('rcm'))   s.raceClassMode = p.get('rcm');
+    if (p.has('esb'))   s.excludeSpellblade = p.get('esb') !== '0';
     if (p.has('rap'))   s.racialAdjustmentPolicy = p.get('rap');
     if (p.has('prm'))   { const v=p.get('prm'); s.primeRequisiteMode = v==='0'?'user':v; }
     if (p.has('hpm'))   s.hpRollingMode = p.get('hpm');
@@ -1103,6 +1138,7 @@ function readURLParams() {
     if (p.has('un'))    s.showUndeadNames = p.get('un')==='1';
     if (p.has('hhr'))   s.hideHumanRace = p.get('hhr')==='1';
     if (p.has('ao'))    s.basicAbilityOrdering = p.get('ao')==='1';
+    if (p.has('sb'))    s.sheetBranding = p.get('sb');
     if (p.has('wp'))    s.wealthPct = parseInt(p.get('wp'));
     if (p.has('l0wm'))  s.l0WealthMethod = p.get('l0wm');
     if (p.has('l0dc'))  s.l0DiceCount = parseInt(p.get('l0dc'));
@@ -1150,6 +1186,10 @@ export function initializeEventListeners() {
     // Race/class mode
     document.querySelectorAll('input[name="raceClassMode"]').forEach(r=>{
         r.addEventListener('change',(e)=>{ raceClassMode=e.target.value; updateUI(); saveCurrentSettings(); });
+    });
+    document.getElementById('excludeSpellblade')?.addEventListener('change', (e) => {
+        excludeSpellblade = e.target.checked;
+        updateUI(); saveCurrentSettings();
     });
     // Racial Adjustment Policy — Tier 1 (does level 0 get it) toggles which
     // Tier-2 sub-group is enabled and picks that sub-group's first option.
@@ -1261,6 +1301,10 @@ export function initializeEventListeners() {
     document.querySelectorAll('input[name="acDisplayMode"]').forEach(r=>{
         r.addEventListener('change',(e)=>{ acDisplayMode=e.target.value; saveCurrentSettings(); });
     });
+    // Character Sheet Branding
+    document.querySelectorAll('input[name="sheetBranding"]').forEach(r=>{
+        r.addEventListener('change',(e)=>{ sheetBranding=e.target.value; saveCurrentSettings(); });
+    });
     // HP Rolling Mode
     document.querySelectorAll('input[name="hpRollingMode"]').forEach(r=>{
         r.addEventListener('change',(e)=>{ hpRollingMode=e.target.value; saveCurrentSettings(); });
@@ -1291,6 +1335,7 @@ export function initializeEventListeners() {
     document.getElementById('basicModeResetButton')?.addEventListener('click', handleBasicModeReset);
     document.getElementById('advancedModeResetButton')?.addEventListener('click', handleAdvancedModeReset);
     document.getElementById('resetPlayerSettingsButton')?.addEventListener('click', handleResetPlayerSettings);
+    document.getElementById('bxModeResetButton')?.addEventListener('click', handleBXModeReset);
     document.getElementById('authorPreferredButton')?.addEventListener('click', handleAuthorPreferred);
     document.getElementById('conventionModeButton')?.addEventListener('click', handleConventionMode);
     document.getElementById('darkModeToggle')?.addEventListener('click', handleDarkModeToggle);

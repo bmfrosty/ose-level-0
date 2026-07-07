@@ -217,8 +217,12 @@ export async function expandCompactV3(cp, precomp = {}, { silent = false } = {})
     // ── Shared strings (single definition for all levels/modes) ──────────────
     const isAdv     = mode === 'A';
     const modeLabel = progModeLabel(cp.p || 'O');
-    const title     = isAdv ? 'OLD-SCHOOL ESSENTIALS ADVANCED' : 'OLD-SCHOOL ESSENTIALS';
-    const subtitle  = `RETRO ADVENTURE GAME &nbsp;·&nbsp; ${modeLabel} Mode`;
+    // Player-configurable sheet branding (cp.sb: 1 = Dungeons & Dragons, default =
+    // Old-School Essentials). Purely cosmetic — doesn't affect any game mechanics.
+    const isDnD     = cp.sb === 1;
+    const title     = isDnD ? 'DUNGEONS & DRAGONS' : 'OLD-SCHOOL ESSENTIALS';
+    const brandSub  = isDnD ? 'FANTASY ADVENTURE GAME' : 'RETRO ADVENTURE GAME';
+    const subtitle  = `${brandSub} &nbsp;·&nbsp; ${modeLabel}`;
     const footerLabel = (identity) => ({ footerLabel: identity });
 
     // ── Level 0 ──────────────────────────────────────────────────────────────
