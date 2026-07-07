@@ -529,22 +529,52 @@ function buildGeneratorURL(cp) {
         }
     }
 
+    // Campaign-tier ruleset settings (written by gen-ui.js's
+    // buildCampaignRulesetCp(), only present when non-default) — not needed
+    // to reproduce this character, only to reconstruct the referee's full
+    // ruleset for the "Back to Generator" link.
+    if (cp.esb === 0) p.set('esb', '0');
+    if (cp.rap)        p.set('rap', cp.rap);
+    if (cp.nl0e === 0) p.set('nl0e', '0');
+    if (cp.l0wm)          p.set('l0wm', cp.l0wm);
+    if (cp.l0dc != null)  p.set('l0dc', String(cp.l0dc));
+    if (cp.l0ds != null)  p.set('l0ds', String(cp.l0ds));
+    if (cp.l0dm != null)  p.set('l0dm', String(cp.l0dm));
+    if (cp.l0fg != null)  p.set('l0fg', String(cp.l0fg));
+    if (cp.l1wm)          p.set('l1wm', cp.l1wm);
+    if (cp.l1dc != null)  p.set('l1dc', String(cp.l1dc));
+    if (cp.l1ds != null)  p.set('l1ds', String(cp.l1ds));
+    if (cp.l1dm != null)  p.set('l1dm', String(cp.l1dm));
+    if (cp.l1fg != null)  p.set('l1fg', String(cp.l1fg));
+    if (cp.l2wm)          p.set('l2wm', cp.l2wm);
+    if (cp.l2dc != null)  p.set('l2dc', String(cp.l2dc));
+    if (cp.l2ds != null)  p.set('l2ds', String(cp.l2ds));
+    if (cp.l2dm != null)  p.set('l2dm', String(cp.l2dm));
+    if (cp.l2fg != null)  p.set('l2fg', String(cp.l2fg));
+    if (cp.xwm)          p.set('xwm', cp.xwm);
+    if (cp.xdc != null)  p.set('xdc', String(cp.xdc));
+    if (cp.xds != null)  p.set('xds', String(cp.xds));
+    if (cp.xdm != null)  p.set('xdm', String(cp.xdm));
+    if (cp.xfg != null)  p.set('xfg', String(cp.xfg));
+
     return `generator.html?${p.toString()}`;
 }
 
 /**
  * Build the "Back to Generator" link from this character's compact params:
  * the same URL as buildGeneratorURL(), but with every Character-tier param
- * stripped (level, class, race, name, zero-level race), so a player
- * following it lands on the referee's ruleset with nothing pre-selected —
- * not a copy of this specific character.
+ * stripped — character identity (level, class, race, name, zero-level race)
+ * and Player Options (show undead names, hide Human prefix, ability score
+ * ordering) — so a player following it lands on the referee's ruleset with
+ * nothing pre-selected, not a copy of this specific character or its display
+ * preferences.
  *
  * @param {Object} cp - Decoded compact params object (post-decodeCompactParams)
  * @returns {string} URL string like "generator.html?mode=race-as-class&p=ose…"
  */
 function buildCampaignURL(cp) {
     const url = new URL(buildGeneratorURL(cp), window.location.href);
-    ['l', 'c', 'r', 'n', 'zr'].forEach(key => url.searchParams.delete(key));
+    ['l', 'c', 'r', 'n', 'zr', 'un', 'hhr', 'ao'].forEach(key => url.searchParams.delete(key));
     return `generator.html?${url.searchParams.toString()}`;
 }
 

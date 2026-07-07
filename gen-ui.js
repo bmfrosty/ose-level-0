@@ -518,6 +518,39 @@ export function generateCharacter() {
     });
 }
 
+// Campaign-tier settings not needed to regenerate or level up this exact
+// character — only stored so cs-sheet-page.js's buildGeneratorURL() ("Back
+// to Generator") can reconstruct the referee's full ruleset later. Omitted
+// when equal to the setting's own default, mirroring syncURLParams()'s
+// omission thresholds so the encoding stays consistent either way.
+function buildCampaignRulesetCp() {
+    return {
+        ...(!excludeSpellblade ? { esb: 0 } : {}),
+        ...(racialAdjustmentPolicy !== 'never' ? { rap: racialAdjustmentPolicy } : {}),
+        ...(!noLevel0Equipment ? { nl0e: 0 } : {}),
+        ...(l0WealthMethod !== 'dice' ? { l0wm: l0WealthMethod } : {}),
+        ...(l0DiceCount !== 3 ? { l0dc: l0DiceCount } : {}),
+        ...(l0DiceSides !== 6 ? { l0ds: l0DiceSides } : {}),
+        ...(l0DiceMult !== 1 ? { l0dm: l0DiceMult } : {}),
+        ...(l0FixedGold !== 0 ? { l0fg: l0FixedGold } : {}),
+        ...(l1WealthMethod !== 'dice' ? { l1wm: l1WealthMethod } : {}),
+        ...(l1DiceCount !== 3 ? { l1dc: l1DiceCount } : {}),
+        ...(l1DiceSides !== 6 ? { l1ds: l1DiceSides } : {}),
+        ...(l1DiceMult !== 10 ? { l1dm: l1DiceMult } : {}),
+        ...(l1FixedGold !== 0 ? { l1fg: l1FixedGold } : {}),
+        ...(l2PlusWealthMethod !== 'xp-pct' ? { l2wm: l2PlusWealthMethod } : {}),
+        ...(l2PlusDiceCount !== 3 ? { l2dc: l2PlusDiceCount } : {}),
+        ...(l2PlusDiceSides !== 6 ? { l2ds: l2PlusDiceSides } : {}),
+        ...(l2PlusDiceMult !== 10 ? { l2dm: l2PlusDiceMult } : {}),
+        ...(l2PlusFixedGold !== 0 ? { l2fg: l2PlusFixedGold } : {}),
+        ...(byXpWealthMethod !== 'xp-pct' ? { xwm: byXpWealthMethod } : {}),
+        ...(byXpDiceCount !== 3 ? { xdc: byXpDiceCount } : {}),
+        ...(byXpDiceSides !== 6 ? { xds: byXpDiceSides } : {}),
+        ...(byXpDiceMult !== 10 ? { xdm: byXpDiceMult } : {}),
+        ...(byXpFixedGold !== 0 ? { xfg: byXpFixedGold } : {}),
+    };
+}
+
 async function runGenerate() {
     document.getElementById('charGenError')?.remove();
 
@@ -594,6 +627,7 @@ async function runGenerate() {
         sm: ['STR','DEX','CON','INT','WIS','CHA'].map(a => readScoresFromInputs()[a] || 3),
         ...(isSeparateRaceClass && hideHumanRace ? { hhr: 1 } : {}),
         ...(adm != null ? { adm } : {}),
+        ...buildCampaignRulesetCp(),
     };
 
     const SCRS = ['STR','DEX','CON','INT','WIS','CHA'];
@@ -686,6 +720,7 @@ async function generateZeroLevel() {
         prm: primeRequisiteMode==='user'?0:parseInt(primeRequisiteMode),
         sm: ['STR','DEX','CON','INT','WIS','CHA'].map(a => readScoresFromInputs()[a] || 3),
         ...(adm != null ? { adm } : {}),
+        ...buildCampaignRulesetCp(),
     };
 
     const SCRS = ['STR','DEX','CON','INT','WIS','CHA'];

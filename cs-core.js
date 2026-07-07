@@ -203,6 +203,23 @@ export async function decompressFromBase64Url(b64url) {
  * wp      number      wealthPct — starting gold % of XP-for-level for level 2+ chars (0–100)
  * prm     0|9|13      primeRequisiteMode — 0=user choice, 9=require ≥9, 13=require ≥13
  *
+ * ── Referee ruleset (not needed for this character; carried only so ─────────
+ * ── buildGeneratorURL()'s "Back to Generator" link can reconstruct the ──────
+ * ── full Campaign-tier settings — see gen-ui.js's buildCampaignRulesetCp()) ─
+ * esb     0|1         excludeSpellblade — omitted when true (the default); 0 = Spellblade
+ *                     allowed in the grid
+ * rap     string      racialAdjustmentPolicy — omitted when 'never' (the default)
+ * nl0e    0|1         noLevel0Equipment — omitted when true (the default); 0 = level 0
+ *                     characters get starting equipment
+ * l0wm/l1wm/l2wm/xwm       string   Starting Wealth method per tier (Level 0 / Level 1 /
+ *                                   Level 2+ / By XP) — 'dice'|'fixed'|'xp-pct', omitted
+ *                                   when equal to that tier's default method
+ * l0dc/l1dc/l2dc/xdc       number   Dice count per tier, omitted when equal to default (3)
+ * l0ds/l1ds/l2ds/xds       number   Dice sides per tier, omitted when equal to default (6)
+ * l0dm/l1dm/l2dm/xdm       number   Dice multiplier per tier, omitted when equal to that
+ *                                   tier's default (l0=1, l1/l2/x=10)
+ * l0fg/l1fg/l2fg/xfg       number   Fixed gold amount per tier, omitted when 0 (the default)
+ *
  * ── Display preferences ───────────────────────────────────────────────────────
  * un      0|1         showUndeadNames — show monster names in Turn Undead table
  * qr      0|1         showQRCode — show QR code on page 2
