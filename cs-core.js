@@ -431,7 +431,10 @@ export function buildOptionsLine(cp) {
                    :             { wm: cp.l2wm || 'xp-pct', dc: cp.l2dc || 3, ds: cp.l2ds || 6, dm: cp.l2dm ?? 10, fg: cp.l2fg || 0 };
         if (tier.wm === 'dice') parts.push(`Wealth: ${tier.dc}d${tier.ds}${tier.dm !== 1 ? `\u00d7${tier.dm}` : ''}`);
         else if (tier.wm === 'fixed') parts.push(`Wealth: ${tier.fg}gp fixed`);
-        else if (lvl >= 2 && cp.wp != null) parts.push(`Wealth: ${cp.wp}%`);
+        // xp-pct: not offered by the level-1 UI (dice/fixed only), but handle
+        // it at any level >= 1 rather than silently omitting if cp.l1wm were
+        // ever crafted to 'xp-pct' by hand.
+        else if (lvl >= 1 && cp.wp != null) parts.push(`Wealth: ${cp.wp}%`);
     }
     if (Array.isArray(cp.sm)) {
         const ORDER = ['STR','DEX','CON','INT','WIS','CHA'];
@@ -460,6 +463,11 @@ const CSS = {
  */
 function fmt(n) {
     return n >= 0 ? `+${n}` : `${n}`;
+}
+
+/** Escape a user-supplied string before interpolating into an HTML template. */
+function escHtml(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
 /**
@@ -955,7 +963,7 @@ export function renderCharacterSheetHTML(sheet) {
                        title='Click or scan to open this character sheet'>
                         <img id='ose-qr-img' style='width: 200px; height: 200px; display: block;' alt='QR code'>
                     </a>
-                    ${sheet.cp?.cn ? `<div style='font-size: 0.8em; font-weight: bold; text-align: center; margin-top: 4px;'>${sheet.cp.cn}</div>` : ''}
+                    ${sheet.cp?.cn ? `<div style='font-size: 0.8em; font-weight: bold; text-align: center; margin-top: 4px;'>${escHtml(sheet.cp.cn)}</div>` : ''}
                     <div style='font-size: 0.7em; color: #888; text-align: center; margin-top: 2px;'>Scan to reopen sheet</div>` : ''}
                 </div>
 
