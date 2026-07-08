@@ -1465,8 +1465,11 @@ export const RCM_CODE = {
 };
 
 // Racial Adjustment Policy — governs whether/when racial ability score
-// adjustments apply across the level 0 -> 1 boundary. Only recorded on
-// level-0 characters (cp.rap); see PLAN_RACIAL_ADJUSTMENT_POLICY.md.
+// adjustments apply across the level 0 -> 1 boundary. Recorded as cp.rap:
+// unconditionally at level 0 (generateCharacterV3), and at level 1+ when
+// non-default (gen-ui.js's buildCampaignRulesetCp, for "Back to Generator"
+// link reconstruction only — not used by any level 1+ generation mechanics).
+// See PLAN_RACIAL_ADJUSTMENT_POLICY.md.
 export const RAP_CODE = {
     always:'AA', 'separate-only':'SO', never:'NV', 'from-separate':'FS', 'from-level-1':'F1'
 };

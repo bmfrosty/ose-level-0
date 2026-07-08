@@ -34,6 +34,7 @@ import {
 } from './cs-core.js';
 
 export { compressToBase32 } from './cs-core.js';
+export { compressToBase64Url, decompressFromBase64Url } from './cs-core.js';
 export { displayCharacterSheet } from './cs-core.js';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
@@ -148,6 +149,7 @@ function buildSheetSpec(sd, opts) {
         showQRCode:      opts.showQRCode,
         abilityOrder:    opts.abilityOrder,
         cp:              sd.cp,
+        campaignHash:    sd.campaignHash,
         footerLabel:     sd.footerLabel,
         printTitle:      sd.printTitle,
         openInNewTab:    opts.openInNewTab,
@@ -160,6 +162,21 @@ const ADM_MAP      = { 0:'aac', 1:'dac-matrix', 2:'dual', 3:'dual-matrix' };
 
 /** Shared CON modifier helper (matches shared-hit-points.js logic). */
 const getConMod = s => s >= 15 ? 1 : s >= 13 ? 1 : s <= 6 ? -1 : s <= 8 ? -1 : 0;
+
+/**
+ * Short, deterministic, non-cryptographic fingerprint (FNV-1a 32-bit, hex,
+ * truncated to 6 chars) of a string — used to show a compact "same campaign"
+ * marker in the footer without needing the full "Back to Generator" URL.
+ * Not for security; just a visual match/mismatch signal.
+ */
+function shortHash(str) {
+    let h = 0x811c9dc5;
+    for (let i = 0; i < str.length; i++) {
+        h ^= str.charCodeAt(i);
+        h = Math.imul(h, 0x01000193);
+    }
+    return (h >>> 0).toString(16).padStart(8, '0').slice(0, 6);
+}
 
 // ── expandCompactV3 ────────────────────────────────────────────────────────────
 
@@ -224,6 +241,10 @@ export async function expandCompactV3(cp, precomp = {}, { silent = false } = {})
     const brandSub  = isDnD ? 'FANTASY ADVENTURE GAME' : 'RETRO ADVENTURE GAME';
     const subtitle  = `${brandSub} &nbsp;·&nbsp; ${modeLabel}`;
     const footerLabel = (identity) => ({ footerLabel: identity });
+    // Fingerprint of the Campaign-scoped "Back to Generator" link — same
+    // campaign settings always hash the same, so two sheets from the same
+    // table show a matching tag in the footer at a glance.
+    const campaignHash = shortHash(await buildCampaignURL(cp));
 
     // ── Level 0 ──────────────────────────────────────────────────────────────
     if (level === 0) {
@@ -236,11 +257,13 @@ export async function expandCompactV3(cp, precomp = {}, { silent = false } = {})
             const conScore = adjArr[2];
             const rawSaves = calculateSavingThrows(race, conScore);
             sv = [rawSaves.Death, rawSaves.Wands, rawSaves.Paralysis, rawSaves.Breath, rawSaves.Spells];
-            const bg = getBackgroundByProfession(cp.bg || '') || {};
+            // No Level 0 Equipment (cp.nl0) — same guard as the level 1+
+            // equipment path (below) — suppresses background-derived gear.
+            const bg = cp.nl0 ? null : (getBackgroundByProfession(cp.bg || '') || {});
             l0Weapons = [];
-            const bgItems = Array.isArray(bg.item) ? bg.item : (bg.item ? [bg.item] : []);
-            l0Items   = [...(bg.weapon ? [`${bg.weapon} (background)`] : []), ...bgItems];
-            l0Armor   = (bg.armor && bg.armor !== 'Unarmored') ? bg.armor : null;
+            const bgItems = Array.isArray(bg?.item) ? bg.item : (bg?.item ? [bg.item] : []);
+            l0Items   = [...(bg?.weapon ? [`${bg.weapon} (background)`] : []), ...bgItems];
+            l0Armor   = (bg?.armor && bg.armor !== 'Unarmored') ? bg.armor : null;
             const armorAC = l0Armor ? (ARMOR[l0Armor]?.ac?.ascending ?? 10) : 10;
             l0AC = armorAC + mods.DEX;
         } else {
@@ -292,7 +315,7 @@ export async function expandCompactV3(cp, precomp = {}, { silent = false } = {})
                          startingGold:cp.g||0, startingHD:'1d4' },
             spellSlots: null, turnUndead: null,
             showUndeadNames: !!cp.un, showQRCode: cp.qr !== 0, abilityOrder: cp.ao ?? 1,
-            cp,
+            cp, campaignHash,
             ...footerLabel(`0-Level ${raceDisplay}`),
             printTitle: `OSE ${isAdv?'Advanced':'Basic'} - ${raceDisplay} - 0-Level - ${cp.bg||''} - ${cp.n||''}`,
         };
@@ -412,7 +435,7 @@ export async function expandCompactV3(cp, precomp = {}, { silent = false } = {})
                      startingAC: eqAC, startingGold: eqGoldRemaining, startingHD: `1d${hdSides}` },
         spellSlots: character.spellSlots || null,
         turnUndead: character.turnUndead || null,
-        cp,
+        cp, campaignHash,
         ...footerLabel(isAdv ? `Level ${level} ${raceDisplay} ${clsDisplay}` : `Level ${level} ${clsDisplay}`),
         printTitle: isAdv
             ? `OSE Advanced - ${raceDisplay} - ${clsDisplay} - Level ${level} - ${cp.bg || ''} - ${cp.n || ''}`
@@ -431,12 +454,16 @@ export async function expandCompactV3(cp, precomp = {}, { silent = false } = {})
 
 /**
  * Reconstruct a generator.html URL with the settings that were used to
- * generate this character, so the user can go back and roll another.
+ * generate this character, including this exact race/class/level/name.
+ * Internal helper for buildCampaignURL() — not wired to a button of its
+ * own. Async because reconstructing `cn` (Campaign Name) requires a fresh
+ * compressToBase64Url() pass — cp.cn is stored raw, but the generator.html
+ * URL param is compressed to keep the link/QR code compact.
  *
  * @param {Object} cp - Decoded compact params object (post-decodeCompactParams)
- * @returns {string} URL string like "generator.html?mode=race-as-class&p=ose&l=1&c=Fighter…"
+ * @returns {Promise<string>} URL string like "generator.html?mode=race-as-class&p=ose&l=1&c=Fighter…"
  */
-function buildGeneratorURL(cp) {
+async function buildGeneratorURL(cp) {
     const CODE_TO_PROG_KEY   = { O:'ose', S:'smoothprog', L:'ll' };
     const CODE_TO_CLASS_NAME = {
         FI:'Fighter', CL:'Cleric', MU:'Magic-User', TH:'Thief',
@@ -444,9 +471,14 @@ function buildGeneratorURL(cp) {
     };
     const CODE_TO_RACE_NAME  = { HU:'Human', DW:'Dwarf', EL:'Elf', HA:'Halfling', GN:'Gnome' };
     const CODE_TO_RCM        = { ST:'strict', SH:'strict-human', TE:'traditional-extended', AL:'allow-all' };
+    const CODE_TO_RAP        = { AA:'always', SO:'separate-only', NV:'never', FS:'from-separate', F1:'from-level-1' };
 
     const isAdv = cp.m === 'A';
     const p = new URLSearchParams();
+
+    // Campaign Name — stored raw in cp.cn, but compressed separately for the
+    // generator.html URL param (see field-reference doc in cs-core.js)
+    if (cp.cn) p.set('cn', await compressToBase64Url(cp.cn));
 
     // Mode preset — reconstructed to whichever preset guarantees this exact
     // race/class combination is clickable, regardless of race. Level 0 always
@@ -501,8 +533,16 @@ function buildGeneratorURL(cp) {
     // Ability ordering (default 1 = 1977 order → only emit when 0 = modern)
     if (cp.ao === 0) p.set('ao', '0');
 
-    // Wealth percent (default 50 → omit)
-    if (cp.wp != null && cp.wp !== 50) p.set('wp', String(cp.wp));
+    // Character Sheet Branding (default 'ose' → only emit when D&D)
+    if (cp.sb === 1) p.set('sb', 'dnd');
+
+    // AC Display Mode (default omitted/'aac' → map the compact numeric code
+    // back to the generator's string values)
+    const ADM_TO_URL = { 1:'dac-matrix', 2:'dual', 3:'dual-matrix' };
+    if (ADM_TO_URL[cp.adm]) p.set('adm', ADM_TO_URL[cp.adm]);
+
+    // Wealth percent (default 20 → omit)
+    if (cp.wp != null && cp.wp !== 20) p.set('wp', String(cp.wp));
 
     // HP mode → hpm generator URL param (0=normal=omit, 1=blessed, 2=5e, 3=reroll12)
     if (cp.hm === 1) p.set('hpm', 'blessed');
@@ -524,7 +564,61 @@ function buildGeneratorURL(cp) {
         }
     }
 
+    // Campaign-tier ruleset settings (written by gen-ui.js's
+    // buildCampaignRulesetCp(), only present when non-default) — not needed
+    // to reproduce this character, only to reconstruct the referee's full
+    // ruleset for the "Back to Generator" link.
+    if (cp.esb === 0) p.set('esb', '0');
+    // cp.rap is the 2-char RAP_CODE (generateCharacterV3 already writes this
+    // for level-0 characters; buildCampaignRulesetCp writes the same code for
+    // level 1+) — map back to the raw racialAdjustmentPolicy string readURLParams expects.
+    if (cp.rap && CODE_TO_RAP[cp.rap]) p.set('rap', CODE_TO_RAP[cp.rap]);
+    // cp.nl0 is written unconditionally by generateCharacterV3 whenever
+    // noLevel0Equipment was true — no separate field needed here.
+    if (cp.nl0 !== 1) p.set('nl0e', '0');
+    if (cp.l0wm)          p.set('l0wm', cp.l0wm);
+    if (cp.l0dc != null)  p.set('l0dc', String(cp.l0dc));
+    if (cp.l0ds != null)  p.set('l0ds', String(cp.l0ds));
+    if (cp.l0dm != null)  p.set('l0dm', String(cp.l0dm));
+    if (cp.l0fg != null)  p.set('l0fg', String(cp.l0fg));
+    if (cp.l1wm)          p.set('l1wm', cp.l1wm);
+    if (cp.l1dc != null)  p.set('l1dc', String(cp.l1dc));
+    if (cp.l1ds != null)  p.set('l1ds', String(cp.l1ds));
+    if (cp.l1dm != null)  p.set('l1dm', String(cp.l1dm));
+    if (cp.l1fg != null)  p.set('l1fg', String(cp.l1fg));
+    if (cp.l2wm)          p.set('l2wm', cp.l2wm);
+    if (cp.l2dc != null)  p.set('l2dc', String(cp.l2dc));
+    if (cp.l2ds != null)  p.set('l2ds', String(cp.l2ds));
+    if (cp.l2dm != null)  p.set('l2dm', String(cp.l2dm));
+    if (cp.l2fg != null)  p.set('l2fg', String(cp.l2fg));
+    if (cp.xwm)          p.set('xwm', cp.xwm);
+    if (cp.xdc != null)  p.set('xdc', String(cp.xdc));
+    if (cp.xds != null)  p.set('xds', String(cp.xds));
+    if (cp.xdm != null)  p.set('xdm', String(cp.xdm));
+    if (cp.xfg != null)  p.set('xfg', String(cp.xfg));
+
     return `generator.html?${p.toString()}`;
+}
+
+/**
+ * Build the "Back to Generator" link from this character's compact params:
+ * the same URL as buildGeneratorURL(), but with every Character-tier param
+ * stripped — character identity (level, class, race, name, zero-level race)
+ * and "hide Human prefix" (only meaningful for the specific human character
+ * that had it set, not a table-wide style choice) — so a player following it
+ * lands on the referee's ruleset with nothing pre-selected, not a copy of
+ * this specific character. Show Undead Names, Ability Score Ordering, AC
+ * Display Mode, and Character Sheet Branding are treated as Campaign-tier
+ * (not stripped) since a referee typically wants one consistent look/feel
+ * for every character at their table, not a per-player choice.
+ *
+ * @param {Object} cp - Decoded compact params object (post-decodeCompactParams)
+ * @returns {Promise<string>} URL string like "generator.html?mode=race-as-class&p=ose…"
+ */
+async function buildCampaignURL(cp) {
+    const url = new URL(await buildGeneratorURL(cp), window.location.href);
+    ['l', 'c', 'r', 'n', 'zr', 'hhr'].forEach(key => url.searchParams.delete(key));
+    return `generator.html?${url.searchParams.toString()}`;
 }
 
 // ── initEditPanel ──────────────────────────────────────────────────────────────
@@ -845,12 +939,17 @@ function initEditPanel(decoded) {
             // so the two paths can't silently diverge.
             const isRaceAsClassPick = DEMIHUMAN_CODES_L01.has(selectedClassCode);
             const newMode = isSeparateRaceClassForPolicy(decoded.rap, isRaceAsClassPick) ? 'A' : 'B';
+            // Spread ...decoded first (matching every other newCp construction
+            // site in this file) so Campaign-tier fields — cn, esb, rap, nl0,
+            // Starting Wealth tiers, sm, prm, hm, wp, sb, adm, etc. — and rr
+            // (roll count) all carry forward unchanged, instead of this one
+            // 0->1 transition silently dropping them the way a hand-built
+            // object did before. Only override what actually changes.
             const newCp = {
-                v:3, m: newMode, p: decoded.p || 'O', r: decoded.r || 'HU',
-                c: selectedClassCode, l: 1,
+                ...decoded,
+                v:3, m: newMode, c: selectedClassCode, l: 1,
                 s: decoded.s || [10,10,10,10,10,10],
                 h: l1HP, hr: [l0HP, l1HP], il: 0,
-                n: decoded.n||'', bg: decoded.bg||'',
                 // No fresh starting-wealth roll here — in play, gold comes from
                 // adventuring, not from the act of leveling up. Carry the level-0
                 // character's existing gold forward unchanged.
@@ -860,6 +959,10 @@ function initEditPanel(decoded) {
                 rcm: decoded.rcm || 'ST',
                 ...(hpMode0 > 0 ? { hm: hpMode0 } : {}),
             };
+            if (!(hpMode0 > 0)) delete newCp.hm;
+            // sm (score minimums) only makes sense for a separate-class pick —
+            // direct Basic/race-as-class L1+ generation never writes it either.
+            if (newMode === 'B') delete newCp.sm;
 
             const encoded = encodeCompactParams(newCp);
             const b32    = await compressToBase32(JSON.stringify(encoded));
@@ -1052,10 +1155,11 @@ export async function initCharacterSheet() {
                 await renderFromCompactParams(decodedCp, contentEl,
                     { initEditPanels: true });
 
-                // Wire up "Back to Generator" link with settings from this character
+                // Wire up "Back to Generator" link — the referee's ruleset
+                // settings, minus this specific character's level/class/race/name
                 const genBtn = document.getElementById('backToGeneratorBtn');
                 if (genBtn) {
-                    genBtn.href = buildGeneratorURL(decodedCp);
+                    genBtn.href = await buildCampaignURL(decodedCp);
                     genBtn.style.display = '';
                 }
 

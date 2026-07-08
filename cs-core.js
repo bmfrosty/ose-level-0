@@ -203,6 +203,39 @@ export async function decompressFromBase64Url(b64url) {
  * wp      number      wealthPct — starting gold % of XP-for-level for level 2+ chars (0–100)
  * prm     0|9|13      primeRequisiteMode — 0=user choice, 9=require ≥9, 13=require ≥13
  *
+ * nl0     0|1         noLevel0Equipment — 1 = level 0 characters get no starting equipment;
+ *                     omitted (falsy) when false. Written by generateCharacterV3 at both
+ *                     level 0 and level 1+; also read directly by cs-sheet-page.js to skip
+ *                     background-derived starting gear on display.
+ * sa      number[6]   Post-generation ability adjustments beyond racial modifiers (e.g. a
+ *                     referee-granted fixed adjustment) — omitted when all zero
+ *
+ * ── Referee ruleset (not needed for this character; carried only so ─────────
+ * ── buildGeneratorURL()'s "Back to Generator" link can reconstruct the ──────
+ * ── full Campaign-tier settings — see gen-ui.js's buildCampaignRulesetCp()) ─
+ * cn      string       Campaign Name (Section 0), up to 64 Unicode characters — omitted when
+ *                     empty. Stored raw here (the whole `cp` blob is already gzip-compressed),
+ *                     but reconstructed into the generator.html URL's `cn` param as a
+ *                     *separately* gzip+base64url-compressed string (compressToBase64Url) —
+ *                     generator.html's own URL params aren't compressed as a whole the way `cp`
+ *                     is, so this field alone gets its own compression pass to keep Campaign
+ *                     Profile links/QR codes compact despite the longer max length.
+ * esb     0|1         excludeSpellblade — omitted when true (the default); 0 = Spellblade
+ *                     allowed in the grid
+ * rap     2-char code racialAdjustmentPolicy, same RAP_CODE as above — written
+ *                     unconditionally at level 0 (by generateCharacterV3) and at level 1+
+ *                     when non-'never' (by buildCampaignRulesetCp); both write paths use
+ *                     the same field/encoding so neither overwrites the other with a
+ *                     different shape
+ * l0wm/l1wm/l2wm/xwm       string   Starting Wealth method per tier (Level 0 / Level 1 /
+ *                                   Level 2+ / By XP) — 'dice'|'fixed'|'xp-pct', omitted
+ *                                   when equal to that tier's default method
+ * l0dc/l1dc/l2dc/xdc       number   Dice count per tier, omitted when equal to default (3)
+ * l0ds/l1ds/l2ds/xds       number   Dice sides per tier, omitted when equal to default (6)
+ * l0dm/l1dm/l2dm/xdm       number   Dice multiplier per tier, omitted when equal to that
+ *                                   tier's default (l0=1, l1/l2/x=10)
+ * l0fg/l1fg/l2fg/xfg       number   Fixed gold amount per tier, omitted when 0 (the default)
+ *
  * ── Display preferences ───────────────────────────────────────────────────────
  * un      0|1         showUndeadNames — show monster names in Turn Undead table
  * qr      0|1         showQRCode — show QR code on page 2
@@ -358,23 +391,51 @@ export function decodeCompactParams(cp) {
 export function buildOptionsLine(cp) {
     const parts = [];
     const lvl = cp.l ?? 0;
-    parts.push(progModeLabel(cp.p || 'O'));
-    const rcmLabel = { ST:'Strict OSE', SH:'Human Racial Abilities', TE:'Extended Levels + Human Abilities', AL:'Allow All Classes' };
-    parts.push(rcmLabel[cp.rcm] || 'Strict OSE');
-    // Racial Adjustment Policy — only meaningful on a level-0 sheet; by level 1+
-    // its effect is already baked into m/mCode, same as rcm isn't re-justified.
-    if (lvl === 0 && cp.rap) {
+    // Progression mode is NOT included here — the one caller (the footer in
+    // renderCharacterSheetHTML) already renders it directly on the identity
+    // line via progModeLabel(); pushing it here too duplicated it as the
+    // first options chip as well.
+    // Race/Class Mode (rcm) is NOT included either (removed 2026-07-07) —
+    // its effects (racial abilities present, level exceeding normal caps,
+    // an otherwise-disallowed race/class combination) are already obvious
+    // from the rest of the sheet, so a dedicated chip was redundant noise.
+    // Racial Adjustment Policy — shown at every level (not just level 0) for
+    // full referee auditability. cp.rap is now always written (gen-ui.js's
+    // buildCampaignRulesetCp), matching generateCharacterV3's own level-0
+    // cp.rap, so there's always an explicit value to show, not just an
+    // absence implying the default.
+    if (cp.rap) {
         const rapLabel = { AA:'Racial Adj: Always', SO:'Racial Adj: Kept for Separate Class',
                             NV:'Racial Adj: Never', FS:'Racial Adj: Gained for Separate Class',
                             F1:'Racial Adj: Gained at Level 1' };
         if (rapLabel[cp.rap]) parts.push(rapLabel[cp.rap]);
     }
+    // No Level 0 Equipment — always shown explicitly (not just on deviation
+    // from default) for the same auditability reason. Exclude Spellblade is
+    // NOT shown (removed 2026-07-07) — whether this character IS a
+    // Spellblade is already obvious from its own class, and a referee
+    // running a table already knows whether the class is allowed at all;
+    // a per-sheet confirmation chip was unnecessary.
+    parts.push(cp.nl0 ? 'L0 Equipment: None' : 'L0 Equipment: Standard');
     if (cp.hm === 2)      parts.push('5e HP (max L1 / avg L2+)');
     else if (cp.hm === 1) parts.push('Blessed HP');
     if (cp.hm === 3)      parts.push('Re-roll 1s and 2s');
     if (lvl >= 1) parts.push(cp.il ? 'L0 HP: Yes' : 'L0 HP: No');
     if (cp.prm != null) parts.push(cp.prm ? `Prime Req \u2265${cp.prm}` : 'User Min Scores');
-    if (lvl >= 2 && cp.wp != null) parts.push(`Wealth: ${cp.wp}%`);
+    // Starting Wealth \u2014 show the actual method (dice/fixed/xp-pct) for this
+    // character's own level tier, not just the level-2+ xp-pct percentage
+    // (previously the only case the footer labeled at all).
+    {
+        const tier = lvl === 0 ? { wm: cp.l0wm || 'dice',   dc: cp.l0dc || 3, ds: cp.l0ds || 6, dm: cp.l0dm ?? 1,  fg: cp.l0fg || 0 }
+                   : lvl === 1 ? { wm: cp.l1wm || 'dice',   dc: cp.l1dc || 3, ds: cp.l1ds || 6, dm: cp.l1dm ?? 10, fg: cp.l1fg || 0 }
+                   :             { wm: cp.l2wm || 'xp-pct', dc: cp.l2dc || 3, ds: cp.l2ds || 6, dm: cp.l2dm ?? 10, fg: cp.l2fg || 0 };
+        if (tier.wm === 'dice') parts.push(`Wealth: ${tier.dc}d${tier.ds}${tier.dm !== 1 ? `\u00d7${tier.dm}` : ''}`);
+        else if (tier.wm === 'fixed') parts.push(`Wealth: ${tier.fg}gp fixed`);
+        // xp-pct: not offered by the level-1 UI (dice/fixed only), but handle
+        // it at any level >= 1 rather than silently omitting if cp.l1wm were
+        // ever crafted to 'xp-pct' by hand.
+        else if (lvl >= 1 && cp.wp != null) parts.push(`Wealth: ${cp.wp}%`);
+    }
     if (Array.isArray(cp.sm)) {
         const ORDER = ['STR','DEX','CON','INT','WIS','CHA'];
         const minParts = ORDER.map((a, i) => (cp.sm[i] || 3) > 3 ? `${a}\u2265${cp.sm[i]}` : null).filter(Boolean);
@@ -402,6 +463,11 @@ const CSS = {
  */
 function fmt(n) {
     return n >= 0 ? `+${n}` : `${n}`;
+}
+
+/** Escape a user-supplied string before interpolating into an HTML template. */
+function escHtml(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
 /**
@@ -775,7 +841,8 @@ export function renderCharacterSheetHTML(sheet) {
             ${(() => {
                 const modeLabel  = progModeLabel(sheet.cp?.p || 'O');
                 const modPfx     = sheet.cp?.mx ? 'Modified ' : '';
-                const identity   = `${modPfx}${sheet.footerLabel} &nbsp;·&nbsp; ${modeLabel}`;
+                const hashTag    = sheet.campaignHash ? ` &nbsp;·&nbsp; #${sheet.campaignHash}` : '';
+                const identity   = `${modPfx}${sheet.footerLabel} &nbsp;·&nbsp; ${modeLabel}${hashTag}`;
                 const optParts   = buildOptionsLine(sheet.cp).split(' &nbsp;·&nbsp; ').filter(Boolean);
                 let afterBreak = false;
                 const optSpans = optParts.map((p, i) => {
@@ -896,7 +963,8 @@ export function renderCharacterSheetHTML(sheet) {
                        title='Click or scan to open this character sheet'>
                         <img id='ose-qr-img' style='width: 200px; height: 200px; display: block;' alt='QR code'>
                     </a>
-                    <div style='font-size: 0.7em; color: #888; text-align: center; margin-top: 4px;'>Scan to reopen sheet</div>` : ''}
+                    ${sheet.cp?.cn ? `<div style='font-size: 0.8em; font-weight: bold; text-align: center; margin-top: 4px;'>${escHtml(sheet.cp.cn)}</div>` : ''}
+                    <div style='font-size: 0.7em; color: #888; text-align: center; margin-top: 2px;'>Scan to reopen sheet</div>` : ''}
                 </div>
 
             </div>

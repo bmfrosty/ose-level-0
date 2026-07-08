@@ -213,9 +213,10 @@ One entry per race. Key fields:
 | `gen-core.js` | Generator-only logic: DOM helpers, name/background tables, equipment purchasing, `generateCharacterV3(opts)` (levels 0–14, explicit `isSeparateRaceClass`). Re-exports all of `shared-core.js`. |
 | `gen-ui.js` | `generator.html`'s UI logic: the unified grid, the 3-way mode preset, settings persistence, URL sync. |
 | `cs-core.js` | Character-sheet-side shared logic: progression tables, `buildOptionsLine()` (compact-params → human-readable settings summary). |
-| `cs-sheet-page.js` | `charactersheet.html`'s rendering logic: `expandCompactV3()` (decodes a character's compact params, re-deriving racial adjustments from `mCode` + race on every decode), `buildGeneratorURL()` (reconstructs a `generator.html` link to regenerate/edit a character), the level-0→1 "class up" flow. |
+| `cs-sheet-page.js` | `charactersheet.html`'s rendering logic: `expandCompactV3()` (decodes a character's compact params, re-deriving racial adjustments from `mCode` + race on every decode), `buildGeneratorURL()` / `buildCampaignURL()` (reconstruct a `generator.html` link — the latter strips Character-tier settings for the "Back to Generator" link), the level-0→1 "class up" flow. |
 | `SRD/CLASSES/` | Verbatim SRD source text for each class (cleric, dwarf, elf, fighter, halfling, magic-user, thief). Reference only. |
 | `COPYRIGHTED-*.txt` | Verbatim text from OSE Advanced Fantasy book. **Do not reproduce in code.** Reword all descriptions. SRD text may be used verbatim where it applies. |
+| `CAMPAIGN_SETTINGS_CARRYTHROUGH.md` | Checked-in (not gitignored) table of every `generator.html` setting: whether it's written to a character's compact params (`cp`) and whether it's reconstructed into the "Back to Generator" link. **Update this table in the same PR as any change to what `cp` stores or what `buildGeneratorURL()`/`buildCampaignURL()` carry through** — don't let it drift out of sync with the code. |
 
 ---
 
