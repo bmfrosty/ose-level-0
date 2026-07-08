@@ -42,6 +42,7 @@ function loadSettings(pageKey) {
     catch (e) { console.warn('OSE: could not load settings:', e); return null; }
 }
 import { expandCompactV3, mergeAdvancedLanguages } from './cs-sheet-page.js';
+import { compressToBase64Url, decompressFromBase64Url } from './cs-sheet-page.js';
 import { PROG_CODE, CLS_CODE, RACE_CODE, RCM_CODE, progModeLabel } from './gen-core.js';
 import { RAP_CODE, isSeparateRaceClassForPolicy } from './gen-core.js';
 
@@ -83,6 +84,15 @@ let showQRCode = true;
 let sheetBranding = 'ose';     // 'ose' | 'dnd'
 let basicAbilityOrdering = true;
 let characterName = '';
+// Campaign Name (Section 0) — identifies the referee's table, up to 64
+// Unicode characters. Carried raw in localStorage/cp (both already have
+// their own compression or aren't URL-length-constrained), but the
+// generator.html URL param is gzip+base64url compressed via
+// compressToBase64Url() to keep Campaign Profile links/QR codes compact —
+// unlike characterName's plain `n` param, since this field can be longer
+// and appears on every Campaign Profile link, not just one character's.
+let campaignName = '';
+let campaignNameCompressed = ''; // cache of compressToBase64Url(campaignName), kept in sync by updateCampaignNameCompressed()
 // Default matches the Basic Mode Reset button — a brand-new visit (no saved
 // settings, no URL params) should look identical to hitting that button.
 let wealthPct = 20;
@@ -532,8 +542,13 @@ export function generateCharacter() {
 // already writes cp.nl0 (1 when true, omitted when false) at both levels.
 function buildCampaignRulesetCp() {
     return {
+        ...(campaignName ? { cn: campaignName } : {}),
         ...(!excludeSpellblade ? { esb: 0 } : {}),
-        ...(racialAdjustmentPolicy !== 'never' ? { rap: RAP_CODE[racialAdjustmentPolicy] } : {}),
+        // Always written (not omitted-when-default like most other fields
+        // here) so the footer can show an explicit Racial Adjustment Policy
+        // at every level, not just level 0 — matches generateCharacterV3's
+        // own level-0 cp.rap, which is also always written.
+        rap: RAP_CODE[racialAdjustmentPolicy],
         ...(l0WealthMethod !== 'dice' ? { l0wm: l0WealthMethod } : {}),
         ...(l0DiceCount !== 3 ? { l0dc: l0DiceCount } : {}),
         ...(l0DiceSides !== 6 ? { l0ds: l0DiceSides } : {}),
@@ -712,7 +727,7 @@ async function generateZeroLevel() {
         hpMode, fixedScores: fixedScoresForGen, fixedName,
         fixedOccupation: document.getElementById('zeroOccupation')?.value || null,
         fixedAdjustments: _fixedAdj,
-        fixedStartingGold,
+        fixedStartingGold, noLevel0Equipment,
         l0WealthMethod, l0DiceCount, l0DiceSides, l0DiceMult, l0FixedGold,
     });
     fixedStartingGold = null;
@@ -799,7 +814,30 @@ function saveCurrentSettings() {
         scoreCON: parseInt(document.getElementById('scoreCON')?.value)||3,
         scoreCHA: parseInt(document.getElementById('scoreCHA')?.value)||3,
         raceClassMode, excludeSpellblade, selectedRace, selectedRaceForZero, racialAdjustmentPolicy,
+        campaignName,
     });
+    syncURLParams();
+}
+
+// Recompute campaignNameCompressed from the current campaignName, then
+// re-sync the URL so the (now-stale) `cn` param picks up the fresh value.
+// Compression is async (gzip via CompressionStream), so this can't happen
+// inline inside syncURLParams() itself — call this on campaignName changes
+// and let syncURLParams() read the cached result synchronously everywhere else.
+//
+// campaignNameVersion guards against a race on page load: localStorage
+// restore and URL-param restore both touch campaignName/campaignNameCompressed
+// in the same synchronous tick (URL always applied second, so it should always
+// win — see initialize()), but their async compress/decompress calls can
+// resolve in either order. Each async callback captures the version at the
+// moment it was scheduled and no-ops if a newer update has since superseded it,
+// so whichever restore ran last always wins regardless of resolution order.
+let campaignNameVersion = 0;
+async function updateCampaignNameCompressed() {
+    const myVersion = ++campaignNameVersion;
+    const compressed = campaignName ? await compressToBase64Url(campaignName) : '';
+    if (myVersion !== campaignNameVersion) return; // superseded — discard
+    campaignNameCompressed = compressed;
     syncURLParams();
 }
 
@@ -807,6 +845,7 @@ function saveCurrentSettings() {
 function syncURLParams() {
     const p = new URLSearchParams();
     p.set('mode', modePreset);
+    if (campaignNameCompressed)                                    p.set('cn', campaignNameCompressed);
     if (progressionMode !== 'ose')                                 p.set('p', progressionMode);
     if (selectedLevel !== null)                                    p.set('l', String(selectedLevel));
     if (selectedClass)                                             p.set('c', selectedClass.replace('_CLASS',''));
@@ -821,6 +860,7 @@ function syncURLParams() {
     if (hideHumanRace)                                             p.set('hhr', '1');
     if (!basicAbilityOrdering)                                     p.set('ao', '0');
     if (sheetBranding !== 'ose')                                   p.set('sb', sheetBranding);
+    if (acDisplayMode !== 'aac')                                   p.set('adm', acDisplayMode);
     if (wealthPct !== 20)                                          p.set('wp', String(wealthPct));
     if (l0WealthMethod !== 'dice')                                 p.set('l0wm', l0WealthMethod);
     if (l0DiceCount !== 3)                                         p.set('l0dc', String(l0DiceCount));
@@ -1033,6 +1073,24 @@ function applySettings(s) {
         document.querySelectorAll('.zero-race-btn').forEach(b=>b.classList.toggle('selected',b.dataset.race===s.selectedRaceForZero));
     }
     if (s.characterName!==undefined) { characterName=s.characterName; const el=document.getElementById('characterName'); if(el) el.value=s.characterName; }
+    // Campaign Name — two possible sources: localStorage restore gives the raw
+    // string directly; URL restore gives the compressed `cn` param and needs
+    // async decompression. See updateCampaignNameCompressed()'s comment for why
+    // both paths bump campaignNameVersion to guard against resolving out of order.
+    if (s.campaignName!==undefined) {
+        campaignName = s.campaignName;
+        const el = document.getElementById('campaignName'); if (el) el.value = campaignName;
+        updateCampaignNameCompressed();
+    }
+    if (s.campaignNameCompressed!==undefined) {
+        campaignNameCompressed = s.campaignNameCompressed;
+        const myVersion = ++campaignNameVersion;
+        decompressFromBase64Url(s.campaignNameCompressed).then(name => {
+            if (myVersion !== campaignNameVersion) return; // superseded — discard
+            campaignName = name;
+            const el = document.getElementById('campaignName'); if (el) el.value = name;
+        }).catch(e => console.warn('OSE: could not decompress campaign name:', e));
+    }
     ['STR','INT','WIS','DEX','CON','CHA'].forEach(a=>{
         const v=s[`score${a}`]; if(v!==undefined){ const el=document.getElementById(`score${a}`); if(el) el.value=v; }
     });
@@ -1179,6 +1237,7 @@ function readURLParams() {
     const p = new URLSearchParams(window.location.search);
     if (!p.toString()) return {};
     const s = {};
+    if (p.has('cn'))    s.campaignNameCompressed = p.get('cn');
     if (p.has('mode'))  s.mode = p.get('mode');
     if (p.has('p'))     s.progressionMode = p.get('p');
     if (p.has('l'))     s.selectedLevel = parseInt(p.get('l'));
@@ -1194,6 +1253,7 @@ function readURLParams() {
     if (p.has('hhr'))   s.hideHumanRace = p.get('hhr')==='1';
     if (p.has('ao'))    s.basicAbilityOrdering = p.get('ao')==='1';
     if (p.has('sb'))    s.sheetBranding = p.get('sb');
+    if (p.has('adm'))   s.acDisplayMode = p.get('adm');
     if (p.has('wp'))    s.wealthPct = parseInt(p.get('wp'));
     if (p.has('l0wm'))  s.l0WealthMethod = p.get('l0wm');
     if (p.has('l0dc'))  s.l0DiceCount = parseInt(p.get('l0dc'));
@@ -1387,6 +1447,12 @@ export function initializeEventListeners() {
     });
     // Buttons
     document.getElementById('characterName')?.addEventListener('change', ()=>saveCurrentSettings());
+    document.getElementById('campaignName')?.addEventListener('change', (e)=>{
+        campaignName = e.target.value.slice(0, 64);
+        e.target.value = campaignName;
+        updateCampaignNameCompressed();
+        saveCurrentSettings();
+    });
     document.getElementById('basicModeResetButton')?.addEventListener('click', handleBasicModeReset);
     document.getElementById('advancedModeResetButton')?.addEventListener('click', handleAdvancedModeReset);
     document.getElementById('resetPlayerSettingsButton')?.addEventListener('click', handleResetPlayerSettings);
