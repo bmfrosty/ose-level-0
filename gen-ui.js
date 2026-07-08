@@ -738,7 +738,7 @@ async function generateZeroLevel() {
         ...cp,
         un: showUndeadNames?1:0, qr: showQRCode?1:0, ao: basicAbilityOrdering?1:0,
         ...(sheetBranding === 'dnd' ? { sb: 1 } : {}),
-        prm: primeRequisiteMode==='user'?0:parseInt(primeRequisiteMode),
+        wp: wealthPct, prm: primeRequisiteMode==='user'?0:parseInt(primeRequisiteMode),
         sm: ['STR','DEX','CON','INT','WIS','CHA'].map(a => readScoresFromInputs()[a] || 3),
         ...(adm != null ? { adm } : {}),
         ...buildCampaignRulesetCp(),
