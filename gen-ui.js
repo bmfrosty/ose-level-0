@@ -903,14 +903,18 @@ function syncURLParams() {
 
 /**
  * Build a Campaign Profile link: the current generator.html URL with every
- * Character-tier param (level, class, race, name, zero-level race) stripped,
- * so the shared link always carries just the referee's ruleset — never a
- * specific character-in-progress, regardless of what's currently selected
- * in the grid or name field.
+ * Character-tier param stripped — character identity (level, class, race,
+ * name, zero-level race) and "hide Human prefix" (only meaningful for one
+ * specific human character, not a table-wide style choice) — so the shared
+ * link always carries just the referee's ruleset — never a specific
+ * character-in-progress, regardless of what's currently selected in the
+ * grid or name field. Mirrors buildCampaignURL()'s strip list in
+ * cs-sheet-page.js, which does the same job for the "Back to Generator"
+ * link on charactersheet.html.
  */
 function buildCampaignProfileURL() {
     const url = new URL(window.location.href);
-    ['l', 'c', 'r', 'n', 'zr'].forEach(key => url.searchParams.delete(key));
+    ['l', 'c', 'r', 'n', 'zr', 'hhr'].forEach(key => url.searchParams.delete(key));
     return url.toString();
 }
 
