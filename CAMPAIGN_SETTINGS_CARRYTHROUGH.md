@@ -17,53 +17,54 @@ architecture.
 
 ## Table
 
-| # | Section                  | Setting                            | Saved to Character (`cp`)? | Back to Generator? | Footer?      |
-|---|--------------------------|------------------------------------|----------------------------|--------------------|--------------|
-| 0 | Campaign Name            | Campaign Name (<=64 Unicode chars) | Yes -- `cn`, raw [8]       | Yes [8]            | Yes [9]      |
-| 1 | Mode & Level             | Mode preset (A/B/C)                | Indirect (`m`+`l`)         | Yes [1]            | No           |
-| 1 | Mode & Level             | Level                              | Yes -- `l`                 | No -- stripped     | Yes          |
-| 1 | Mode & Level             | Level Mode + XP amount             | No                         | No                 | No           |
-| 2 | Progressions             | Progression Mode                   | Yes -- `p`                 | Yes                | Yes          |
-| 3 | Min Ability Scores       | 6 minimum values                   | Yes -- `sm`                | Yes                | Partial [10] |
-| 3 | Min Ability Scores       | "Use fixed scores" checkbox        | No [2]                     | No                 | Yes [11]     |
-| 4 | Race/Class Restrictions  | Race/Class Mode                    | Yes -- `rcm`               | Yes                | No [19]      |
-| 4 | Race/Class Restrictions  | Exclude Spellblade                 | Yes -- `esb`               | Yes                | No [20]      |
-| 4 | Race/Class Restrictions  | Race + Class pick                  | Yes -- `r`/`c` [5]         | No -- stripped     | Yes          |
-| 5 | Racial Adjustment Policy | Policy value                       | Yes -- `rap`               | Yes                | Yes [12]     |
-| 6 | Referee Options          | Prime Requisite Mode               | Yes -- `prm`               | Yes                | Yes          |
-| 6 | Referee Options          | HP Rolling Style                   | Yes -- `hm`                | Yes                | Partial [13] |
-| 6 | Referee Options          | Include Level 0 HP                 | Yes -- `il`                | Yes                | Yes          |
-| 6 | Referee Options          | No Level 0 Equipment               | Yes -- `nl0`               | Yes                | Yes [18]     |
-| 6 | Referee Options          | Starting Wealth (4 tiers)          | Yes -- `wp` + tiers [3]    | Yes                | Partial [14] |
-| 7 | Character Name           | Name                               | Yes -- `n`                 | No -- stripped     | No [15]      |
-| 8 | Player Options           | Show Undead Names                  | Yes -- `un`                | Yes [6]            | No           |
-| 8 | Player Options           | 1977 Ability Ordering              | Yes -- `ao`                | Yes [6]            | No           |
-| 8 | Player Options           | Hide "Human" prefix                | Yes -- `hhr`               | No -- stripped [7] | No [16]      |
-| 8 | Player Options           | AC Display Mode                    | Yes -- `adm`               | Yes [4][6]         | No           |
-| 8 | Player Options           | Character Sheet Branding           | Yes -- `sb`                | Yes [6]            | No [17]      |
-| 8 | Player Options           | Auto-gen toggles, Open in new tab  | No                         | No                 | No           |
+Each row has at most **one** note, covering every column that needs
+explanation for that setting — not scattered per-cell references.
+
+| # | Section                  | Setting                            | Saved to Character (`cp`)? | Back to Generator? | Footer? | In Hash? | Notes |
+|---|--------------------------|------------------------------------|----------------------------|--------------------|---------|----------|-------|
+| 0 | Campaign Name            | Campaign Name (<=64 Unicode chars) | Yes -- `cn`, raw           | Yes                | Yes     | Yes      | [1]   |
+| 1 | Mode & Level             | Mode preset (A/B/C)                | Indirect (`m`+`l`)         | Yes                | No      | Yes      | [2]   |
+| 1 | Mode & Level             | Level                              | Yes -- `l`                 | No -- stripped     | Yes     | No       |       |
+| 1 | Mode & Level             | Level Mode + XP amount             | No                         | No                 | No      | No       |       |
+| 2 | Progressions             | Progression Mode                   | Yes -- `p`                 | Yes                | Yes     | Yes      |       |
+| 3 | Min Ability Scores       | 6 minimum values                   | Yes -- `sm`                | Yes                | Partial | Yes      | [3]   |
+| 3 | Min Ability Scores       | "Use fixed scores" checkbox        | No                         | No                 | Yes     | No       | [4]   |
+| 4 | Race/Class Restrictions  | Race/Class Mode                    | Yes -- `rcm`               | Yes                | No      | Yes      | [5]   |
+| 4 | Race/Class Restrictions  | Exclude Spellblade                 | Yes -- `esb`               | Yes                | No      | Yes      | [6]   |
+| 4 | Race/Class Restrictions  | Race + Class pick                  | Yes -- `r`/`c`             | No -- stripped     | Yes     | No       | [7]   |
+| 5 | Racial Adjustment Policy | Policy value                       | Yes -- `rap`               | Yes                | Yes     | Yes      | [8]   |
+| 6 | Referee Options          | Prime Requisite Mode               | Yes -- `prm`               | Yes                | Yes     | Yes      |       |
+| 6 | Referee Options          | HP Rolling Style                   | Yes -- `hm`                | Yes                | Partial | Yes      | [9]   |
+| 6 | Referee Options          | Include Level 0 HP                 | Yes -- `il`                | Yes                | Yes     | Yes      |       |
+| 6 | Referee Options          | No Level 0 Equipment               | Yes -- `nl0`               | No -- stripped     | Yes     | No       | [10]  |
+| 6 | Referee Options          | Starting Wealth (4 tiers)          | Yes -- `wp` + tiers        | Yes                | Partial | Yes      | [11]  |
+| 7 | Character Name           | Name                               | Yes -- `n`                 | No -- stripped     | No      | No       | [12]  |
+| 8 | Player Options           | Show Undead Names                  | Yes -- `un`                | Yes                | No      | No       | [13]  |
+| 8 | Player Options           | 1977 Ability Ordering              | Yes -- `ao`                | Yes                | No      | No       | [14]  |
+| 8 | Player Options           | Hide "Human" prefix                | Yes -- `hhr`               | No -- stripped     | No      | No       | [15]  |
+| 8 | Player Options           | AC Display Mode                    | Yes -- `adm`               | Yes                | No      | No       | [16]  |
+| 8 | Player Options           | Character Sheet Branding           | Yes -- `sb`                | Yes                | No      | No       | [17]  |
+| 8 | Player Options           | Auto-gen toggles, Open in new tab  | No                         | No                 | No      | No       |       |
 
 **Notes:**
-1. Reconstructed to an equivalent preset guaranteeing the pick is clickable — not necessarily the original literal A/B/C choice.
-2. Only `cp.fs=1` exists (a fact about this character's scores being fixed, not the checkbox setting itself).
-3. `l0wm/l0dc/l0ds/l0dm/l0fg`, `l1wm/…`, `l2wm/…`, `xwm/…` — 20 sub-fields total, each omitted when equal to its own default.
-4. `generator.html` didn't used to have a URL param for AC Display Mode at all; `adm` was added to `syncURLParams()`/`readURLParams()` (and `buildGeneratorURL()`'s reconstruction) specifically to support this row (2026-07-07).
-5. Not a restriction setting like the row above it (Race/Class Mode) — this is the actual race and class the player clicked in the grid for this one character (e.g. "Elf" + "Fighter"). It's inherently specific to this character, the same way Level and Name are, which is why it's stripped from the "Back to Generator" link alongside them rather than carried through like the Campaign-tier rows.
-6. Reclassified Campaign-tier (2026-07-07): a referee running a table typically wants one consistent look for every character, not a per-player choice, so it now round-trips like the rest of section 6/2/etc. instead of resetting per character.
-7. Stays Character-tier, unlike the row above it — only meaningful for the specific human character that had it set (hides "Human" from that one character's race/class display), not a table-wide style choice. Stripped by both Campaign Link builders: `buildCampaignURL()` (`cs-sheet-page.js`, the "Back to Generator" link) and `buildCampaignProfileURL()` (`gen-ui.js`, the Share/QR link) — the latter was missing it until 2026-07-08, caught by automated review.
-8. Stored raw in `cp.cn` (the whole `cp` blob is already gzip-compressed as a unit), but the generator.html URL param is *separately* gzip+base64url-compressed via `compressToBase64Url()`/`decompressFromBase64Url()` — unlike every other string param (`n`, race/class names, etc.), which are plain query-string values. Campaign Name can run up to 64 Unicode characters and appears on every Campaign Profile link/QR code, so it gets its own compression pass to stay compact; the others are short enough that plain percent-encoding is fine.
-9. Printed directly as text under the QR code on page 2 when set (2026-07-07, `renderCharacterSheetHTML`'s QR block in `cs-core.js`) — genuinely readable, not just equality-checkable. It's also folded (along with every other Campaign-tier setting) into the `#XXXXXX` fingerprint on the page-1 footer identity line, so two sheets from the same table show a matching tag there too without a referee needing to compare the full printed name by eye.
-10. Only entries above the default (3) are shown, as `Min: X≥Y`. A minimum left at the default doesn't appear at all, so a referee auditing the footer can't distinguish "explicitly set to 3" from "never touched" -- both look identical (absent).
-11. Shown as `Fixed Scores` when set; otherwise the roll-attempt count (`<n> rolls`) is shown instead -- the two are mutually exclusive in the footer, so "Fixed Scores" absent implies rolled, not necessarily "checkbox off" (a referee can't distinguish "off" from "on but this row happened to roll on the first attempt" without the `Fixed Scores` tag itself, which is unambiguous when present).
-12. Fixed (2026-07-07): `buildOptionsLine()` used to only push a `Racial Adj: ...` chip at `lvl === 0`. Now shown at every level -- `cp.rap` is unconditionally written by `buildCampaignRulesetCp()` (not omitted-when-default like most other fields), so there's always an explicit value.
-13. Only non-default HP rolling modes push a chip (`Blessed HP`, `5e HP (...)`, `Re-roll 1s and 2s`) -- normal mode (the default) shows nothing, so its absence is the only signal it was normal.
-14. Improved (2026-07-07): now shows the actual method (`Wealth: 3d6×10`, `Wealth: 50gp fixed`, or `Wealth: 20%` for xp-pct) for whichever tier applies to *this character's own level*. Still Partial, not Yes -- only one of the 4 tiers is ever relevant to a given character, so the other 3 tiers' settings remain unaudited from any single sheet; a referee would need sample characters at levels 0, 1, and 2+ to audit all of them. Bug fixed 2026-07-08 (caught by automated review): `generateZeroLevel()`'s `fullCp` never included `wp: wealthPct` at all (unlike the level 1+ path), so a level-0 character's `cp.wp` was always absent -- silently dropping a non-default wealth % from that character's "Back to Generator" link, and (via the `...decoded` spread) from any character leveled up from 0 as well.
-15. Shown in the sheet's header table (`Character Name` column) instead, not the footer.
-16. Changes what the identity line/header display (omits "Human" from the race/class name), but the toggle itself has no dedicated footer label -- its effect is visible, the setting name is not.
-17. Visible via the page's title/subtitle at the top of the sheet (`OLD-SCHOOL ESSENTIALS` vs `DUNGEONS & DRAGONS`), not the footer specifically.
-18. Added (2026-07-07): now always shown explicitly (`L0 Equipment: None`/`Standard`), not just on deviation from default, so absence never has to be interpreted as "default." Adding this footer line surfaced a real, previously-hidden bug: `generateZeroLevel()` never passed `noLevel0Equipment` to `generateCharacterV3()` at all, so level-0 characters always got the library's own internal default (equipment shown) regardless of the checkbox -- and the level-0 rendering path separately never checked `cp.nl0` when building the background-derived weapon/item list, so even a correctly-set `cp.nl0` wouldn't have suppressed anything. Both fixed.
-19. Briefly added, then removed the same day (2026-07-07) after review: the setting's effects (racial abilities present, level exceeding normal caps, an otherwise-disallowed race/class combination) are already obvious from the rest of the sheet, so a dedicated chip was redundant noise rather than genuinely useful auditability.
-20. Briefly added, then removed the same day (2026-07-07): whether *this* character is a Spellblade is already obvious from its own class, and a referee running a table already knows whether the class is allowed at all — a per-sheet confirmation chip added noise without adding real audit value.
+
+1. Gets its own gzip+base64url compression pass, separate from every other (plain query-string) param, because it can run up to 64 Unicode characters and appears on every Campaign Profile link/QR code -- keeping it compact matters more here than for any other field.
+2. Reconstructed to an equivalent preset guaranteeing the pick is clickable -- not necessarily the original literal A/B/C choice.
+3. Only entries above the default (3) are shown, as `Min: X≥Y`. A minimum left at the default doesn't appear at all, so a referee auditing the footer can't distinguish "explicitly set to 3" from "never touched" -- both look identical (absent).
+4. No URL param exists for the checkbox itself -- only `cp.fs=1` exists (a fact about this character's scores being fixed). In the footer, shown as `Fixed Scores` when set, otherwise the roll-attempt count (`<n> rolls`) is shown instead; the two are mutually exclusive, so "Fixed Scores" absent implies rolled, not necessarily "checkbox off."
+5. No footer chip: the setting's effects (racial abilities present, level exceeding normal caps, an otherwise-disallowed race/class combination) are already obvious from the rest of the sheet, so a dedicated chip would be redundant noise.
+6. No footer chip: whether *this* character is a Spellblade is already obvious from its own class, and a referee running a table already knows whether the class is allowed at all -- a per-sheet confirmation chip would add noise without adding real audit value.
+7. Not a restriction setting like the Race/Class Mode row above it -- this is the actual race and class the player clicked in the grid for this one character (e.g. "Elf" + "Fighter"). It's inherently specific to this character, the same way Level and Name are, which is why it's stripped from the "Back to Generator" link alongside them.
+8. `cp.rap` is unconditionally written (not omitted-when-default like most other fields), so there's always an explicit value to show in the footer at every level, not just level 0.
+9. Only non-default HP rolling modes push a footer chip (`Blessed HP`, `5e HP (...)`, `Re-roll 1s and 2s`) -- normal mode (the default) shows nothing, so its absence is the only signal it was normal.
+10. Means "does this character keep its 0-level equipment once it's past level 0," applying only to level 1+ rendering -- a level-0 character's own gear IS its whole equipment, so it always shows unconditionally regardless of this setting. This is a per-character/per-player choice, not a table-wide policy, so it's Character-tier despite `cp.nl0` living in generator.html's "6. Referee Options" section with no UI relocation there. Both campaign-link builders strip it (matching `hhr`), which also automatically excludes it from the hash, and in character-sheet editing it lives in Edit Sheet Options (freely editable, doesn't set `cp.mx`).
+11. `l0wm/l0dc/l0ds/l0dm/l0fg`, `l1wm/…`, `l2wm/…`, `xwm/…` -- 20 sub-fields total, each omitted from `cp` when equal to its own default. The footer shows the actual method (`Wealth: 3d6×10`, `Wealth: 50gp fixed`, or `Wealth: 20%` for xp-pct) only for whichever tier applies to *this character's own level* -- still only Partial, since the other 3 tiers' settings remain unaudited from any single sheet.
+12. Shown in the sheet's header table (`Character Name` column) instead, not the footer.
+13. A referee running a table typically wants one consistent look for every character, not a per-player choice, so it round-trips through "Back to Generator" instead of resetting per character. Excluded from the `#XXXXXX` campaign hash, though, since Edit Sheet Options lets a player freely tweak it without marking the character Modified -- a purely cosmetic per-sheet tweak shouldn't make two characters from the same table look like they're from different campaigns.
+14. Same reasoning as Show Undead Names (note 13): Campaign-tier for "Back to Generator" purposes, but excluded from the hash since it's freely player-editable via Edit Sheet Options without marking Modified.
+15. Stays Character-tier, unlike the row above it -- only meaningful for the specific human character that had it set (hides "Human" from that one character's race/class display), not a table-wide style choice. Stripped by both campaign link builders.
+16. Same reasoning as Show Undead Names (note 13).
+17. Same reasoning as Show Undead Names (note 13). Visible via the page's title/subtitle at the top of the sheet (`OLD-SCHOOL ESSENTIALS` vs `DUNGEONS & DRAGONS`), not the footer.
 
 ## Maintenance
 
@@ -86,5 +87,14 @@ architecture.
   `buildOptionsLine()`), separately from whether it's carried in `cp` or the
   "Back to Generator" link. Mark `Yes` only when the setting's value is
   unambiguously readable as text; `Partial` when only some of its states or
-  sub-fields show; `Indirect` when it only affects the `#XXXXXX` campaign
-  hash (equality-checkable but not readable); `No` otherwise.
+  sub-fields show; `No` otherwise.
+- **"In Hash?" column** tracks whether a setting's value feeds into the
+  `#XXXXXX` campaign hash (`expandCompactV3()` in `cs-sheet-page.js`,
+  `shortHash()` of `buildCampaignURL()`'s output with `un`/`ao`/`adm`/`sb`
+  additionally excluded). A setting stripped from the "Back to Generator"
+  link is automatically `No` here too, since the hash is computed from that
+  same link.
+- **One note per row.** If a row needs explanation, put everything relevant
+  (across every column) into a single numbered note, rather than adding
+  separate references per cell or reusing one note across multiple rows.
+  Keep notes numbered in table order, top to bottom.

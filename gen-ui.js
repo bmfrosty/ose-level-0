@@ -904,9 +904,12 @@ function syncURLParams() {
 /**
  * Build a Campaign Profile link: the current generator.html URL with every
  * Character-tier param stripped — character identity (level, class, race,
- * name, zero-level race) and "hide Human prefix" (only meaningful for one
- * specific human character, not a table-wide style choice) — so the shared
- * link always carries just the referee's ruleset — never a specific
+ * name, zero-level race), "hide Human prefix" (only meaningful for one
+ * specific human character, not a table-wide style choice), and "No Level 0
+ * Equipment" (redefined 2026-07-08 to mean "does a character keep its
+ * 0-level gear past level 0" — a per-character choice despite living in
+ * this page's Referee Options section, not a table-wide policy) — so the
+ * shared link always carries just the referee's ruleset — never a specific
  * character-in-progress, regardless of what's currently selected in the
  * grid or name field. Mirrors buildCampaignURL()'s strip list in
  * cs-sheet-page.js, which does the same job for the "Back to Generator"
@@ -914,7 +917,7 @@ function syncURLParams() {
  */
 function buildCampaignProfileURL() {
     const url = new URL(window.location.href);
-    ['l', 'c', 'r', 'n', 'zr', 'hhr'].forEach(key => url.searchParams.delete(key));
+    ['l', 'c', 'r', 'n', 'zr', 'hhr', 'nl0e'].forEach(key => url.searchParams.delete(key));
     return url.toString();
 }
 

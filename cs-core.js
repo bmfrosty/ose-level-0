@@ -203,10 +203,16 @@ export async function decompressFromBase64Url(b64url) {
  * wp      number      wealthPct — starting gold % of XP-for-level for level 2+ chars (0–100)
  * prm     0|9|13      primeRequisiteMode — 0=user choice, 9=require ≥9, 13=require ≥13
  *
- * nl0     0|1         noLevel0Equipment — 1 = level 0 characters get no starting equipment;
- *                     omitted (falsy) when false. Written by generateCharacterV3 at both
- *                     level 0 and level 1+; also read directly by cs-sheet-page.js to skip
- *                     background-derived starting gear on display.
+ * nl0     0|1         noLevel0Equipment — redefined 2026-07-08: 1 = this character does NOT
+ *                     keep its 0-level background equipment once past level 0; omitted
+ *                     (falsy) = it carries forward as free starting gear alongside whatever
+ *                     is purchased. Has no effect on a level-0 character's own display — that
+ *                     background gear IS the character's whole equipment at level 0, shown
+ *                     unconditionally. Character-tier despite living in generator.html's
+ *                     Referee Options section — see PLAN_CAMPAIGN_PROFILES.md. Written by
+ *                     generateCharacterV3 at both level 0 and level 1+ (reflecting the
+ *                     referee's current default at generation time, but freely
+ *                     player-editable afterward without marking the character Modified).
  * sa      number[6]   Post-generation ability adjustments beyond racial modifiers (e.g. a
  *                     referee-granted fixed adjustment) — omitted when all zero
  *

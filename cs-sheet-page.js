@@ -31,6 +31,7 @@ import {
     ARMOR, purchaseEquipment, getBackgroundByProfession,
     calculateSavingThrows,
     isSeparateRaceClassForPolicy,
+    RCM_CODE, RAP_CODE,
 } from './cs-core.js';
 
 export { compressToBase32 } from './cs-core.js';
@@ -107,6 +108,10 @@ function getDieSidesForLevel(classCode, levelIndex) {
 
 /** Compact code → progression mode name (e.g. 'O' → 'ose') */
 const CODE_TO_PROG = { O:'ose', S:'smoothprog', L:'ll' };
+/** Compact code → Race/Class Mode name (e.g. 'ST' → 'strict') */
+const CODE_TO_RCM_MC = { ST:'strict', SH:'strict-human', TE:'traditional-extended', AL:'allow-all' };
+/** Compact code → Racial Adjustment Policy name (e.g. 'NV' → 'never') */
+const CODE_TO_RAP_MC = { AA:'always', SO:'separate-only', NV:'never', FS:'from-separate', F1:'from-level-1' };
 
 /**
  * Build the spec object passed to `renderFromCompactParams` / `displayCharacterSheet`
@@ -243,8 +248,17 @@ export async function expandCompactV3(cp, precomp = {}, { silent = false } = {})
     const footerLabel = (identity) => ({ footerLabel: identity });
     // Fingerprint of the Campaign-scoped "Back to Generator" link — same
     // campaign settings always hash the same, so two sheets from the same
-    // table show a matching tag in the footer at a glance.
-    const campaignHash = shortHash(await buildCampaignURL(cp));
+    // table show a matching tag in the footer at a glance. un/ao/adm/sb are
+    // excluded from the hash input (though not from the link itself) even
+    // though they're Campaign-tier — Edit Sheet Options lets a player freely
+    // tweak them without marking the character Modified, so they shouldn't
+    // change the campaign hash either; otherwise a purely cosmetic per-sheet
+    // tweak would make two characters from the same table look like they're
+    // from different campaigns.
+    const HASH_EXCLUDED_PARAMS = ['un', 'ao', 'adm', 'sb'];
+    const campaignUrlForHash = new URL(await buildCampaignURL(cp), 'http://x/');
+    HASH_EXCLUDED_PARAMS.forEach(k => campaignUrlForHash.searchParams.delete(k));
+    const campaignHash = shortHash(`generator.html?${campaignUrlForHash.searchParams.toString()}`);
 
     // ── Level 0 ──────────────────────────────────────────────────────────────
     if (level === 0) {
@@ -257,13 +271,17 @@ export async function expandCompactV3(cp, precomp = {}, { silent = false } = {})
             const conScore = adjArr[2];
             const rawSaves = calculateSavingThrows(race, conScore);
             sv = [rawSaves.Death, rawSaves.Wands, rawSaves.Paralysis, rawSaves.Breath, rawSaves.Spells];
-            // No Level 0 Equipment (cp.nl0) — same guard as the level 1+
-            // equipment path (below) — suppresses background-derived gear.
-            const bg = cp.nl0 ? null : (getBackgroundByProfession(cp.bg || '') || {});
+            // cp.nl0 ("No Level 0 Equipment") does NOT apply here (2026-07-08
+            // redefinition) — a level-0 character's background gear IS their
+            // whole equipment, so it always shows regardless of this flag.
+            // nl0 now means "does this character keep its 0-level equipment
+            // once it's past level 0" — see the level 1+ equipment path below,
+            // which is where this flag actually applies.
+            const bg = getBackgroundByProfession(cp.bg || '') || {};
             l0Weapons = [];
-            const bgItems = Array.isArray(bg?.item) ? bg.item : (bg?.item ? [bg.item] : []);
-            l0Items   = [...(bg?.weapon ? [`${bg.weapon} (background)`] : []), ...bgItems];
-            l0Armor   = (bg?.armor && bg.armor !== 'Unarmored') ? bg.armor : null;
+            const bgItems = Array.isArray(bg.item) ? bg.item : (bg.item ? [bg.item] : []);
+            l0Items   = [...(bg.weapon ? [`${bg.weapon} (background)`] : []), ...bgItems];
+            l0Armor   = (bg.armor && bg.armor !== 'Unarmored') ? bg.armor : null;
             const armorAC = l0Armor ? (ARMOR[l0Armor]?.ac?.ascending ?? 10) : 10;
             l0AC = armorAC + mods.DEX;
         } else {
@@ -396,6 +414,11 @@ export async function expandCompactV3(cp, precomp = {}, { silent = false } = {})
     // ── Equipment: v3 derives at render time; v2 reads stored fields ──────────
     let eqWeapons, eqArmor, eqShield, eqItems, eqAC, eqGoldRemaining;
     if (cp.v === 3) {
+        // cp.nl0 ("No Level 0 Equipment", redefined 2026-07-08): whether this
+        // character keeps its 0-level background equipment once past level 0.
+        // When set, the background contributes no free starting gear here —
+        // purchaseEquipment() only has this character's own gold to work
+        // with, same as any level 1+ character purchasing from scratch.
         const bg  = cp.nl0 ? null : (getBackgroundByProfession(cp.bg || '') || {});
         const eq  = purchaseEquipment(cls, cp.g || 0, mods.DEX, bg, prog);
         eqWeapons      = eq.weapons;
@@ -603,10 +626,13 @@ async function buildGeneratorURL(cp) {
 /**
  * Build the "Back to Generator" link from this character's compact params:
  * the same URL as buildGeneratorURL(), but with every Character-tier param
- * stripped — character identity (level, class, race, name, zero-level race)
- * and "hide Human prefix" (only meaningful for the specific human character
- * that had it set, not a table-wide style choice) — so a player following it
- * lands on the referee's ruleset with nothing pre-selected, not a copy of
+ * stripped — character identity (level, class, race, name, zero-level race),
+ * "hide Human prefix" (only meaningful for the specific human character that
+ * had it set, not a table-wide style choice), and "No Level 0 Equipment"
+ * (redefined 2026-07-08 to mean "does this character keep its 0-level gear
+ * past level 0" — a per-character choice despite living in generator.html's
+ * Referee Options section, not a table-wide policy) — so a player following
+ * it lands on the referee's ruleset with nothing pre-selected, not a copy of
  * this specific character. Show Undead Names, Ability Score Ordering, AC
  * Display Mode, and Character Sheet Branding are treated as Campaign-tier
  * (not stripped) since a referee typically wants one consistent look/feel
@@ -617,7 +643,7 @@ async function buildGeneratorURL(cp) {
  */
 async function buildCampaignURL(cp) {
     const url = new URL(await buildGeneratorURL(cp), window.location.href);
-    ['l', 'c', 'r', 'n', 'zr', 'hhr'].forEach(key => url.searchParams.delete(key));
+    ['l', 'c', 'r', 'n', 'zr', 'hhr', 'nl0e'].forEach(key => url.searchParams.delete(key));
     return `generator.html?${url.searchParams.toString()}`;
 }
 
@@ -677,6 +703,66 @@ function initEditPanel(decoded) {
         const progRadio = document.querySelector(`input[name="ep-prog"][value="${curProg}"]`);
         if (progRadio) progRadio.checked = true;
     }
+
+    // Campaign-tier fields — populate every Modify Character field from this
+    // character's own stored cp values (not generator.html's defaults), since
+    // this reflects what's actually on the character, not a fresh session.
+    document.getElementById('mc-cn').value = decoded.cn || '';
+
+    const minScores = decoded.sm || [3,3,3,3,3,3];
+    ['STR','DEX','CON','INT','WIS','CHA'].forEach((a, i) => {
+        const el = document.getElementById(`mc-min-${a}`);
+        if (el) el.value = minScores[i] ?? 3;
+    });
+
+    const rcmVal = CODE_TO_RCM_MC[decoded.rcm] || 'strict';
+    const rcmRadio = document.querySelector(`input[name="mc-rcm"][value="${rcmVal}"]`);
+    if (rcmRadio) rcmRadio.checked = true;
+    document.getElementById('mc-esb').checked = decoded.esb !== 0;
+
+    const rapVal = CODE_TO_RAP_MC[decoded.rap] || 'never';
+    const rapRadio = document.querySelector(`input[name="mc-rap"][value="${rapVal}"]`);
+    if (rapRadio) rapRadio.checked = true;
+    // Tier 1 reflects which sub-group the actual policy belongs to, matching
+    // generator.html's own grouping (applied-at-level-0 vs not).
+    const rapTier1Actual = (rapVal === 'always' || rapVal === 'separate-only') ? 'applied' : 'not-applied';
+    const rapTier1Radio = document.querySelector(`input[name="mc-rap-tier1"][value="${rapTier1Actual}"]`);
+    if (rapTier1Radio) rapTier1Radio.checked = true;
+
+    const prmVal = decoded.prm ? String(decoded.prm) : 'user';
+    const prmRadio = document.querySelector(`input[name="mc-prm"][value="${prmVal}"]`);
+    if (prmRadio) prmRadio.checked = true;
+
+    const HM_CODE_TO_NAME = { 0:'normal', 1:'blessed', 2:'5e', 3:'healthy' };
+    const hpmVal = HM_CODE_TO_NAME[decoded.hm] || 'normal';
+    const hpmRadio = document.querySelector(`input[name="mc-hpm"][value="${hpmVal}"]`);
+    if (hpmRadio) hpmRadio.checked = true;
+
+    document.getElementById('mc-il').checked  = !!decoded.il;
+
+    const wealthTier = (prefix, wmDefault, dmDefault) => {
+        const wmVal = decoded[`${prefix}wm`] || wmDefault;
+        const wmRadio = document.querySelector(`input[name="mc-${prefix}wm"][value="${wmVal}"]`);
+        if (wmRadio) wmRadio.checked = true;
+        const dc = document.getElementById(`mc-${prefix}dc`); if (dc) dc.value = decoded[`${prefix}dc`] ?? 3;
+        const ds = document.getElementById(`mc-${prefix}ds`); if (ds) ds.value = decoded[`${prefix}ds`] ?? 6;
+        const dm = document.getElementById(`mc-${prefix}dm`); if (dm) dm.value = decoded[`${prefix}dm`] ?? dmDefault;
+        const fg = document.getElementById(`mc-${prefix}fg`); if (fg) fg.value = decoded[`${prefix}fg`] ?? 0;
+    };
+    wealthTier('l0', 'dice', 1);
+    wealthTier('l1', 'dice', 10);
+    wealthTier('l2', 'xp-pct', 10);
+    wealthTier('x', 'xp-pct', 10);
+    document.getElementById('mc-wp').value = decoded.wp ?? 20;
+
+    document.getElementById('mc-un').checked = !!decoded.un;
+    document.getElementById('mc-ao').checked = decoded.ao !== 0;
+    const admValMc = decoded.adm || 0;
+    const admRadioMc = document.querySelector(`input[name="mc-adm"][value="${admValMc}"]`);
+    if (admRadioMc) admRadioMc.checked = true;
+    const sbValMc = decoded.sb === 1 ? 'dnd' : 'ose';
+    const sbRadioMc = document.querySelector(`input[name="mc-sb"][value="${sbValMc}"]`);
+    if (sbRadioMc) sbRadioMc.checked = true;
 
     document.getElementById('ep-name').value = decoded.n || '';
 
@@ -766,9 +852,17 @@ function initEditPanel(decoded) {
 
     document.getElementById('ep-undead').checked = !!decoded.un;
     document.getElementById('ep-qr').checked     = decoded.qr !== 0;
+    document.getElementById('ep-nl0').checked    = !!decoded.nl0;
 
     // ── Apply Changes (Modify Character) ──────────────────────────────────────
     document.getElementById('ep-apply-btn').addEventListener('click', async () => {
+        // Soft nudge only — this tool has no accounts/auth, so this can't be
+        // real access control, just a reminder that these are normally the
+        // referee's settings before applying a change to someone else's link.
+        if (!confirm('These are normally the referee’s table-wide settings, not something a player usually edits on their own character. Apply anyway?')) {
+            return;
+        }
+
         const newProg = document.querySelector('input[name="ep-prog"]:checked')?.value
             || CODE_TO_PROG[decoded.p] || 'ose';
 
@@ -793,10 +887,74 @@ function initEditPanel(decoded) {
             newHpRolls = decoded.hr || [];
         }
 
+        // Campaign-tier fields — read every setting from its panel input and
+        // write it directly (not omitted-when-default the way fresh
+        // generation is, for simplicity — this is a one-off manual edit, and
+        // the character is already being marked Modified).
+        const newMinScores = ['STR','DEX','CON','INT','WIS','CHA'].map(a => {
+            const v = parseInt(document.getElementById(`mc-min-${a}`)?.value);
+            return isNaN(v) ? 3 : Math.max(3, Math.min(18, v));
+        });
+        const rcmValMc = document.querySelector('input[name="mc-rcm"]:checked')?.value || 'strict';
+        const rapValMc = document.querySelector('input[name="mc-rap"]:checked')?.value || 'never';
+        const prmValMc = document.querySelector('input[name="mc-prm"]:checked')?.value || 'user';
+        const HM_NAME_TO_CODE = { normal:0, blessed:1, '5e':2, healthy:3 };
+        const hpmValMc = HM_NAME_TO_CODE[document.querySelector('input[name="mc-hpm"]:checked')?.value] || 0;
+        const admValMc = parseInt(document.querySelector('input[name="mc-adm"]:checked')?.value || '0');
+        const sbValMc  = document.querySelector('input[name="mc-sb"]:checked')?.value === 'dnd';
+        const wealthField = (prefix, defWm) => ({
+            wm: document.querySelector(`input[name="mc-${prefix}wm"]:checked`)?.value || defWm,
+            dc: parseInt(document.getElementById(`mc-${prefix}dc`)?.value) || 3,
+            ds: parseInt(document.getElementById(`mc-${prefix}ds`)?.value) || 6,
+            dm: parseInt(document.getElementById(`mc-${prefix}dm`)?.value) || 1,
+            fg: parseInt(document.getElementById(`mc-${prefix}fg`)?.value) || 0,
+        });
+        const l0 = wealthField('l0', 'dice');
+        const l1 = wealthField('l1', 'dice');
+        const l2 = wealthField('l2', 'xp-pct');
+        const xw = wealthField('x', 'xp-pct');
+
         const newCp = { ...decoded, p: PROG_TO_CODE[newProg], s: newScores, h: newHp,
-                        hr: newHpRolls, mx: 1 };
+                        hr: newHpRolls, mx: 1,
+                        cn: document.getElementById('mc-cn').value.trim().slice(0, 64) || undefined,
+                        sm: newMinScores,
+                        rcm: RCM_CODE[rcmValMc] || 'ST',
+                        esb: document.getElementById('mc-esb').checked ? undefined : 0,
+                        rap: RAP_CODE[rapValMc] || 'NV',
+                        prm: prmValMc === 'user' ? 0 : parseInt(prmValMc),
+                        il: document.getElementById('mc-il').checked ? 1 : 0,
+                        // nl0 ("No Level 0 Equipment") is NOT edited here — it was
+                        // reclassified Character-tier 2026-07-08 and now lives in
+                        // Edit Sheet Options instead; ...decoded above already
+                        // carries its current value forward unchanged.
+                        l0wm: l0.wm, l0dc: l0.dc, l0ds: l0.ds, l0dm: l0.dm, l0fg: l0.fg,
+                        l1wm: l1.wm, l1dc: l1.dc, l1ds: l1.ds, l1dm: l1.dm, l1fg: l1.fg,
+                        l2wm: l2.wm, l2dc: l2.dc, l2ds: l2.ds, l2dm: l2.dm, l2fg: l2.fg,
+                        xwm: xw.wm, xdc: xw.dc, xds: xw.ds, xdm: xw.dm, xfg: xw.fg,
+                        wp: parseInt(document.getElementById('mc-wp').value) || 20,
+                        un: document.getElementById('mc-un').checked ? 1 : 0,
+                        ao: document.getElementById('mc-ao').checked ? 1 : 0,
+                        sb: sbValMc ? 1 : undefined,
+                      };
+        if (hpmValMc) newCp.hm = hpmValMc; else delete newCp.hm;
+        if (admValMc) newCp.adm = admValMc; else delete newCp.adm;
+        if (!newCp.cn) delete newCp.cn;
+        if (!newCp.esb && newCp.esb !== 0) delete newCp.esb;
+        if (!newCp.sb) delete newCp.sb;
         delete newCp.hd;
         if (hasAnyAdj) { newCp.bs = newBaseScores; } else { delete newCp.bs; }
+
+        // Clear equipment: null out weapon, armor, shield, items, and gold;
+        // reset AC to 10 (unarmored). Same behavior as Edit Sheet Options'
+        // and Level Up's equivalent checkbox.
+        if (document.getElementById('mc-clear-equipment')?.checked) {
+            newCp.w  = [];
+            newCp.ar = null;
+            newCp.sh = 0;
+            newCp.it = [];
+            newCp.g  = 0;
+            newCp.ac = 10;
+        }
 
         const encoded = encodeCompactParams(newCp);
         const b32    = await compressToBase32(JSON.stringify(encoded));
@@ -813,6 +971,9 @@ function initEditPanel(decoded) {
         };
         delete newCp.hd;
         if (newAdm) newCp.adm = newAdm; else delete newCp.adm;
+        // No Level 0 Equipment ("keep 0-level gear past level 0", reclassified
+        // Character-tier 2026-07-08) — freely editable here, does not set mx.
+        if (document.getElementById('ep-nl0')?.checked) newCp.nl0 = 1; else delete newCp.nl0;
 
         // Clear equipment: null out weapon, armor, shield, items, and gold;
         // reset AC to 10 (unarmored). Attack bonus, melee/ranged modifiers, and
@@ -964,6 +1125,18 @@ function initEditPanel(decoded) {
             // direct Basic/race-as-class L1+ generation never writes it either.
             if (newMode === 'B') delete newCp.sm;
 
+            // Clear equipment: models a player hand-writing in their new gear
+            // rather than the tool tracking it — same behavior as Edit Sheet
+            // Options' and Modify Character's equivalent checkbox.
+            if (document.getElementById('lup-clear-equipment')?.checked) {
+                newCp.w  = [];
+                newCp.ar = null;
+                newCp.sh = 0;
+                newCp.it = [];
+                newCp.g  = 0;
+                newCp.ac = 10;
+            }
+
             const encoded = encodeCompactParams(newCp);
             const b32    = await compressToBase32(JSON.stringify(encoded));
             window.location.href = `charactersheet.html?d=${b32}`;
@@ -1067,6 +1240,19 @@ function initEditPanel(decoded) {
             }
 
             delete newCp.hd;
+
+            // Clear equipment: models a player hand-writing in their new gear
+            // rather than the tool tracking it — same behavior as Edit Sheet
+            // Options' and Modify Character's equivalent checkbox.
+            if (document.getElementById('lup-clear-equipment')?.checked) {
+                newCp.w  = [];
+                newCp.ar = null;
+                newCp.sh = 0;
+                newCp.it = [];
+                newCp.g  = 0;
+                newCp.ac = 10;
+            }
+
             const encoded = encodeCompactParams(newCp);
             const b32    = await compressToBase32(JSON.stringify(encoded));
             window.location.href = `charactersheet.html?d=${b32}`;
