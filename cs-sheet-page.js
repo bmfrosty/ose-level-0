@@ -165,9 +165,6 @@ function buildSheetSpec(sd, opts) {
 const ABILITIES    = ['STR','DEX','CON','INT','WIS','CHA'];
 const ADM_MAP      = { 0:'aac', 1:'dac-matrix', 2:'dual', 3:'dual-matrix' };
 
-/** Shared CON modifier helper (matches shared-hit-points.js logic). */
-const getConMod = s => s >= 15 ? 1 : s >= 13 ? 1 : s <= 6 ? -1 : s <= 8 ? -1 : 0;
-
 /**
  * Short, deterministic, non-cryptographic fingerprint (FNV-1a 32-bit, hex,
  * truncated to 6 chars) of a string — used to show a compact "same campaign"
@@ -709,16 +706,9 @@ function initEditPanel(decoded) {
     // this reflects what's actually on the character, not a fresh session.
     document.getElementById('mc-cn').value = decoded.cn || '';
 
-    const minScores = decoded.sm || [3,3,3,3,3,3];
-    ['STR','DEX','CON','INT','WIS','CHA'].forEach((a, i) => {
-        const el = document.getElementById(`mc-min-${a}`);
-        if (el) el.value = minScores[i] ?? 3;
-    });
-
     const rcmVal = CODE_TO_RCM_MC[decoded.rcm] || 'strict';
     const rcmRadio = document.querySelector(`input[name="mc-rcm"][value="${rcmVal}"]`);
     if (rcmRadio) rcmRadio.checked = true;
-    document.getElementById('mc-esb').checked = decoded.esb !== 0;
 
     const rapVal = CODE_TO_RAP_MC[decoded.rap] || 'never';
     const rapRadio = document.querySelector(`input[name="mc-rap"][value="${rapVal}"]`);
@@ -729,40 +719,12 @@ function initEditPanel(decoded) {
     const rapTier1Radio = document.querySelector(`input[name="mc-rap-tier1"][value="${rapTier1Actual}"]`);
     if (rapTier1Radio) rapTier1Radio.checked = true;
 
-    const prmVal = decoded.prm ? String(decoded.prm) : 'user';
-    const prmRadio = document.querySelector(`input[name="mc-prm"][value="${prmVal}"]`);
-    if (prmRadio) prmRadio.checked = true;
-
     const HM_CODE_TO_NAME = { 0:'normal', 1:'blessed', 2:'5e', 3:'healthy' };
     const hpmVal = HM_CODE_TO_NAME[decoded.hm] || 'normal';
     const hpmRadio = document.querySelector(`input[name="mc-hpm"][value="${hpmVal}"]`);
     if (hpmRadio) hpmRadio.checked = true;
 
     document.getElementById('mc-il').checked  = !!decoded.il;
-
-    const wealthTier = (prefix, wmDefault, dmDefault) => {
-        const wmVal = decoded[`${prefix}wm`] || wmDefault;
-        const wmRadio = document.querySelector(`input[name="mc-${prefix}wm"][value="${wmVal}"]`);
-        if (wmRadio) wmRadio.checked = true;
-        const dc = document.getElementById(`mc-${prefix}dc`); if (dc) dc.value = decoded[`${prefix}dc`] ?? 3;
-        const ds = document.getElementById(`mc-${prefix}ds`); if (ds) ds.value = decoded[`${prefix}ds`] ?? 6;
-        const dm = document.getElementById(`mc-${prefix}dm`); if (dm) dm.value = decoded[`${prefix}dm`] ?? dmDefault;
-        const fg = document.getElementById(`mc-${prefix}fg`); if (fg) fg.value = decoded[`${prefix}fg`] ?? 0;
-    };
-    wealthTier('l0', 'dice', 1);
-    wealthTier('l1', 'dice', 10);
-    wealthTier('l2', 'xp-pct', 10);
-    wealthTier('x', 'xp-pct', 10);
-    document.getElementById('mc-wp').value = decoded.wp ?? 20;
-
-    document.getElementById('mc-un').checked = !!decoded.un;
-    document.getElementById('mc-ao').checked = decoded.ao !== 0;
-    const admValMc = decoded.adm || 0;
-    const admRadioMc = document.querySelector(`input[name="mc-adm"][value="${admValMc}"]`);
-    if (admRadioMc) admRadioMc.checked = true;
-    const sbValMc = decoded.sb === 1 ? 'dnd' : 'ose';
-    const sbRadioMc = document.querySelector(`input[name="mc-sb"][value="${sbValMc}"]`);
-    if (sbRadioMc) sbRadioMc.checked = true;
 
     document.getElementById('ep-name').value = decoded.n || '';
 
@@ -801,7 +763,7 @@ function initEditPanel(decoded) {
     const conScoreInit = decoded.s ? decoded.s[2] : 10;
 
     if (hpRollsData) {
-        const conMod0 = getConMod(conScoreInit);
+        const conMod0 = calculateModifier(conScoreInit);
         hpSec.innerHTML =
             `<strong>HP per Level:</strong> <span style="font-size:10px;color:#555;margin-left:8px;">CON mod: ${conMod0>=0?'+':''}${conMod0} &nbsp;·&nbsp; 🎲 rerolls 1 die</span>` +
             `<div id="ep-hp-rolls-wrap" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;"></div>`;
@@ -824,7 +786,7 @@ function initEditPanel(decoded) {
                 const idx      = parseInt(rb.dataset.index);
                 const sides    = parseInt(rb.dataset.sides);
                 const conScore = parseInt(document.getElementById('ep-base-CON')?.dataset.base) || conScoreInit;
-                const hpVal    = Math.max(1, Math.floor(Math.random() * sides) + 1 + getConMod(conScore));
+                const hpVal    = Math.max(1, Math.floor(Math.random() * sides) + 1 + calculateModifier(conScore));
                 const inp = hpSec.querySelector(`.ep-edit-hp[data-index='${idx}']`);
                 if (inp) inp.value = hpVal;
             });
@@ -839,7 +801,7 @@ function initEditPanel(decoded) {
             const sides    = CLASS_HD[decoded.c] || 6;
             const lvl      = decoded.l || 1;
             const conScore = parseInt(document.getElementById('ep-base-CON')?.dataset.base) || conScoreInit;
-            const conMod   = getConMod(conScore);
+            const conMod   = calculateModifier(conScore);
             let total = 0;
             for (let i = 0; i < lvl; i++) total += Math.max(1, Math.floor(Math.random() * sides) + 1 + conMod);
             hpSec.querySelector('#ep-hp').value = Math.max(1, total);
@@ -853,6 +815,10 @@ function initEditPanel(decoded) {
     document.getElementById('ep-undead').checked = !!decoded.un;
     document.getElementById('ep-qr').checked     = decoded.qr !== 0;
     document.getElementById('ep-nl0').checked    = !!decoded.nl0;
+    document.getElementById('ep-ao').checked     = decoded.ao !== 0;
+    const sbVal   = decoded.sb === 1 ? 'dnd' : 'ose';
+    const sbRadio = document.querySelector(`input[name="ep-sb"][value="${sbVal}"]`);
+    if (sbRadio) sbRadio.checked = true;
 
     // ── Apply Changes (Modify Character) ──────────────────────────────────────
     document.getElementById('ep-apply-btn').addEventListener('click', async () => {
@@ -887,60 +853,40 @@ function initEditPanel(decoded) {
             newHpRolls = decoded.hr || [];
         }
 
-        // Campaign-tier fields — read every setting from its panel input and
-        // write it directly (not omitted-when-default the way fresh
-        // generation is, for simplicity — this is a one-off manual edit, and
-        // the character is already being marked Modified).
-        const newMinScores = ['STR','DEX','CON','INT','WIS','CHA'].map(a => {
-            const v = parseInt(document.getElementById(`mc-min-${a}`)?.value);
-            return isNaN(v) ? 3 : Math.max(3, Math.min(18, v));
-        });
+        // Campaign-tier fields — read every remaining panel input and write it
+        // directly (not omitted-when-default the way fresh generation is, for
+        // simplicity — this is a one-off manual edit, and the character is
+        // already being marked Modified). Min Ability Scores, Exclude
+        // Spellblade, Prime Requisite Mode, and Starting Wealth were removed
+        // from this panel (2026-07-08) — they only affect character
+        // generation, so editing them here had zero effect on an existing
+        // character; ...decoded above carries their current values forward
+        // unchanged. Player Options (Show Undead Names, 1977 Ability Ordering,
+        // AC Display, Branding) moved to Edit Sheet Options the same day.
+        // Race/Class Mode (rcm) was cut in that same pass, then restored the
+        // same day after review: unlike the rest of Section 4, it keeps
+        // mattering post-creation — it gates whether a Human character
+        // currently has Blessed/Decisiveness/Leadership (checked fresh at
+        // every level-up and render), so a referee needs to be able to move a
+        // character into or out of human-abilities eligibility after the fact.
         const rcmValMc = document.querySelector('input[name="mc-rcm"]:checked')?.value || 'strict';
         const rapValMc = document.querySelector('input[name="mc-rap"]:checked')?.value || 'never';
-        const prmValMc = document.querySelector('input[name="mc-prm"]:checked')?.value || 'user';
         const HM_NAME_TO_CODE = { normal:0, blessed:1, '5e':2, healthy:3 };
         const hpmValMc = HM_NAME_TO_CODE[document.querySelector('input[name="mc-hpm"]:checked')?.value] || 0;
-        const admValMc = parseInt(document.querySelector('input[name="mc-adm"]:checked')?.value || '0');
-        const sbValMc  = document.querySelector('input[name="mc-sb"]:checked')?.value === 'dnd';
-        const wealthField = (prefix, defWm) => ({
-            wm: document.querySelector(`input[name="mc-${prefix}wm"]:checked`)?.value || defWm,
-            dc: parseInt(document.getElementById(`mc-${prefix}dc`)?.value) || 3,
-            ds: parseInt(document.getElementById(`mc-${prefix}ds`)?.value) || 6,
-            dm: parseInt(document.getElementById(`mc-${prefix}dm`)?.value) || 1,
-            fg: parseInt(document.getElementById(`mc-${prefix}fg`)?.value) || 0,
-        });
-        const l0 = wealthField('l0', 'dice');
-        const l1 = wealthField('l1', 'dice');
-        const l2 = wealthField('l2', 'xp-pct');
-        const xw = wealthField('x', 'xp-pct');
 
         const newCp = { ...decoded, p: PROG_TO_CODE[newProg], s: newScores, h: newHp,
                         hr: newHpRolls, mx: 1,
-                        cn: document.getElementById('mc-cn').value.trim().slice(0, 64) || undefined,
-                        sm: newMinScores,
+                        cn: document.getElementById('mc-cn').value.trim().slice(0, 72) || undefined,
                         rcm: RCM_CODE[rcmValMc] || 'ST',
-                        esb: document.getElementById('mc-esb').checked ? undefined : 0,
                         rap: RAP_CODE[rapValMc] || 'NV',
-                        prm: prmValMc === 'user' ? 0 : parseInt(prmValMc),
                         il: document.getElementById('mc-il').checked ? 1 : 0,
                         // nl0 ("No Level 0 Equipment") is NOT edited here — it was
                         // reclassified Character-tier 2026-07-08 and now lives in
                         // Edit Sheet Options instead; ...decoded above already
                         // carries its current value forward unchanged.
-                        l0wm: l0.wm, l0dc: l0.dc, l0ds: l0.ds, l0dm: l0.dm, l0fg: l0.fg,
-                        l1wm: l1.wm, l1dc: l1.dc, l1ds: l1.ds, l1dm: l1.dm, l1fg: l1.fg,
-                        l2wm: l2.wm, l2dc: l2.dc, l2ds: l2.ds, l2dm: l2.dm, l2fg: l2.fg,
-                        xwm: xw.wm, xdc: xw.dc, xds: xw.ds, xdm: xw.dm, xfg: xw.fg,
-                        wp: parseInt(document.getElementById('mc-wp').value) || 20,
-                        un: document.getElementById('mc-un').checked ? 1 : 0,
-                        ao: document.getElementById('mc-ao').checked ? 1 : 0,
-                        sb: sbValMc ? 1 : undefined,
                       };
         if (hpmValMc) newCp.hm = hpmValMc; else delete newCp.hm;
-        if (admValMc) newCp.adm = admValMc; else delete newCp.adm;
         if (!newCp.cn) delete newCp.cn;
-        if (!newCp.esb && newCp.esb !== 0) delete newCp.esb;
-        if (!newCp.sb) delete newCp.sb;
         delete newCp.hd;
         if (hasAnyAdj) { newCp.bs = newBaseScores; } else { delete newCp.bs; }
 
@@ -974,6 +920,12 @@ function initEditPanel(decoded) {
         // No Level 0 Equipment ("keep 0-level gear past level 0", reclassified
         // Character-tier 2026-07-08) — freely editable here, does not set mx.
         if (document.getElementById('ep-nl0')?.checked) newCp.nl0 = 1; else delete newCp.nl0;
+        // 1977 Ability Score Ordering and Character Sheet Branding moved here
+        // from Modify Character (2026-07-08) — cosmetic per-sheet display
+        // prefs a player can freely tweak, same reasoning as Show Undead
+        // Names and AC Display Mode above; doesn't set mx.
+        newCp.ao = document.getElementById('ep-ao')?.checked ? 1 : 0;
+        if (document.querySelector('input[name="ep-sb"]:checked')?.value === 'dnd') newCp.sb = 1; else delete newCp.sb;
 
         // Clear equipment: null out weapon, armor, shield, items, and gold;
         // reset AC to 10 (unarmored). Attack bonus, melee/ranged modifiers, and
@@ -1055,7 +1007,7 @@ function initEditPanel(decoded) {
 
             const className = CODE_TO_CLASS_LU[selectedClassCode] || 'Fighter_CLASS';
             const conScore  = decoded.s ? decoded.s[2] : 10;
-            const conMod    = getConMod(conScore);
+            const conMod    = calculateModifier(conScore);
             const l0HP      = decoded.h || 1;
 
             const getHdStr = (cls, lvl) => {
@@ -1071,9 +1023,15 @@ function initEditPanel(decoded) {
             const DEMIHUMAN_CODES_L01 = new Set(['DW','EL','HA','GN']);
             // Race never changes at this level-up step (decoded.r is carried forward
             // regardless of which class button was picked), so Blessed eligibility
-            // only depends on race — matching hasBlessed's check in gen-ui.js.
+            // only depends on race — matching gen-core.js's own check. Blessed
+            // governs this character's own roll in place of hpMode0 (doesn't
+            // combine with Re-roll 1s/2s on one roll) — but newCp.hm below still
+            // stores the referee's raw hpMode0 unchanged, so the campaign's
+            // actual chosen style isn't lost just because this one character
+            // happened to roll under Blessed instead.
             const hasBlessed0 = decoded.rcm && decoded.rcm !== 'ST' && decoded.r === 'HU';
-            const effMode0 = hasBlessed0 ? 1 : hpMode0;
+            // Never overrides 5e (hpMode0 2) — no die to roll twice there.
+            const effMode0 = (hasBlessed0 && hpMode0 !== 2) ? 1 : hpMode0;
             const roll = () => Math.floor(Math.random() * sides) + 1;
 
             let l1HP;
@@ -1170,7 +1128,7 @@ function initEditPanel(decoded) {
             const newUn     = document.getElementById('lup-undead').checked ? 1 : 0;
             const newQr     = document.getElementById('lup-qr').checked     ? 1 : 0;
             const conScore  = decoded.s ? decoded.s[2] : 10;
-            const conMod    = getConMod(conScore);
+            const conMod    = calculateModifier(conScore);
             const className = CODE_TO_CLASS_LU[decoded.c] || 'Fighter_CLASS';
 
             const getHdStr = (cls, lvl) => {
@@ -1186,9 +1144,15 @@ function initEditPanel(decoded) {
                 const l0HP   = newHpRolls[0] || 1;
                 const hpMode = decoded.hm || 0;
                 // Race never changes across levels, so Blessed eligibility only
-                // depends on race — matches the hasBlessed0 fix at the level-0→1 step.
+                // depends on race — matches gen-core.js's own check. Blessed
+                // governs this character's own roll in place of hpMode (doesn't
+                // combine with Re-roll 1s/2s on one roll) — but newCp below still
+                // carries decoded.hm forward unchanged via ...decoded, so the
+                // campaign's actual chosen style isn't lost just because this
+                // one character happened to roll under Blessed instead.
                 const hasBlessed = decoded.rcm && decoded.rcm !== 'ST' && decoded.r === 'HU';
-                const effectiveHpMode = hasBlessed ? 1 : hpMode;
+                // Never overrides 5e (hpMode 2) — no die to roll twice there.
+                const effectiveHpMode = (hasBlessed && hpMode !== 2) ? 1 : hpMode;
                 const roll   = sides => Math.floor(Math.random() * sides) + 1;
 
                 for (let lvl = curLevel + 1; lvl <= newLevel; lvl++) {

@@ -179,8 +179,17 @@ export async function decompressFromBase64Url(b64url) {
  * il      0|1         includeLevel0HP — if 1, hr[0] is added to h; if 0, hr[0] sets the
  *                     floor for hr[1] but does not count toward h
  * hm      0|1|2|3     HP rolling mode: omit/0=normal random, 1=blessed (roll twice take
- *                     best), 2=5e style (average die value, rounded up), 3=healthy (treat
- *                     every die as its maximum value)
+ *                     best), 2=5e style (max die at level 1, average at level 2+), 3=healthy
+ *                     (re-roll any die showing 1 or 2). This is always the referee's raw
+ *                     campaign-wide choice — never overwritten by an individual character's
+ *                     own eligibility for anything (2026-07-08 fix), and `buildOptionsLine()`'s
+ *                     footer chip deliberately shows this raw value too (not a per-character
+ *                     override), so every sheet from the same campaign is directly comparable.
+ *                     A Human character's racial Blessed ability is a separate, unstored,
+ *                     per-character value (derived from race + rcm) that overrides this only
+ *                     for that one character's own HP *rolls*, not for storage or the footer
+ *                     — see gen-core.js's `effHpMode`. Never overrides 5e (hm=2) — no die to
+ *                     roll twice under a static per-level increase.
  *
  * ── Saving throws ─────────────────────────────────────────────────────────────
  * sv      number[5]   0-Level only: fixed save values [Death,Wands,Paralysis,Breath,Spells]
@@ -219,7 +228,7 @@ export async function decompressFromBase64Url(b64url) {
  * ── Referee ruleset (not needed for this character; carried only so ─────────
  * ── buildGeneratorURL()'s "Back to Generator" link can reconstruct the ──────
  * ── full Campaign-tier settings — see gen-ui.js's buildCampaignRulesetCp()) ─
- * cn      string       Campaign Name (Section 0), up to 64 Unicode characters — omitted when
+ * cn      string       Campaign Name (Section 0), up to 72 Unicode characters — omitted when
  *                     empty. Stored raw here (the whole `cp` blob is already gzip-compressed),
  *                     but reconstructed into the generator.html URL's `cn` param as a
  *                     *separately* gzip+base64url-compressed string (compressToBase64Url) —
@@ -423,9 +432,20 @@ export function buildOptionsLine(cp) {
     // running a table already knows whether the class is allowed at all;
     // a per-sheet confirmation chip was unnecessary.
     parts.push(cp.nl0 ? 'L0 Equipment: None' : 'L0 Equipment: Standard');
+    // Deliberately the raw campaign value (cp.hm), not the per-character
+    // effective mode — a qualifying Human's own roll actually uses Blessed
+    // regardless of cp.hm (see gen-core.js's effHpMode and the level-up
+    // transitions' effMode0/effectiveHpMode), but showing that here instead
+    // of cp.hm would make a Human's hm=0 and hm=3 look identical on this
+    // chip, hiding it if that one character's cp.hm has drifted from the
+    // rest of the table (e.g. edited via Modify Character). Every sheet from
+    // the same campaign should show the same value here for that reason. The
+    // Blessed racial ability itself is still visible on a qualifying
+    // character's own printed ability list (from RACE_INFO), so nothing is
+    // lost by not also encoding it into this chip.
     if (cp.hm === 2)      parts.push('5e HP (max L1 / avg L2+)');
     else if (cp.hm === 1) parts.push('Blessed HP');
-    if (cp.hm === 3)      parts.push('Re-roll 1s and 2s');
+    else if (cp.hm === 3) parts.push('Re-roll 1s and 2s');
     if (lvl >= 1) parts.push(cp.il ? 'L0 HP: Yes' : 'L0 HP: No');
     if (cp.prm != null) parts.push(cp.prm ? `Prime Req \u2265${cp.prm}` : 'User Min Scores');
     // Starting Wealth \u2014 show the actual method (dice/fixed/xp-pct) for this
@@ -612,15 +632,18 @@ export function renderCharacterSheetHTML(sheet) {
 
     // ── Equipment ─────────────────────────────────────────────────────────────
     const eq = sheet.equipment;
-    // Items list for page 2 ITEMS column — weapons/armor/shield already in Weapons box
+    // Items list for page 2 ITEMS column — weapons/armor/shield already in Weapons box.
+    // No inner "Items:" label — the box is already labeled ITEMS by its own
+    // sectionHeader div just above it, matching the label-free MAGIC ITEMS and
+    // ITEMS (cont.) boxes beside it. When there's nothing prefilled, this shows
+    // the same blank ruled lines those boxes use rather than a redundant label
+    // or "no items" filler text, so a printed sheet's Items box is genuinely
+    // blank space for a player to write gear into by hand (e.g. after using
+    // "Clear Weapons, Armor & Items"), not text eating into that space.
     const filteredItemsHTML = filteredItems.map(item => `<li>${item}</li>`).join('');
     const equipmentListHTML = filteredItems.length > 0
-        ? `<div style='font-size: 0.85em;'>
-            <div><strong>Items:</strong>
-                <ul style='margin: 2px 0; padding-left: 18px;'>${filteredItemsHTML}</ul>
-            </div>
-           </div>`
-        : `<span style='color:#666; font-size:0.85em;'>No additional items</span>`;
+        ? `<ul style='margin: 0; padding-left: 18px; font-size: 0.85em;'>${filteredItemsHTML}</ul>`
+        : `<div style='font-size: 0.85em; line-height: 2.1em;'>${'&nbsp;<br>'.repeat(7)}&nbsp;</div>`;
     // Starting AC + gold for the footer
     const startingAC = eq.startingAC;
     const startingACDisplay = (startingAC !== null && startingAC !== undefined)

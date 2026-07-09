@@ -247,7 +247,7 @@
         <details class="mc-section">
             <summary>0. Campaign Name</summary>
             <div>
-                <input type="text" id="mc-cn" maxlength="64" placeholder="Enter campaign/table name..." style="width:100%;max-width:300px;padding:5px;font-size:12px;border:1px solid #ccc;border-radius:3px;">
+                <input type="text" id="mc-cn" maxlength="72" placeholder="Enter campaign/table name..." style="width:100%;max-width:300px;padding:5px;font-size:12px;border:1px solid #ccc;border-radius:3px;">
             </div>
         </details>
 
@@ -261,25 +261,13 @@
         </details>
 
         <details class="mc-section">
-            <summary>3. Minimum Ability Scores (referee defaults)</summary>
-            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px 14px;max-width:320px;">
-                <label style="display:flex;align-items:center;gap:4px;">STR <input type="number" id="mc-min-STR" value="3" min="3" max="18" style="width:44px;padding:2px;"></label>
-                <label style="display:flex;align-items:center;gap:4px;">DEX <input type="number" id="mc-min-DEX" value="3" min="3" max="18" style="width:44px;padding:2px;"></label>
-                <label style="display:flex;align-items:center;gap:4px;">CON <input type="number" id="mc-min-CON" value="3" min="3" max="18" style="width:44px;padding:2px;"></label>
-                <label style="display:flex;align-items:center;gap:4px;">INT <input type="number" id="mc-min-INT" value="3" min="3" max="18" style="width:44px;padding:2px;"></label>
-                <label style="display:flex;align-items:center;gap:4px;">WIS <input type="number" id="mc-min-WIS" value="3" min="3" max="18" style="width:44px;padding:2px;"></label>
-                <label style="display:flex;align-items:center;gap:4px;">CHA <input type="number" id="mc-min-CHA" value="3" min="3" max="18" style="width:44px;padding:2px;"></label>
-            </div>
-        </details>
-
-        <details class="mc-section">
-            <summary>4. Race/Class Restrictions</summary>
+            <summary>4. Race/Class Mode</summary>
             <div>
                 <label style="display:block;margin-bottom:4px;cursor:pointer;"><input type="radio" name="mc-rcm" value="strict" checked> Strict OSE</label>
                 <label style="display:block;margin-bottom:4px;cursor:pointer;"><input type="radio" name="mc-rcm" value="strict-human"> Strict + Human Abilities</label>
                 <label style="display:block;margin-bottom:4px;cursor:pointer;"><input type="radio" name="mc-rcm" value="traditional-extended"> Extended Levels + Human Abilities</label>
-                <label style="display:block;margin-bottom:8px;cursor:pointer;"><input type="radio" name="mc-rcm" value="allow-all"> Allow All Combinations</label>
-                <label style="display:block;cursor:pointer;"><input type="checkbox" id="mc-esb" checked> Exclude Spellblade</label>
+                <label style="display:block;cursor:pointer;"><input type="radio" name="mc-rcm" value="allow-all"> Allow All Combinations</label>
+                <span style="font-size:10px;color:#555;display:block;margin-top:6px;">Unlike the rest of Section 4 (Exclude Spellblade, and the actual race+class pick — neither has any effect once a character already exists), this one keeps working after creation: it gates whether a Human character currently has Blessed/Decisiveness/Leadership, checked fresh at every level-up and on every sheet render — not baked in at generation.</span>
             </div>
         </details>
 
@@ -303,94 +291,16 @@
         <details class="mc-section">
             <summary>6. Referee Options</summary>
             <div>
-                <strong style="font-size:11px;">Prime Requisite:</strong>
-                <div style="display:flex;gap:10px;flex-wrap:wrap;margin:4px 0 10px;">
-                    <label style="display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="radio" name="mc-prm" value="user" checked> User Minimums</label>
-                    <label style="display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="radio" name="mc-prm" value="9"> ≥9</label>
-                    <label style="display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="radio" name="mc-prm" value="13"> ≥13</label>
-                </div>
-
                 <strong style="font-size:11px;">HP Rolling Style:</strong>
                 <div style="display:flex;gap:10px;flex-wrap:wrap;margin:4px 0 10px;">
                     <label style="display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="radio" name="mc-hpm" value="normal" checked> Normal</label>
                     <label style="display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="radio" name="mc-hpm" value="healthy"> Re-roll 1s/2s</label>
-                    <label style="display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="radio" name="mc-hpm" value="blessed"> Blessed</label>
+                    <label style="display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="radio" name="mc-hpm" value="blessed"> Everyone is Blessed</label>
                     <label style="display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="radio" name="mc-hpm" value="5e"> 5e Style</label>
                 </div>
+                <span style="font-size:10px;color:#555;display:block;margin-bottom:8px;">Humans separately get their own Blessed racial bonus (roll twice, take best) whenever Race/Class Restrictions allow human racial abilities — it stacks with whichever style is picked above (e.g. a Blessed human under "Re-roll 1s/2s" gets both).</span>
 
-                <label style="display:block;margin-bottom:10px;cursor:pointer;"><input type="checkbox" id="mc-il"> Include Level 0 HP</label>
-
-                <strong style="font-size:11px;">Starting Wealth:</strong>
-
-                <div class="mc-subwealth">
-                    <strong style="font-size:10px;">Level 0:</strong>
-                    <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:3px;">
-                        <label style="display:flex;align-items:center;gap:3px;cursor:pointer;"><input type="radio" name="mc-l0wm" value="dice" checked> Dice</label>
-                        <input type="number" id="mc-l0dc" value="3" min="1" style="width:36px;padding:2px;">
-                        <select id="mc-l0ds" style="padding:2px;"><option value="4">d4</option><option value="6" selected>d6</option><option value="8">d8</option><option value="10">d10</option><option value="12">d12</option></select>
-                        <span>&times;</span><input type="number" id="mc-l0dm" value="1" min="1" style="width:36px;padding:2px;">
-                        <label style="display:flex;align-items:center;gap:3px;cursor:pointer;"><input type="radio" name="mc-l0wm" value="fixed"> Fixed</label>
-                        <input type="number" id="mc-l0fg" value="0" min="0" style="width:50px;padding:2px;"> gp
-                    </div>
-                </div>
-
-                <div class="mc-subwealth">
-                    <strong style="font-size:10px;">Level 1:</strong>
-                    <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:3px;">
-                        <label style="display:flex;align-items:center;gap:3px;cursor:pointer;"><input type="radio" name="mc-l1wm" value="dice" checked> Dice</label>
-                        <input type="number" id="mc-l1dc" value="3" min="1" style="width:36px;padding:2px;">
-                        <select id="mc-l1ds" style="padding:2px;"><option value="4">d4</option><option value="6" selected>d6</option><option value="8">d8</option><option value="10">d10</option><option value="12">d12</option></select>
-                        <span>&times;</span><input type="number" id="mc-l1dm" value="10" min="1" style="width:36px;padding:2px;">
-                        <label style="display:flex;align-items:center;gap:3px;cursor:pointer;"><input type="radio" name="mc-l1wm" value="fixed"> Fixed</label>
-                        <input type="number" id="mc-l1fg" value="0" min="0" style="width:50px;padding:2px;"> gp
-                    </div>
-                </div>
-
-                <div class="mc-subwealth">
-                    <strong style="font-size:10px;">Level 2+:</strong>
-                    <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:3px;">
-                        <label style="display:flex;align-items:center;gap:3px;cursor:pointer;"><input type="radio" name="mc-l2wm" value="dice"> Dice</label>
-                        <input type="number" id="mc-l2dc" value="3" min="1" style="width:36px;padding:2px;">
-                        <select id="mc-l2ds" style="padding:2px;"><option value="4">d4</option><option value="6" selected>d6</option><option value="8">d8</option><option value="10">d10</option><option value="12">d12</option></select>
-                        <span>&times;</span><input type="number" id="mc-l2dm" value="10" min="1" style="width:36px;padding:2px;">
-                        <label style="display:flex;align-items:center;gap:3px;cursor:pointer;"><input type="radio" name="mc-l2wm" value="fixed"> Fixed</label>
-                        <input type="number" id="mc-l2fg" value="0" min="0" style="width:50px;padding:2px;"> gp
-                        <label style="display:flex;align-items:center;gap:3px;cursor:pointer;"><input type="radio" name="mc-l2wm" value="xp-pct" checked> <input type="number" id="mc-wp" value="20" min="0" max="1000" style="width:50px;padding:2px;"> % of min XP for level</label>
-                    </div>
-                </div>
-
-                <div class="mc-subwealth">
-                    <strong style="font-size:10px;">By XP:</strong> <span style="font-size:9px;color:#777;">(only affects a future character generated via "Back to Generator")</span>
-                    <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:3px;">
-                        <label style="display:flex;align-items:center;gap:3px;cursor:pointer;"><input type="radio" name="mc-xwm" value="dice"> Dice</label>
-                        <input type="number" id="mc-xdc" value="3" min="1" style="width:36px;padding:2px;">
-                        <select id="mc-xds" style="padding:2px;"><option value="4">d4</option><option value="6" selected>d6</option><option value="8">d8</option><option value="10">d10</option><option value="12">d12</option></select>
-                        <span>&times;</span><input type="number" id="mc-xdm" value="10" min="1" style="width:36px;padding:2px;">
-                        <label style="display:flex;align-items:center;gap:3px;cursor:pointer;"><input type="radio" name="mc-xwm" value="fixed"> Fixed</label>
-                        <input type="number" id="mc-xfg" value="0" min="0" style="width:50px;padding:2px;"> gp
-                        <label style="display:flex;align-items:center;gap:3px;cursor:pointer;"><input type="radio" name="mc-xwm" value="xp-pct" checked> % of assigned XP (shares the Level 2+ % above)</label>
-                    </div>
-                </div>
-            </div>
-        </details>
-
-        <details class="mc-section">
-            <summary>8. Player Options (Campaign-tier subset)</summary>
-            <div>
-                <label style="display:block;margin-bottom:4px;cursor:pointer;"><input type="checkbox" id="mc-un"> Show Undead Monster Names</label>
-                <label style="display:block;margin-bottom:8px;cursor:pointer;"><input type="checkbox" id="mc-ao" checked> 1977 Ability Score Ordering</label>
-                <strong style="font-size:11px;">AC Display:</strong>
-                <div style="display:flex;flex-direction:column;gap:3px;margin:4px 0 10px;">
-                    <label style="display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="radio" name="mc-adm" value="0" checked> Ascending Armor Class</label>
-                    <label style="display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="radio" name="mc-adm" value="1"> Descending AC + Attack Matrix</label>
-                    <label style="display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="radio" name="mc-adm" value="2"> Dual Format</label>
-                    <label style="display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="radio" name="mc-adm" value="3"> Dual Format + Attack Matrix</label>
-                </div>
-                <strong style="font-size:11px;">Character Sheet Branding:</strong>
-                <div style="display:flex;gap:14px;margin-top:4px;">
-                    <label style="display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="radio" name="mc-sb" value="ose" checked> Old-School Essentials</label>
-                    <label style="display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="radio" name="mc-sb" value="dnd"> Dungeons &amp; Dragons</label>
-                </div>
+                <label style="display:block;cursor:pointer;"><input type="checkbox" id="mc-il"> Include Level 0 HP</label>
             </div>
         </details>
 
@@ -442,6 +352,15 @@
                 <label style="display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="checkbox" id="ep-undead"> Show Undead Monster Names</label>
                 <label style="display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="checkbox" id="ep-qr" checked> Show QR Code</label>
                 <label style="display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="checkbox" id="ep-nl0" checked> No Level 0 Equipment <span style="font-size:10px;color:#555;">(don't keep 0-level gear past level 0)</span></label>
+                <label style="display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="checkbox" id="ep-ao" checked> 1977 Ability Score Ordering</label>
+            </div>
+        </div>
+
+        <div style="margin-bottom:10px;">
+            <strong>Character Sheet Branding:</strong>
+            <div style="display:flex;gap:14px;margin-top:4px;">
+                <label style="display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="radio" name="ep-sb" value="ose" checked> Old-School Essentials</label>
+                <label style="display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="radio" name="ep-sb" value="dnd"> Dungeons &amp; Dragons</label>
             </div>
         </div>
 

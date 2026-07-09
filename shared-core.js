@@ -1089,7 +1089,7 @@ export function parseHitDice(hitDiceString) {
  * @param {number} options.conModifier - CON modifier
  * @param {Object} options.classData - Class data module (OSE or Gygar)
  * @param {boolean} [options.includeLevel0HP=false] - Whether to include level 0 HP
- * @param {number} [options.hpMode=0] - HP rolling mode: 0=normal, 1=blessed, 2=5e, 3=re-roll 1s and 2s (all levels)
+ * @param {number} [options.hpMode=0] - HP rolling mode governing THIS roll: 0=normal, 1=blessed, 2=5e, 3=re-roll 1s and 2s (all levels). A character's own racial Blessed does not combine/stack with this — see gen-core.js's `blessed` derivation, which resolves the two into a single effective mode *before* calling here (Blessed wins if eligible), so this function only ever needs to handle one mode at a time. The referee's raw chosen mode is still stored separately in `cp.hm` regardless of what's passed here — see the callers.
  * @param {number[]|null} [options.fixedRolls=null] - If provided, use these per-entry HP values instead of rolling
  * @returns {{ max: number, rolls: number[], dice: number[] }} HP result with per-level breakdown
  */
@@ -1206,7 +1206,7 @@ export function rollHitPoints(options) {
     }
 
     const label = rolls.map((r,i) => `[${i===0 ? 'L0' : 'L'+i}:${r}]`).join(' ');
-    console.log(`HP total: ${label} = ${totalHP}  (bg L0 hp=${backgroundHP}${mode===1?' ✨blessed':mode===2?' 🎲5e':''})`);
+    console.log(`HP total: ${label} = ${totalHP}  (bg L0 hp=${backgroundHP}${mode===1?' ✨blessed':mode===2?' 🎲5e':mode===3?' 🎲reroll12':''})`);
     return { max: totalHP, rolls, dice, backgroundHP, l0RawHP, l1RawHP, l1Die, l1Sides };
 }
 

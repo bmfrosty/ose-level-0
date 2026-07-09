@@ -84,7 +84,7 @@ let showQRCode = true;
 let sheetBranding = 'ose';     // 'ose' | 'dnd'
 let basicAbilityOrdering = true;
 let characterName = '';
-// Campaign Name (Section 0) — identifies the referee's table, up to 64
+// Campaign Name (Section 0) — identifies the referee's table, up to 72
 // Unicode characters. Carried raw in localStorage/cp (both already have
 // their own compression or aren't URL-length-constrained), but the
 // generator.html URL param is gzip+base64url compressed via
@@ -592,9 +592,15 @@ async function runGenerate() {
 
     const classData = getClassDataForMode(progressionMode);
     const effectiveLevel = xpMode ? classData.getLevelFromXP(selectedClass, xpAmount) : selectedLevel;
-    const hasBlessed = selectedRace === 'Human_RACE' && raceClassMode !== 'strict';
+    // Human racial Blessed (roll HP twice, take best) is derived and applied
+    // inside generateCharacterV3 itself from race + raceClassMode — it
+    // overrides this hpMode for THIS character's own roll when eligible, but
+    // (unlike the old code here) no longer clobbers what actually gets stored
+    // in cp.hm: the referee's raw HP Rolling Style choice below is passed
+    // through unmodified, so it stays intact as the campaign's real setting
+    // even for a character whose own roll used Blessed instead.
     const hpMode = hpRollingMode === '5e' ? 2
-        : (hpRollingMode === 'blessed' || hasBlessed) ? 1
+        : hpRollingMode === 'blessed' ? 1
         : hpRollingMode === 'healthy' ? 3 : 0;
 
     const fixedScoresForGen = useFixedScores ? readScoresFromInputs() : null;
@@ -714,6 +720,8 @@ async function generateZeroLevel() {
     const fixedName   = document.getElementById('characterName')?.value.trim() || '';
     const _fixedAdj   = fixedAdjustments;
     fixedAdjustments  = null;
+    // L0 is never Blessed regardless (see shared-core.js's rollHitPoints),
+    // so no need to derive it here either.
     const hpMode = hpRollingMode === 'healthy' ? 3 : hpRollingMode === 'blessed' ? 1 : 0;
 
     // Whether level 0 itself shows racial ability adjustments/minimums is now
@@ -1455,7 +1463,7 @@ export function initializeEventListeners() {
     // Buttons
     document.getElementById('characterName')?.addEventListener('change', ()=>saveCurrentSettings());
     document.getElementById('campaignName')?.addEventListener('change', (e)=>{
-        campaignName = e.target.value.slice(0, 64);
+        campaignName = e.target.value.slice(0, 72);
         e.target.value = campaignName;
         updateCampaignNameCompressed();
         saveCurrentSettings();
