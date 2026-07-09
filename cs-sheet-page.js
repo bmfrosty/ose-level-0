@@ -718,6 +718,24 @@ function initEditPanel(decoded) {
     const rapTier1Actual = (rapVal === 'always' || rapVal === 'separate-only') ? 'applied' : 'not-applied';
     const rapTier1Radio = document.querySelector(`input[name="mc-rap-tier1"][value="${rapTier1Actual}"]`);
     if (rapTier1Radio) rapTier1Radio.checked = true;
+    // Clicking a tier-1 radio only changes visual grouping — it doesn't touch
+    // mc-rap itself, so without this, clicking tier-1 without also picking a
+    // tier-2 option leaves whatever mc-rap radio was last checked selected,
+    // even if it belongs to the *other* tier-1 group (e.g. tier-1 shows
+    // "Applied at level 0" but mc-rap is still "never", from "Not applied").
+    // Auto-select that group's first option whenever the checked mc-rap
+    // radio doesn't actually belong to the newly-picked tier.
+    const RAP_TIER2_GROUPS = { applied: ['separate-only', 'always'], 'not-applied': ['never', 'from-separate', 'from-level-1'] };
+    document.querySelectorAll('input[name="mc-rap-tier1"]').forEach(tier1Radio => {
+        tier1Radio.addEventListener('change', () => {
+            const group = RAP_TIER2_GROUPS[tier1Radio.value];
+            const checkedTier2 = document.querySelector('input[name="mc-rap"]:checked')?.value;
+            if (!group.includes(checkedTier2)) {
+                const defaultTier2 = document.querySelector(`input[name="mc-rap"][value="${group[0]}"]`);
+                if (defaultTier2) defaultTier2.checked = true;
+            }
+        });
+    });
 
     const HM_CODE_TO_NAME = { 0:'normal', 1:'blessed', 2:'5e', 3:'healthy' };
     const hpmVal = HM_CODE_TO_NAME[decoded.hm] || 'normal';
@@ -843,11 +861,17 @@ function initEditPanel(decoded) {
         const newScores  = ABILITIES.map((a, i) => Math.max(3, Math.min(18, newBaseScores[i] + newAdjVals[i])));
         const hasAnyAdj  = newAdjVals.some(v => v !== 0);
 
+        // Read the new Include Level 0 HP state before computing newHp — using
+        // decoded.il (the pre-edit value) here instead would let cp.h and
+        // cp.il fall out of sync whenever this checkbox is actually changed
+        // (e.g. off->on saves a total that's missing hr[0]'s HP even though
+        // cp.il=1 says it should be included).
+        const newIl = document.getElementById('mc-il').checked ? 1 : 0;
         const hpRollInputs = document.querySelectorAll('#ep-hp-section .ep-edit-hp');
         let newHp, newHpRolls;
         if (hpRollInputs.length > 0) {
             newHpRolls = Array.from(hpRollInputs).map(inp => Math.max(1, parseInt(inp.value) || 1));
-            newHp = newHpRolls.reduce((a, b, i) => (i === 0 && !decoded.il) ? a : a + b, 0);
+            newHp = newHpRolls.reduce((a, b, i) => (i === 0 && !newIl) ? a : a + b, 0);
         } else {
             newHp      = Math.max(1, parseInt(document.querySelector('#ep-hp-section #ep-hp')?.value) || decoded.h || 1);
             newHpRolls = decoded.hr || [];
@@ -879,7 +903,7 @@ function initEditPanel(decoded) {
                         cn: document.getElementById('mc-cn').value.trim().slice(0, 72) || undefined,
                         rcm: RCM_CODE[rcmValMc] || 'ST',
                         rap: RAP_CODE[rapValMc] || 'NV',
-                        il: document.getElementById('mc-il').checked ? 1 : 0,
+                        il: newIl,
                         // nl0 ("No Level 0 Equipment") is NOT edited here — it was
                         // reclassified Character-tier 2026-07-08 and now lives in
                         // Edit Sheet Options instead; ...decoded above already
