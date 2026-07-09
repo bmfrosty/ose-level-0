@@ -31,6 +31,7 @@ import {
     ARMOR, purchaseEquipment, getBackgroundByProfession,
     calculateSavingThrows,
     isSeparateRaceClassForPolicy,
+    RCM_CODE, RAP_CODE,
 } from './cs-core.js';
 
 export { compressToBase32 } from './cs-core.js';
@@ -107,6 +108,10 @@ function getDieSidesForLevel(classCode, levelIndex) {
 
 /** Compact code → progression mode name (e.g. 'O' → 'ose') */
 const CODE_TO_PROG = { O:'ose', S:'smoothprog', L:'ll' };
+/** Compact code → Race/Class Mode name (e.g. 'ST' → 'strict') */
+const CODE_TO_RCM_MC = { ST:'strict', SH:'strict-human', TE:'traditional-extended', AL:'allow-all' };
+/** Compact code → Racial Adjustment Policy name (e.g. 'NV' → 'never') */
+const CODE_TO_RAP_MC = { AA:'always', SO:'separate-only', NV:'never', FS:'from-separate', F1:'from-level-1' };
 
 /**
  * Build the spec object passed to `renderFromCompactParams` / `displayCharacterSheet`
@@ -159,9 +164,6 @@ function buildSheetSpec(sd, opts) {
 }
 const ABILITIES    = ['STR','DEX','CON','INT','WIS','CHA'];
 const ADM_MAP      = { 0:'aac', 1:'dac-matrix', 2:'dual', 3:'dual-matrix' };
-
-/** Shared CON modifier helper (matches shared-hit-points.js logic). */
-const getConMod = s => s >= 15 ? 1 : s >= 13 ? 1 : s <= 6 ? -1 : s <= 8 ? -1 : 0;
 
 /**
  * Short, deterministic, non-cryptographic fingerprint (FNV-1a 32-bit, hex,
@@ -243,8 +245,17 @@ export async function expandCompactV3(cp, precomp = {}, { silent = false } = {})
     const footerLabel = (identity) => ({ footerLabel: identity });
     // Fingerprint of the Campaign-scoped "Back to Generator" link — same
     // campaign settings always hash the same, so two sheets from the same
-    // table show a matching tag in the footer at a glance.
-    const campaignHash = shortHash(await buildCampaignURL(cp));
+    // table show a matching tag in the footer at a glance. un/ao/adm/sb are
+    // excluded from the hash input (though not from the link itself) even
+    // though they're Campaign-tier — Edit Sheet Options lets a player freely
+    // tweak them without marking the character Modified, so they shouldn't
+    // change the campaign hash either; otherwise a purely cosmetic per-sheet
+    // tweak would make two characters from the same table look like they're
+    // from different campaigns.
+    const HASH_EXCLUDED_PARAMS = ['un', 'ao', 'adm', 'sb'];
+    const campaignUrlForHash = new URL(await buildCampaignURL(cp), 'http://x/');
+    HASH_EXCLUDED_PARAMS.forEach(k => campaignUrlForHash.searchParams.delete(k));
+    const campaignHash = shortHash(`generator.html?${campaignUrlForHash.searchParams.toString()}`);
 
     // ── Level 0 ──────────────────────────────────────────────────────────────
     if (level === 0) {
@@ -257,13 +268,17 @@ export async function expandCompactV3(cp, precomp = {}, { silent = false } = {})
             const conScore = adjArr[2];
             const rawSaves = calculateSavingThrows(race, conScore);
             sv = [rawSaves.Death, rawSaves.Wands, rawSaves.Paralysis, rawSaves.Breath, rawSaves.Spells];
-            // No Level 0 Equipment (cp.nl0) — same guard as the level 1+
-            // equipment path (below) — suppresses background-derived gear.
-            const bg = cp.nl0 ? null : (getBackgroundByProfession(cp.bg || '') || {});
+            // cp.nl0 ("No Level 0 Equipment") does NOT apply here (2026-07-08
+            // redefinition) — a level-0 character's background gear IS their
+            // whole equipment, so it always shows regardless of this flag.
+            // nl0 now means "does this character keep its 0-level equipment
+            // once it's past level 0" — see the level 1+ equipment path below,
+            // which is where this flag actually applies.
+            const bg = getBackgroundByProfession(cp.bg || '') || {};
             l0Weapons = [];
-            const bgItems = Array.isArray(bg?.item) ? bg.item : (bg?.item ? [bg.item] : []);
-            l0Items   = [...(bg?.weapon ? [`${bg.weapon} (background)`] : []), ...bgItems];
-            l0Armor   = (bg?.armor && bg.armor !== 'Unarmored') ? bg.armor : null;
+            const bgItems = Array.isArray(bg.item) ? bg.item : (bg.item ? [bg.item] : []);
+            l0Items   = [...(bg.weapon ? [`${bg.weapon} (background)`] : []), ...bgItems];
+            l0Armor   = (bg.armor && bg.armor !== 'Unarmored') ? bg.armor : null;
             const armorAC = l0Armor ? (ARMOR[l0Armor]?.ac?.ascending ?? 10) : 10;
             l0AC = armorAC + mods.DEX;
         } else {
@@ -396,6 +411,11 @@ export async function expandCompactV3(cp, precomp = {}, { silent = false } = {})
     // ── Equipment: v3 derives at render time; v2 reads stored fields ──────────
     let eqWeapons, eqArmor, eqShield, eqItems, eqAC, eqGoldRemaining;
     if (cp.v === 3) {
+        // cp.nl0 ("No Level 0 Equipment", redefined 2026-07-08): whether this
+        // character keeps its 0-level background equipment once past level 0.
+        // When set, the background contributes no free starting gear here —
+        // purchaseEquipment() only has this character's own gold to work
+        // with, same as any level 1+ character purchasing from scratch.
         const bg  = cp.nl0 ? null : (getBackgroundByProfession(cp.bg || '') || {});
         const eq  = purchaseEquipment(cls, cp.g || 0, mods.DEX, bg, prog);
         eqWeapons      = eq.weapons;
@@ -603,10 +623,13 @@ async function buildGeneratorURL(cp) {
 /**
  * Build the "Back to Generator" link from this character's compact params:
  * the same URL as buildGeneratorURL(), but with every Character-tier param
- * stripped — character identity (level, class, race, name, zero-level race)
- * and "hide Human prefix" (only meaningful for the specific human character
- * that had it set, not a table-wide style choice) — so a player following it
- * lands on the referee's ruleset with nothing pre-selected, not a copy of
+ * stripped — character identity (level, class, race, name, zero-level race),
+ * "hide Human prefix" (only meaningful for the specific human character that
+ * had it set, not a table-wide style choice), and "No Level 0 Equipment"
+ * (redefined 2026-07-08 to mean "does this character keep its 0-level gear
+ * past level 0" — a per-character choice despite living in generator.html's
+ * Referee Options section, not a table-wide policy) — so a player following
+ * it lands on the referee's ruleset with nothing pre-selected, not a copy of
  * this specific character. Show Undead Names, Ability Score Ordering, AC
  * Display Mode, and Character Sheet Branding are treated as Campaign-tier
  * (not stripped) since a referee typically wants one consistent look/feel
@@ -617,7 +640,7 @@ async function buildGeneratorURL(cp) {
  */
 async function buildCampaignURL(cp) {
     const url = new URL(await buildGeneratorURL(cp), window.location.href);
-    ['l', 'c', 'r', 'n', 'zr', 'hhr'].forEach(key => url.searchParams.delete(key));
+    ['l', 'c', 'r', 'n', 'zr', 'hhr', 'nl0e'].forEach(key => url.searchParams.delete(key));
     return `generator.html?${url.searchParams.toString()}`;
 }
 
@@ -678,6 +701,49 @@ function initEditPanel(decoded) {
         if (progRadio) progRadio.checked = true;
     }
 
+    // Campaign-tier fields — populate every Modify Character field from this
+    // character's own stored cp values (not generator.html's defaults), since
+    // this reflects what's actually on the character, not a fresh session.
+    document.getElementById('mc-cn').value = decoded.cn || '';
+
+    const rcmVal = CODE_TO_RCM_MC[decoded.rcm] || 'strict';
+    const rcmRadio = document.querySelector(`input[name="mc-rcm"][value="${rcmVal}"]`);
+    if (rcmRadio) rcmRadio.checked = true;
+
+    const rapVal = CODE_TO_RAP_MC[decoded.rap] || 'never';
+    const rapRadio = document.querySelector(`input[name="mc-rap"][value="${rapVal}"]`);
+    if (rapRadio) rapRadio.checked = true;
+    // Tier 1 reflects which sub-group the actual policy belongs to, matching
+    // generator.html's own grouping (applied-at-level-0 vs not).
+    const rapTier1Actual = (rapVal === 'always' || rapVal === 'separate-only') ? 'applied' : 'not-applied';
+    const rapTier1Radio = document.querySelector(`input[name="mc-rap-tier1"][value="${rapTier1Actual}"]`);
+    if (rapTier1Radio) rapTier1Radio.checked = true;
+    // Clicking a tier-1 radio only changes visual grouping — it doesn't touch
+    // mc-rap itself, so without this, clicking tier-1 without also picking a
+    // tier-2 option leaves whatever mc-rap radio was last checked selected,
+    // even if it belongs to the *other* tier-1 group (e.g. tier-1 shows
+    // "Applied at level 0" but mc-rap is still "never", from "Not applied").
+    // Auto-select that group's first option whenever the checked mc-rap
+    // radio doesn't actually belong to the newly-picked tier.
+    const RAP_TIER2_GROUPS = { applied: ['separate-only', 'always'], 'not-applied': ['never', 'from-separate', 'from-level-1'] };
+    document.querySelectorAll('input[name="mc-rap-tier1"]').forEach(tier1Radio => {
+        tier1Radio.addEventListener('change', () => {
+            const group = RAP_TIER2_GROUPS[tier1Radio.value];
+            const checkedTier2 = document.querySelector('input[name="mc-rap"]:checked')?.value;
+            if (!group.includes(checkedTier2)) {
+                const defaultTier2 = document.querySelector(`input[name="mc-rap"][value="${group[0]}"]`);
+                if (defaultTier2) defaultTier2.checked = true;
+            }
+        });
+    });
+
+    const HM_CODE_TO_NAME = { 0:'normal', 1:'blessed', 2:'5e', 3:'healthy' };
+    const hpmVal = HM_CODE_TO_NAME[decoded.hm] || 'normal';
+    const hpmRadio = document.querySelector(`input[name="mc-hpm"][value="${hpmVal}"]`);
+    if (hpmRadio) hpmRadio.checked = true;
+
+    document.getElementById('mc-il').checked  = !!decoded.il;
+
     document.getElementById('ep-name').value = decoded.n || '';
 
     const finalScores   = decoded.s  || [10,10,10,10,10,10];
@@ -715,7 +781,7 @@ function initEditPanel(decoded) {
     const conScoreInit = decoded.s ? decoded.s[2] : 10;
 
     if (hpRollsData) {
-        const conMod0 = getConMod(conScoreInit);
+        const conMod0 = calculateModifier(conScoreInit);
         hpSec.innerHTML =
             `<strong>HP per Level:</strong> <span style="font-size:10px;color:#555;margin-left:8px;">CON mod: ${conMod0>=0?'+':''}${conMod0} &nbsp;·&nbsp; 🎲 rerolls 1 die</span>` +
             `<div id="ep-hp-rolls-wrap" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;"></div>`;
@@ -738,7 +804,7 @@ function initEditPanel(decoded) {
                 const idx      = parseInt(rb.dataset.index);
                 const sides    = parseInt(rb.dataset.sides);
                 const conScore = parseInt(document.getElementById('ep-base-CON')?.dataset.base) || conScoreInit;
-                const hpVal    = Math.max(1, Math.floor(Math.random() * sides) + 1 + getConMod(conScore));
+                const hpVal    = Math.max(1, Math.floor(Math.random() * sides) + 1 + calculateModifier(conScore));
                 const inp = hpSec.querySelector(`.ep-edit-hp[data-index='${idx}']`);
                 if (inp) inp.value = hpVal;
             });
@@ -753,7 +819,7 @@ function initEditPanel(decoded) {
             const sides    = CLASS_HD[decoded.c] || 6;
             const lvl      = decoded.l || 1;
             const conScore = parseInt(document.getElementById('ep-base-CON')?.dataset.base) || conScoreInit;
-            const conMod   = getConMod(conScore);
+            const conMod   = calculateModifier(conScore);
             let total = 0;
             for (let i = 0; i < lvl; i++) total += Math.max(1, Math.floor(Math.random() * sides) + 1 + conMod);
             hpSec.querySelector('#ep-hp').value = Math.max(1, total);
@@ -766,9 +832,21 @@ function initEditPanel(decoded) {
 
     document.getElementById('ep-undead').checked = !!decoded.un;
     document.getElementById('ep-qr').checked     = decoded.qr !== 0;
+    document.getElementById('ep-nl0').checked    = !!decoded.nl0;
+    document.getElementById('ep-ao').checked     = decoded.ao !== 0;
+    const sbVal   = decoded.sb === 1 ? 'dnd' : 'ose';
+    const sbRadio = document.querySelector(`input[name="ep-sb"][value="${sbVal}"]`);
+    if (sbRadio) sbRadio.checked = true;
 
     // ── Apply Changes (Modify Character) ──────────────────────────────────────
     document.getElementById('ep-apply-btn').addEventListener('click', async () => {
+        // Soft nudge only — this tool has no accounts/auth, so this can't be
+        // real access control, just a reminder that these are normally the
+        // referee's settings before applying a change to someone else's link.
+        if (!confirm('These are normally the referee’s table-wide settings, not something a player usually edits on their own character. Apply anyway?')) {
+            return;
+        }
+
         const newProg = document.querySelector('input[name="ep-prog"]:checked')?.value
             || CODE_TO_PROG[decoded.p] || 'ose';
 
@@ -783,20 +861,70 @@ function initEditPanel(decoded) {
         const newScores  = ABILITIES.map((a, i) => Math.max(3, Math.min(18, newBaseScores[i] + newAdjVals[i])));
         const hasAnyAdj  = newAdjVals.some(v => v !== 0);
 
+        // Read the new Include Level 0 HP state before computing newHp — using
+        // decoded.il (the pre-edit value) here instead would let cp.h and
+        // cp.il fall out of sync whenever this checkbox is actually changed
+        // (e.g. off->on saves a total that's missing hr[0]'s HP even though
+        // cp.il=1 says it should be included).
+        const newIl = document.getElementById('mc-il').checked ? 1 : 0;
         const hpRollInputs = document.querySelectorAll('#ep-hp-section .ep-edit-hp');
         let newHp, newHpRolls;
         if (hpRollInputs.length > 0) {
             newHpRolls = Array.from(hpRollInputs).map(inp => Math.max(1, parseInt(inp.value) || 1));
-            newHp = newHpRolls.reduce((a, b, i) => (i === 0 && !decoded.il) ? a : a + b, 0);
+            newHp = newHpRolls.reduce((a, b, i) => (i === 0 && !newIl) ? a : a + b, 0);
         } else {
             newHp      = Math.max(1, parseInt(document.querySelector('#ep-hp-section #ep-hp')?.value) || decoded.h || 1);
             newHpRolls = decoded.hr || [];
         }
 
+        // Campaign-tier fields — read every remaining panel input and write it
+        // directly (not omitted-when-default the way fresh generation is, for
+        // simplicity — this is a one-off manual edit, and the character is
+        // already being marked Modified). Min Ability Scores, Exclude
+        // Spellblade, Prime Requisite Mode, and Starting Wealth were removed
+        // from this panel (2026-07-08) — they only affect character
+        // generation, so editing them here had zero effect on an existing
+        // character; ...decoded above carries their current values forward
+        // unchanged. Player Options (Show Undead Names, 1977 Ability Ordering,
+        // AC Display, Branding) moved to Edit Sheet Options the same day.
+        // Race/Class Mode (rcm) was cut in that same pass, then restored the
+        // same day after review: unlike the rest of Section 4, it keeps
+        // mattering post-creation — it gates whether a Human character
+        // currently has Blessed/Decisiveness/Leadership (checked fresh at
+        // every level-up and render), so a referee needs to be able to move a
+        // character into or out of human-abilities eligibility after the fact.
+        const rcmValMc = document.querySelector('input[name="mc-rcm"]:checked')?.value || 'strict';
+        const rapValMc = document.querySelector('input[name="mc-rap"]:checked')?.value || 'never';
+        const HM_NAME_TO_CODE = { normal:0, blessed:1, '5e':2, healthy:3 };
+        const hpmValMc = HM_NAME_TO_CODE[document.querySelector('input[name="mc-hpm"]:checked')?.value] || 0;
+
         const newCp = { ...decoded, p: PROG_TO_CODE[newProg], s: newScores, h: newHp,
-                        hr: newHpRolls, mx: 1 };
+                        hr: newHpRolls, mx: 1,
+                        cn: document.getElementById('mc-cn').value.trim().slice(0, 72) || undefined,
+                        rcm: RCM_CODE[rcmValMc] || 'ST',
+                        rap: RAP_CODE[rapValMc] || 'NV',
+                        il: newIl,
+                        // nl0 ("No Level 0 Equipment") is NOT edited here — it was
+                        // reclassified Character-tier 2026-07-08 and now lives in
+                        // Edit Sheet Options instead; ...decoded above already
+                        // carries its current value forward unchanged.
+                      };
+        if (hpmValMc) newCp.hm = hpmValMc; else delete newCp.hm;
+        if (!newCp.cn) delete newCp.cn;
         delete newCp.hd;
         if (hasAnyAdj) { newCp.bs = newBaseScores; } else { delete newCp.bs; }
+
+        // Clear equipment: null out weapon, armor, shield, items, and gold;
+        // reset AC to 10 (unarmored). Same behavior as Edit Sheet Options'
+        // and Level Up's equivalent checkbox.
+        if (document.getElementById('mc-clear-equipment')?.checked) {
+            newCp.w  = [];
+            newCp.ar = null;
+            newCp.sh = 0;
+            newCp.it = [];
+            newCp.g  = 0;
+            newCp.ac = 10;
+        }
 
         const encoded = encodeCompactParams(newCp);
         const b32    = await compressToBase32(JSON.stringify(encoded));
@@ -813,6 +941,15 @@ function initEditPanel(decoded) {
         };
         delete newCp.hd;
         if (newAdm) newCp.adm = newAdm; else delete newCp.adm;
+        // No Level 0 Equipment ("keep 0-level gear past level 0", reclassified
+        // Character-tier 2026-07-08) — freely editable here, does not set mx.
+        if (document.getElementById('ep-nl0')?.checked) newCp.nl0 = 1; else delete newCp.nl0;
+        // 1977 Ability Score Ordering and Character Sheet Branding moved here
+        // from Modify Character (2026-07-08) — cosmetic per-sheet display
+        // prefs a player can freely tweak, same reasoning as Show Undead
+        // Names and AC Display Mode above; doesn't set mx.
+        newCp.ao = document.getElementById('ep-ao')?.checked ? 1 : 0;
+        if (document.querySelector('input[name="ep-sb"]:checked')?.value === 'dnd') newCp.sb = 1; else delete newCp.sb;
 
         // Clear equipment: null out weapon, armor, shield, items, and gold;
         // reset AC to 10 (unarmored). Attack bonus, melee/ranged modifiers, and
@@ -894,7 +1031,7 @@ function initEditPanel(decoded) {
 
             const className = CODE_TO_CLASS_LU[selectedClassCode] || 'Fighter_CLASS';
             const conScore  = decoded.s ? decoded.s[2] : 10;
-            const conMod    = getConMod(conScore);
+            const conMod    = calculateModifier(conScore);
             const l0HP      = decoded.h || 1;
 
             const getHdStr = (cls, lvl) => {
@@ -910,9 +1047,15 @@ function initEditPanel(decoded) {
             const DEMIHUMAN_CODES_L01 = new Set(['DW','EL','HA','GN']);
             // Race never changes at this level-up step (decoded.r is carried forward
             // regardless of which class button was picked), so Blessed eligibility
-            // only depends on race — matching hasBlessed's check in gen-ui.js.
+            // only depends on race — matching gen-core.js's own check. Blessed
+            // governs this character's own roll in place of hpMode0 (doesn't
+            // combine with Re-roll 1s/2s on one roll) — but newCp.hm below still
+            // stores the referee's raw hpMode0 unchanged, so the campaign's
+            // actual chosen style isn't lost just because this one character
+            // happened to roll under Blessed instead.
             const hasBlessed0 = decoded.rcm && decoded.rcm !== 'ST' && decoded.r === 'HU';
-            const effMode0 = hasBlessed0 ? 1 : hpMode0;
+            // Never overrides 5e (hpMode0 2) — no die to roll twice there.
+            const effMode0 = (hasBlessed0 && hpMode0 !== 2) ? 1 : hpMode0;
             const roll = () => Math.floor(Math.random() * sides) + 1;
 
             let l1HP;
@@ -964,6 +1107,18 @@ function initEditPanel(decoded) {
             // direct Basic/race-as-class L1+ generation never writes it either.
             if (newMode === 'B') delete newCp.sm;
 
+            // Clear equipment: models a player hand-writing in their new gear
+            // rather than the tool tracking it — same behavior as Edit Sheet
+            // Options' and Modify Character's equivalent checkbox.
+            if (document.getElementById('lup-clear-equipment')?.checked) {
+                newCp.w  = [];
+                newCp.ar = null;
+                newCp.sh = 0;
+                newCp.it = [];
+                newCp.g  = 0;
+                newCp.ac = 10;
+            }
+
             const encoded = encodeCompactParams(newCp);
             const b32    = await compressToBase32(JSON.stringify(encoded));
             window.location.href = `charactersheet.html?d=${b32}`;
@@ -997,7 +1152,7 @@ function initEditPanel(decoded) {
             const newUn     = document.getElementById('lup-undead').checked ? 1 : 0;
             const newQr     = document.getElementById('lup-qr').checked     ? 1 : 0;
             const conScore  = decoded.s ? decoded.s[2] : 10;
-            const conMod    = getConMod(conScore);
+            const conMod    = calculateModifier(conScore);
             const className = CODE_TO_CLASS_LU[decoded.c] || 'Fighter_CLASS';
 
             const getHdStr = (cls, lvl) => {
@@ -1013,9 +1168,15 @@ function initEditPanel(decoded) {
                 const l0HP   = newHpRolls[0] || 1;
                 const hpMode = decoded.hm || 0;
                 // Race never changes across levels, so Blessed eligibility only
-                // depends on race — matches the hasBlessed0 fix at the level-0→1 step.
+                // depends on race — matches gen-core.js's own check. Blessed
+                // governs this character's own roll in place of hpMode (doesn't
+                // combine with Re-roll 1s/2s on one roll) — but newCp below still
+                // carries decoded.hm forward unchanged via ...decoded, so the
+                // campaign's actual chosen style isn't lost just because this
+                // one character happened to roll under Blessed instead.
                 const hasBlessed = decoded.rcm && decoded.rcm !== 'ST' && decoded.r === 'HU';
-                const effectiveHpMode = hasBlessed ? 1 : hpMode;
+                // Never overrides 5e (hpMode 2) — no die to roll twice there.
+                const effectiveHpMode = (hasBlessed && hpMode !== 2) ? 1 : hpMode;
                 const roll   = sides => Math.floor(Math.random() * sides) + 1;
 
                 for (let lvl = curLevel + 1; lvl <= newLevel; lvl++) {
@@ -1067,6 +1228,19 @@ function initEditPanel(decoded) {
             }
 
             delete newCp.hd;
+
+            // Clear equipment: models a player hand-writing in their new gear
+            // rather than the tool tracking it — same behavior as Edit Sheet
+            // Options' and Modify Character's equivalent checkbox.
+            if (document.getElementById('lup-clear-equipment')?.checked) {
+                newCp.w  = [];
+                newCp.ar = null;
+                newCp.sh = 0;
+                newCp.it = [];
+                newCp.g  = 0;
+                newCp.ac = 10;
+            }
+
             const encoded = encodeCompactParams(newCp);
             const b32    = await compressToBase32(JSON.stringify(encoded));
             window.location.href = `charactersheet.html?d=${b32}`;

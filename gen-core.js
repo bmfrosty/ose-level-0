@@ -331,6 +331,20 @@ export function generateCharacterV3(opts = {}) {
 
     const conMod = calculateModifier(adjArr[ABILITIES.indexOf('CON')]);
 
+    // Human racial Blessed (roll HP twice, take best) governs THIS character's
+    // own rolling in place of whatever hpMode the referee chose — the two
+    // don't combine on a single character's roll (a Blessed Human doesn't
+    // additionally get Re-roll 1s/2s applied to their own HP). What *does*
+    // coexist is the campaign's metadata: the referee's actual chosen hpMode
+    // is still stored below in cp.hm unchanged by this override, so a table
+    // can have both "Re-roll 1s/2s" as its rule AND Humans separately getting
+    // Blessed, without one clobbering the record of the other. Never applies
+    // at level 0 (rollHPLeveled enforces that invariant internally regardless).
+    // Also never applies under 5e style (hpMode 2) — there's no die to roll
+    // twice, just a static per-level increase, so 5e always wins outright.
+    const blessed = race === 'Human_RACE' && humanRacialAbilities;
+    const effHpMode = (blessed && hpMode !== 2) ? 1 : hpMode;
+
     // ── Name — needed before HP roll so LOW_HP error can include it ───────────
 
     const raceStem = race.replace('_RACE', '');
@@ -340,7 +354,7 @@ export function generateCharacterV3(opts = {}) {
     // ── Level 0 HP ────────────────────────────────────────────────────────────
 
     if (level === 0) {
-        hp0 = rollHPLeveled({ level: 0, conModifier: conMod, includeLevel0HP: true, hpMode, fixedRolls: fixedHPRolls });
+        hp0 = rollHPLeveled({ level: 0, conModifier: conMod, includeLevel0HP: true, hpMode: effHpMode, fixedRolls: fixedHPRolls });
         if (!fixedHPRolls && hp0.l0RawHP <= 0) {
             const scoreStr = ABILITIES.map((a, i) => `${a}:${rawArr[i]}`).join(' ');
             const err = new Error(`${name} decided to not become an adventurer, for they rolled ${scoreStr} and then a ${hp0.backgroundHP} on a 1d4 for a hit die and didn't have enough hit points.`);
@@ -392,7 +406,7 @@ export function generateCharacterV3(opts = {}) {
 
     const hpResult = rollHPLeveled({
         className, level, conModifier: conMod, classData,
-        includeLevel0HP, hpMode, fixedRolls: fixedHPRolls,
+        includeLevel0HP, hpMode: effHpMode, fixedRolls: fixedHPRolls,
     });
     if (!fixedHPRolls) {
         const scoreStr = ABILITIES.map((a, i) => `${a}:${rawArr[i]}`).join(' ');

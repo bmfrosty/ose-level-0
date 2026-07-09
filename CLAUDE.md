@@ -266,3 +266,15 @@ These come from `RACE_INFO.Human_RACE.abilities` entries flagged `humanOnly: tru
   a race is always separately chosen at level 0 (no class yet to imply one). This differs from
   the old Basic-mode level-0 behavior, which applied none; it was a deliberate design change made
   when the grid was unified (see git history around the `race-as-class-grid-unification` branch).
+
+---
+
+## Git / PR Workflow
+
+- **Update the PR description before committing or pushing — never after.** Order: review the
+  diff → `gh pr edit --body-file` to update the PR description → `git commit` → `git push`. This
+  repo's `claude-review.yml` triggers on every push and edits its review comment in place within
+  seconds, so there is no safe window to push first and fix the description afterward — pushing
+  is the trigger, and the description must already be correct when it fires. Getting this order
+  wrong has already cost a prior automated review's content (2026-07-09, PR #21) — it is not a
+  hypothetical risk.
