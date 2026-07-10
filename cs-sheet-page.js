@@ -24,7 +24,7 @@ import {
     PROGRESSION_TABLES, calculateModifier, getModifierEffects,
     getAdvancedModeRacialAbilities, getRaceDisplayName, getClassDisplayName,
     getClassProgressionData, getClassFeatures, getBasicModeClassAbilities,
-    getRaceInfo, CLASS_INFO, getAvailableClasses,
+    getRaceInfo, CLASS_INFO, getAvailableClasses, getMaxLevel,
     createCharacter, calculateXPBonus, getPrimeRequisites,
     encodeCompactParams, decodeCompactParams,
     parseHitDice, HIT_DICE_PROGRESSIONS, HIT_DICE_SCALE,
@@ -1137,8 +1137,26 @@ function initEditPanel(decoded) {
         // Level 1+ → Level N+1
         const curLevel = decoded.l || 1;
 
-        const MAX_LEVEL_BY_CODE = { FI:14, CL:14, MU:14, TH:14, SB:14, DW:12, EL:10, HA:8, GN:8 };
-        const classMaxLevel = MAX_LEVEL_BY_CODE[decoded.c] || 14;
+        // Racial level limits (RACE_INFO[race].classLevelLimits / CLASS_INFO[x].maxLevel)
+        // only apply under strict/strict-human raceClassMode, matching gen-ui.js's own
+        // grid-availability gating during generation (the source of truth this mirrors) —
+        // Extended Levels / Allow All lift them entirely. The old flat MAX_LEVEL_BY_CODE
+        // table ignored race and raceClassMode altogether, so e.g. a Dwarf who took
+        // Fighter as a separate class (capped at 10 under strict rules, same as
+        // generation enforces) could level all the way to 14 via this panel.
+        const RACE_AS_CLASS_NAME_BY_CODE = { DW:'Dwarf', EL:'Elf', HA:'Halfling', GN:'Gnome' };
+        const CODE_TO_RACE_NAME_L1 = { HU:'Human', DW:'Dwarf', EL:'Elf', HA:'Halfling', GN:'Gnome' };
+        const CODE_TO_CLASS_NAME_L1 = { FI:'Fighter_CLASS', CL:'Cleric_CLASS', MU:'Magic-User_CLASS', TH:'Thief_CLASS', SB:'Spellblade_CLASS' };
+        const classMaxLevel = (() => {
+            if (decoded.rcm !== 'ST' && decoded.rcm !== 'SH') return 14;
+            if (RACE_AS_CLASS_NAME_BY_CODE[decoded.c]) {
+                return CLASS_INFO[RACE_AS_CLASS_NAME_BY_CODE[decoded.c]]?.maxLevel ?? 14;
+            }
+            const raceName  = CODE_TO_RACE_NAME_L1[decoded.r] || 'Human';
+            const className = CODE_TO_CLASS_NAME_L1[decoded.c];
+            if (!className) return 14;
+            return getMaxLevel(`${raceName}_RACE`, className, false) ?? 14;
+        })();
         const levelUpBtn2 = document.getElementById('toggleLevelUpBtn');
         if (curLevel >= classMaxLevel) { if (levelUpBtn2) levelUpBtn2.style.display = 'none'; return; }
 
