@@ -1136,7 +1136,16 @@ function initEditPanel(decoded) {
         const CODE_TO_RACE_NAME_L1 = { HU:'Human', DW:'Dwarf', EL:'Elf', HA:'Halfling', GN:'Gnome' };
         const CODE_TO_CLASS_NAME_L1 = { FI:'Fighter_CLASS', CL:'Cleric_CLASS', MU:'Magic-User_CLASS', TH:'Thief_CLASS', SB:'Spellblade_CLASS' };
         const classMaxLevel = (() => {
-            if (decoded.rcm !== 'ST' && decoded.rcm !== 'SH') return 14;
+            // The !decoded.rcm check is a no-op today (undefined already fails
+            // both string comparisons below, landing on the same "unlimited"
+            // result) — it's here to make a malformed/hand-crafted ?d= URL
+            // missing rcm entirely an explicit, self-documented case rather
+            // than an implicit fallthrough, in case this function is ever
+            // touched by someone assuming decoded.rcm is always one of the
+            // four known codes. No real decode path produces a missing rcm
+            // today — generation always writes it, and the legacy bl->rcm
+            // migration backfills it for old links.
+            if (!decoded.rcm || (decoded.rcm !== 'ST' && decoded.rcm !== 'SH')) return 14;
             if (RACE_AS_CLASS_NAME_BY_CODE[decoded.c]) {
                 return CLASS_INFO[RACE_AS_CLASS_NAME_BY_CODE[decoded.c]]?.maxLevel ?? 14;
             }
