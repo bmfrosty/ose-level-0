@@ -24,7 +24,7 @@ import {
     PROGRESSION_TABLES, calculateModifier, getModifierEffects,
     getAdvancedModeRacialAbilities, getRaceDisplayName, getClassDisplayName,
     getClassProgressionData, getClassFeatures, getBasicModeClassAbilities,
-    getRaceInfo, CLASS_INFO, getAvailableClasses,
+    getRaceInfo, CLASS_INFO, getAvailableClasses, getMaxLevel,
     createCharacter, calculateXPBonus, getPrimeRequisites,
     encodeCompactParams, decodeCompactParams,
     parseHitDice, HIT_DICE_PROGRESSIONS, HIT_DICE_SCALE,
@@ -704,11 +704,10 @@ function initEditPanel(decoded) {
     // Campaign-tier fields — populate every Modify Character field from this
     // character's own stored cp values (not generator.html's defaults), since
     // this reflects what's actually on the character, not a fresh session.
-    document.getElementById('mc-cn').value = decoded.cn || '';
-
     const rcmVal = CODE_TO_RCM_MC[decoded.rcm] || 'strict';
     const rcmRadio = document.querySelector(`input[name="mc-rcm"][value="${rcmVal}"]`);
     if (rcmRadio) rcmRadio.checked = true;
+    document.getElementById('mc-esb').checked = decoded.esb !== 0;
 
     const rapVal = CODE_TO_RAP_MC[decoded.rap] || 'never';
     const rapRadio = document.querySelector(`input[name="mc-rap"][value="${rapVal}"]`);
@@ -877,22 +876,27 @@ function initEditPanel(decoded) {
             newHpRolls = decoded.hr || [];
         }
 
-        // Campaign-tier fields — read every remaining panel input and write it
-        // directly (not omitted-when-default the way fresh generation is, for
+        // Campaign-tier fields — read every panel input and write it directly
+        // (not omitted-when-default the way fresh generation is, for
         // simplicity — this is a one-off manual edit, and the character is
-        // already being marked Modified). Min Ability Scores, Exclude
-        // Spellblade, Prime Requisite Mode, and Starting Wealth were removed
-        // from this panel (2026-07-08) — they only affect character
-        // generation, so editing them here had zero effect on an existing
-        // character; ...decoded above carries their current values forward
-        // unchanged. Player Options (Show Undead Names, 1977 Ability Ordering,
-        // AC Display, Branding) moved to Edit Sheet Options the same day.
-        // Race/Class Mode (rcm) was cut in that same pass, then restored the
-        // same day after review: unlike the rest of Section 4, it keeps
-        // mattering post-creation — it gates whether a Human character
-        // currently has Blessed/Decisiveness/Leadership (checked fresh at
-        // every level-up and render), so a referee needs to be able to move a
-        // character into or out of human-abilities eligibility after the fact.
+        // already being marked Modified). Modify Character's scope (settled
+        // 2026-07-09): a field belongs here if it mechanically modifies this
+        // character and/or changes the campaign hash (or both) — Min Ability
+        // Scores, Prime Requisite Mode, and Starting Wealth were removed
+        // (2026-07-08) because they only affect fresh generation and aren't
+        // part of the hash's relevant carry-through; Player Options (Show
+        // Undead Names, 1977 Ability Ordering, AC Display, Branding) moved to
+        // Edit Sheet Options the same day since they're excluded from the hash
+        // and freely player-editable. Race/Class Mode and Exclude Spellblade
+        // both stay: rcm keeps mattering post-creation (gates whether a Human
+        // currently has Blessed/Decisiveness/Leadership, checked fresh at
+        // every level-up and render) and esb gates the level 0->1 class-up
+        // class list (fixed 2026-07-09) — both are also part of the hash.
+        // Campaign Name is NOT edited anywhere in character-sheet editing
+        // (removed from here 2026-07-09) — it has no mechanical effect and
+        // there's no real reason a player or referee would rename an existing
+        // character's campaign from its own sheet; ...decoded above still
+        // carries whatever value it already had forward unchanged.
         const rcmValMc = document.querySelector('input[name="mc-rcm"]:checked')?.value || 'strict';
         const rapValMc = document.querySelector('input[name="mc-rap"]:checked')?.value || 'never';
         const HM_NAME_TO_CODE = { normal:0, blessed:1, '5e':2, healthy:3 };
@@ -900,31 +904,20 @@ function initEditPanel(decoded) {
 
         const newCp = { ...decoded, p: PROG_TO_CODE[newProg], s: newScores, h: newHp,
                         hr: newHpRolls, mx: 1,
-                        cn: document.getElementById('mc-cn').value.trim().slice(0, 72) || undefined,
                         rcm: RCM_CODE[rcmValMc] || 'ST',
+                        esb: document.getElementById('mc-esb').checked ? undefined : 0,
                         rap: RAP_CODE[rapValMc] || 'NV',
                         il: newIl,
-                        // nl0 ("No Level 0 Equipment") is NOT edited here — it was
-                        // reclassified Character-tier 2026-07-08 and now lives in
-                        // Edit Sheet Options instead; ...decoded above already
-                        // carries its current value forward unchanged.
+                        // nl0 ("No Level 0 Equipment") is NOT edited here — it
+                        // was reclassified Character-tier 2026-07-08 and now
+                        // lives in Edit Sheet Options instead; ...decoded
+                        // above already carries its current value forward
+                        // unchanged.
                       };
         if (hpmValMc) newCp.hm = hpmValMc; else delete newCp.hm;
-        if (!newCp.cn) delete newCp.cn;
+        if (!newCp.esb && newCp.esb !== 0) delete newCp.esb;
         delete newCp.hd;
         if (hasAnyAdj) { newCp.bs = newBaseScores; } else { delete newCp.bs; }
-
-        // Clear equipment: null out weapon, armor, shield, items, and gold;
-        // reset AC to 10 (unarmored). Same behavior as Edit Sheet Options'
-        // and Level Up's equivalent checkbox.
-        if (document.getElementById('mc-clear-equipment')?.checked) {
-            newCp.w  = [];
-            newCp.ar = null;
-            newCp.sh = 0;
-            newCp.it = [];
-            newCp.g  = 0;
-            newCp.ac = 10;
-        }
 
         const encoded = encodeCompactParams(newCp);
         const b32    = await compressToBase32(JSON.stringify(encoded));
@@ -996,7 +989,16 @@ function initEditPanel(decoded) {
         const allowNonTraditional = decoded.rcm === 'AL';
         const raceName = CODE_TO_RACE_NAME_LU[raceCode] || 'Human';
         const permittedClassNames = new Set(getAvailableClasses(raceName, allowNonTraditional));
-        const separateClasses = allSeparateClasses.filter(c => permittedClassNames.has(c.name));
+        // Exclude Spellblade is enforced here too, not just at fresh generation
+        // (gen-ui.js's grid) — this level-0->1 step is itself a class-selection
+        // moment, so a campaign with Spellblade excluded shouldn't let a level-0
+        // character level into it just because it wasn't picked at generation.
+        // esb === 0 means Spellblade is explicitly ALLOWED (checkbox unchecked);
+        // omitted/undefined is the default EXCLUDED state — same inverted
+        // omit-when-default encoding buildCampaignURL()'s `esb` write uses.
+        const separateClasses = allSeparateClasses
+            .filter(c => permittedClassNames.has(c.name))
+            .filter(c => !(c.name === 'Spellblade' && decoded.esb !== 0));
 
         const availableClasses = [...(basicDemihumanClass[raceCode] || []), ...separateClasses];
 
@@ -1016,9 +1018,6 @@ function initEditPanel(decoded) {
                 selectedClassCode = btn.dataset.code;
             });
         });
-
-        document.getElementById('lup-undead').checked = !!decoded.un;
-        document.getElementById('lup-qr').checked     = decoded.qr !== 0;
 
         document.getElementById('lup-apply-btn').addEventListener('click', async () => {
             if (!selectedClassCode) { alert('Please select a class first!'); return; }
@@ -1097,8 +1096,6 @@ function initEditPanel(decoded) {
                 // adventuring, not from the act of leveling up. Carry the level-0
                 // character's existing gold forward unchanged.
                 g: decoded.g || 0,
-                un: document.getElementById('lup-undead').checked ? 1 : 0,
-                qr: document.getElementById('lup-qr').checked    ? 1 : 0,
                 rcm: decoded.rcm || 'ST',
                 ...(hpMode0 > 0 ? { hm: hpMode0 } : {}),
             };
@@ -1128,8 +1125,35 @@ function initEditPanel(decoded) {
         // Level 1+ → Level N+1
         const curLevel = decoded.l || 1;
 
-        const MAX_LEVEL_BY_CODE = { FI:14, CL:14, MU:14, TH:14, SB:14, DW:12, EL:10, HA:8, GN:8 };
-        const classMaxLevel = MAX_LEVEL_BY_CODE[decoded.c] || 14;
+        // Racial level limits (RACE_INFO[race].classLevelLimits / CLASS_INFO[x].maxLevel)
+        // only apply under strict/strict-human raceClassMode, matching gen-ui.js's own
+        // grid-availability gating during generation (the source of truth this mirrors) —
+        // Extended Levels / Allow All lift them entirely. The old flat MAX_LEVEL_BY_CODE
+        // table ignored race and raceClassMode altogether, so e.g. a Dwarf who took
+        // Fighter as a separate class (capped at 10 under strict rules, same as
+        // generation enforces) could level all the way to 14 via this panel.
+        const RACE_AS_CLASS_NAME_BY_CODE = { DW:'Dwarf', EL:'Elf', HA:'Halfling', GN:'Gnome' };
+        const CODE_TO_RACE_NAME_L1 = { HU:'Human', DW:'Dwarf', EL:'Elf', HA:'Halfling', GN:'Gnome' };
+        const CODE_TO_CLASS_NAME_L1 = { FI:'Fighter_CLASS', CL:'Cleric_CLASS', MU:'Magic-User_CLASS', TH:'Thief_CLASS', SB:'Spellblade_CLASS' };
+        const classMaxLevel = (() => {
+            // The !decoded.rcm check is a no-op today (undefined already fails
+            // both string comparisons below, landing on the same "unlimited"
+            // result) — it's here to make a malformed/hand-crafted ?d= URL
+            // missing rcm entirely an explicit, self-documented case rather
+            // than an implicit fallthrough, in case this function is ever
+            // touched by someone assuming decoded.rcm is always one of the
+            // four known codes. No real decode path produces a missing rcm
+            // today — generation always writes it, and the legacy bl->rcm
+            // migration backfills it for old links.
+            if (!decoded.rcm || (decoded.rcm !== 'ST' && decoded.rcm !== 'SH')) return 14;
+            if (RACE_AS_CLASS_NAME_BY_CODE[decoded.c]) {
+                return CLASS_INFO[RACE_AS_CLASS_NAME_BY_CODE[decoded.c]]?.maxLevel ?? 14;
+            }
+            const raceName  = CODE_TO_RACE_NAME_L1[decoded.r] || 'Human';
+            const className = CODE_TO_CLASS_NAME_L1[decoded.c];
+            if (!className) return 14;
+            return getMaxLevel(`${raceName}_RACE`, className, false) ?? 14;
+        })();
         const levelUpBtn2 = document.getElementById('toggleLevelUpBtn');
         if (curLevel >= classMaxLevel) { if (levelUpBtn2) levelUpBtn2.style.display = 'none'; return; }
 
@@ -1137,9 +1161,6 @@ function initEditPanel(decoded) {
         const lupLevelBtns = document.getElementById('lup-level-btns');
         lupLevelBtns.innerHTML =
             `<span style="font-size:13px;font-weight:bold;color:#4A148C;">Level ${curLevel} → Level ${nextLevel}</span>`;
-
-        document.getElementById('lup-undead').checked = !!decoded.un;
-        document.getElementById('lup-qr').checked     = decoded.qr !== 0;
 
         document.getElementById('lup-apply-btn').addEventListener('click', async () => {
             const CODE_TO_CLASS_LU = {
@@ -1149,8 +1170,6 @@ function initEditPanel(decoded) {
             };
 
             const newLevel  = curLevel + 1;
-            const newUn     = document.getElementById('lup-undead').checked ? 1 : 0;
-            const newQr     = document.getElementById('lup-qr').checked     ? 1 : 0;
             const conScore  = decoded.s ? decoded.s[2] : 10;
             const conMod    = calculateModifier(conScore);
             const className = CODE_TO_CLASS_LU[decoded.c] || 'Fighter_CLASS';
@@ -1218,8 +1237,7 @@ function initEditPanel(decoded) {
             }
 
             const newHp = newHpRolls.reduce((a, b, i) => (i === 0 && !decoded.il) ? a : a + b, 0);
-            const newCp = { ...decoded, l: newLevel, hr: newHpRolls,
-                            h: newHp, un: newUn, qr: newQr };
+            const newCp = { ...decoded, l: newLevel, hr: newHpRolls, h: newHp };
 
             if (rollLog.length) {
                 sessionStorage.setItem('levelUpNotice', JSON.stringify({

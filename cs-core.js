@@ -3,7 +3,7 @@
 // Re-exports everything from shared-core.js so cs-sheet-page.js has a single import point.
 
 export * from './shared-core.js';
-import { WEAPONS, progModeLabel } from './shared-core.js';
+import { WEAPONS, progModeLabel, calculateModifier } from './shared-core.js';
 
 /**
  * cs-sheet-renderer.js
@@ -893,7 +893,14 @@ export function renderCharacterSheetHTML(sheet) {
                 if (startingACDisplay !== null && startingACDisplay !== undefined) statParts.push(`Starting AC: ${startingACDisplay}`);
                 if (eq.startingHD)    statParts.push(`Starting HD: ${eq.startingHD}`);
                 if (startingGold !== null) statParts.push(`Starting Gold: ${startingGold} gp`);
-                const cpConMod = (() => { const s = sheet.cp?.s?.[2]; if (s == null) return 0; return s>=15?1:s>=13?1:s<=6?-1:s<=8?-1:0; })();
+                // Was a separate, broken duplicate of calculateModifier() that
+                // could only ever return -1/0/+1 (same bug class as the
+                // getConMod() fixed in cs-sheet-page.js) -- since editState is
+                // only ever populated by gen-ui.js's live preview, never here,
+                // every character loaded from a `?d=` link fell back to this
+                // on every page load, showing the wrong footer CON modifier
+                // for any CON <=5 or >=16.
+                const cpConMod = (() => { const s = sheet.cp?.s?.[2]; if (s == null) return 0; return calculateModifier(s); })();
                 const hpRolls  = (sheet.editState?.hpRolls?.length > 0 ? sheet.editState.hpRolls : null) || sheet.cp?.hr || [];
                 const conMod   = sheet.editState?.conModifier ?? cpConMod;
                 const hpParts  = hpRolls.length > 0

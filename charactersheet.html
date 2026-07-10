@@ -217,14 +217,6 @@
         </div>
 
         <div class="lup-section" style="margin-top:10px;">
-            <strong>Options:</strong>
-            <div style="display:flex;flex-wrap:wrap;gap:14px;margin-top:4px;">
-                <label style="display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="checkbox" id="lup-undead"> Show Undead Monster Names</label>
-                <label style="display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="checkbox" id="lup-qr" checked> Show QR Code</label>
-            </div>
-        </div>
-
-        <div class="lup-section" style="margin-top:10px;">
             <label style="display:flex;align-items:center;gap:4px;cursor:pointer;">
                 <input type="checkbox" id="lup-clear-equipment">
                 Clear Weapons, Armor &amp; Items
@@ -242,14 +234,7 @@
          ability scores, and HP (marks character as modified) -->
     <div id="modify-panel" style="display:none;background:#e3f2fd;border:2px solid #2196F3;border-radius:5px;padding:14px;margin-bottom:16px;font-size:12px;">
         <h3 style="margin:0 0 12px;color:#1565C0;font-size:1.1em;">🔧 Modify Character</h3>
-        <div style="font-size:11px;color:#555;margin-bottom:10px;">The sections below are the referee's table-wide ruleset settings for this character. Changing anything in this panel marks the character "Modified" in the footer.</div>
-
-        <details class="mc-section">
-            <summary>0. Campaign Name</summary>
-            <div>
-                <input type="text" id="mc-cn" maxlength="72" placeholder="Enter campaign/table name..." style="width:100%;max-width:300px;padding:5px;font-size:12px;border:1px solid #ccc;border-radius:3px;">
-            </div>
-        </details>
+        <div style="font-size:11px;color:#555;margin-bottom:10px;">The sections below either mechanically modify this character or change the campaign hash (or both). Changing anything in this panel marks the character "Modified" in the footer.</div>
 
         <details class="mc-section" open id="ep-prog-section">
             <summary>2. Progression Mode</summary>
@@ -261,13 +246,14 @@
         </details>
 
         <details class="mc-section">
-            <summary>4. Race/Class Mode</summary>
+            <summary>4. Race/Class Restrictions</summary>
             <div>
                 <label style="display:block;margin-bottom:4px;cursor:pointer;"><input type="radio" name="mc-rcm" value="strict" checked> Strict OSE</label>
                 <label style="display:block;margin-bottom:4px;cursor:pointer;"><input type="radio" name="mc-rcm" value="strict-human"> Strict + Human Abilities</label>
                 <label style="display:block;margin-bottom:4px;cursor:pointer;"><input type="radio" name="mc-rcm" value="traditional-extended"> Extended Levels + Human Abilities</label>
-                <label style="display:block;cursor:pointer;"><input type="radio" name="mc-rcm" value="allow-all"> Allow All Combinations</label>
-                <span style="font-size:10px;color:#555;display:block;margin-top:6px;">Unlike the rest of Section 4 (Exclude Spellblade, and the actual race+class pick — neither has any effect once a character already exists), this one keeps working after creation: it gates whether a Human character currently has Blessed/Decisiveness/Leadership, checked fresh at every level-up and on every sheet render — not baked in at generation.</span>
+                <label style="display:block;margin-bottom:8px;cursor:pointer;"><input type="radio" name="mc-rcm" value="allow-all"> Allow All Combinations</label>
+                <label style="display:block;cursor:pointer;"><input type="checkbox" id="mc-esb" checked> Exclude Spellblade</label>
+                <span style="font-size:10px;color:#555;display:block;margin-top:6px;">Race/Class Mode gates whether a Human character currently has Blessed/Decisiveness/Leadership, checked fresh at every level-up and on every sheet render — not baked in at generation. Exclude Spellblade gates which classes are offered at the level 0→1 class-up step. Both are part of the campaign hash.</span>
             </div>
         </details>
 
@@ -311,14 +297,6 @@
 
         <div style="margin-bottom:10px;" id="ep-hp-section">
             <!-- populated by JS: per-level HP rows (if hr data available) or single total HP -->
-        </div>
-
-        <div style="margin-bottom:10px;">
-            <label style="display:flex;align-items:center;gap:4px;cursor:pointer;">
-                <input type="checkbox" id="mc-clear-equipment">
-                Clear Weapons, Armor &amp; Items
-                <span style="font-size:10px;color:#555;margin-left:4px;">(keeps attack bonus, melee &amp; ranged modifiers)</span>
-            </label>
         </div>
 
         <div style="display:flex;gap:8px;margin-top:12px;">
