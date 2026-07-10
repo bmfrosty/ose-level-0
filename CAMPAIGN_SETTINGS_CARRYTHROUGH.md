@@ -48,12 +48,12 @@ explanation for that setting — not scattered per-cell references.
 
 **Notes:**
 
-1. Gets its own gzip+base64url compression pass, separate from every other (plain query-string) param, because it can run up to 72 Unicode characters and appears on every Campaign Profile link/QR code -- keeping it compact matters more here than for any other field.
+1. Gets its own gzip+base64url compression pass, separate from every other (plain query-string) param, because it can run up to 72 Unicode characters and appears on every Campaign Profile link/QR code -- keeping it compact matters more here than for any other field. Not editable anywhere in character-sheet editing (2026-07-09): it's part of the campaign hash, so it would technically qualify for Modify Character, but there's no real reason a player or referee would want to rename an existing character's campaign from that character's own sheet -- it only ever changes by generating a new Campaign Link.
 2. Reconstructed to an equivalent preset guaranteeing the pick is clickable -- not necessarily the original literal A/B/C choice.
 3. Only entries above the default (3) are shown, as `Min: X≥Y`. A minimum left at the default doesn't appear at all, so a referee auditing the footer can't distinguish "explicitly set to 3" from "never touched" -- both look identical (absent).
 4. No URL param exists for the checkbox itself -- only `cp.fs=1` exists (a fact about this character's scores being fixed). In the footer, shown as `Fixed Scores` when set, otherwise the roll-attempt count (`<n> rolls`) is shown instead; the two are mutually exclusive, so "Fixed Scores" absent implies rolled, not necessarily "checkbox off."
 5. No footer chip: the setting's effects (racial abilities present, level exceeding normal caps, an otherwise-disallowed race/class combination) are already obvious from the rest of the sheet, so a dedicated chip would be redundant noise.
-6. No footer chip: whether *this* character is a Spellblade is already obvious from its own class, and a referee running a table already knows whether the class is allowed at all -- a per-sheet confirmation chip would add noise without adding real audit value.
+6. No footer chip: whether *this* character is a Spellblade is already obvious from its own class, and a referee running a table already knows whether the class is allowed at all -- a per-sheet confirmation chip would add noise without adding real audit value. Fixed 2026-07-09: the level 0->1 class-up step (charactersheet.html's Level Up panel) never actually checked this at all, so a level-0 character from a campaign with Spellblade excluded could still level into it, bypassing the restriction generation enforces -- now filtered there too. This live effect (not just a hash/carry-through fact) is also why it stayed in Modify Character rather than moving to Edit Sheet Options.
 7. Not a restriction setting like the Race/Class Mode row above it -- this is the actual race and class the player clicked in the grid for this one character (e.g. "Elf" + "Fighter"). It's inherently specific to this character, the same way Level and Name are, which is why it's stripped from the "Back to Generator" link alongside them.
 8. `cp.rap` is unconditionally written (not omitted-when-default like most other fields), so there's always an explicit value to show in the footer at every level, not just level 0.
 9. There are two distinct HP-mode values in play (2026-07-08): the **campaign** value, `cp.hm` itself -- the referee's raw chosen style, always stored unmodified regardless of any individual character -- and an unstored, derived **character** value used only for actually rolling that one character's HP (a Human with racial Blessed eligible, gated by Race/Class Restrictions allowing human abilities, rolls Blessed regardless of `cp.hm`, except under 5e which always wins outright since there's no die to double). This chip deliberately shows the **campaign** value (`cp.hm`), not the character value -- every sheet from the same campaign shows the same chip here, so a referee can spot a character whose `cp.hm` has drifted from the rest of the table (e.g. edited via Modify Character) even though it wouldn't affect that character's own dice. The Blessed racial ability itself is still visible on a qualifying character's own printed ability list, so this doesn't hide that a Human actually rolled Blessed -- it's just not duplicated into this chip too.
@@ -94,6 +94,16 @@ explanation for that setting — not scattered per-cell references.
   additionally excluded). A setting stripped from the "Back to Generator"
   link is automatically `No` here too, since the hash is computed from that
   same link.
+- **This table also decides Modify Character vs. Edit Sheet Options scope**
+  (settled 2026-07-09, `charactersheet.html`): a setting belongs in Modify
+  Character if it mechanically modifies an existing character and/or its
+  "In Hash?" column is `Yes` (either condition is enough). Otherwise it
+  belongs in Edit Sheet Options — freely player-editable, doesn't set
+  `cp.mx`. Settings that are neither (only matter during fresh generation,
+  e.g. Min Ability Scores, Prime Requisite Mode, Starting Wealth) don't
+  belong in either panel. Campaign Name is the one deliberate exception:
+  it qualifies on hash alone, but isn't editable in *either* panel — see
+  note 1.
 - **One note per row.** If a row needs explanation, put everything relevant
   (across every column) into a single numbered note, rather than adding
   separate references per cell or reusing one note across multiple rows.
