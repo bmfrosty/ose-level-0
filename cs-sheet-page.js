@@ -996,7 +996,16 @@ function initEditPanel(decoded) {
         const allowNonTraditional = decoded.rcm === 'AL';
         const raceName = CODE_TO_RACE_NAME_LU[raceCode] || 'Human';
         const permittedClassNames = new Set(getAvailableClasses(raceName, allowNonTraditional));
-        const separateClasses = allSeparateClasses.filter(c => permittedClassNames.has(c.name));
+        // Exclude Spellblade is enforced here too, not just at fresh generation
+        // (gen-ui.js's grid) — this level-0->1 step is itself a class-selection
+        // moment, so a campaign with Spellblade excluded shouldn't let a level-0
+        // character level into it just because it wasn't picked at generation.
+        // esb === 0 means Spellblade is explicitly ALLOWED (checkbox unchecked);
+        // omitted/undefined is the default EXCLUDED state — same inverted
+        // omit-when-default encoding buildCampaignURL()'s `esb` write uses.
+        const separateClasses = allSeparateClasses
+            .filter(c => permittedClassNames.has(c.name))
+            .filter(c => !(c.name === 'Spellblade' && decoded.esb !== 0));
 
         const availableClasses = [...(basicDemihumanClass[raceCode] || []), ...separateClasses];
 
