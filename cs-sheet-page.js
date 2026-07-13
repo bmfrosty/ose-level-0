@@ -352,7 +352,7 @@ export async function expandCompactV3(cp, precomp = {}, { silent = false } = {})
             character = createCharacter({
                 level, className: cls, mode: prog === 'smoothprog' ? 'Smoothified' : 'Normal',
                 abilityScores: adj, hp: cp.h,
-                progressionData: progData, features, racialAbilities,
+                progressionData: progData, features, racialAbilities, race,
                 name: cp.n, background: { profession: cp.bg },
             });
             character.race              = race;
@@ -379,7 +379,7 @@ export async function expandCompactV3(cp, precomp = {}, { silent = false } = {})
             character = createCharacter({
                 level, className: cls, mode: modeLabel,
                 abilityScores: adj, hp: cp.h,
-                progressionData: progData, features, racialAbilities: [],
+                progressionData: progData, features, racialAbilities: [], race,
                 name: cp.n, background: { profession: cp.bg }, startingGold: cp.g || 0
             });
             if (rcm !== 'strict' && !BASIC_DEMIHUMAN_CLASSES.includes(cls)) {

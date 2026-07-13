@@ -846,7 +846,11 @@ export function resolveFormula(formula, abilityScores) {
  * Apply racial save modifiers to a saves object, reading saveModifier entries from RACE_INFO.
  * Replaces calculateSavingThrows() for the racial-bonus portion.
  * Applies regardless of mode (Basic or Advanced) — save bonuses always apply.
- * @param {Object} saves - { Death, Wands, Paralysis, Breath, Spells } (mutated in place)
+ * @param {Object} saves - save-category keys (e.g. Death/Wands/Paralysis/Breath/Spells or
+ *   death/wands/paralysis/breath/spells) mapped to numeric target values (mutated in place).
+ *   Matched against RACE_INFO's saveModifier.appliesTo case-insensitively, since the level-0
+ *   path (savingThrowsLevel0) and the level-1+ class-progression tables use different casing
+ *   for the same categories.
  * @param {string} race - Race name (with or without _RACE suffix)
  * @param {Object|Array} abilityScores - passed to resolveFormula
  * @returns {Object} The mutated saves object
@@ -855,12 +859,14 @@ export function applyRacialSaveModifiers(saves, race, abilityScores) {
     const raceData = getRaceInfo(race);
     if (!raceData) return saves;
 
+    const saveKeys = Object.keys(saves);
     for (const entry of raceData.abilities) {
         if (!entry.saveModifier) continue;
         const bonus = resolveFormula(entry.saveModifier.formula, abilityScores);
         if (bonus === 0) continue;
         for (const category of entry.saveModifier.appliesTo) {
-            if (saves[category] !== undefined) saves[category] -= bonus;
+            const key = saveKeys.find(k => k.toLowerCase() === category.toLowerCase());
+            if (key !== undefined) saves[key] -= bonus;
         }
     }
     return saves;
@@ -1255,7 +1261,8 @@ export function createCharacter(options) {
         racialAbilities,
         name,
         background,
-        startingGold = null
+        startingGold = null,
+        race = null
     } = options;
 
     console.log('\n=== Creating Character Object ===');
@@ -1286,8 +1293,12 @@ export function createCharacter(options) {
             max: hp
         },
 
-        // Combat stats
-        savingThrows: { ...progressionData.savingThrows },
+        // Combat stats — race defaults to null for any caller that doesn't supply
+        // it, giving no racial save modifier (same as a race with none). Level 0
+        // applies this same saveModifier logic via calculateSavingThrows() instead
+        // — see that function's own doc comment.
+        savingThrows: race ? applyRacialSaveModifiers({ ...progressionData.savingThrows }, race, abilityScores)
+                            : { ...progressionData.savingThrows },
         attackBonus: progressionData.attackBonus,
         armorClass: 10, // Base AC (Ascending Armor Class) before DEX modifier and armor
 
