@@ -1745,6 +1745,54 @@ export const WEAPON_PRIORITY = {
 
 export const ARMOR_PRIORITY = ["Plate mail", "Chain mail", "Leather"];
 
+// Races whose Combat racial ability says "no longbows or two-handed swords"
+// (Dwarf, Halfling, Gnome) — they get the largest equivalent weapon they can
+// actually use instead: a Sword in place of a Two-handed sword, a Short bow
+// in place of a Long bow. Restricted/replacement pairs are listed in every
+// display-name variant that appears in this file's own weapon/background
+// data (WEAPONS uses "Long bow"/"Short bow"/"Sword" with a space; background
+// weapon strings use "Longbow"/"Shortbow" with no space), each paired with
+// the WEAPONS key to source the replacement's own damage die from.
+const SMALL_RACE_WEAPON_RESTRICTED_RACES = new Set(["Dwarf_RACE", "Halfling_RACE", "Gnome_RACE"]);
+const SMALL_RACE_WEAPON_SUBSTITUTIONS = [
+    { restricted: "Long bow",         replacement: "Short bow", weaponsKey: "Short bow" },
+    { restricted: "Longbow",          replacement: "Shortbow",  weaponsKey: "Short bow" },
+    { restricted: "Two-handed sword", replacement: "Sword",     weaponsKey: "Sword" },
+];
+
+/**
+ * Substitute a weapon a small race can't use (Longbow, Two-handed sword) with
+ * the largest equivalent it can (Short bow, Sword), per that race's Combat
+ * ability. Accepts either a bare WEAPONS-table name or a background-style
+ * display string (e.g. "Longbow (1d6) + 10 arrows") — any trailing text after
+ * the weapon name is preserved, with the damage die rewritten to match the
+ * replacement weapon's own entry in WEAPONS.
+ * @param {string} weaponText - weapon name or display string
+ * @param {string} race - race name (with or without _RACE suffix)
+ * @returns {string} substituted weapon text, or the original if no substitution applies
+ */
+export function substituteSmallRaceWeapon(weaponText, race) {
+    if (!weaponText || !SMALL_RACE_WEAPON_RESTRICTED_RACES.has(normalizeRaceName(race))) return weaponText;
+
+    for (const { restricted, replacement, weaponsKey } of SMALL_RACE_WEAPON_SUBSTITUTIONS) {
+        if (!weaponText.startsWith(restricted)) continue;
+        const suffix = weaponText.slice(restricted.length);
+        const replacementDamage = WEAPONS[weaponsKey]?.damage;
+        const rewrittenSuffix = replacementDamage ? suffix.replace(/\(\d+d\d+\)/, `(${replacementDamage})`) : suffix;
+        return `${replacement}${rewrittenSuffix}`;
+    }
+    return weaponText;
+}
+
+// Classes whose default melee loadout is a Sword + Shield, and who may
+// instead prefer a two-handed weapon (forgoing the shield) — see
+// purchaseEquipment()'s wantsTwoHanded param. Small races (see
+// SMALL_RACE_WEAPON_RESTRICTED_RACES) use the same Sword + Shield default —
+// their Combat ability allows "small or normal sized weapons" one-handed —
+// but can't wield an actual Two-handed sword, so for them the "two-handed"
+// choice is their own Sword again, just used two-handed (no shield) instead.
+export const TWO_HANDED_CANDIDATE_CLASSES = new Set(["Fighter", "Dwarf", "Elf", "Gnome", "Halfling", "Spellblade"]);
+
 /**
  * Purchase starting equipment for a character.
  * @param {string} className   - Full class name e.g. 'Fighter_CLASS'
@@ -1752,16 +1800,24 @@ export const ARMOR_PRIORITY = ["Plate mail", "Chain mail", "Leather"];
  * @param {number} dexModifier  - DEX modifier (displayed score, post-racial)
  * @param {Object} background   - Background entry { weapon, armor, item }
  * @param {string} progression  - Progression mode key ('ose'|'smooth'|'ll') — reserved
+ * @param {string} [race]       - Race name, used to substitute a too-large background
+ *                                weapon (Longbow, Two-handed sword) for a small race —
+ *                                see substituteSmallRaceWeapon() — and to determine the
+ *                                two-handed-weapon choice below. Omit for no substitution.
+ * @param {boolean} [wantsTwoHanded] - For TWO_HANDED_CANDIDATE_CLASSES only: this character
+ *                                prefers a two-handed weapon over a one-handed weapon +
+ *                                shield. Rolled once at character creation and persisted
+ *                                (cp.th) rather than re-rolled on every render — see callers.
  * @returns {{ weapons, armor, shield, items, startingAC, goldRemaining }}
  */
-export function purchaseEquipment(className, startingGold, dexModifier, background, progression) {
+export function purchaseEquipment(className, startingGold, dexModifier, background, progression, race, wantsTwoHanded = false) {
     let gold = startingGold;
     const result = {
         weapons: [], armor: null, shield: false,
         items: [], startingAC: 10 + dexModifier, goldRemaining: 0
     };
 
-    if (background?.weapon) result.items.push(`${background.weapon} (background)`);
+    if (background?.weapon) result.items.push(`${substituteSmallRaceWeapon(background.weapon, race)} (background)`);
     if (background?.armor)  result.items.push(`${background.armor} (background)`);
     const bgItems = Array.isArray(background?.item) ? background.item : (background?.item ? [background.item] : []);
     bgItems.forEach(i => { if (i) result.items.push(i); });
@@ -1773,9 +1829,24 @@ export function purchaseEquipment(className, startingGold, dexModifier, backgrou
     const allowedWeapons = new Set(classInfo.weapons || []);
     const allowedArmors  = (classInfo.armor || []).filter(a => a !== "Shield");
     const allowsShield   = (classInfo.armor || []).includes("Shield");
+    const isSmallRace     = SMALL_RACE_WEAPON_RESTRICTED_RACES.has(normalizeRaceName(race));
+
+    // Tracks whether the purchased weapon is being wielded two-handed, whether
+    // that's because it's literally a Two-handed sword (has the "Two-handed"
+    // WEAPONS quality) or, for a small race — who can use a normal Sword fine
+    // one-handed, per their Combat ability ("small or normal sized weapons"),
+    // just not an actual Two-handed sword — because they're using their own
+    // Sword two-handed instead, forgoing the shield for it.
+    let usedTwoHanded = false;
 
     if (background?.weapon && allowedWeapons.has(background.weapon)) {
         result.weapons.push(background.weapon);
+    } else if (TWO_HANDED_CANDIDATE_CLASSES.has(baseClass)) {
+        const preferred = (wantsTwoHanded && !isSmallRace) ? "Two-handed sword" : "Sword";
+        if (allowedWeapons.has(preferred) && WEAPONS[preferred] && WEAPONS[preferred].cost <= gold) {
+            result.weapons.push(preferred); gold -= WEAPONS[preferred].cost; result.items.push(preferred);
+            usedTwoHanded = wantsTwoHanded;
+        }
     } else {
         for (const wName of (WEAPON_PRIORITY[baseClass] || [])) {
             if (allowedWeapons.has(wName) && WEAPONS[wName] && WEAPONS[wName].cost <= gold) {
@@ -1790,7 +1861,11 @@ export function purchaseEquipment(className, startingGold, dexModifier, backgrou
         }
     }
 
-    if (allowsShield && ARMOR["Shield"] && ARMOR["Shield"].cost <= gold) {
+    // No shield with a two-handed weapon in hand — either a literal Two-handed
+    // sword (or anything else with the WEAPONS "Two-handed" quality) or, for a
+    // small race, their own Sword used two-handed via usedTwoHanded above.
+    const wieldingTwoHanded = usedTwoHanded || result.weapons.some(w => WEAPONS[w]?.qualities?.includes("Two-handed"));
+    if (allowsShield && !wieldingTwoHanded && ARMOR["Shield"] && ARMOR["Shield"].cost <= gold) {
         result.shield = true; gold -= ARMOR["Shield"].cost;
     }
 

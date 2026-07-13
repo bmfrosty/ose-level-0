@@ -203,6 +203,18 @@ export async function decompressFromBase64Url(b64url) {
  * it      string[]    Item list              (each item lookup-table compressed)
  * g       number      Gold remaining after equipment purchase
  * ac      number      Starting AC (before DEX modifier)
+ * th      0|1         wantsTwoHanded — this character prefers a two-handed weapon over a
+ *                     one-handed weapon + shield (omitted = default one-handed + shield).
+ *                     Only meaningful for TWO_HANDED_CANDIDATE_CLASSES (Fighter, Dwarf, Elf,
+ *                     Gnome, Halfling, Spellblade). Rolled once (1/3 chance) at the moment a
+ *                     level 1+ class is first chosen — generateCharacterV3 for fresh level 1+
+ *                     generation, the level-up panel's 0→1 class-up step otherwise — and
+ *                     carried forward unchanged on further leveling, so purchaseEquipment()'s
+ *                     resulting weapon/shield choice stays stable across sheet re-renders
+ *                     instead of being re-rolled every time. See purchaseEquipment() in
+ *                     shared-core.js for how this combines with race (small races get a Sword
+ *                     instead of an actual Two-handed sword, and Short sword instead of Sword
+ *                     as their one-handed default).
  *
  * ── Generation options (preserved for level-up / regeneration) ────────────────
  * rcm     2-char code Race/class restriction preset, applies to any pick: ST SH TE AL

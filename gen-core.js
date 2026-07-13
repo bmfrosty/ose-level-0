@@ -25,6 +25,7 @@ import { WEAPONS, ARMOR, calculateModifier,
     getBackgroundByProfession, getRandomBackground,
     getClassRequirements, getPrimeRequisites,
     CLS_CODE, RACE_CODE, RCM_CODE, PROG_CODE, RAP_CODE,
+    TWO_HANDED_CANDIDATE_CLASSES,
 } from './shared-core.js';
 import * as ClassDataShared from './shared-core.js';
 
@@ -442,6 +443,13 @@ export function generateCharacterV3(opts = {}) {
     }
     const clsCode = CLS_CODE[className] ?? 'FI';
 
+    // Whether this character prefers a two-handed weapon over a one-handed
+    // weapon + shield — rolled once here (1/3 chance) and persisted as cp.th
+    // rather than re-rolled by purchaseEquipment() on every sheet render. Only
+    // meaningful for TWO_HANDED_CANDIDATE_CLASSES; omitted (falsy) otherwise.
+    const bareClassName = className.replace(/_CLASS$/, '');
+    const wantsTwoHanded = TWO_HANDED_CANDIDATE_CLASSES.has(bareClassName) && Math.random() < (1 / 3);
+
     return {
         v: 3, m: mCode, p: pCode, r: raceCode, c: clsCode, l: level,
         s: rawArr, ...(saArr ? { sa: saArr } : {}),
@@ -453,6 +461,7 @@ export function generateCharacterV3(opts = {}) {
         ...(noLevel0Equipment ? { nl0: 1 } : {}),
         ...(hpMode > 0 ? { hm: hpMode } : {}),
         ...(fixedScores ? { fs: 1 } : {}),
+        ...(wantsTwoHanded ? { th: 1 } : {}),
     };
 }
 

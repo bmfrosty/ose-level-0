@@ -251,7 +251,25 @@ These come from `RACE_INFO.Human_RACE.abilities` entries flagged `humanOnly: tru
   9th Level" section) distinct from the Stronghold ability.
 - Dwarf and Halfling `Resilience` (CON-based save bonus) is a **racial feature**, not a class
   feature. It lives in `RACE_INFO[race].abilities` with a `saveModifier` field, mechanically
-  applied via `calculateSavingThrows()` in `shared-core.js`.
+  applied via `applyRacialSaveModifiers()` in `shared-core.js` — called from
+  `calculateSavingThrows()` at level 0 and from `createCharacter()` (when given a `race`) at
+  level 1+, so the bonus applies at every level regardless of pick type.
+- Dwarf, Halfling, and Gnome's Combat ability ("no longbows or two-handed swords") is enforced
+  mechanically, not just described: `substituteSmallRaceWeapon()` in `shared-core.js` swaps a
+  Longbow for a Short bow and a Two-handed sword for a Sword (the largest equivalent each race
+  can actually use) for any of these three races, whenever a background or purchased weapon
+  would otherwise be one of the restricted two. Applied both to the level-0 sheet's background
+  item display and to `purchaseEquipment()`'s level 1+ background-carry-through path.
+- Fighter, Dwarf, Elf, Gnome, Halfling, and Spellblade (`TWO_HANDED_CANDIDATE_CLASSES` in
+  `shared-core.js`) default to a Sword + Shield for auto-purchased equipment, but each such
+  character has a persisted 1/3 chance (`cp.th`, rolled once when the class is first chosen —
+  fresh level 1+ generation or the level-up panel's 0→1 class-up step — and carried forward
+  unchanged on further leveling) of preferring a two-handed weapon and forgoing the shield
+  instead. For Dwarf/Halfling/Gnome this still means their own Sword (per their Combat ability,
+  a normal-sized Sword is fine for them one-handed — they just can't wield an actual Two-handed
+  sword), used two-handed purely to skip the shield; for every other race it's a literal
+  Two-handed sword. `purchaseEquipment()` takes this as an explicit `wantsTwoHanded` param rather
+  than rolling its own randomness, so the choice stays stable across sheet re-renders.
 - `CLASS_ABILITIES` entries for the Gnome class use `// BOOK:` comments (not `// SRD:`) because
   the Gnome class is not in the free OSE SRD — it is from OSE Advanced Fantasy.
 - Gnome class **requirements**: CON 9 minimum only. DEX and INT are prime requisites (XP bonus),
