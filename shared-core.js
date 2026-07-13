@@ -1293,11 +1293,10 @@ export function createCharacter(options) {
             max: hp
         },
 
-        // Combat stats — race is null for pre-Advanced-mode call sites that don't
-        // yet track a race (e.g. legacy Basic-mode paths); those get no racial
-        // save modifier applied, same as if the race had none. Level 0 applies
-        // this same saveModifier logic via calculateSavingThrows() instead — see
-        // that function's own doc comment.
+        // Combat stats — race defaults to null for any caller that doesn't supply
+        // it, giving no racial save modifier (same as a race with none). Level 0
+        // applies this same saveModifier logic via calculateSavingThrows() instead
+        // — see that function's own doc comment.
         savingThrows: race ? applyRacialSaveModifiers({ ...progressionData.savingThrows }, race, abilityScores)
                             : { ...progressionData.savingThrows },
         attackBonus: progressionData.attackBonus,
