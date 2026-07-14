@@ -278,7 +278,7 @@ export async function expandCompactV3(cp, precomp = {}, { silent = false } = {})
             const bg = getBackgroundByProfession(cp.bg || '') || {};
             l0Weapons = [];
             const bgItems = Array.isArray(bg.item) ? bg.item : (bg.item ? [bg.item] : []);
-            l0Items   = [...(bg.weapon ? [`${substituteSmallRaceWeapon(bg.weapon, race)} (background)`] : []), ...bgItems];
+            l0Items   = [...(bg.weapon ? [`${substituteSmallRaceWeapon(bg.weapon, race, cp.ssw === 1)} (background)`] : []), ...bgItems];
             l0Armor   = (bg.armor && bg.armor !== 'Unarmored') ? bg.armor : null;
             const armorAC = l0Armor ? (ARMOR[l0Armor]?.ac?.ascending ?? 10) : 10;
             l0AC = armorAC + mods.DEX;
