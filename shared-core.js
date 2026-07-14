@@ -1800,6 +1800,14 @@ export function substituteSmallRaceWeapon(weaponText, race, limitSmallRaceShortS
 // forgoing the shield — see purchaseEquipment()'s wantsTwoHanded param.
 export const TWO_HANDED_CANDIDATE_CLASSES = new Set(["Fighter", "Dwarf", "Elf", "Gnome", "Halfling", "Spellblade"]);
 
+// Classes purchaseEquipment() also gives a race-sized ranged weapon (Long bow,
+// or Short bow for Dwarf/Halfling/Gnome). A superset of TWO_HANDED_CANDIDATE_CLASSES
+// — also includes Thief, who per the SRD "can use any weapon" but has no shield
+// at all (Leather armour only), so Thief is deliberately NOT in
+// TWO_HANDED_CANDIDATE_CLASSES: there's no shield for a two-handed weapon to
+// cost them, so that preference logic doesn't apply, only the ranged purchase.
+export const RANGED_WEAPON_CANDIDATE_CLASSES = new Set([...TWO_HANDED_CANDIDATE_CLASSES, "Thief"]);
+
 // Referee-facing control over the two-handed weapon roll — persisted as
 // cp.wpm (omitted when 'random', the default).
 export const WEAPON_PREFERENCE_CODE = { random: 'R', 'always-shield': 'S', 'always-two-handed': 'T' };
@@ -1852,7 +1860,7 @@ export function resolveWantsTwoHanded(weaponPreferenceMode, className, race) {
  *                                Dwarf) use a Short sword instead of a Sword as their default
  *                                melee weapon. Persisted as cp.ssw — see callers.
  * @param {number} [strModifier] - STR modifier (displayed score, post-racial). For
- *                                TWO_HANDED_CANDIDATE_CLASSES only: when this is > dexModifier,
+ *                                RANGED_WEAPON_CANDIDATE_CLASSES only: when this is > dexModifier,
  *                                the melee weapon is bought before the ranged weapon (default);
  *                                when dexModifier is higher, ranged is bought first instead, so
  *                                a gold-limited character gets whichever weapon suits them best.
@@ -1879,6 +1887,7 @@ export function purchaseEquipment(className, startingGold, dexModifier, backgrou
     const allowsShield   = (classInfo.armor || []).includes("Shield");
     const isSmallRace     = SMALL_RACE_WEAPON_RESTRICTED_RACES.has(normalizeRaceName(race));
     const isTwoHandedCandidate = TWO_HANDED_CANDIDATE_CLASSES.has(baseClass);
+    const isRangedCandidate    = RANGED_WEAPON_CANDIDATE_CLASSES.has(baseClass);
 
     // Name of the melee weapon actually purchased, tracked separately from
     // result.weapons (which may also gain a ranged weapon below) so the
@@ -1915,11 +1924,11 @@ export function purchaseEquipment(className, startingGold, dexModifier, backgrou
         }
     };
 
-    // TWO_HANDED_CANDIDATE_CLASSES also get a ranged weapon sized for their
-    // race — Long bow normally, Short bow for Dwarf/Halfling/Gnome (same
-    // "no longbows" restriction as their Combat ability).
+    // RANGED_WEAPON_CANDIDATE_CLASSES also get a ranged weapon sized for
+    // their race — Long bow normally, Short bow for Dwarf/Halfling/Gnome
+    // (same "no longbows" restriction as their Combat ability).
     const buyRangedWeapon = () => {
-        if (!isTwoHandedCandidate) return;
+        if (!isRangedCandidate) return;
         const rangedPreferred = isSmallRace ? "Short bow" : "Long bow";
         if (allowedWeapons.has(rangedPreferred) && WEAPONS[rangedPreferred] && WEAPONS[rangedPreferred].cost <= gold) {
             result.weapons.push(rangedPreferred); gold -= WEAPONS[rangedPreferred].cost; result.items.push(rangedPreferred);
@@ -1929,7 +1938,7 @@ export function purchaseEquipment(className, startingGold, dexModifier, backgrou
     // A character who's better at range than melee (DEX modifier > STR
     // modifier) buys their ranged weapon first, so limited gold favors
     // whichever weapon actually suits them; otherwise melee comes first.
-    if (isTwoHandedCandidate && dexModifier > strModifier) {
+    if (isRangedCandidate && dexModifier > strModifier) {
         buyRangedWeapon();
         buyMeleeWeapon();
     } else {
