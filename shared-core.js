@@ -1753,7 +1753,7 @@ export const ARMOR_PRIORITY = ["Plate mail", "Chain mail", "Leather"];
 // data (WEAPONS uses "Long bow"/"Short bow"/"Sword" with a space; background
 // weapon strings use "Longbow"/"Shortbow" with no space), each paired with
 // the WEAPONS key to source the replacement's own damage die from.
-const SMALL_RACE_WEAPON_RESTRICTED_RACES = new Set(["Dwarf_RACE", "Halfling_RACE", "Gnome_RACE"]);
+export const SMALL_RACE_WEAPON_RESTRICTED_RACES = new Set(["Dwarf_RACE", "Halfling_RACE", "Gnome_RACE"]);
 const SMALL_RACE_WEAPON_SUBSTITUTIONS = [
     { restricted: "Long bow",         replacement: "Short bow", weaponsKey: "Short bow" },
     { restricted: "Longbow",          replacement: "Shortbow",  weaponsKey: "Short bow" },
@@ -1784,14 +1784,48 @@ export function substituteSmallRaceWeapon(weaponText, race) {
     return weaponText;
 }
 
-// Classes whose default melee loadout is a Sword + Shield, and who may
-// instead prefer a two-handed weapon (forgoing the shield) — see
-// purchaseEquipment()'s wantsTwoHanded param. Small races (see
-// SMALL_RACE_WEAPON_RESTRICTED_RACES) use the same Sword + Shield default —
-// their Combat ability allows "small or normal sized weapons" one-handed —
-// but can't wield an actual Two-handed sword, so for them the "two-handed"
-// choice is their own Sword again, just used two-handed (no shield) instead.
+// Classes whose default melee loadout is a Sword + Shield, and who (except
+// Dwarf/Halfling/Gnome — see below) may instead prefer a two-handed weapon,
+// forgoing the shield — see purchaseEquipment()'s wantsTwoHanded param.
 export const TWO_HANDED_CANDIDATE_CLASSES = new Set(["Fighter", "Dwarf", "Elf", "Gnome", "Halfling", "Spellblade"]);
+
+// Dwarf, Halfling, and Gnome have no two-handed option at all (they can't
+// wield an actual Two-handed sword, and there's no benefit to using their own
+// Sword two-handed instead) — purchaseEquipment() ignores wantsTwoHanded
+// entirely for these races. Their Combat ability allows "small or normal
+// sized weapons" one-handed, so Dwarf still defaults to a Sword; Halfling and
+// Gnome default to a Sword too UNLESS the referee's limitSmallRaceShortSword
+// house rule is on, in which case they use a Short sword instead (Dwarf is
+// deliberately excluded from this limit).
+const SHORT_SWORD_LIMITED_RACES = new Set(["Halfling_RACE", "Gnome_RACE"]);
+
+// Referee-facing control over the two-handed weapon roll — persisted as
+// cp.wpm (omitted when 'random', the default).
+export const WEAPON_PREFERENCE_CODE = { random: 'R', 'always-shield': 'S', 'always-two-handed': 'T' };
+export const CODE_TO_WEAPON_PREFERENCE = Object.fromEntries(Object.entries(WEAPON_PREFERENCE_CODE).map(([k, v]) => [v, k]));
+
+/**
+ * Decide whether a level 1+ character prefers a two-handed weapon over a
+ * one-handed weapon + shield, given the referee's Weapon Preference setting.
+ * Single source of truth used identically by direct level 1+ generation
+ * (gen-core.js) and the level 0 -> 1 class-up transition (cs-sheet-page.js),
+ * so the two paths can't silently diverge — see isSeparateRaceClassForPolicy()
+ * for the same pattern applied to Racial Adjustment Policy.
+ * @param {string} weaponPreferenceMode - 'random' | 'always-shield' | 'always-two-handed'
+ * @param {string} className - Full class name e.g. 'Fighter_CLASS'
+ * @param {string} race - Race name (with or without _RACE suffix)
+ * @returns {boolean}
+ */
+export function resolveWantsTwoHanded(weaponPreferenceMode, className, race) {
+    const baseClass = className.replace(/_CLASS$/, '');
+    if (!TWO_HANDED_CANDIDATE_CLASSES.has(baseClass)) return false;
+    // Dwarf/Halfling/Gnome have no two-handed option at all — see
+    // SHORT_SWORD_LIMITED_RACES' comment above.
+    if (SMALL_RACE_WEAPON_RESTRICTED_RACES.has(normalizeRaceName(race))) return false;
+    if (weaponPreferenceMode === 'always-shield') return false;
+    if (weaponPreferenceMode === 'always-two-handed') return true;
+    return Math.random() < (1 / 3);
+}
 
 /**
  * Purchase starting equipment for a character.
@@ -1804,13 +1838,17 @@ export const TWO_HANDED_CANDIDATE_CLASSES = new Set(["Fighter", "Dwarf", "Elf", 
  *                                weapon (Longbow, Two-handed sword) for a small race —
  *                                see substituteSmallRaceWeapon() — and to determine the
  *                                two-handed-weapon choice below. Omit for no substitution.
- * @param {boolean} [wantsTwoHanded] - For TWO_HANDED_CANDIDATE_CLASSES only: this character
- *                                prefers a two-handed weapon over a one-handed weapon +
- *                                shield. Rolled once at character creation and persisted
- *                                (cp.th) rather than re-rolled on every render — see callers.
+ * @param {boolean} [wantsTwoHanded] - For TWO_HANDED_CANDIDATE_CLASSES only, and never for
+ *                                Dwarf/Halfling/Gnome (see SHORT_SWORD_LIMITED_RACES comment):
+ *                                this character prefers a two-handed weapon over a one-handed
+ *                                weapon + shield. Rolled once at character creation and
+ *                                persisted (cp.th) rather than re-rolled on every render.
+ * @param {boolean} [limitSmallRaceShortSword] - Referee house rule: Halfling and Gnome (not
+ *                                Dwarf) use a Short sword instead of a Sword as their default
+ *                                melee weapon. Persisted as cp.ssw — see callers.
  * @returns {{ weapons, armor, shield, items, startingAC, goldRemaining }}
  */
-export function purchaseEquipment(className, startingGold, dexModifier, background, progression, race, wantsTwoHanded = false) {
+export function purchaseEquipment(className, startingGold, dexModifier, background, progression, race, wantsTwoHanded = false, limitSmallRaceShortSword = false) {
     let gold = startingGold;
     const result = {
         weapons: [], armor: null, shield: false,
@@ -1831,26 +1869,34 @@ export function purchaseEquipment(className, startingGold, dexModifier, backgrou
     const allowsShield   = (classInfo.armor || []).includes("Shield");
     const isSmallRace     = SMALL_RACE_WEAPON_RESTRICTED_RACES.has(normalizeRaceName(race));
 
-    // Tracks whether the purchased weapon is being wielded two-handed, whether
-    // that's because it's literally a Two-handed sword (has the "Two-handed"
-    // WEAPONS quality) or, for a small race — who can use a normal Sword fine
-    // one-handed, per their Combat ability ("small or normal sized weapons"),
-    // just not an actual Two-handed sword — because they're using their own
-    // Sword two-handed instead, forgoing the shield for it.
+    // Tracks whether the purchased weapon is being wielded two-handed (has the
+    // "Two-handed" WEAPONS quality) — Dwarf/Halfling/Gnome never take this path
+    // at all now, so it's only ever true for a literal Two-handed sword.
     let usedTwoHanded = false;
 
     if (background?.weapon && allowedWeapons.has(background.weapon)) {
         result.weapons.push(background.weapon);
-    } else if (TWO_HANDED_CANDIDATE_CLASSES.has(baseClass)) {
-        const preferred = (wantsTwoHanded && !isSmallRace) ? "Two-handed sword" : "Sword";
-        if (allowedWeapons.has(preferred) && WEAPONS[preferred] && WEAPONS[preferred].cost <= gold) {
-            result.weapons.push(preferred); gold -= WEAPONS[preferred].cost; result.items.push(preferred);
-            usedTwoHanded = wantsTwoHanded;
-        }
     } else {
-        for (const wName of (WEAPON_PRIORITY[baseClass] || [])) {
-            if (allowedWeapons.has(wName) && WEAPONS[wName] && WEAPONS[wName].cost <= gold) {
-                result.weapons.push(wName); gold -= WEAPONS[wName].cost; result.items.push(wName); break;
+        let boughtPreferred = false;
+        if (TWO_HANDED_CANDIDATE_CLASSES.has(baseClass)) {
+            const preferred = isSmallRace
+                ? (SHORT_SWORD_LIMITED_RACES.has(normalizeRaceName(race)) && limitSmallRaceShortSword ? "Short sword" : "Sword")
+                : (wantsTwoHanded ? "Two-handed sword" : "Sword");
+            if (allowedWeapons.has(preferred) && WEAPONS[preferred] && WEAPONS[preferred].cost <= gold) {
+                result.weapons.push(preferred); gold -= WEAPONS[preferred].cost; result.items.push(preferred);
+                usedTwoHanded = !isSmallRace && wantsTwoHanded;
+                boughtPreferred = true;
+            }
+        }
+        // Fall back to the generic priority list if the preferred weapon
+        // couldn't be afforded (or this class has no two-handed preference at
+        // all) — keeps a low-gold character armed with whatever they can
+        // afford instead of ending up weaponless.
+        if (!boughtPreferred) {
+            for (const wName of (WEAPON_PRIORITY[baseClass] || [])) {
+                if (allowedWeapons.has(wName) && WEAPONS[wName] && WEAPONS[wName].cost <= gold) {
+                    result.weapons.push(wName); gold -= WEAPONS[wName].cost; result.items.push(wName); break;
+                }
             }
         }
     }

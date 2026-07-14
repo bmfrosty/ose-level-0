@@ -44,7 +44,7 @@ function loadSettings(pageKey) {
 import { expandCompactV3, mergeAdvancedLanguages } from './cs-sheet-page.js';
 import { compressToBase64Url, decompressFromBase64Url } from './cs-sheet-page.js';
 import { PROG_CODE, CLS_CODE, RACE_CODE, RCM_CODE, progModeLabel } from './gen-core.js';
-import { RAP_CODE, isSeparateRaceClassForPolicy } from './gen-core.js';
+import { RAP_CODE, isSeparateRaceClassForPolicy, WEAPON_PREFERENCE_CODE } from './gen-core.js';
 
 // ── Dark mode (persisted separately — never reset by settings reset) ──────────
 let darkMode = localStorage.getItem('theme') === 'dark'; // default light
@@ -137,6 +137,17 @@ let raceClassMode = 'strict';
 // Spellblade is a house-rules fighter/magic-user hybrid, not part of Basic or
 // Advanced core OSE — excluded by default so Basic Mode Reset is genuinely basic.
 let excludeSpellblade = true;
+
+// House rule, off by default: Halfling and Gnome (small races other than Dwarf,
+// who use a Sword normally per their Combat ability) are limited to a Short
+// sword instead of a Sword for auto-purchased equipment. See
+// purchaseEquipment()'s limitSmallRaceShortSword param in shared-core.js.
+let limitSmallRaceShortSword = false;
+
+// Referee control over TWO_HANDED_CANDIDATE_CLASSES' two-handed weapon roll:
+// 'random' (default, 1/3 chance) | 'always-shield' | 'always-two-handed'.
+// See resolveWantsTwoHanded() in shared-core.js.
+let weaponPreferenceMode = 'random';
 
 // True when the currently-selected class is a race-as-class pick (CLASS_INFO
 // classType === 'raceAsClass'), i.e. the Race-as-Class grid column was clicked
@@ -544,6 +555,8 @@ function buildCampaignRulesetCp() {
     return {
         ...(campaignName ? { cn: campaignName } : {}),
         ...(!excludeSpellblade ? { esb: 0 } : {}),
+        ...(limitSmallRaceShortSword ? { ssw: 1 } : {}),
+        ...(weaponPreferenceMode !== 'random' ? { wpm: WEAPON_PREFERENCE_CODE[weaponPreferenceMode] } : {}),
         // Always written (not omitted-when-default like most other fields
         // here) so the footer can show an explicit Racial Adjustment Policy
         // at every level, not just level 0 — matches generateCharacterV3's
@@ -635,6 +648,7 @@ async function runGenerate() {
         l0WealthMethod, l0DiceCount, l0DiceSides, l0DiceMult, l0FixedGold,
         l1WealthMethod, l1DiceCount, l1DiceSides, l1DiceMult, l1FixedGold,
         l2PlusWealthMethod, l2PlusDiceCount, l2PlusDiceSides, l2PlusDiceMult, l2PlusFixedGold,
+        limitSmallRaceShortSword, weaponPreferenceMode,
     });
     fixedHPRolls = null; fixedStartingGold = null;
     _scoreRollAttempts = cp.rr || 1;
@@ -737,6 +751,7 @@ async function generateZeroLevel() {
         fixedAdjustments: _fixedAdj,
         fixedStartingGold, noLevel0Equipment,
         l0WealthMethod, l0DiceCount, l0DiceSides, l0DiceMult, l0FixedGold,
+        limitSmallRaceShortSword, weaponPreferenceMode,
     });
     fixedStartingGold = null;
     _scoreRollAttempts = cp.rr || 1;
@@ -821,7 +836,7 @@ function saveCurrentSettings() {
         scoreDEX: parseInt(document.getElementById('scoreDEX')?.value)||3,
         scoreCON: parseInt(document.getElementById('scoreCON')?.value)||3,
         scoreCHA: parseInt(document.getElementById('scoreCHA')?.value)||3,
-        raceClassMode, excludeSpellblade, selectedRace, selectedRaceForZero, racialAdjustmentPolicy,
+        raceClassMode, excludeSpellblade, limitSmallRaceShortSword, weaponPreferenceMode, selectedRace, selectedRaceForZero, racialAdjustmentPolicy,
         campaignName,
     });
     syncURLParams();
@@ -860,6 +875,8 @@ function syncURLParams() {
     if (selectedRace)                                              p.set('r', selectedRace.replace('_RACE',''));
     if (raceClassMode !== 'strict')                                p.set('rcm', raceClassMode);
     if (!excludeSpellblade)                                        p.set('esb', '0');
+    if (limitSmallRaceShortSword)                                  p.set('ssw', '1');
+    if (weaponPreferenceMode !== 'random')                         p.set('wpm', weaponPreferenceMode);
     if (racialAdjustmentPolicy !== 'never')                        p.set('rap', racialAdjustmentPolicy);
     if (primeRequisiteMode !== 'user')                             p.set('prm', primeRequisiteMode);
     if (hpRollingMode !== 'normal')                                p.set('hpm', hpRollingMode);
@@ -1001,6 +1018,8 @@ function applySettings(s) {
         if (_id) { const el=document.getElementById(_id); if(el) el.checked=true; }
     }
     if (s.excludeSpellblade!==undefined) { excludeSpellblade=s.excludeSpellblade; const _el=document.getElementById('excludeSpellblade'); if(_el) _el.checked=s.excludeSpellblade; }
+    if (s.limitSmallRaceShortSword!==undefined) { limitSmallRaceShortSword=s.limitSmallRaceShortSword; const _sswEl=document.getElementById('limitSmallRaceShortSword'); if(_sswEl) _sswEl.checked=s.limitSmallRaceShortSword; }
+    if (s.weaponPreferenceMode!==undefined) { weaponPreferenceMode=s.weaponPreferenceMode; document.querySelectorAll('input[name="weaponPreferenceMode"]').forEach(r=>{r.checked=r.value===s.weaponPreferenceMode;}); }
     if (s.racialAdjustmentPolicy) {
         racialAdjustmentPolicy = s.racialAdjustmentPolicy;
         document.querySelectorAll('input[name="racialAdjustmentPolicy"]').forEach(r=>{r.checked=r.value===s.racialAdjustmentPolicy;});
@@ -1120,6 +1139,7 @@ function applyPreset(modeValue, overrides) {
         hpRollingMode: 'normal', includeLevel0HP: false,
         scoreSTR:3, scoreINT:3, scoreWIS:3, scoreDEX:3, scoreCON:3, scoreCHA:3,
         useFixedScores: false, noLevel0Equipment: true, excludeSpellblade: false,
+        limitSmallRaceShortSword: false, weaponPreferenceMode: 'random',
         ...overrides,
     });
     saveCurrentSettings();
@@ -1152,6 +1172,8 @@ function applyRefereeModeReset(modePresetValue, racialAdjustmentPolicyValue, exc
     progressionMode='ose'; primeRequisiteMode='user'; raceClassMode='strict';
     hpRollingMode='normal'; includeLevel0HP=false; useFixedScores=false; noLevel0Equipment=true;
     excludeSpellblade=excludeSpellbladeValue; const _esbEl=document.getElementById('excludeSpellblade'); if(_esbEl) _esbEl.checked=excludeSpellbladeValue;
+    limitSmallRaceShortSword=false; const _sswEl=document.getElementById('limitSmallRaceShortSword'); if(_sswEl) _sswEl.checked=false;
+    weaponPreferenceMode='random'; document.querySelectorAll('input[name="weaponPreferenceMode"]').forEach(r=>{r.checked=r.value==='random';});
     document.querySelectorAll('input[name="hpRollingMode"]').forEach(r=>{r.checked=r.value==='normal';});
     xpMode=false; xpAmount=null; const _lmR=document.getElementById('levelModeFixed'); if(_lmR) _lmR.checked=true; const _xaR=document.getElementById('xpAmount'); if(_xaR) _xaR.value='';
     document.querySelectorAll('input[name="progressionMode"]').forEach(r=>{r.checked=r.value==='ose';});
@@ -1260,6 +1282,8 @@ function readURLParams() {
     if (p.has('r'))     s.selectedRace  = p.get('r') + '_RACE';
     if (p.has('rcm'))   s.raceClassMode = p.get('rcm');
     if (p.has('esb'))   s.excludeSpellblade = p.get('esb') !== '0';
+    if (p.has('ssw'))   s.limitSmallRaceShortSword = p.get('ssw') === '1';
+    if (p.has('wpm'))   s.weaponPreferenceMode = p.get('wpm');
     if (p.has('rap'))   s.racialAdjustmentPolicy = p.get('rap');
     if (p.has('prm'))   { const v=p.get('prm'); s.primeRequisiteMode = v==='0'?'user':v; }
     if (p.has('hpm'))   s.hpRollingMode = p.get('hpm');
@@ -1320,6 +1344,13 @@ export function initializeEventListeners() {
     document.getElementById('excludeSpellblade')?.addEventListener('change', (e) => {
         excludeSpellblade = e.target.checked;
         updateUI(); saveCurrentSettings();
+    });
+    document.getElementById('limitSmallRaceShortSword')?.addEventListener('change', (e) => {
+        limitSmallRaceShortSword = e.target.checked;
+        saveCurrentSettings();
+    });
+    document.querySelectorAll('input[name="weaponPreferenceMode"]').forEach(r=>{
+        r.addEventListener('change',(e)=>{ weaponPreferenceMode=e.target.value; saveCurrentSettings(); });
     });
     // Racial Adjustment Policy — Tier 1 (does level 0 get it) toggles which
     // Tier-2 sub-group is enabled and picks that sub-group's first option.

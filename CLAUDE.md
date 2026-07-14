@@ -261,15 +261,23 @@ These come from `RACE_INFO.Human_RACE.abilities` entries flagged `humanOnly: tru
   would otherwise be one of the restricted two. Applied both to the level-0 sheet's background
   item display and to `purchaseEquipment()`'s level 1+ background-carry-through path.
 - Fighter, Dwarf, Elf, Gnome, Halfling, and Spellblade (`TWO_HANDED_CANDIDATE_CLASSES` in
-  `shared-core.js`) default to a Sword + Shield for auto-purchased equipment, but each such
-  character has a persisted 1/3 chance (`cp.th`, rolled once when the class is first chosen —
-  fresh level 1+ generation or the level-up panel's 0→1 class-up step — and carried forward
-  unchanged on further leveling) of preferring a two-handed weapon and forgoing the shield
-  instead. For Dwarf/Halfling/Gnome this still means their own Sword (per their Combat ability,
-  a normal-sized Sword is fine for them one-handed — they just can't wield an actual Two-handed
-  sword), used two-handed purely to skip the shield; for every other race it's a literal
-  Two-handed sword. `purchaseEquipment()` takes this as an explicit `wantsTwoHanded` param rather
-  than rolling its own randomness, so the choice stays stable across sheet re-renders.
+  `shared-core.js`) default to a Sword + Shield for auto-purchased equipment. Only Human/Elf/
+  Drow/Half-Elf-type ("normal-sized") characters get a two-handed option at all: a persisted
+  chance (`cp.th`, decided once when the class is first chosen — fresh level 1+ generation or
+  the level-up panel's 0→1 class-up step — and carried forward unchanged on further leveling)
+  of preferring a literal Two-handed sword and forgoing the shield instead, governed by the
+  referee's **Weapon Preference** setting (`cp.wpm` — Random/1/3 chance, Always One-Handed +
+  Shield, or Always Two-Handed; see `resolveWantsTwoHanded()`, the single source of truth used
+  identically by both call sites). **Dwarf, Halfling, and Gnome have no two-handed option at
+  all** — they can use a normal-sized Sword one-handed just fine per their Combat ability, but
+  can't wield an actual Two-handed sword, and there's no benefit to using their own Sword
+  two-handed just to lose the shield — `resolveWantsTwoHanded()` always returns `false` for
+  these three races regardless of the referee's Weapon Preference setting. Separately, an
+  optional referee house rule, **Limit Small Races to Short Swords** (`cp.ssw`, a checkbox,
+  default off), makes Halfling and Gnome (deliberately *not* Dwarf) default to a Short sword
+  instead of a Sword. `purchaseEquipment()` takes `wantsTwoHanded` and `limitSmallRaceShortSword`
+  as explicit params rather than deciding either itself, so the choice stays stable across sheet
+  re-renders.
 - `CLASS_ABILITIES` entries for the Gnome class use `// BOOK:` comments (not `// SRD:`) because
   the Gnome class is not in the free OSE SRD — it is from OSE Advanced Fantasy.
 - Gnome class **requirements**: CON 9 minimum only. DEX and INT are prime requisites (XP bonus),

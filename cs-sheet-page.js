@@ -29,7 +29,7 @@ import {
     encodeCompactParams, decodeCompactParams,
     parseHitDice, HIT_DICE_PROGRESSIONS, HIT_DICE_SCALE,
     ARMOR, purchaseEquipment, getBackgroundByProfession, substituteSmallRaceWeapon,
-    TWO_HANDED_CANDIDATE_CLASSES,
+    resolveWantsTwoHanded, CODE_TO_WEAPON_PREFERENCE,
     calculateSavingThrows,
     isSeparateRaceClassForPolicy,
     RCM_CODE, RAP_CODE,
@@ -418,7 +418,7 @@ export async function expandCompactV3(cp, precomp = {}, { silent = false } = {})
         // purchaseEquipment() only has this character's own gold to work
         // with, same as any level 1+ character purchasing from scratch.
         const bg  = cp.nl0 ? null : (getBackgroundByProfession(cp.bg || '') || {});
-        const eq  = purchaseEquipment(cls, cp.g || 0, mods.DEX, bg, prog, race, cp.th === 1);
+        const eq  = purchaseEquipment(cls, cp.g || 0, mods.DEX, bg, prog, race, cp.th === 1, cp.ssw === 1);
         eqWeapons      = eq.weapons;
         eqArmor        = eq.armor;
         eqShield       = eq.shield;
@@ -1083,11 +1083,14 @@ function initEditPanel(decoded) {
             const isRaceAsClassPick = DEMIHUMAN_CODES_L01.has(selectedClassCode);
             const newMode = isSeparateRaceClassForPolicy(decoded.rap, isRaceAsClassPick) ? 'A' : 'B';
             // Whether this character prefers a two-handed weapon over a
-            // one-handed weapon + shield — rolled once here (this is the first
-            // moment a level 1+ class is chosen for this character) and
-            // persisted as cp.th, matching generateCharacterV3's own roll for
-            // fresh level 1+ generation — see purchaseEquipment()'s doc comment.
-            const wantsTwoHanded = TWO_HANDED_CANDIDATE_CLASSES.has(className.replace(/_CLASS$/, '')) && Math.random() < (1 / 3);
+            // one-handed weapon + shield — decided once here (this is the
+            // first moment a level 1+ class is chosen for this character),
+            // per the referee's Weapon Preference setting recorded at level 0
+            // (decoded.wpm), and persisted as cp.th — see resolveWantsTwoHanded().
+            const wantsTwoHanded = resolveWantsTwoHanded(
+                CODE_TO_WEAPON_PREFERENCE[decoded.wpm] || 'random',
+                className, `${raceName}_RACE`
+            );
             // Spread ...decoded first (matching every other newCp construction
             // site in this file) so Campaign-tier fields — cn, esb, rap, nl0,
             // Starting Wealth tiers, sm, prm, hm, wp, sb, adm, etc. — and rr
