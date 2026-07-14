@@ -418,7 +418,7 @@ export async function expandCompactV3(cp, precomp = {}, { silent = false } = {})
         // purchaseEquipment() only has this character's own gold to work
         // with, same as any level 1+ character purchasing from scratch.
         const bg  = cp.nl0 ? null : (getBackgroundByProfession(cp.bg || '') || {});
-        const eq  = purchaseEquipment(cls, cp.g || 0, mods.DEX, bg, prog, race, cp.th === 1, cp.ssw === 1);
+        const eq  = purchaseEquipment(cls, cp.g || 0, mods.DEX, bg, prog, race, cp.th === 1, cp.ssw === 1, mods.STR);
         eqWeapons      = eq.weapons;
         eqArmor        = eq.armor;
         eqShield       = eq.shield;

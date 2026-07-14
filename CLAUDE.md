@@ -278,6 +278,16 @@ These come from `RACE_INFO.Human_RACE.abilities` entries flagged `humanOnly: tru
   instead of a Sword. `purchaseEquipment()` takes `wantsTwoHanded` and `limitSmallRaceShortSword`
   as explicit params rather than deciding either itself, so the choice stays stable across sheet
   re-renders.
+- `TWO_HANDED_CANDIDATE_CLASSES` members also get a ranged weapon added to their auto-purchase
+  list — a Long bow normally, or a Short bow for Dwarf/Halfling/Gnome (same "no longbows"
+  restriction as their Combat ability). Purchase order between the melee weapon and this ranged
+  weapon depends on ability scores: if DEX modifier > STR modifier the ranged weapon is bought
+  first (so a limited-gold character favoring ranged still gets a bow even if that means no
+  melee weapon), otherwise melee is bought first as before. `purchaseEquipment()` tracks which
+  weapon name was purchased as the *melee* weapon separately from the full `weapons` list, since
+  Long bow/Short bow also carry the WEAPONS "Two-handed" quality (both hands to draw) — the
+  shield-skip check deliberately only looks at the melee weapon, so owning a bow never costs a
+  Sword+Shield character their shield.
 - `CLASS_ABILITIES` entries for the Gnome class use `// BOOK:` comments (not `// SRD:`) because
   the Gnome class is not in the free OSE SRD — it is from OSE Advanced Fantasy.
 - Gnome class **requirements**: CON 9 minimum only. DEX and INT are prime requisites (XP bonus),
