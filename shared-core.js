@@ -1800,14 +1800,19 @@ const BACKGROUND_WEAPON_NAME_ALIASES = { Longbow: "Long bow", Shortbow: "Short b
 
 /**
  * Reduce a background weapon's display string (e.g. "Longbow (1d6) + 10
- * arrows", "3 x daggers (1d4)", "Sword (1d8)") to whatever WEAPONS-table key
- * it might correspond to, so purchaseEquipment() can recognize a background
- * weapon that's already class-legal instead of buying a redundant duplicate.
- * Strips a leading "N x " quantity prefix and everything from the first "("
- * onward, then applies BACKGROUND_WEAPON_NAME_ALIASES. Returns a best-guess
- * name whether or not it turns out to exist in WEAPONS — callers must check
- * that themselves (most background weapons, e.g. "Stage sword", "Rock",
- * "Walking stick", are flavor-only civilian items with no WEAPONS entry at all).
+ * arrows", "Sword (1d8)") to whatever WEAPONS-table key it might correspond
+ * to, so purchaseEquipment() can recognize a background weapon that's
+ * already class-legal instead of buying a redundant duplicate. Strips a
+ * leading "N x " quantity prefix and everything from the first "(" onward,
+ * then applies BACKGROUND_WEAPON_NAME_ALIASES. Returns a best-guess name
+ * whether or not it turns out to exist in WEAPONS — callers must check that
+ * themselves. Most background weapons (e.g. "Stage sword", "Rock", "Walking
+ * stick") are flavor-only civilian items with no WEAPONS entry at all and
+ * simply won't match; plural quantity-prefixed ones (e.g. "3 x daggers
+ * (1d4)" strips to lowercase-plural "daggers", not "Dagger") also won't
+ * match today — an acceptably conservative gap, not a bug, since the
+ * fallback is just to treat them as flavor items too, same as any other
+ * non-matching weapon.
  * @param {string} weaponText - background weapon display string
  * @returns {string} best-guess WEAPONS-table key
  */
@@ -1832,6 +1837,13 @@ export const TWO_HANDED_CANDIDATE_CLASSES = new Set(["Fighter", "Dwarf", "Elf", 
 // TWO_HANDED_CANDIDATE_CLASSES: there's no shield for a two-handed weapon to
 // cost them, so that preference logic doesn't apply, only the ranged purchase.
 export const RANGED_WEAPON_CANDIDATE_CLASSES = new Set([...TWO_HANDED_CANDIDATE_CLASSES, "Thief"]);
+
+// The only background ranged weapons "good enough" to satisfy a
+// RANGED_WEAPON_CANDIDATE_CLASSES member's ranged slot outright — a Sling or
+// Crossbow background leaves that slot unclaimed instead, so the class still
+// buys its own preferred, race-sized bow. See purchaseEquipment()'s
+// bgWeaponForRanged/bgWeaponUnclaimed.
+const DEDICATED_RANGED_WEAPONS = new Set(["Long bow", "Short bow"]);
 
 // Referee-facing control over the two-handed weapon roll — persisted as
 // cp.wpm (omitted when 'random', the default).
@@ -1914,7 +1926,14 @@ export function purchaseEquipment(className, startingGold, dexModifier, backgrou
     const bgWeaponData = bgWeaponKey ? WEAPONS[bgWeaponKey] : null;
     const allowedWeapons = new Set(classInfo?.weapons || []);
     const bgWeaponUsable = !!(bgWeaponData && allowedWeapons.has(bgWeaponKey));
-    const bgWeaponIsRanged = bgWeaponData?.qualities?.includes("Missile") ?? false;
+    // True for any ranged-only weapon (Long bow, Short bow, Crossbow, Sling) —
+    // dual-use throwables like Dagger/Hand axe/Spear also carry "Missile" but
+    // are fundamentally melee weapons (they also carry "Melee"), so they must
+    // not claim the ranged slot and block the character from getting an
+    // actual bow. Being ranged-only doesn't by itself mean "good enough" to
+    // claim the ranged slot outright — see DEDICATED_RANGED_WEAPONS below,
+    // which narrows this further to just Long bow/Short bow.
+    const bgWeaponIsRanged = !!(bgWeaponData?.qualities?.includes("Missile") && !bgWeaponData?.qualities?.includes("Melee"));
 
     if (!classInfo) {
         // Still show the background's flavor items even for an unrecognized class.
@@ -1932,17 +1951,23 @@ export function purchaseEquipment(className, startingGold, dexModifier, backgrou
     const isRangedCandidate    = RANGED_WEAPON_CANDIDATE_CLASSES.has(baseClass);
 
     // The background weapon satisfies the ranged slot only if this class
-    // actually has one (RANGED_WEAPON_CANDIDATE_CLASSES) and the weapon is
-    // itself ranged; otherwise, if usable at all, it satisfies the single
-    // melee/primary slot, matching how classes without a separate ranged slot
-    // (Cleric, Magic-User) always worked.
-    const bgWeaponForRanged = bgWeaponUsable && bgWeaponIsRanged && isRangedCandidate;
-    const bgWeaponForMelee  = bgWeaponUsable && !bgWeaponForRanged;
+    // actually has one (RANGED_WEAPON_CANDIDATE_CLASSES) and the weapon is a
+    // dedicated bow (Long bow/Short bow) — a Fighter-type still buys their own
+    // preferred bow over a background Sling or Crossbow (weaker/non-martial
+    // ranged options), which are left unclaimed by either slot for these
+    // classes rather than treated as "good enough." Any other class-legal
+    // background weapon — melee, dual-use throwable, or ranged for a class
+    // with no separate ranged slot (Cleric, Magic-User) — satisfies the
+    // single melee/primary slot, matching how those classes always worked.
+    const bgWeaponIsDedicatedRanged = bgWeaponIsRanged && DEDICATED_RANGED_WEAPONS.has(bgWeaponKey);
+    const bgWeaponForRanged = bgWeaponUsable && isRangedCandidate && bgWeaponIsDedicatedRanged;
+    const bgWeaponUnclaimed = isRangedCandidate && bgWeaponIsRanged && !bgWeaponIsDedicatedRanged;
+    const bgWeaponForMelee  = bgWeaponUsable && !bgWeaponForRanged && !bgWeaponUnclaimed;
 
     // Only shown as a loose flavor item when it doesn't satisfy an actual
     // equipment slot above — once claimed as the melee or ranged weapon, it's
     // shown as that weapon instead (see buyMeleeWeapon/buyRangedWeapon).
-    if (substitutedBgWeapon && !bgWeaponUsable) result.items.push(`${substitutedBgWeapon} (background)`);
+    if (substitutedBgWeapon && !bgWeaponForMelee && !bgWeaponForRanged) result.items.push(`${substitutedBgWeapon} (background)`);
     if (background?.armor)  result.items.push(`${background.armor} (background)`);
     const bgItems = Array.isArray(background?.item) ? background.item : (background?.item ? [background.item] : []);
     bgItems.forEach(i => { if (i) result.items.push(i); });
@@ -1984,7 +2009,10 @@ export function purchaseEquipment(className, startingGold, dexModifier, backgrou
 
     // A Long bow or Short bow needs a quiver of arrows to actually shoot —
     // bought alongside it (gold permitting) whether the bow was freshly
-    // purchased or recognized from the background.
+    // purchased or recognized from the background. Only these two: Crossbow
+    // and Sling are never claimed via bgWeaponForRanged (see
+    // DEDICATED_RANGED_WEAPONS) and never chosen as rangedPreferred below, so
+    // buyAmmoFor() is only ever called with "Long bow" or "Short bow".
     const AMMO_FOR_WEAPON = { "Long bow": "Arrows (quiver of 20)", "Short bow": "Arrows (quiver of 20)" };
     const buyAmmoFor = (weaponName) => {
         const ammo = AMMO_FOR_WEAPON[weaponName];

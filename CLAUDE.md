@@ -299,10 +299,21 @@ These come from `RACE_INFO.Human_RACE.abilities` entries flagged `humanOnly: tru
   `normalizeBackgroundWeaponName()` reduces the background's display string (e.g. "Longbow (1d6)
   + 10 arrows") to its likely WEAPONS-table key; most background weapons (Stage sword, Rock,
   Walking stick, etc.) are flavor-only civilian items with no WEAPONS entry at all and simply
-  won't match. A matched background weapon claims the ranged slot if it's itself a ranged
-  (`"Missile"` quality) weapon and this class has one (`RANGED_WEAPON_CANDIDATE_CLASSES`);
-  otherwise, if usable at all, it claims the single melee/primary slot — matching how classes
-  without a separate ranged slot (Cleric, Magic-User) always worked.
+  won't match. A matched background weapon claims the ranged slot only if this class has one
+  (`RANGED_WEAPON_CANDIDATE_CLASSES`) **and** it's a dedicated bow (`DEDICATED_RANGED_WEAPONS` —
+  Long bow or Short bow specifically); otherwise, if usable at all, it claims the single
+  melee/primary slot — matching how classes without a separate ranged slot (Cleric, Magic-User)
+  always worked. Two things this excludes from the ranged slot on purpose:
+  - Dagger, Hand axe, and Spear carry both `"Melee"` and `"Missile"` qualities (throwable melee
+    weapons, not dedicated ranged ones) — without excluding weapons with `"Melee"`, a
+    Jeweller/Butler/Fisher-type background would wrongly let its Dagger/Hand axe/Spear claim the
+    ranged slot and leave the character with no actual bow at all.
+  - Sling and Crossbow are ranged-only but not "good enough" for a `RANGED_WEAPON_CANDIDATE_CLASSES`
+    member (Shepherd/Innkeeper/Navigator/Trader backgrounds) — a Fighter-type still buys its own
+    preferred, race-sized bow over a background Sling or Crossbow, which are left unclaimed by
+    either slot (shown as a flavor item) rather than treated as satisfying the ranged slot.
+  `AMMO_FOR_WEAPON` only needs Long bow/Short bow entries (Arrows) — Crossbow and Sling are never
+  claimed via the ranged slot (see above), so they never reach `buyAmmoFor()` at all.
 - `CLASS_ABILITIES` entries for the Gnome class use `// BOOK:` comments (not `// SRD:`) because
   the Gnome class is not in the free OSE SRD — it is from OSE Advanced Fantasy.
 - Gnome class **requirements**: CON 9 minimum only. DEX and INT are prime requisites (XP bonus),
@@ -322,6 +333,15 @@ These come from `RACE_INFO.Human_RACE.abilities` entries flagged `humanOnly: tru
 
 ## Git / PR Workflow
 
+- **Run `scripts/local-review.sh` before pushing, and iterate until it comes back clean.** It
+  mirrors `claude-review.yml`'s exact review criteria (same focus areas, same previous-review
+  context-carrying) but runs locally in a fresh `claude` context — billed against the Pro/Max
+  subscription via OAuth login (no `ANTHROPIC_API_KEY` needed), not the GitHub Action's
+  per-token API billing. Defaults to `--model opus`; pass `--model <name>` to override. This is
+  now the **primary** review loop — push only once `local-review.sh` has nothing left to flag.
+  The GitHub Action's own post-push review is a secondary/backstop check, not where review
+  feedback should be first discovered — by the time a push happens, local-review.sh should
+  already have caught what it's going to catch.
 - **Update the PR description before committing or pushing — never after.** Order: review the
   diff → `gh pr edit --body-file` to update the PR description → `git commit` → `git push`. This
   repo's `claude-review.yml` triggers on every push and edits its review comment in place within
