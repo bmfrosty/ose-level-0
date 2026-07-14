@@ -590,6 +590,12 @@ async function buildGeneratorURL(cp) {
     // to reproduce this character, only to reconstruct the referee's full
     // ruleset for the "Back to Generator" link.
     if (cp.esb === 0) p.set('esb', '0');
+    if (cp.ssw === 1) p.set('ssw', '1');
+    // cp.wpm is the 1-char WEAPON_PREFERENCE_CODE — map back to the raw
+    // weaponPreferenceMode string readURLParams expects, same pattern as rap below.
+    if (cp.wpm && CODE_TO_WEAPON_PREFERENCE[cp.wpm] !== 'random') {
+        p.set('wpm', CODE_TO_WEAPON_PREFERENCE[cp.wpm]);
+    }
     // cp.rap is the 2-char RAP_CODE (generateCharacterV3 already writes this
     // for level-0 characters; buildCampaignRulesetCp writes the same code for
     // level 1+) — map back to the raw racialAdjustmentPolicy string readURLParams expects.
