@@ -28,7 +28,8 @@ import {
     createCharacter, calculateXPBonus, getPrimeRequisites,
     encodeCompactParams, decodeCompactParams,
     parseHitDice, HIT_DICE_PROGRESSIONS, HIT_DICE_SCALE,
-    ARMOR, purchaseEquipment, getBackgroundByProfession,
+    ARMOR, purchaseEquipment, getBackgroundByProfession, substituteSmallRaceWeapon,
+    resolveWantsTwoHanded, CODE_TO_WEAPON_PREFERENCE,
     calculateSavingThrows,
     isSeparateRaceClassForPolicy,
     RCM_CODE, RAP_CODE,
@@ -277,7 +278,7 @@ export async function expandCompactV3(cp, precomp = {}, { silent = false } = {})
             const bg = getBackgroundByProfession(cp.bg || '') || {};
             l0Weapons = [];
             const bgItems = Array.isArray(bg.item) ? bg.item : (bg.item ? [bg.item] : []);
-            l0Items   = [...(bg.weapon ? [`${bg.weapon} (background)`] : []), ...bgItems];
+            l0Items   = [...(bg.weapon ? [`${substituteSmallRaceWeapon(bg.weapon, race, cp.ssw === 1)} (background)`] : []), ...bgItems];
             l0Armor   = (bg.armor && bg.armor !== 'Unarmored') ? bg.armor : null;
             const armorAC = l0Armor ? (ARMOR[l0Armor]?.ac?.ascending ?? 10) : 10;
             l0AC = armorAC + mods.DEX;
@@ -417,7 +418,7 @@ export async function expandCompactV3(cp, precomp = {}, { silent = false } = {})
         // purchaseEquipment() only has this character's own gold to work
         // with, same as any level 1+ character purchasing from scratch.
         const bg  = cp.nl0 ? null : (getBackgroundByProfession(cp.bg || '') || {});
-        const eq  = purchaseEquipment(cls, cp.g || 0, mods.DEX, bg, prog);
+        const eq  = purchaseEquipment(cls, cp.g || 0, mods.DEX, bg, prog, race, cp.th === 1, cp.ssw === 1);
         eqWeapons      = eq.weapons;
         eqArmor        = eq.armor;
         eqShield       = eq.shield;
@@ -589,6 +590,12 @@ async function buildGeneratorURL(cp) {
     // to reproduce this character, only to reconstruct the referee's full
     // ruleset for the "Back to Generator" link.
     if (cp.esb === 0) p.set('esb', '0');
+    if (cp.ssw === 1) p.set('ssw', '1');
+    // cp.wpm is the 1-char WEAPON_PREFERENCE_CODE — map back to the raw
+    // weaponPreferenceMode string readURLParams expects, same pattern as rap below.
+    if (cp.wpm && CODE_TO_WEAPON_PREFERENCE[cp.wpm] !== 'random') {
+        p.set('wpm', CODE_TO_WEAPON_PREFERENCE[cp.wpm]);
+    }
     // cp.rap is the 2-char RAP_CODE (generateCharacterV3 already writes this
     // for level-0 characters; buildCampaignRulesetCp writes the same code for
     // level 1+) — map back to the raw racialAdjustmentPolicy string readURLParams expects.
@@ -1081,6 +1088,15 @@ function initEditPanel(decoded) {
             // so the two paths can't silently diverge.
             const isRaceAsClassPick = DEMIHUMAN_CODES_L01.has(selectedClassCode);
             const newMode = isSeparateRaceClassForPolicy(decoded.rap, isRaceAsClassPick) ? 'A' : 'B';
+            // Whether this character prefers a two-handed weapon over a
+            // one-handed weapon + shield — decided once here (this is the
+            // first moment a level 1+ class is chosen for this character),
+            // per the referee's Weapon Preference setting recorded at level 0
+            // (decoded.wpm), and persisted as cp.th — see resolveWantsTwoHanded().
+            const wantsTwoHanded = resolveWantsTwoHanded(
+                CODE_TO_WEAPON_PREFERENCE[decoded.wpm] || 'random',
+                className, `${raceName}_RACE`
+            );
             // Spread ...decoded first (matching every other newCp construction
             // site in this file) so Campaign-tier fields — cn, esb, rap, nl0,
             // Starting Wealth tiers, sm, prm, hm, wp, sb, adm, etc. — and rr
@@ -1098,6 +1114,7 @@ function initEditPanel(decoded) {
                 g: decoded.g || 0,
                 rcm: decoded.rcm || 'ST',
                 ...(hpMode0 > 0 ? { hm: hpMode0 } : {}),
+                ...(wantsTwoHanded ? { th: 1 } : {}),
             };
             if (!(hpMode0 > 0)) delete newCp.hm;
             // sm (score minimums) only makes sense for a separate-class pick —

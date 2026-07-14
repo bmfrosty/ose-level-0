@@ -25,6 +25,7 @@ import { WEAPONS, ARMOR, calculateModifier,
     getBackgroundByProfession, getRandomBackground,
     getClassRequirements, getPrimeRequisites,
     CLS_CODE, RACE_CODE, RCM_CODE, PROG_CODE, RAP_CODE,
+    resolveWantsTwoHanded, WEAPON_PREFERENCE_CODE,
 } from './shared-core.js';
 import * as ClassDataShared from './shared-core.js';
 
@@ -227,6 +228,12 @@ export function generateCharacterV3(opts = {}) {
         l0WealthMethod = 'dice', l0DiceCount = 3, l0DiceSides = 6, l0DiceMult = 1, l0FixedGold = 0,
         l1WealthMethod = 'dice', l1DiceCount = 3, l1DiceSides = 6, l1DiceMult = 10, l1FixedGold = 0,
         l2PlusWealthMethod = 'xp-pct', l2PlusDiceCount = 3, l2PlusDiceSides = 6, l2PlusDiceMult = 10, l2PlusFixedGold = 0,
+        // House rule, off by default: Halfling and Gnome limited to a Short sword
+        // instead of a Sword for auto-purchased equipment (Dwarf unaffected — see
+        // purchaseEquipment()'s limitSmallRaceShortSword param in shared-core.js).
+        limitSmallRaceShortSword = false,
+        // Referee control over the two-handed weapon roll — see resolveWantsTwoHanded().
+        weaponPreferenceMode = 'random',
     } = opts;
 
     const isAdvanced = isSeparateRaceClass;
@@ -397,6 +404,14 @@ export function generateCharacterV3(opts = {}) {
             rap: RAP_CODE[racialAdjustmentPolicy] ?? 'SO',
             ...(noLevel0Equipment ? { nl0: 1 } : {}),
             ...(fixedScores ? { fs: 1 } : {}),
+            // Written at level 0 too (despite not mechanically applying until
+            // equipment is purchased at level 1+) so it survives the 0->1
+            // class-up transition via cs-sheet-page.js's ...decoded spread —
+            // same reasoning as rcm/esb/rap.
+            ...(limitSmallRaceShortSword ? { ssw: 1 } : {}),
+            // Written at level 0 too, same reasoning — the 0->1 class-up step
+            // is where this setting actually gets consulted (resolveWantsTwoHanded()).
+            ...(weaponPreferenceMode !== 'random' ? { wpm: WEAPON_PREFERENCE_CODE[weaponPreferenceMode] } : {}),
         };
     }
 
@@ -442,6 +457,12 @@ export function generateCharacterV3(opts = {}) {
     }
     const clsCode = CLS_CODE[className] ?? 'FI';
 
+    // Whether this character prefers a two-handed weapon over a one-handed
+    // weapon + shield — decided once here per the referee's Weapon Preference
+    // setting and persisted as cp.th rather than re-rolled by
+    // purchaseEquipment() on every sheet render. See resolveWantsTwoHanded().
+    const wantsTwoHanded = resolveWantsTwoHanded(weaponPreferenceMode, className, race);
+
     return {
         v: 3, m: mCode, p: pCode, r: raceCode, c: clsCode, l: level,
         s: rawArr, ...(saArr ? { sa: saArr } : {}),
@@ -453,6 +474,8 @@ export function generateCharacterV3(opts = {}) {
         ...(noLevel0Equipment ? { nl0: 1 } : {}),
         ...(hpMode > 0 ? { hm: hpMode } : {}),
         ...(fixedScores ? { fs: 1 } : {}),
+        ...(wantsTwoHanded ? { th: 1 } : {}),
+        ...(limitSmallRaceShortSword ? { ssw: 1 } : {}),
     };
 }
 

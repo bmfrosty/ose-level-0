@@ -529,6 +529,12 @@
                     <span><strong>Exclude Spellblade</strong> — Spellblade is a house-rules hybrid class, not part of Basic or Advanced OSE, or of 1981 B/X D&amp;D; uncheck to offer it as a separate-class pick</span>
                 </label>
             </div>
+            <div class="checkbox-option">
+                <label>
+                    <input type="checkbox" id="limitSmallRaceShortSword">
+                    <span><strong>Limit Small Races to Short Swords</strong> — Halflings and other similarly sized creatures will be limited to shortswords (Dwarves are unaffected — they can use a Sword normally)</span>
+                </label>
+            </div>
         </div>
 
 
@@ -667,6 +673,28 @@
                     <input type="checkbox" id="noLevel0Equipment" checked>
                     <span><strong>No Level 0 Equipment</strong> - Skip background weapon/armor/items (level 1+)</span>
                 </label>
+            </div>
+            <div style="margin-top: 8px; margin-bottom: 8px;">
+                <strong>Weapon Preference:</strong>
+                <span style="color:#555; font-size:0.95em;"> — Fighter, Elf, and Spellblade: whether to prefer a two-handed weapon over a one-handed weapon + shield (Dwarf, Gnome, and Halfling always use one-handed + shield regardless)</span>
+                <div class="radio-option">
+                    <label>
+                        <input type="radio" name="weaponPreferenceMode" value="random" checked>
+                        <span><strong>Random</strong> &mdash; 1/3 chance of preferring a two-handed weapon over a shield, per character</span>
+                    </label>
+                </div>
+                <div class="radio-option">
+                    <label>
+                        <input type="radio" name="weaponPreferenceMode" value="always-shield">
+                        <span><strong>Always One-Handed + Shield</strong> &mdash; never prefer a two-handed weapon</span>
+                    </label>
+                </div>
+                <div class="radio-option">
+                    <label>
+                        <input type="radio" name="weaponPreferenceMode" value="always-two-handed">
+                        <span><strong>Always Two-Handed</strong> &mdash; always prefer a two-handed weapon over a shield</span>
+                    </label>
+                </div>
             </div>
 
             <div style="margin-top: 12px; border-top: 1px solid #ddd; padding-top: 10px;">

@@ -203,6 +203,33 @@ export async function decompressFromBase64Url(b64url) {
  * it      string[]    Item list              (each item lookup-table compressed)
  * g       number      Gold remaining after equipment purchase
  * ac      number      Starting AC (before DEX modifier)
+ * th      0|1         wantsTwoHanded — this character prefers a two-handed weapon over a
+ *                     one-handed weapon + shield (omitted = default one-handed + shield).
+ *                     Only meaningful for TWO_HANDED_CANDIDATE_CLASSES (Fighter, Dwarf, Elf,
+ *                     Gnome, Halfling, Spellblade) — and never set for Dwarf/Halfling/Gnome at
+ *                     all, since they have no two-handed option (see ssw below). Decided once,
+ *                     per the referee's Weapon Preference setting (wpm), at the moment a level
+ *                     1+ class is first chosen — generateCharacterV3 for fresh level 1+
+ *                     generation, the level-up panel's 0→1 class-up step otherwise — and
+ *                     carried forward unchanged on further leveling, so purchaseEquipment()'s
+ *                     resulting weapon/shield choice stays stable across sheet re-renders
+ *                     instead of being re-decided every time. See resolveWantsTwoHanded() and
+ *                     purchaseEquipment() in shared-core.js.
+ * ssw     0|1         limitSmallRaceShortSword — referee house rule: Halfling and Gnome (not
+ *                     Dwarf, who uses a Sword normally) use a Short sword instead of a Sword as
+ *                     their default melee weapon (omitted = default, Sword). Written
+ *                     unconditionally-when-true at level 0 too (despite only mechanically
+ *                     applying once equipment is purchased at level 1+) so it survives the 0->1
+ *                     class-up transition via cs-sheet-page.js's ...decoded spread.
+ * wpm     1-char code weaponPreferenceMode — referee control over the two-handed weapon roll
+ *                     above: R=random (default, 1/3 chance, omitted), S=always-shield (never
+ *                     two-handed), T=always-two-handed. Written unconditionally-when-non-default
+ *                     at level 0 too, same reasoning as ssw — the 0->1 class-up step is where
+ *                     this setting actually gets consulted for that character. Also part of
+ *                     buildCampaignRulesetCp's "Back to Generator" reconstruction (like Prime
+ *                     Requisite Mode) so a referee generating another character from the same
+ *                     table gets the same weapon-preference ruleset back, even though it has no
+ *                     further effect on any already-created character.
  *
  * ── Generation options (preserved for level-up / regeneration) ────────────────
  * rcm     2-char code Race/class restriction preset, applies to any pick: ST SH TE AL

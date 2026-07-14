@@ -37,12 +37,14 @@ deliberately excluded from character-sheet editing entirely).
 | 3 | Min Ability Scores       | "Use fixed scores" checkbox        | No                         | No                 | Yes     | No       |        | [4]   |
 | 4 | Race/Class Restrictions  | Race/Class Mode                    | Yes -- `rcm`               | Yes                | No      | Yes      | C      | [5]   |
 | 4 | Race/Class Restrictions  | Exclude Spellblade                 | Yes -- `esb`               | Yes                | No      | Yes      | C      | [6]   |
+| 4 | Race/Class Restrictions  | Limit Small Races to Short Swords  | Yes -- `ssw`               | Yes                | No      | Yes      |        | [18]  |
 | 4 | Race/Class Restrictions  | Race + Class pick                  | Yes -- `r`/`c`             | No -- stripped     | Yes     | No       | L      | [7]   |
 | 5 | Racial Adjustment Policy | Policy value                       | Yes -- `rap`               | Yes                | Yes     | Yes      | C      | [8]   |
 | 6 | Referee Options          | Prime Requisite Mode               | Yes -- `prm`               | Yes                | Yes     | Yes      |        |       |
 | 6 | Referee Options          | HP Rolling Style                   | Yes -- `hm`                | Yes                | Partial | Yes      | C      | [9]   |
 | 6 | Referee Options          | Include Level 0 HP                 | Yes -- `il`                | Yes                | Yes     | Yes      | C      |       |
 | 6 | Referee Options          | No Level 0 Equipment               | Yes -- `nl0`               | No -- stripped     | Yes     | No       | S      | [10]  |
+| 6 | Referee Options          | Weapon Preference                  | Yes -- `wpm`               | Yes                | No      | Yes      |        | [19]  |
 | 6 | Referee Options          | Starting Wealth (4 tiers)          | Yes -- `wp` + tiers        | Yes                | Partial | Yes      |        | [11]  |
 | 7 | Character Name           | Name                               | Yes -- `n`                 | No -- stripped     | No      | No       | S      | [12]  |
 | 8 | Player Options           | Show Undead Names                  | Yes -- `un`                | Yes                | No      | No       | S      | [13]  |
@@ -71,6 +73,8 @@ deliberately excluded from character-sheet editing entirely).
 15. Stays Character-tier, unlike the row above it -- only meaningful for the specific human character that had it set (hides "Human" from that one character's race/class display), not a table-wide style choice. Stripped by both campaign link builders.
 16. Same reasoning as Show Undead Names (note 13).
 17. Same reasoning as Show Undead Names (note 13). Visible via the page's title/subtitle at the top of the sheet (`OLD-SCHOOL ESSENTIALS` vs `DUNGEONS & DRAGONS`), not the footer.
+18. No footer chip: whether this house rule is on is already evident from a Halfling/Gnome character's own weapon list (Short sword vs Sword) -- a dedicated chip would be redundant. Deliberately excludes Dwarf (unaffected -- see `purchaseEquipment()`'s `SHORT_SWORD_LIMITED_RACES` comment in `shared-core.js`).
+19. No footer chip: a character's own two-handed-weapon choice (or lack of one) is already visible on its own printed weapon/shield list -- a chip showing the referee's Random/Always-Shield/Always-Two-Handed setting would add no further audit value. Only affects `TWO_HANDED_CANDIDATE_CLASSES` (Fighter, Dwarf, Elf, Gnome, Halfling, Spellblade), and is a no-op for Dwarf/Halfling/Gnome either way (see `resolveWantsTwoHanded()` in `shared-core.js`) since they have no two-handed option at all. Like Prime Requisite Mode, carried through to "Back to Generator" (`buildCampaignRulesetCp()`) despite only ever affecting a character at its own one-time creation moment, so a referee generating another character from the same table gets the same ruleset back.
 
 ## Maintenance
 
