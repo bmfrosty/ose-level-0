@@ -1793,6 +1793,31 @@ export function substituteSmallRaceWeapon(weaponText, race, limitSmallRaceShortS
     return weaponText;
 }
 
+// Aliases between background weapon display-string spelling and the WEAPONS
+// table's own key spelling, beyond the generic parenthetical/quantity
+// stripping normalizeBackgroundWeaponName() already does.
+const BACKGROUND_WEAPON_NAME_ALIASES = { Longbow: "Long bow", Shortbow: "Short bow", Shortsword: "Short sword" };
+
+/**
+ * Reduce a background weapon's display string (e.g. "Longbow (1d6) + 10
+ * arrows", "3 x daggers (1d4)", "Sword (1d8)") to whatever WEAPONS-table key
+ * it might correspond to, so purchaseEquipment() can recognize a background
+ * weapon that's already class-legal instead of buying a redundant duplicate.
+ * Strips a leading "N x " quantity prefix and everything from the first "("
+ * onward, then applies BACKGROUND_WEAPON_NAME_ALIASES. Returns a best-guess
+ * name whether or not it turns out to exist in WEAPONS — callers must check
+ * that themselves (most background weapons, e.g. "Stage sword", "Rock",
+ * "Walking stick", are flavor-only civilian items with no WEAPONS entry at all).
+ * @param {string} weaponText - background weapon display string
+ * @returns {string} best-guess WEAPONS-table key
+ */
+function normalizeBackgroundWeaponName(weaponText) {
+    let name = weaponText.replace(/^\d+\s*x\s*/i, '');
+    const parenIdx = name.indexOf('(');
+    if (parenIdx !== -1) name = name.slice(0, parenIdx).trim();
+    return BACKGROUND_WEAPON_NAME_ALIASES[name] || name;
+}
+
 // Classes whose default melee loadout is a one-handed weapon + Shield (Sword,
 // or Short sword for Halfling/Gnome under limitSmallRaceShortSword — see
 // SHORT_SWORD_LIMITED_RACES), and who (except Dwarf/Halfling/Gnome — see
@@ -1843,7 +1868,7 @@ export function resolveWantsTwoHanded(weaponPreferenceMode, className, race) {
  * Purchase starting equipment for a character.
  * @param {string} className   - Full class name e.g. 'Fighter_CLASS'
  * @param {number} startingGold - Starting gold (generation input, not goldRemaining)
- * @param {number} dexModifier  - DEX modifier (displayed score, post-racial)
+ * @param {number} dexModifier  - DEX ability modifier (numeric bonus/penalty, post-racial)
  * @param {Object} background   - Background entry { weapon, armor, item }
  * @param {string} progression  - Progression mode key ('ose'|'smooth'|'ll') — reserved
  * @param {string} [race]       - Race name, used to substitute a too-large background
@@ -1859,7 +1884,7 @@ export function resolveWantsTwoHanded(weaponPreferenceMode, className, race) {
  * @param {boolean} [limitSmallRaceShortSword] - Referee house rule: Halfling and Gnome (not
  *                                Dwarf) use a Short sword instead of a Sword as their default
  *                                melee weapon. Persisted as cp.ssw — see callers.
- * @param {number} [strModifier] - STR modifier (displayed score, post-racial). For
+ * @param {number} [strModifier] - STR ability modifier (numeric bonus/penalty, post-racial). For
  *                                RANGED_WEAPON_CANDIDATE_CLASSES only: when this is > dexModifier,
  *                                the melee weapon is bought before the ranged weapon (default);
  *                                when dexModifier is higher, ranged is bought first instead, so
@@ -1873,21 +1898,54 @@ export function purchaseEquipment(className, startingGold, dexModifier, backgrou
         items: [], startingAC: 10 + dexModifier, goldRemaining: 0
     };
 
-    if (background?.weapon) result.items.push(`${substituteSmallRaceWeapon(background.weapon, race, limitSmallRaceShortSword)} (background)`);
-    if (background?.armor)  result.items.push(`${background.armor} (background)`);
-    const bgItems = Array.isArray(background?.item) ? background.item : (background?.item ? [background.item] : []);
-    bgItems.forEach(i => { if (i) result.items.push(i); });
-
     const baseClass = className.replace(/_CLASS$/, '');
     const classInfo = CLASS_INFO[baseClass];
-    if (!classInfo) { result.goldRemaining = gold; return result; }
 
-    const allowedWeapons = new Set(classInfo.weapons || []);
+    // Does the background's own weapon happen to already be one this class can
+    // use? If so it satisfies a purchase slot for free instead of also buying
+    // a redundant duplicate (e.g. a Hunter's background Longbow shouldn't sit
+    // next to a freshly-bought Long bow). Checked against the *substituted*
+    // form (a small race's Longbow is already a Shortbow by the time this
+    // matters) via normalizeBackgroundWeaponName() — most background weapons
+    // (Stage sword, Rock, Walking stick, etc.) are flavor-only civilian items
+    // with no WEAPONS entry at all, so this simply won't match for them.
+    const substitutedBgWeapon = background?.weapon ? substituteSmallRaceWeapon(background.weapon, race, limitSmallRaceShortSword) : null;
+    const bgWeaponKey  = substitutedBgWeapon ? normalizeBackgroundWeaponName(substitutedBgWeapon) : null;
+    const bgWeaponData = bgWeaponKey ? WEAPONS[bgWeaponKey] : null;
+    const allowedWeapons = new Set(classInfo?.weapons || []);
+    const bgWeaponUsable = !!(bgWeaponData && allowedWeapons.has(bgWeaponKey));
+    const bgWeaponIsRanged = bgWeaponData?.qualities?.includes("Missile") ?? false;
+
+    if (!classInfo) {
+        // Still show the background's flavor items even for an unrecognized class.
+        if (substitutedBgWeapon) result.items.push(`${substitutedBgWeapon} (background)`);
+        if (background?.armor)  result.items.push(`${background.armor} (background)`);
+        const bgItemsUnknown = Array.isArray(background?.item) ? background.item : (background?.item ? [background.item] : []);
+        bgItemsUnknown.forEach(i => { if (i) result.items.push(i); });
+        result.goldRemaining = gold; return result;
+    }
+
     const allowedArmors  = (classInfo.armor || []).filter(a => a !== "Shield");
     const allowsShield   = (classInfo.armor || []).includes("Shield");
     const isSmallRace     = SMALL_RACE_WEAPON_RESTRICTED_RACES.has(normalizeRaceName(race));
     const isTwoHandedCandidate = TWO_HANDED_CANDIDATE_CLASSES.has(baseClass);
     const isRangedCandidate    = RANGED_WEAPON_CANDIDATE_CLASSES.has(baseClass);
+
+    // The background weapon satisfies the ranged slot only if this class
+    // actually has one (RANGED_WEAPON_CANDIDATE_CLASSES) and the weapon is
+    // itself ranged; otherwise, if usable at all, it satisfies the single
+    // melee/primary slot, matching how classes without a separate ranged slot
+    // (Cleric, Magic-User) always worked.
+    const bgWeaponForRanged = bgWeaponUsable && bgWeaponIsRanged && isRangedCandidate;
+    const bgWeaponForMelee  = bgWeaponUsable && !bgWeaponForRanged;
+
+    // Only shown as a loose flavor item when it doesn't satisfy an actual
+    // equipment slot above — once claimed as the melee or ranged weapon, it's
+    // shown as that weapon instead (see buyMeleeWeapon/buyRangedWeapon).
+    if (substitutedBgWeapon && !bgWeaponUsable) result.items.push(`${substitutedBgWeapon} (background)`);
+    if (background?.armor)  result.items.push(`${background.armor} (background)`);
+    const bgItems = Array.isArray(background?.item) ? background.item : (background?.item ? [background.item] : []);
+    bgItems.forEach(i => { if (i) result.items.push(i); });
 
     // Name of the melee weapon actually purchased, tracked separately from
     // result.weapons (which may also gain a ranged weapon below) so the
@@ -1896,9 +1954,9 @@ export function purchaseEquipment(className, startingGold, dexModifier, backgrou
     // to draw) but doesn't preclude carrying a shield on the back.
     let meleeWeaponName = null;
     const buyMeleeWeapon = () => {
-        if (background?.weapon && allowedWeapons.has(background.weapon)) {
-            result.weapons.push(background.weapon);
-            meleeWeaponName = background.weapon;
+        if (bgWeaponForMelee) {
+            result.weapons.push(bgWeaponKey);
+            meleeWeaponName = bgWeaponKey;
             return;
         }
         if (isTwoHandedCandidate) {
@@ -1924,14 +1982,31 @@ export function purchaseEquipment(className, startingGold, dexModifier, backgrou
         }
     };
 
+    // A Long bow or Short bow needs a quiver of arrows to actually shoot —
+    // bought alongside it (gold permitting) whether the bow was freshly
+    // purchased or recognized from the background.
+    const AMMO_FOR_WEAPON = { "Long bow": "Arrows (quiver of 20)", "Short bow": "Arrows (quiver of 20)" };
+    const buyAmmoFor = (weaponName) => {
+        const ammo = AMMO_FOR_WEAPON[weaponName];
+        if (ammo && AMMUNITION[ammo] && AMMUNITION[ammo].cost <= gold) {
+            result.items.push(ammo); gold -= AMMUNITION[ammo].cost;
+        }
+    };
+
     // RANGED_WEAPON_CANDIDATE_CLASSES also get a ranged weapon sized for
     // their race — Long bow normally, Short bow for Dwarf/Halfling/Gnome
     // (same "no longbows" restriction as their Combat ability).
     const buyRangedWeapon = () => {
         if (!isRangedCandidate) return;
+        if (bgWeaponForRanged) {
+            result.weapons.push(bgWeaponKey);
+            buyAmmoFor(bgWeaponKey);
+            return;
+        }
         const rangedPreferred = isSmallRace ? "Short bow" : "Long bow";
         if (allowedWeapons.has(rangedPreferred) && WEAPONS[rangedPreferred] && WEAPONS[rangedPreferred].cost <= gold) {
             result.weapons.push(rangedPreferred); gold -= WEAPONS[rangedPreferred].cost; result.items.push(rangedPreferred);
+            buyAmmoFor(rangedPreferred);
         }
     };
 

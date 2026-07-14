@@ -290,7 +290,19 @@ These come from `RACE_INFO.Human_RACE.abilities` entries flagged `humanOnly: tru
   before. `purchaseEquipment()` tracks which weapon name was purchased as the *melee* weapon
   separately from the full `weapons` list, since Long bow/Short bow also carry the WEAPONS
   "Two-handed" quality (both hands to draw) — the shield-skip check deliberately only looks at the
-  melee weapon, so owning a bow never costs a Sword+Shield character their shield.
+  melee weapon, so owning a bow never costs a Sword+Shield character their shield. A purchased
+  Long bow/Short bow also comes with a quiver of arrows (`AMMUNITION["Arrows (quiver of 20)"]`,
+  5gp, gold permitting).
+- `purchaseEquipment()` also recognizes when a carried-through background weapon (`cp.nl0`
+  unchecked) is already one this class can use, instead of separately buying a redundant
+  duplicate (a Hunter's background Longbow no longer sits next to a freshly-bought Long bow).
+  `normalizeBackgroundWeaponName()` reduces the background's display string (e.g. "Longbow (1d6)
+  + 10 arrows") to its likely WEAPONS-table key; most background weapons (Stage sword, Rock,
+  Walking stick, etc.) are flavor-only civilian items with no WEAPONS entry at all and simply
+  won't match. A matched background weapon claims the ranged slot if it's itself a ranged
+  (`"Missile"` quality) weapon and this class has one (`RANGED_WEAPON_CANDIDATE_CLASSES`);
+  otherwise, if usable at all, it claims the single melee/primary slot — matching how classes
+  without a separate ranged slot (Cleric, Magic-User) always worked.
 - `CLASS_ABILITIES` entries for the Gnome class use `// BOOK:` comments (not `// SRD:`) because
   the Gnome class is not in the free OSE SRD — it is from OSE Advanced Fantasy.
 - Gnome class **requirements**: CON 9 minimum only. DEX and INT are prime requisites (XP bonus),
