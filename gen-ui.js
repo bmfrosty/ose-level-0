@@ -390,9 +390,31 @@ function updateXPPreview() {
     }
 }
 
+// ── Starting Wealth tier badges ───────────────────────────────────────────────
+// Which of the four independent wealth tiers (Level 0 / Level 1 / Level 2+ /
+// By XP) actually gets consulted at generation time depends on xpMode and
+// selectedLevel, not on which tier's radio buttons the referee last touched —
+// e.g. typing an XP amount uses By XP's own method/fixed-gold fields even if
+// Level 1's are set to Fixed. Badges make the live-active tier visible so a
+// referee can't set the wrong tier's Fixed Gold and have it silently ignored.
+function updateWealthTierBadges() {
+    const activeTier = xpMode ? 'xp' : selectedLevel === 0 ? 'l0' : selectedLevel === 1 ? 'l1' : 'l2';
+    const badgeIds = { l0: 'l0WealthBadge', l1: 'l1WealthBadge', l2: 'l2WealthBadge', xp: 'xpWealthBadge' };
+    Object.entries(badgeIds).forEach(([tier, id]) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const isActive = tier === activeTier;
+        el.textContent = isActive ? '● ACTIVE' : 'not used for this generation';
+        el.style.color = isActive ? '#2e7d32' : '#999';
+        el.style.fontWeight = isActive ? 'bold' : 'normal';
+        el.style.fontStyle = isActive ? 'normal' : 'italic';
+    });
+}
+
 // ── updateUI ──────────────────────────────────────────────────────────────────
 export function updateUI() {
     const isZeroLevel = !xpMode && selectedLevel === 0;
+    updateWealthTierBadges();
 
     // ── Level buttons: in XP mode, highlight the derived level ──
     if (xpMode) {
