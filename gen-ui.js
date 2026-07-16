@@ -714,7 +714,7 @@ async function runGenerate() {
         if (values.editACDisplayMode) { acDisplayMode=values.editACDisplayMode; document.querySelectorAll('input[name="acDisplayMode"]').forEach(r=>{r.checked=r.value===acDisplayMode;}); }
         includeLevel0HP=values.includeLevel0HP||false; showUndeadNames=values.showUndeadNames||false; showQRCode=values.showQRCode??true;
         fixedHPRolls=values.hpRolls?.length?[...values.hpRolls]:null;
-        fixedStartingGold=(values.startingGold!=null)?parseInt(values.startingGold):null;
+        fixedStartingGold=(values.startingGold!=null)?parseFloat(values.startingGold):null;
         ['STR','INT','WIS','DEX','CON','CHA'].forEach(a=>{const el=document.getElementById(`score${a}`);if(el)el.value=values[a];});
         const _nameEl=document.getElementById('characterName'); if(_nameEl) _nameEl.value=characterName;
         document.querySelectorAll('.level-btn').forEach(b=>b.classList.toggle('selected',parseInt(b.dataset.level)===selectedLevel));
@@ -1298,22 +1298,22 @@ function readURLParams() {
     if (p.has('l0dc'))  s.l0DiceCount = parseInt(p.get('l0dc'));
     if (p.has('l0ds'))  s.l0DiceSides = parseInt(p.get('l0ds'));
     if (p.has('l0dm'))  s.l0DiceMult = parseInt(p.get('l0dm'));
-    if (p.has('l0fg'))  s.l0FixedGold = parseInt(p.get('l0fg'));
+    if (p.has('l0fg'))  s.l0FixedGold = parseFloat(p.get('l0fg'));
     if (p.has('l1wm'))  s.l1WealthMethod = p.get('l1wm');
     if (p.has('l1dc'))  s.l1DiceCount = parseInt(p.get('l1dc'));
     if (p.has('l1ds'))  s.l1DiceSides = parseInt(p.get('l1ds'));
     if (p.has('l1dm'))  s.l1DiceMult = parseInt(p.get('l1dm'));
-    if (p.has('l1fg'))  s.l1FixedGold = parseInt(p.get('l1fg'));
+    if (p.has('l1fg'))  s.l1FixedGold = parseFloat(p.get('l1fg'));
     if (p.has('l2wm'))  s.l2PlusWealthMethod = p.get('l2wm');
     if (p.has('l2dc'))  s.l2PlusDiceCount = parseInt(p.get('l2dc'));
     if (p.has('l2ds'))  s.l2PlusDiceSides = parseInt(p.get('l2ds'));
     if (p.has('l2dm'))  s.l2PlusDiceMult = parseInt(p.get('l2dm'));
-    if (p.has('l2fg'))  s.l2PlusFixedGold = parseInt(p.get('l2fg'));
+    if (p.has('l2fg'))  s.l2PlusFixedGold = parseFloat(p.get('l2fg'));
     if (p.has('xwm'))   s.byXpWealthMethod = p.get('xwm');
     if (p.has('xdc'))   s.byXpDiceCount = parseInt(p.get('xdc'));
     if (p.has('xds'))   s.byXpDiceSides = parseInt(p.get('xds'));
     if (p.has('xdm'))   s.byXpDiceMult = parseInt(p.get('xdm'));
-    if (p.has('xfg'))   s.byXpFixedGold = parseInt(p.get('xfg'));
+    if (p.has('xfg'))   s.byXpFixedGold = parseFloat(p.get('xfg'));
     // Default flipped to true (matches Basic Mode Reset) — only '0' (explicitly
     // off) needs encoding now, but old links with 'nl0e=1' still parse correctly.
     if (p.has('nl0e'))  s.noLevel0Equipment  = p.get('nl0e') !== '0';
@@ -1407,7 +1407,7 @@ export function initializeEventListeners() {
     });
     wireDiceConfig('l0', v=>l0DiceCount=v, v=>l0DiceSides=v, v=>l0DiceMult=v);
     document.getElementById('l0FixedGold')?.addEventListener('change', (e) => {
-        l0FixedGold = Math.max(0, parseInt(e.target.value) || 0);
+        l0FixedGold = Math.max(0, parseFloat(e.target.value) || 0);
         e.target.value = l0FixedGold;
         saveCurrentSettings();
     });
@@ -1417,7 +1417,7 @@ export function initializeEventListeners() {
     });
     wireDiceConfig('l1', v=>l1DiceCount=v, v=>l1DiceSides=v, v=>l1DiceMult=v);
     document.getElementById('l1FixedGold')?.addEventListener('change', (e) => {
-        l1FixedGold = Math.max(0, parseInt(e.target.value) || 0);
+        l1FixedGold = Math.max(0, parseFloat(e.target.value) || 0);
         e.target.value = l1FixedGold;
         saveCurrentSettings();
     });
@@ -1436,7 +1436,7 @@ export function initializeEventListeners() {
     });
     wireDiceConfig('l2', v=>l2PlusDiceCount=v, v=>l2PlusDiceSides=v, v=>l2PlusDiceMult=v);
     document.getElementById('l2FixedGold')?.addEventListener('change', (e) => {
-        l2PlusFixedGold = Math.max(0, parseInt(e.target.value) || 0);
+        l2PlusFixedGold = Math.max(0, parseFloat(e.target.value) || 0);
         e.target.value = l2PlusFixedGold;
         updateUI(); saveCurrentSettings();
     });
@@ -1446,7 +1446,7 @@ export function initializeEventListeners() {
     });
     wireDiceConfig('xp', v=>byXpDiceCount=v, v=>byXpDiceSides=v, v=>byXpDiceMult=v);
     document.getElementById('xpFixedGold')?.addEventListener('change', (e) => {
-        byXpFixedGold = Math.max(0, parseInt(e.target.value) || 0);
+        byXpFixedGold = Math.max(0, parseFloat(e.target.value) || 0);
         e.target.value = byXpFixedGold;
         saveCurrentSettings();
     });
