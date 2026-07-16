@@ -518,6 +518,17 @@ function fmt(n) {
     return n >= 0 ? `+${n}` : `${n}`;
 }
 
+/**
+ * Format a gold amount for display: rounds to 2 decimal places (clears
+ * floating-point drift from repeated subtraction during equipment purchase,
+ * e.g. 68.34999999999999 -> 68.35) and drops the decimal entirely for a
+ * whole-gp amount (90, not 90.00).
+ */
+function formatGold(value) {
+    const rounded = Math.round(value * 100) / 100;
+    return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(2);
+}
+
 /** Escape a user-supplied string before interpolating into an HTML template. */
 function escHtml(s) {
     return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -919,7 +930,7 @@ export function renderCharacterSheetHTML(sheet) {
                 const statParts = [];
                 if (startingACDisplay !== null && startingACDisplay !== undefined) statParts.push(`Starting AC: ${startingACDisplay}`);
                 if (eq.startingHD)    statParts.push(`Starting HD: ${eq.startingHD}`);
-                if (startingGold !== null) statParts.push(`Starting Gold: ${startingGold} gp`);
+                if (startingGold !== null) statParts.push(`Starting Gold: ${formatGold(startingGold)} gp`);
                 // Was a separate, broken duplicate of calculateModifier() that
                 // could only ever return -1/0/+1 (same bug class as the
                 // getConMod() fixed in cs-sheet-page.js) -- since editState is
@@ -1145,7 +1156,7 @@ function renderEditPanel(editState) {
         </div>` : ''}
         <div style='margin-bottom:10px;'>
             <strong>Starting Gold:</strong>
-            <input type='number' id='oseEditStartingGold' value='${editState.startingGold || 0}' min='0' max='99999'
+            <input type='number' id='oseEditStartingGold' value='${editState.startingGold || 0}' min='0' max='99999' step='0.01'
                 style='margin-left:6px;width:65px;padding:3px;text-align:center;border:1px solid #ccc;border-radius:3px;font-size:12px;font-weight:bold;'> gp
             <button id='oseEditRerollGold' title='Reroll starting gold (3d6×10)'
                 style='margin-left:4px;padding:2px 5px;font-size:11px;border:1px solid #aaa;border-radius:3px;cursor:pointer;background:white;line-height:1;'>🎲</button>
@@ -1186,7 +1197,7 @@ function readEditPanelValues(panel, editState) {
         ? Array.from(hpInputs).map(inp => Math.max(1, parseInt(inp.value) || 1))
         : (editState.hpRolls || []);
     // Starting gold
-    const goldVal = parseInt(panel.querySelector('#oseEditStartingGold')?.value);
+    const goldVal = parseFloat(panel.querySelector('#oseEditStartingGold')?.value);
     const startingGold = isNaN(goldVal) ? (editState.startingGold || 0) : goldVal;
     // Checkboxes
     const includeLevel0HP = panel.querySelector('#oseEditIncludeLevel0HP')?.checked || false;
