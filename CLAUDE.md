@@ -341,7 +341,10 @@ These come from `RACE_INFO.Human_RACE.abilities` entries flagged `humanOnly: tru
   now the **primary** review loop — push only once `local-review.sh` has nothing left to flag.
   The GitHub Action's own post-push review is a secondary/backstop check, not where review
   feedback should be first discovered — by the time a push happens, local-review.sh should
-  already have caught what it's going to catch.
+  already have caught what it's going to catch. **Commit fixes locally as soon as they're
+  verified, independent of whether a push follows immediately** — don't hold a commit hostage
+  to "not ready to push yet." A push is a separate, later decision (and often its own
+  confirmation); a clean local commit costs nothing to make in the meantime.
 - **Update the PR description before committing or pushing — never after.** Order: review the
   diff → `gh pr edit --body-file` to update the PR description → `git commit` → `git push`. This
   repo's `claude-review.yml` triggers on every push and edits its review comment in place within

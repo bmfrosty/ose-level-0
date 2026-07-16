@@ -85,6 +85,11 @@ PLAN_*
 PLANS_COMPLETED
 COPYRIGHTED-*
 BASIC_VS_ADVANCED_CLASSES.md
+
+# Local review loop state (scripts/local-review.sh) — emulated PR title/
+# description per branch, plus saved review output fed back in as
+# "previous review" context on the next run. Branch-specific, not shared.
+.local-review/
 CHARACTER_CREATION_*
 
 legacy-functions.txt
