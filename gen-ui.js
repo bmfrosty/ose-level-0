@@ -399,15 +399,27 @@ function updateXPPreview() {
 // referee can't set the wrong tier's Fixed Gold and have it silently ignored.
 function updateWealthTierBadges() {
     const activeTier = xpMode ? 'xp' : selectedLevel === 0 ? 'l0' : selectedLevel === 1 ? 'l1' : 'l2';
-    const badgeIds = { l0: 'l0WealthBadge', l1: 'l1WealthBadge', l2: 'l2WealthBadge', xp: 'xpWealthBadge' };
-    Object.entries(badgeIds).forEach(([tier, id]) => {
-        const el = document.getElementById(id);
-        if (!el) return;
+    const rowIds   = { l0: 'l0WealthHeadingRow', l1: 'l1WealthHeadingRow', l2: 'l2WealthHeadingRow', xp: 'xpWealthHeadingRow' };
+    const badgeIds = { l0: 'l0WealthBadge',      l1: 'l1WealthBadge',      l2: 'l2WealthBadge',      xp: 'xpWealthBadge' };
+    Object.keys(rowIds).forEach(tier => {
+        const row   = document.getElementById(rowIds[tier]);
+        const badge = document.getElementById(badgeIds[tier]);
         const isActive = tier === activeTier;
-        el.textContent = isActive ? '● ACTIVE' : 'not used for this generation';
-        el.style.color = isActive ? '#2e7d32' : '#999';
-        el.style.fontWeight = isActive ? 'bold' : 'normal';
-        el.style.fontStyle = isActive ? 'normal' : 'italic';
+        // Border-left color/background/text color toggle on the whole heading
+        // row (not just the badge) so the active tier is unmistakable at a
+        // glance — border width stays constant (transparent when inactive) to
+        // avoid a layout shift when switching tiers.
+        if (row) {
+            row.style.borderLeftColor = isActive ? '#2e7d32' : 'transparent';
+            row.style.background      = isActive ? '#e8f5e9' : 'transparent';
+            row.style.color           = isActive ? '#1b5e20' : '';
+        }
+        if (badge) {
+            badge.textContent  = isActive ? '✓ ACTIVE' : 'not used for this generation';
+            badge.style.color  = isActive ? '' : '#999';
+            badge.style.fontWeight  = isActive ? 'bold'   : 'normal';
+            badge.style.fontStyle   = isActive ? 'normal' : 'italic';
+        }
     });
 }
 
