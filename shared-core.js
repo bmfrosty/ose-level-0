@@ -1909,6 +1909,12 @@ export function purchaseEquipment(className, startingGold, dexModifier, backgrou
         weapons: [], armor: null, shield: false,
         items: [], startingAC: 10 + dexModifier, goldRemaining: 0
     };
+    // Per-item purchase log for the console breakdown at the bottom of this
+    // function — every gold-spending line below pushes here alongside its
+    // `gold -=` so the log can never drift out of sync with what was actually
+    // charged. Background-carried-through items are logged too (at 0gp) so
+    // it's clear they weren't skipped, just free.
+    const purchaseLog = [];
 
     const baseClass = className.replace(/_CLASS$/, '');
     const classInfo = CLASS_INFO[baseClass];
@@ -1982,6 +1988,7 @@ export function purchaseEquipment(className, startingGold, dexModifier, backgrou
         if (bgWeaponForMelee) {
             result.weapons.push(bgWeaponKey);
             meleeWeaponName = bgWeaponKey;
+            purchaseLog.push(`${bgWeaponKey} — 0gp (background)`);
             return;
         }
         if (isTwoHandedCandidate) {
@@ -1991,6 +1998,7 @@ export function purchaseEquipment(className, startingGold, dexModifier, backgrou
             if (allowedWeapons.has(preferred) && WEAPONS[preferred] && WEAPONS[preferred].cost <= gold) {
                 result.weapons.push(preferred); gold -= WEAPONS[preferred].cost; result.items.push(preferred);
                 meleeWeaponName = preferred;
+                purchaseLog.push(`${preferred} — ${WEAPONS[preferred].cost}gp`);
                 return;
             }
         }
@@ -2002,6 +2010,7 @@ export function purchaseEquipment(className, startingGold, dexModifier, backgrou
             if (allowedWeapons.has(wName) && WEAPONS[wName] && WEAPONS[wName].cost <= gold) {
                 result.weapons.push(wName); gold -= WEAPONS[wName].cost; result.items.push(wName);
                 meleeWeaponName = wName;
+                purchaseLog.push(`${wName} — ${WEAPONS[wName].cost}gp`);
                 break;
             }
         }
@@ -2018,6 +2027,7 @@ export function purchaseEquipment(className, startingGold, dexModifier, backgrou
         const ammo = AMMO_FOR_WEAPON[weaponName];
         if (ammo && AMMUNITION[ammo] && AMMUNITION[ammo].cost <= gold) {
             result.items.push(ammo); gold -= AMMUNITION[ammo].cost;
+            purchaseLog.push(`${ammo} — ${AMMUNITION[ammo].cost}gp`);
         }
     };
 
@@ -2028,12 +2038,25 @@ export function purchaseEquipment(className, startingGold, dexModifier, backgrou
         if (!isRangedCandidate) return;
         if (bgWeaponForRanged) {
             result.weapons.push(bgWeaponKey);
-            buyAmmoFor(bgWeaponKey);
+            purchaseLog.push(`${bgWeaponKey} — 0gp (background)`);
+            // The background's own weapon text already includes its ammo (e.g.
+            // Hunter's "Longbow (1d6) + 10 arrows") — do NOT also buy a fresh
+            // "Arrows (quiver of 20)" on top of it (previously charged 5gp for
+            // ammo the character already had, and silently dropped the
+            // background's actual arrow count in favor of the purchased one).
+            // Only the ammo count is pushed as a flavor item, not the full
+            // "Shortbow (1d6) + 10 arrows" string — that string contains a
+            // damage-die notation, which the sheet template sweeps into the
+            // Weapons box as its own slot, duplicating the bow already listed
+            // via result.weapons above.
+            const ammoDetail = substitutedBgWeapon.match(/\+\s*(\d+\s+\S+)\s*$/)?.[1];
+            if (ammoDetail) result.items.push(`${ammoDetail} (background)`);
             return;
         }
         const rangedPreferred = isSmallRace ? "Short bow" : "Long bow";
         if (allowedWeapons.has(rangedPreferred) && WEAPONS[rangedPreferred] && WEAPONS[rangedPreferred].cost <= gold) {
             result.weapons.push(rangedPreferred); gold -= WEAPONS[rangedPreferred].cost; result.items.push(rangedPreferred);
+            purchaseLog.push(`${rangedPreferred} — ${WEAPONS[rangedPreferred].cost}gp`);
             buyAmmoFor(rangedPreferred);
         }
     };
@@ -2051,7 +2074,9 @@ export function purchaseEquipment(className, startingGold, dexModifier, backgrou
 
     for (const aName of ARMOR_PRIORITY) {
         if (allowedArmors.includes(aName) && ARMOR[aName] && ARMOR[aName].cost <= gold) {
-            result.armor = aName; gold -= ARMOR[aName].cost; break;
+            result.armor = aName; gold -= ARMOR[aName].cost;
+            purchaseLog.push(`${aName} — ${ARMOR[aName].cost}gp`);
+            break;
         }
     }
 
@@ -2062,18 +2087,20 @@ export function purchaseEquipment(className, startingGold, dexModifier, backgrou
     const wieldingTwoHanded = WEAPONS[meleeWeaponName]?.qualities?.includes("Two-handed") ?? false;
     if (allowsShield && !wieldingTwoHanded && ARMOR["Shield"] && ARMOR["Shield"].cost <= gold) {
         result.shield = true; gold -= ARMOR["Shield"].cost;
+        purchaseLog.push(`Shield — ${ARMOR["Shield"].cost}gp`);
     }
 
     for (const { name, cost } of (CLASS_SPECIFIC_GEAR[baseClass] || [])) {
-        if (cost <= gold) { result.items.push(name); gold -= cost; }
+        if (cost <= gold) { result.items.push(name); gold -= cost; purchaseLog.push(`${name} — ${cost}gp`); }
     }
 
     for (const { name, cost } of DUNGEONEERING_BUNDLE) {
-        if (cost <= gold) { result.items.push(name); gold -= cost; }
+        if (cost <= gold) { result.items.push(name); gold -= cost; purchaseLog.push(`${name} — ${cost}gp`); }
     }
 
     if (ARMOR["Helmet"] && ARMOR["Helmet"].cost <= gold) {
         result.items.push("Helmet"); gold -= ARMOR["Helmet"].cost;
+        purchaseLog.push(`Helmet — ${ARMOR["Helmet"].cost}gp`);
     }
 
     const armorAC  = result.armor ? ARMOR[result.armor].ac.ascending : 10;
@@ -2082,6 +2109,10 @@ export function purchaseEquipment(className, startingGold, dexModifier, backgrou
 
     console.log('\n=== Equipment Purchases ===');
     console.log(`Starting gold: ${startingGold} gp`);
+    if (purchaseLog.length) {
+        console.log('Purchase breakdown:');
+        purchaseLog.forEach(line => console.log(`  - ${line}`));
+    }
     if (result.weapons.length) console.log(`Weapons: ${result.weapons.join(', ')}`);
     if (result.armor)          console.log(`Armor: ${result.armor}`);
     if (result.shield)         console.log(`Shield: yes`);
