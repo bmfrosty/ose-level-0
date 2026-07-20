@@ -2170,6 +2170,7 @@ export function purchaseEquipment(className, startingGold, dexModifier, backgrou
                     purchaseLog.push(`${bgAmmo.bundleName} — ${bgAmmo.bundleCost}gp, net ${netCost}gp after selling starting ${bgAmmo.detail} (background) for ${bgAmmo.value}gp`);
                 } else {
                     result.items.push(`${bgAmmo.detail} (background)`);
+                    purchaseLog.push(`${bgAmmo.detail} — 0gp (background, net ${netCost}gp upgrade to ${bgAmmo.bundleName} not affordable)`);
                 }
             }
             return;
