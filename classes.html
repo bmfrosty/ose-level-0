@@ -246,8 +246,14 @@
             <!-- populated by JS -->
         </div>
     </div>
+    <div class="class-group">
+        <span class="class-group-label">Reference</span>
+        <div class="class-buttons" id="class-buttons-reference">
+            <button class="class-btn" id="btn-shopping">🛒 Shopping</button>
+        </div>
+    </div>
 
-    <div class="print-bar">
+    <div class="print-bar" id="print-bar">
         <button class="print-btn" id="print-btn">🖨 Print / Save as PDF</button>
         <span class="print-hint">Opens a print-optimized view for the selected class</span>
     </div>
@@ -261,7 +267,8 @@
             PROGRESSION_TABLES,
             XP_REQUIREMENTS,
             HIT_DICE_SCALE,
-            HIT_DICE_PROGRESSIONS
+            HIT_DICE_PROGRESSIONS,
+            WEAPONS
         } from './cs-core.js';
 
         import { CLASS_INFO } from './shared-class-info.js';
@@ -383,6 +390,58 @@
             </table>`;
         }
 
+        // Weapon table columns: name, cost, damage, weight, then either a
+        // ranges (Missile-quality short/medium/long to-hit bands) or reach
+        // (melee-only, e.g. Whip) display, whichever the entry has — never
+        // both, and most weapons have neither.
+        function buildShoppingTable() {
+            const rows = Object.entries(WEAPONS)
+                .sort(([a], [b]) => a.localeCompare(b))
+                .map(([name, w]) => {
+                    const rangeText = w.ranges
+                        ? `S ${w.ranges.short}' / M ${w.ranges.medium}' / L ${w.ranges.long}'`
+                        : (w.reach ? `Reach ${w.reach}'` : '—');
+                    return `<tr>
+                        <td>${name}</td>
+                        <td>${w.cost}gp</td>
+                        <td>${w.damage}</td>
+                        <td>${w.weight}</td>
+                        <td>${rangeText}</td>
+                        <td style="text-align:left;">${w.qualities.join(', ')}</td>
+                    </tr>`;
+                }).join('');
+            return `<table>
+                <thead><tr>
+                    <th>Weapon</th><th>Cost</th><th>Damage</th><th>Weight</th>
+                    <th>Range / Reach</th><th style="text-align:left;">Qualities</th>
+                </tr></thead>
+                <tbody>${rows}</tbody>
+            </table>`;
+        }
+
+        function showShopping() {
+            document.querySelectorAll('.class-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('btn-shopping').classList.add('active');
+            document.getElementById('print-bar').style.display = 'none';
+
+            document.getElementById('class-display').innerHTML = `
+                <h2>🛒 Shopping — Weapons &amp; Pricing</h2>
+                <p class="table-note">
+                    Every weapon the generator's equipment-purchasing logic recognizes —
+                    including small-race substitutions (Short bow, Short sword) and homebrew
+                    additions (Rock, Whip, Bull Whip). Not every weapon here is purchasable by
+                    every class; see each class's own page for its specific weapon
+                    restrictions. Whip and Bull Whip are only ever inherited from a background,
+                    never shopped for.
+                </p>
+                ${buildShoppingTable()}
+            `;
+
+            const url = new URL(window.location);
+            url.searchParams.set('class', 'shopping');
+            window.history.replaceState({}, '', url);
+        }
+
         function showClass(classKey) {
             const cls = CLASSES.find(c => c.key === classKey);
             if (!cls) return;
@@ -390,6 +449,7 @@
             // Update active button
             document.querySelectorAll('.class-btn').forEach(b => b.classList.remove('active'));
             document.getElementById('btn-' + classKey).classList.add('active');
+            document.getElementById('print-bar').style.display = '';
 
             const note = CLASS_NOTES[classKey];
             const noteHtml = note
@@ -449,10 +509,16 @@
             container.appendChild(btn);
         });
 
+        document.getElementById('btn-shopping').addEventListener('click', () => showShopping());
+
         // Load from URL param or default to Fighter
         const urlParam = new URLSearchParams(window.location.search).get('class');
-        const initial = CLASSES.find(c => c.key === urlParam) ? urlParam : 'Fighter_CLASS';
-        showClass(initial);
+        if (urlParam === 'shopping') {
+            showShopping();
+        } else {
+            const initial = CLASSES.find(c => c.key === urlParam) ? urlParam : 'Fighter_CLASS';
+            showClass(initial);
+        }
 
         document.getElementById('print-btn').addEventListener('click', () => {
             const key = new URLSearchParams(window.location.search).get('class') || 'Fighter_CLASS';
