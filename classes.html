@@ -204,10 +204,43 @@
 
         @media print {
             nav, .class-group, .print-bar, .intro-box { display: none; }
-            body { max-width: 100%; padding: 0; font-size: 9px; }
-            #class-display { border: none; padding: 4px; }
-            th, td { padding: 2px 4px; font-size: 9px; }
+            /* body padding is the actual guaranteed margin — @page's own
+               margin below is a nice-to-have on top of it, but printers/
+               print-preview panes don't reliably honor @page margin, so
+               don't depend on it alone. Also force light-mode colors
+               regardless of the on-screen theme (body.dark-mode variants
+               repeated at the same specificity so they win by source
+               order) — printing a dark background wastes ink and isn't
+               something any print dialog's own "background graphics"
+               toggle should be relied on to fix. */
+            body, body.dark-mode {
+                max-width: 100%; padding: 1cm; font-size: 9px;
+                background: white; color: #000;
+            }
+            #class-display, body.dark-mode #class-display {
+                border: none; padding: 4px; background: white;
+            }
+            #class-display h2, body.dark-mode #class-display h2 {
+                color: #4a148c; border-bottom-color: #9C27B0;
+            }
+            th, td, body.dark-mode th, body.dark-mode td {
+                padding: 2px 4px; font-size: 9px; border-color: #ccc;
+            }
+            th, body.dark-mode th { background-color: #6a1b9a; color: white; }
+            tr:nth-child(even), body.dark-mode tr:nth-child(even) { background-color: #faf0ff; }
+            tr:hover, body.dark-mode tr:hover { background-color: transparent; }
+            .table-note, body.dark-mode .table-note { color: #666; }
             .class-note, .fighter-note { display: none; }
+            /* Shopping only: keep Weapons+Armor together on page 1, start
+               Ammunition (and General Items right after it) on page 2.
+               page-break-before alone leaves no visible gap at the top of
+               the new page — every #class-display h2 has margin-top:0
+               (so the *first* heading sits flush under the container), but
+               that same rule strips the gap this heading would otherwise
+               need after a forced page break. h2#shopping-ammo-heading
+               matches that rule's specificity and comes later in the
+               stylesheet, so it wins without needing !important. */
+            h2#shopping-ammo-heading { page-break-before: always; margin-top: 1cm; }
             @page { size: portrait; margin: 1cm; }
         }
     </style>
@@ -423,9 +456,17 @@
         }
 
         function buildArmorTable() {
-            const rows = Object.entries(ARMOR)
-                .sort(([a], [b]) => a.localeCompare(b))
-                .map(([name, a]) => `<tr>
+            // Body armor first, worst-to-best AC; Shield and Helmet (worn
+            // alongside body armor, not instead of it) always last.
+            const SUPPLEMENTARY = ["Shield", "Helmet"];
+            const entries = Object.entries(ARMOR);
+            const bodyArmor = entries
+                .filter(([name]) => !SUPPLEMENTARY.includes(name))
+                .sort(([, a], [, b]) => a.ac.ascending - b.ac.ascending);
+            const supplementary = SUPPLEMENTARY
+                .map(name => [name, ARMOR[name]])
+                .filter(([, a]) => a);
+            const rows = [...bodyArmor, ...supplementary].map(([name, a]) => `<tr>
                     <td>${name}</td>
                     <td>${a.cost}gp</td>
                     <td>${a.ac.ascending} / ${a.ac.descending}</td>
@@ -467,7 +508,7 @@
                 ${buildWeaponsTable()}
                 <h2>Armor</h2>
                 ${buildArmorTable()}
-                <h2>Ammunition</h2>
+                <h2 id="shopping-ammo-heading">Ammunition</h2>
                 ${buildPriceTable(AMMUNITION, 'Ammunition')}
                 <h2>General Items</h2>
                 ${buildPriceTable(ADVENTURING_GEAR, 'Item')}
