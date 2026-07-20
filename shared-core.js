@@ -1828,6 +1828,21 @@ const BACKGROUND_WEAPON_NAME_ALIASES = {
     Rock: "Rock, Thrown 10/30/50",
 };
 
+// A handful of the flavor-item equivalences above share their alias
+// target's damage/qualities for combat purposes but aren't actually worth
+// the same — a Jewelled dagger is worth far more than a plain Dagger, a
+// Stage sword (a theatrical prop) far less. Only consulted when crediting
+// an unusable item's cash value (weaponCredit's !bgWeaponUsable branch);
+// never affects the free claim of a class-legal item, which involves no
+// price at all, and never affects damage/legality, which still comes from
+// the WEAPONS entry via BACKGROUND_WEAPON_NAME_ALIASES. Items aliased
+// above but not listed here (Scissors, Belaying pin, Walking stick,
+// Pitchfork, the "daggers" plural) are worth the same as their alias
+// target — no override needed.
+const BACKGROUND_WEAPON_VALUE_OVERRIDES = {
+    "Jewelled dagger": 25, "Stage sword": 1, Awl: 1, Razor: 2, Hammer: 2, "Pick axe": 5,
+};
+
 /**
  * Strip a background weapon display string down to its bare name — a
  * leading "N x " quantity prefix and everything from the first "(" onward
@@ -2106,7 +2121,8 @@ export function purchaseEquipment(className, startingGold, dexModifier, backgrou
     if (background?.weapon) {
         const originalKey     = normalizeBackgroundWeaponName(background.weapon);
         const originalCost    = WEAPONS[originalKey]?.cost;
-        const substitutedCost = bgWeaponData?.cost;
+        const bareName        = getBackgroundWeaponBareName(substitutedBgWeapon);
+        const substitutedCost = BACKGROUND_WEAPON_VALUE_OVERRIDES[bareName] ?? bgWeaponData?.cost;
         if (!bgWeaponUsable) {
             if (!bgWeaponUnclaimed) weaponCredit = (substitutedCost ?? 0) + (bgAmmo?.value ?? 0);
         } else if (originalKey !== bgWeaponKey && originalCost != null && substitutedCost != null) {
