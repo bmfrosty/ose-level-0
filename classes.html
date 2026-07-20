@@ -255,7 +255,7 @@
 
     <div class="print-bar" id="print-bar">
         <button class="print-btn" id="print-btn">🖨 Print / Save as PDF</button>
-        <span class="print-hint">Opens a print-optimized view for the selected class</span>
+        <span class="print-hint" id="print-hint">Opens a print-optimized view for the selected class</span>
     </div>
 
     <div id="class-display">
@@ -268,7 +268,10 @@
             XP_REQUIREMENTS,
             HIT_DICE_SCALE,
             HIT_DICE_PROGRESSIONS,
-            WEAPONS
+            WEAPONS,
+            ARMOR,
+            AMMUNITION,
+            ADVENTURING_GEAR
         } from './cs-core.js';
 
         import { CLASS_INFO } from './shared-class-info.js';
@@ -394,7 +397,7 @@
         // ranges (Missile-quality short/medium/long to-hit bands) or reach
         // (melee-only, e.g. Whip) display, whichever the entry has — never
         // both, and most weapons have neither.
-        function buildShoppingTable() {
+        function buildWeaponsTable() {
             const rows = Object.entries(WEAPONS)
                 .sort(([a], [b]) => a.localeCompare(b))
                 .map(([name, w]) => {
@@ -419,13 +422,40 @@
             </table>`;
         }
 
+        function buildArmorTable() {
+            const rows = Object.entries(ARMOR)
+                .sort(([a], [b]) => a.localeCompare(b))
+                .map(([name, a]) => `<tr>
+                    <td>${name}</td>
+                    <td>${a.cost}gp</td>
+                    <td>${a.ac.ascending} / ${a.ac.descending}</td>
+                    <td>${a.weight}</td>
+                </tr>`).join('');
+            return `<table>
+                <thead><tr><th>Armor</th><th>Cost</th><th>AC (Ascending / Descending)</th><th>Weight</th></tr></thead>
+                <tbody>${rows}</tbody>
+            </table>`;
+        }
+
+        // Ammunition and general adventuring gear share the same simple
+        // { cost } shape — one generic two-column table builder for both.
+        function buildPriceTable(data, colHeader) {
+            const rows = Object.entries(data)
+                .sort(([a], [b]) => a.localeCompare(b))
+                .map(([name, d]) => `<tr><td>${name}</td><td>${d.cost}gp</td></tr>`).join('');
+            return `<table>
+                <thead><tr><th>${colHeader}</th><th>Cost</th></tr></thead>
+                <tbody>${rows}</tbody>
+            </table>`;
+        }
+
         function showShopping() {
             document.querySelectorAll('.class-btn').forEach(b => b.classList.remove('active'));
             document.getElementById('btn-shopping').classList.add('active');
-            document.getElementById('print-bar').style.display = 'none';
+            document.getElementById('print-hint').textContent = 'Prints this weapons, armor, and equipment reference';
 
             document.getElementById('class-display').innerHTML = `
-                <h2>🛒 Shopping — Weapons &amp; Pricing</h2>
+                <h2>🛒 Shopping — Equipment &amp; Pricing</h2>
                 <p class="table-note">
                     Every weapon the generator's equipment-purchasing logic recognizes —
                     including small-race substitutions (Short bow, Short sword) and homebrew
@@ -434,7 +464,13 @@
                     restrictions. Whip and Bull Whip are only ever inherited from a background,
                     never shopped for.
                 </p>
-                ${buildShoppingTable()}
+                ${buildWeaponsTable()}
+                <h2>Armor</h2>
+                ${buildArmorTable()}
+                <h2>Ammunition</h2>
+                ${buildPriceTable(AMMUNITION, 'Ammunition')}
+                <h2>General Items</h2>
+                ${buildPriceTable(ADVENTURING_GEAR, 'Item')}
             `;
 
             const url = new URL(window.location);
@@ -450,6 +486,7 @@
             document.querySelectorAll('.class-btn').forEach(b => b.classList.remove('active'));
             document.getElementById('btn-' + classKey).classList.add('active');
             document.getElementById('print-bar').style.display = '';
+            document.getElementById('print-hint').textContent = 'Opens a print-optimized view for the selected class';
 
             const note = CLASS_NOTES[classKey];
             const noteHtml = note
@@ -522,7 +559,15 @@
 
         document.getElementById('print-btn').addEventListener('click', () => {
             const key = new URLSearchParams(window.location.search).get('class') || 'Fighter_CLASS';
-            window.open(`classprint.html?class=${key}`, '_blank');
+            if (key === 'shopping') {
+                // No dedicated print page for Shopping (unlike classprint.html
+                // for classes) — the existing @media print rules already hide
+                // nav/buttons/intro-box and format #class-display cleanly, so
+                // printing this page directly works just as well.
+                window.print();
+            } else {
+                window.open(`classprint.html?class=${key}`, '_blank');
+            }
         });
     </script>
 
