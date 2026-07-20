@@ -1390,8 +1390,11 @@ export const AMMUNITION = {
 
 export const ARMOR = {
   "Unarmoured": { ac: { descending: 9, ascending: 10 }, cost: 0, weight: 0 },
+  "Gambeson": { ac: { descending: 8, ascending: 11 }, cost: 10, weight: 100 },
   "Leather": { ac: { descending: 7, ascending: 12 }, cost: 20, weight: 200 },
+  "Scale mail": { ac: { descending: 6, ascending: 13 }, cost: 30, weight: 300 },
   "Chain mail": { ac: { descending: 5, ascending: 14 }, cost: 40, weight: 400 },
+  "Banded mail": { ac: { descending: 4, ascending: 15 }, cost: 50, weight: 450 },
   "Plate mail": { ac: { descending: 3, ascending: 16 }, cost: 60, weight: 500 },
   "Shield": { ac: { descending: -1, ascending: 1 }, cost: 10, weight: 100 },
   "Helmet": { ac: { descending: 0, ascending: 0 }, cost: 10, weight: 50 }
