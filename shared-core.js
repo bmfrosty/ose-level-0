@@ -1794,9 +1794,24 @@ export function substituteSmallRaceWeapon(weaponText, race, limitSmallRaceShortS
 }
 
 // Aliases between background weapon display-string spelling and the WEAPONS
-// table's own key spelling, beyond the generic parenthetical/quantity
-// stripping normalizeBackgroundWeaponName() already does.
-const BACKGROUND_WEAPON_NAME_ALIASES = { Longbow: "Long bow", Shortbow: "Short bow", Shortsword: "Short sword" };
+// table's own key spelling. Two kinds:
+//   1. Pure spelling/casing variants (Longbow -> Long bow, plural "daggers"
+//      from the "N x daggers" quantity-prefix stripping -> Dagger).
+//   2. Deliberate equivalences for flavor-only civilian tools with no
+//      WEAPONS entry of their own, so purchaseEquipment() can still resolve
+//      a class-legality/cost check for them instead of always treating them
+//      as valueless — mapped to the closest real weapon by damage die and
+//      handling (e.g. a Pitchfork behaves like a Spear, a Walking stick like
+//      a Club). This doesn't rename the display string (still shown as
+//      "Pitchfork (1d6)", not "Spear") — only the mechanical lookup changes.
+const BACKGROUND_WEAPON_NAME_ALIASES = {
+    Longbow: "Long bow", Shortbow: "Short bow", Shortsword: "Short sword",
+    daggers: "Dagger",
+    Awl: "Dagger", "Jewelled dagger": "Dagger", Razor: "Dagger", Rock: "Dagger",
+    Scissors: "Dagger", "Stage sword": "Dagger", Whip: "Dagger",
+    "Belaying pin": "Club", Hammer: "Club", "Walking stick": "Club",
+    "Pick axe": "Hand axe", Pitchfork: "Spear",
+};
 
 /**
  * Reduce a background weapon's display string (e.g. "Longbow (1d6) + 10
@@ -1804,15 +1819,12 @@ const BACKGROUND_WEAPON_NAME_ALIASES = { Longbow: "Long bow", Shortbow: "Short b
  * to, so purchaseEquipment() can recognize a background weapon that's
  * already class-legal instead of buying a redundant duplicate. Strips a
  * leading "N x " quantity prefix and everything from the first "(" onward,
- * then applies BACKGROUND_WEAPON_NAME_ALIASES. Returns a best-guess name
+ * then applies BACKGROUND_WEAPON_NAME_ALIASES (including the deliberate
+ * flavor-item equivalences documented there). Returns a best-guess name
  * whether or not it turns out to exist in WEAPONS — callers must check that
- * themselves. Most background weapons (e.g. "Stage sword", "Rock", "Walking
- * stick") are flavor-only civilian items with no WEAPONS entry at all and
- * simply won't match; plural quantity-prefixed ones (e.g. "3 x daggers
- * (1d4)" strips to lowercase-plural "daggers", not "Dagger") also won't
- * match today — an acceptably conservative gap, not a bug, since the
- * fallback is just to treat them as flavor items too, same as any other
- * non-matching weapon.
+ * themselves. A handful of background weapons still have no real or
+ * equivalent WEAPONS entry and simply won't match (e.g. multi-word ammo
+ * suffixes aside, anything not listed in BACKGROUND_WEAPON_NAME_ALIASES).
  * @param {string} weaponText - background weapon display string
  * @returns {string} best-guess WEAPONS-table key
  */
@@ -2275,7 +2287,7 @@ export const backgroundTables = {
         { profession: "Juggler",                item: ["Juggling balls"],                  weapon: "3 x daggers (1d4)",           armor: "Unarmored" },
         { profession: "Money Lender",           item: ["50gp"],                            weapon: "Mace (1d6)",                  armor: "Unarmored" },
         { profession: "Scribe",                 item: ["3 x Parchment", "Ink pot", "Quill"], weapon: "Staff (1d4)",               armor: "Unarmored" },
-        { profession: "Trumpet Player",         item: ["Trumpet"],                         weapon: "Rock (1d3)",                  armor: "Unarmored" },
+        { profession: "Trumpet Player",         item: ["Trumpet"],                         weapon: "Rock (1d4)",                  armor: "Unarmored" },
         { profession: "Wealthy Heir",           item: ["Signet ring", "Perfume"],          weapon: "Jewelled dagger (1d4)",       armor: "Unarmored" },
         { profession: "Wizard's Apprentice",    item: ["Spell book (1 random cantrip)"],   weapon: "Dagger (1d4)",                armor: "Unarmored" }
     ],
@@ -2291,7 +2303,7 @@ export const backgroundTables = {
         { profession: "Shepherd",   item: ["Pole (10' long, wooden)"],              weapon: "Sling (1d4) + 10 stones",     armor: "Unarmored" },
         { profession: "Tailor",     item: ["Needle", "Thread", "Bag of buttons"],   weapon: "Scissors (1d4)",              armor: "Unarmored" },
         { profession: "Trader",     item: ["Rare, fragrant spices"],                weapon: "Crossbow (1d6) + 10 bolts",   armor: "Unarmored" },
-        { profession: "Weaver",     item: ["Hand Loom", "Yarn"],                    weapon: "Scissors (1d3)",              armor: "Unarmored" }
+        { profession: "Weaver",     item: ["Hand Loom", "Yarn"],                    weapon: "Scissors (1d4)",              armor: "Unarmored" }
     ],
     3: [
         { profession: "Bowyer",       item: ["Saw"],                                 weapon: "Longbow (1d6) + 10 arrows",   armor: "Unarmored" },
