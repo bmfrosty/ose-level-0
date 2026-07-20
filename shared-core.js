@@ -2059,8 +2059,16 @@ export function purchaseEquipment(className, startingGold, dexModifier, backgrou
     // instead (see buyMeleeWeapon/buyRangedWeapon and weaponCredit above).
     if (substitutedBgWeapon && !bgWeaponForMelee && !bgWeaponForRanged && weaponCredit === 0) {
         result.items.push(`${substitutedBgWeapon} (background)`);
-    } else if (weaponCredit > 0) {
+    } else if (weaponCredit > 0 && !bgWeaponUsable) {
         purchaseLog.push(`${substitutedBgWeapon} — unusable by ${baseClass}, credited +${weaponCredit}gp instead`);
+    } else if (weaponCredit > 0) {
+        // Downgraded-but-still-usable case (bgWeaponForRanged/bgWeaponForMelee
+        // already claimed it and logged its own "0gp (background)" line) —
+        // this credit is a price-gap bonus on top of keeping the weapon, not
+        // a replacement for it, so the wording must not say "unusable" or
+        // "instead" here.
+        const originalKeyForLog = normalizeBackgroundWeaponName(background.weapon);
+        purchaseLog.push(`${bgWeaponKey} downgraded from ${originalKeyForLog} for a small race — credited +${weaponCredit}gp price difference`);
     }
     const bgArmorKey = background?.armor ? normalizeBackgroundArmorName(background.armor) : null;
     const bgArmorUsable = !!(bgArmorKey && bgArmorKey !== 'Unarmoured' && ARMOR[bgArmorKey] && allowedArmors.includes(bgArmorKey));
