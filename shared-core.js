@@ -1823,6 +1823,59 @@ function normalizeBackgroundWeaponName(weaponText) {
     return BACKGROUND_WEAPON_NAME_ALIASES[name] || name;
 }
 
+// Full-bundle ammunition each background's partial starter ammo (e.g.
+// Hunter's "10 arrows", Innkeeper's "10 bolts") is proportionally valued
+// against — Arrows (quiver of 20) 5gp -> 0.25gp/arrow; Crossbow bolts
+// (case of 30) 10gp -> 0.3333gp/bolt.
+const AMMO_BUNDLES = {
+    arrows: { bundleName: "Arrows (quiver of 20)", bundleQty: 20 },
+    bolts:  { bundleName: "Crossbow bolts (case of 30)", bundleQty: 30 },
+};
+
+/**
+ * Parse a background weapon's "+ N ammoType" suffix (e.g. "Longbow (1d6) +
+ * 10 arrows") into its display fragment and cash value proportional to the
+ * matching full purchasable bundle. Returns null when there's no such
+ * suffix or the ammo word isn't a recognized AMMO_BUNDLES type.
+ * @param {string} weaponText - substituted background weapon display string
+ * @returns {?{detail: string, qty: number, value: number, bundleName: string, bundleCost: number}}
+ */
+function parseBackgroundAmmo(weaponText) {
+    const match = weaponText?.match(/\+\s*(\d+)\s+(\S+)\s*$/);
+    if (!match) return null;
+    const qty = parseInt(match[1], 10);
+    const bundle = AMMO_BUNDLES[match[2].toLowerCase()];
+    const bundleCost = bundle ? AMMUNITION[bundle.bundleName]?.cost : null;
+    if (!bundle || bundleCost == null) return null;
+    return {
+        detail: `${qty} ${match[2]}`, qty,
+        // Rounded to 2 decimals (matches the app's fractional-gold precision
+        // elsewhere) — a straight fraction (e.g. 10/30 bolts) doesn't
+        // terminate cleanly and would otherwise leak repeating-decimal noise
+        // (33.333333333333336gp) into gold and every downstream log line.
+        value: Math.round((qty / bundle.bundleQty) * bundleCost * 100) / 100,
+        bundleName: bundle.bundleName, bundleCost,
+    };
+}
+
+// Aliases between background *armor* display-string spelling and the ARMOR
+// table's own key spelling — every background's armor field is either
+// "Unarmored" (American spelling; ARMOR's own "no armor" entry is spelled
+// "Unarmoured") or "Chain Mail" (capital M; ARMOR's key is "Chain mail").
+const BACKGROUND_ARMOR_NAME_ALIASES = { "Unarmored": "Unarmoured", "Chain Mail": "Chain mail" };
+
+/**
+ * Reduce a background's armor field to whatever ARMOR-table key it
+ * corresponds to. Unlike weapons, background armor values are always
+ * complete ARMOR-table names (no damage-die/quantity suffix to strip) — this
+ * only exists to bridge the spelling/casing mismatch above.
+ * @param {string} armorText - background armor field, e.g. "Chain Mail"
+ * @returns {string} ARMOR-table key
+ */
+function normalizeBackgroundArmorName(armorText) {
+    return BACKGROUND_ARMOR_NAME_ALIASES[armorText] || armorText;
+}
+
 // Classes whose default melee loadout is a one-handed weapon + Shield (Sword,
 // or Short sword for Halfling/Gnome under limitSmallRaceShortSword — see
 // SHORT_SWORD_LIMITED_RACES), and who (except Dwarf/Halfling/Gnome — see
@@ -1930,6 +1983,7 @@ export function purchaseEquipment(className, startingGold, dexModifier, backgrou
     const substitutedBgWeapon = background?.weapon ? substituteSmallRaceWeapon(background.weapon, race, limitSmallRaceShortSword) : null;
     const bgWeaponKey  = substitutedBgWeapon ? normalizeBackgroundWeaponName(substitutedBgWeapon) : null;
     const bgWeaponData = bgWeaponKey ? WEAPONS[bgWeaponKey] : null;
+    const bgAmmo = substitutedBgWeapon ? parseBackgroundAmmo(substitutedBgWeapon) : null;
     const allowedWeapons = new Set(classInfo?.weapons || []);
     const bgWeaponUsable = !!(bgWeaponData && allowedWeapons.has(bgWeaponKey));
     // True for any ranged-only weapon (Long bow, Short bow, Crossbow, Sling) —
@@ -1970,11 +2024,57 @@ export function purchaseEquipment(className, startingGold, dexModifier, backgrou
     const bgWeaponUnclaimed = isRangedCandidate && bgWeaponIsRanged && !bgWeaponIsDedicatedRanged;
     const bgWeaponForMelee  = bgWeaponUsable && !bgWeaponForRanged && !bgWeaponUnclaimed;
 
+    // Weapon pricing credit: if the character doesn't end up with the exact
+    // weapon their background lists — either downgraded by race substitution
+    // (a small race's Longbow became a cheaper Short bow) or entirely unusable
+    // by this class (a Cleric's background Sword) — credit the gold value gap
+    // instead of silently absorbing it. bgWeaponUnclaimed (a background
+    // Sling/Crossbow this class *could* use but the tool prefers not to
+    // auto-equip over its own preferred bow) is excluded — that weapon isn't
+    // actually unusable, just not auto-selected, so no credit applies. Only
+    // meaningful when the background weapon is a real WEAPONS-table item to
+    // begin with — most backgrounds (Rock, Walking stick, etc.) are
+    // flavor-only with no WEAPONS entry and nothing to credit. When the
+    // weapon is entirely unusable its starter ammo (bgAmmo) is credited too,
+    // at its own proportional value — see parseBackgroundAmmo() — since
+    // there's no bow left to fire it from either. When the weapon is
+    // downgraded-but-still-usable, its ammo is handled separately in
+    // buyRangedWeapon() (sell it toward a full bundle, or just keep it).
+    let weaponCredit = 0;
+    if (background?.weapon) {
+        const originalKey     = normalizeBackgroundWeaponName(background.weapon);
+        const originalCost    = WEAPONS[originalKey]?.cost;
+        const substitutedCost = bgWeaponData?.cost;
+        if (!bgWeaponUsable) {
+            if (!bgWeaponUnclaimed) weaponCredit = (substitutedCost ?? 0) + (bgAmmo?.value ?? 0);
+        } else if (originalKey !== bgWeaponKey && originalCost != null && substitutedCost != null) {
+            weaponCredit = Math.max(0, originalCost - substitutedCost);
+        }
+    }
+    gold += weaponCredit;
+
     // Only shown as a loose flavor item when it doesn't satisfy an actual
-    // equipment slot above — once claimed as the melee or ranged weapon, it's
-    // shown as that weapon instead (see buyMeleeWeapon/buyRangedWeapon).
-    if (substitutedBgWeapon && !bgWeaponForMelee && !bgWeaponForRanged) result.items.push(`${substitutedBgWeapon} (background)`);
-    if (background?.armor)  result.items.push(`${background.armor} (background)`);
+    // equipment slot above and wasn't cashed out above — once claimed as the
+    // melee/ranged weapon or credited as gold, it's represented that way
+    // instead (see buyMeleeWeapon/buyRangedWeapon and weaponCredit above).
+    if (substitutedBgWeapon && !bgWeaponForMelee && !bgWeaponForRanged && weaponCredit === 0) {
+        result.items.push(`${substitutedBgWeapon} (background)`);
+    } else if (weaponCredit > 0) {
+        purchaseLog.push(`${substitutedBgWeapon} — unusable by ${baseClass}, credited +${weaponCredit}gp instead`);
+    }
+    const bgArmorKey = background?.armor ? normalizeBackgroundArmorName(background.armor) : null;
+    const bgArmorUsable = !!(bgArmorKey && bgArmorKey !== 'Unarmoured' && ARMOR[bgArmorKey] && allowedArmors.includes(bgArmorKey));
+    const armorCredit = (bgArmorKey && bgArmorKey !== 'Unarmoured' && !bgArmorUsable) ? (ARMOR[bgArmorKey]?.cost ?? 0) : 0;
+    gold += armorCredit;
+    if (background?.armor && !bgArmorUsable && armorCredit === 0) {
+        // "Unarmored" (nothing to claim or credit) or a genuinely unrecognized
+        // armor string — shown as-is, same as always.
+        result.items.push(`${background.armor} (background)`);
+    } else if (armorCredit > 0) {
+        purchaseLog.push(`${background.armor} — unusable by ${baseClass}, credited +${armorCredit}gp instead`);
+    }
+    // bgArmorUsable armor is claimed for free below (see the armor-purchase
+    // loop), not shown as a flavor item — it's represented as result.armor.
     const bgItems = Array.isArray(background?.item) ? background.item : (background?.item ? [background.item] : []);
     bgItems.forEach(i => { if (i) result.items.push(i); });
 
@@ -2040,17 +2140,30 @@ export function purchaseEquipment(className, startingGold, dexModifier, backgrou
             result.weapons.push(bgWeaponKey);
             purchaseLog.push(`${bgWeaponKey} — 0gp (background)`);
             // The background's own weapon text already includes its ammo (e.g.
-            // Hunter's "Longbow (1d6) + 10 arrows") — do NOT also buy a fresh
-            // "Arrows (quiver of 20)" on top of it (previously charged 5gp for
-            // ammo the character already had, and silently dropped the
-            // background's actual arrow count in favor of the purchased one).
-            // Only the ammo count is pushed as a flavor item, not the full
-            // "Shortbow (1d6) + 10 arrows" string — that string contains a
+            // Hunter's "Longbow (1d6) + 10 arrows") — never buy a fresh
+            // "Arrows (quiver of 20)" *on top of* it for free (that would
+            // silently charge for ammo the character already had). Instead,
+            // sell the partial starter ammo at its proportional value (see
+            // parseBackgroundAmmo()) and put that credit toward a full
+            // bundle, so the character only pays the net difference — e.g.
+            // Hunter's 10 arrows (2.5gp) toward a 5gp quiver of 20 nets 2.5gp.
+            // If even the discounted bundle isn't affordable, fall back to
+            // just keeping the original partial ammo for free. Only the ammo
+            // fragment is ever pushed as an item, never the full
+            // "Shortbow (1d6) + 10 arrows" string — that contains a
             // damage-die notation, which the sheet template sweeps into the
             // Weapons box as its own slot, duplicating the bow already listed
             // via result.weapons above.
-            const ammoDetail = substitutedBgWeapon.match(/\+\s*(\d+\s+\S+)\s*$/)?.[1];
-            if (ammoDetail) result.items.push(`${ammoDetail} (background)`);
+            if (bgAmmo) {
+                const netCost = bgAmmo.bundleCost - bgAmmo.value;
+                if (netCost <= gold) {
+                    gold -= netCost;
+                    result.items.push(bgAmmo.bundleName);
+                    purchaseLog.push(`${bgAmmo.bundleName} — ${bgAmmo.bundleCost}gp, net ${netCost}gp after selling starting ${bgAmmo.detail} (background) for ${bgAmmo.value}gp`);
+                } else {
+                    result.items.push(`${bgAmmo.detail} (background)`);
+                }
+            }
             return;
         }
         const rangedPreferred = isSmallRace ? "Short bow" : "Long bow";
@@ -2072,11 +2185,22 @@ export function purchaseEquipment(className, startingGold, dexModifier, backgrou
         buyRangedWeapon();
     }
 
-    for (const aName of ARMOR_PRIORITY) {
-        if (allowedArmors.includes(aName) && ARMOR[aName] && ARMOR[aName].cost <= gold) {
-            result.armor = aName; gold -= ARMOR[aName].cost;
-            purchaseLog.push(`${aName} — ${ARMOR[aName].cost}gp`);
-            break;
+    if (bgArmorUsable) {
+        // Class-legal background armor is worn for free instead of also
+        // buying a redundant (possibly better) piece from scratch — same
+        // "recognize it, don't double-spend" treatment as background
+        // weapons above. No auto-upgrade consideration, matching how a
+        // class-legal background weapon is used as-is rather than weighed
+        // against buying something nominally better.
+        result.armor = bgArmorKey;
+        purchaseLog.push(`${bgArmorKey} — 0gp (background)`);
+    } else {
+        for (const aName of ARMOR_PRIORITY) {
+            if (allowedArmors.includes(aName) && ARMOR[aName] && ARMOR[aName].cost <= gold) {
+                result.armor = aName; gold -= ARMOR[aName].cost;
+                purchaseLog.push(`${aName} — ${ARMOR[aName].cost}gp`);
+                break;
+            }
         }
     }
 
@@ -2118,7 +2242,12 @@ export function purchaseEquipment(className, startingGold, dexModifier, backgrou
     if (result.shield)         console.log(`Shield: yes`);
     const purchasedItems = result.items.filter(i => !i.includes('(background)'));
     if (purchasedItems.length) console.log(`Items: ${purchasedItems.join(', ')}`);
-    console.log(`AC: ${result.startingAC}  |  Gold remaining: ${result.goldRemaining} gp`);
+    // Rounded for this debug line only (result.goldRemaining itself stays
+    // unrounded — the sheet's own displayed "Starting Gold" line already
+    // rounds via cs-core.js's formatGold()). Ammo-value credits (see
+    // parseBackgroundAmmo()) can otherwise leave float noise here even
+    // though the credit itself was already rounded to 2 decimals.
+    console.log(`AC: ${result.startingAC}  |  Gold remaining: ${Math.round(result.goldRemaining * 100) / 100} gp`);
     console.log('===========================\n');
 
     return result;
