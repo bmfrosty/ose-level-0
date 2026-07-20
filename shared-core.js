@@ -1372,7 +1372,13 @@ export const WEAPONS = {
   // Entangle (from the Teamster background's own flavor text) isn't a
   // mechanical WEAPON_QUALITIES entry anywhere else in this table — no
   // special-condition rules exist to hook it into, so it's flavor-only here.
-  "Whip": { cost: 1, weight: 20, damage: "1d2", qualities: ["Melee"] }
+  // `reach` (feet) is a melee-weapon-only field distinct from `ranges`
+  // (OSE's three-tier short/medium/long to-hit bands for Missile-quality
+  // weapons) — a Whip strikes at a distance without being thrown, so it
+  // doesn't fit that shape. Not consumed anywhere in the app yet (no
+  // reach-based to-hit rules implemented); reference/flavor only for now.
+  "Whip": { cost: 5, weight: 20, damage: "1d2", qualities: ["Melee"], reach: 5 },
+  "Bull Whip": { cost: 10, weight: 30, damage: "1d2", qualities: ["Melee"], reach: 10 }
 };
 
 export const AMMUNITION = {
@@ -1867,7 +1873,7 @@ const UNIVERSALLY_USABLE_WEAPONS = new Set(["Staff", "Rock, Thrown 10/30/50"]);
 // `allowedWeapons` at all, so a class can't shop for one, but a background
 // that happens to hand them one is still honored instead of being treated
 // as unusable.
-const BACKGROUND_UNIVERSAL_WEAPONS = new Set(["Whip"]);
+const BACKGROUND_UNIVERSAL_WEAPONS = new Set(["Whip", "Bull Whip"]);
 
 // Full-bundle ammunition each background's partial starter ammo (e.g.
 // Hunter's "10 arrows", Innkeeper's "10 bolts") is proportionally valued
