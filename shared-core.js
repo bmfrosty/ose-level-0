@@ -1929,6 +1929,25 @@ function parseBackgroundAmmo(weaponText) {
     };
 }
 
+/**
+ * Some background `item` entries represent cash or a sellable valuable
+ * rather than a physical thing to carry — the Money Lender's bare "50gp",
+ * or the Jeweller's "Ostentatious Jewellery (25gp)" (a named valuable with
+ * its worth stated inline, same convention as a weapon's damage die). Both
+ * convert straight to starting gold; there's no "wear/wield it instead"
+ * alternative for either the way there is for weapons/armor, so unlike
+ * BACKGROUND_WEAPON_VALUE_OVERRIDES this always converts, unconditionally.
+ * @param {string} itemText - background item display string
+ * @returns {?number} gold value if this item is cash/a priced valuable, else null
+ */
+function extractBackgroundItemCashValue(itemText) {
+    const bareCash = itemText.match(/^(\d+)\s*gp$/i);
+    if (bareCash) return parseInt(bareCash[1], 10);
+    const valuable = itemText.match(/\((\d+)\s*gp\)\s*$/i);
+    if (valuable) return parseInt(valuable[1], 10);
+    return null;
+}
+
 // Aliases between background *armor* display-string spelling and the ARMOR
 // table's own key spelling — every background's armor field is either
 // "Unarmored" (American spelling; ARMOR's own "no armor" entry is spelled
@@ -2163,7 +2182,16 @@ export function purchaseEquipment(className, startingGold, dexModifier, backgrou
     // bgArmorUsable armor is claimed for free below (see the armor-purchase
     // loop), not shown as a flavor item — it's represented as result.armor.
     const bgItems = Array.isArray(background?.item) ? background.item : (background?.item ? [background.item] : []);
-    bgItems.forEach(i => { if (i) result.items.push(i); });
+    bgItems.forEach(i => {
+        if (!i) return;
+        const cashValue = extractBackgroundItemCashValue(i);
+        if (cashValue != null) {
+            gold += cashValue;
+            purchaseLog.push(`${i} — converted to +${cashValue}gp starting gold`);
+        } else {
+            result.items.push(i);
+        }
+    });
 
     // Name of the melee weapon actually purchased, tracked separately from
     // result.weapons (which may also gain a ranged weapon below) so the
