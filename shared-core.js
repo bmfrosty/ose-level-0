@@ -1757,7 +1757,7 @@ export const WEAPON_PRIORITY = {
     "Thief":      ["Sword", "Short sword", "Dagger", "Club"],
 };
 
-export const ARMOR_PRIORITY = ["Plate mail", "Chain mail", "Leather"];
+export const ARMOR_PRIORITY = ["Plate mail", "Banded mail", "Chain mail", "Scale mail", "Leather", "Gambeson"];
 
 // Races whose Combat racial ability says "no longbows or two-handed swords"
 // (Dwarf, Halfling, Gnome) — they get the largest equivalent weapon they can
@@ -2189,23 +2189,29 @@ export function purchaseEquipment(className, startingGold, dexModifier, backgrou
 
     const buyMeleeWeapon = () => {
         if (bgWeaponForMelee) {
-            // A near-worthless background item (a Rock, 0.1gp) doesn't lock
-            // the character into wielding it over a real weapon. Three
-            // cases: (1) the class's normal preferred weapon is already
-            // affordable without any help — buy that instead, falling
-            // through below, and don't bother selling the near-worthless
+            const bareName = getBackgroundWeaponBareName(substitutedBgWeapon);
+            // A near-worthless combat item (a Rock, 0.1gp — via
+            // UNIVERSALLY_USABLE_WEAPONS) or a valuable heirloom whose true
+            // worth is captured by BACKGROUND_WEAPON_VALUE_OVERRIDES (a
+            // Jewelled dagger, worth 25gp despite fighting exactly like a
+            // 3gp Dagger) doesn't lock the character into wielding it over
+            // a real weapon. Three cases: (1) the class's normal preferred
+            // weapon is already affordable without any help — buy that
+            // instead, falling through below, and don't bother selling the
             // item at all; (2) it's only affordable once the item's sale
-            // price is added in — sell it and fall through; (3) still not
+            // value is added in — sell it and fall through; (3) still not
             // affordable even with it — keep it for free, wielded, same as
             // any other background weapon (the else branch below).
+            const isNearWorthless = UNIVERSALLY_USABLE_WEAPONS.has(bgWeaponKey) && bgWeaponData.cost > 0 && bgWeaponData.cost < 1;
+            const saleValue = BACKGROUND_WEAPON_VALUE_OVERRIDES[bareName] ?? (isNearWorthless ? bgWeaponData.cost : null);
             let claimForFree = true;
-            if (UNIVERSALLY_USABLE_WEAPONS.has(bgWeaponKey) && bgWeaponData.cost > 0 && bgWeaponData.cost < 1) {
+            if (saleValue != null) {
                 const preferredCost = getPreferredMeleeCost();
                 if (preferredCost != null && gold >= preferredCost) {
                     claimForFree = false;
-                } else if (preferredCost != null && gold + bgWeaponData.cost >= preferredCost) {
-                    gold += bgWeaponData.cost;
-                    purchaseLog.push(`${bgWeaponKey} sold for ${bgWeaponData.cost}gp — the difference needed to afford a better weapon`);
+                } else if (preferredCost != null && gold + saleValue >= preferredCost) {
+                    gold += saleValue;
+                    purchaseLog.push(`${substitutedBgWeapon} sold for ${saleValue}gp — the difference needed to afford a better weapon`);
                     claimForFree = false;
                 }
             }
@@ -2228,7 +2234,6 @@ export function purchaseEquipment(className, startingGold, dexModifier, backgrou
                 // "Rock" -> "Rock, Thrown 10/30/50"), it's the same item,
                 // not a substitution — show the flavor text as-is, no
                 // "(as ...)" suffix.
-                const bareName = getBackgroundWeaponBareName(substitutedBgWeapon);
                 const displayName = bareName === bgWeaponKey ? bgWeaponKey
                     : bgWeaponKey.startsWith(bareName) ? substitutedBgWeapon
                     : `${substitutedBgWeapon} (as ${bgWeaponKey})`;
