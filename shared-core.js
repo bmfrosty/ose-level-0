@@ -1839,9 +1839,15 @@ const BACKGROUND_WEAPON_NAME_ALIASES = {
 // the WEAPONS entry via BACKGROUND_WEAPON_NAME_ALIASES. Items aliased
 // above but not listed here (Scissors, Belaying pin, Walking stick,
 // Pitchfork, the "daggers" plural) are worth the same as their alias
-// target — no override needed.
+// target — no override needed. Whip isn't aliased at all (it's its own
+// WEAPONS entry) but is listed here at its own real cost anyway, purely to
+// opt it into the sell-for-upgrade check below — a TWO_HANDED_CANDIDATE_CLASS
+// with a background Whip sells it toward their preferred weapon (a Sword)
+// whenever that's affordable, rather than being stuck with a 1d2 weapon
+// while carrying enough gold to buy something better.
 const BACKGROUND_WEAPON_VALUE_OVERRIDES = {
     "Jewelled dagger": 25, "Stage sword": 1, Awl: 1, Razor: 2, Hammer: 2, "Pick axe": 5,
+    Whip: 5,
 };
 
 /**
