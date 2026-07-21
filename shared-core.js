@@ -1358,6 +1358,7 @@ export const WEAPONS = {
   "Mace": { cost: 5, weight: 30, damage: "1d6", qualities: ["Blunt", "Melee"] },
   "Oil (flask), burning": { cost: 2, weight: 0, damage: "1d8", qualities: ["Missile", "Splash weapon"], ranges: { short: 10, medium: 30, long: 50 } },
   "Pole arm": { cost: 7, weight: 150, damage: "1d10", qualities: ["Brace", "Melee", "Slow", "Two-handed"] },
+  "Rock, Thrown 10/30/50": { cost: 0.1, weight: 10, damage: "1d3", qualities: ["Melee", "Missile"], ranges: { short: 10, medium: 30, long: 50 } },
   "Short bow": { cost: 25, weight: 30, damage: "1d6", qualities: ["Missile", "Two-handed"], ranges: { short: 50, medium: 100, long: 150 } },
   "Short sword": { cost: 7, weight: 30, damage: "1d6", qualities: ["Melee"] },
   "Silver dagger": { cost: 30, weight: 10, damage: "1d4", qualities: ["Melee", "Missile"], ranges: { short: 10, medium: 20, long: 30 } },
@@ -1367,7 +1368,17 @@ export const WEAPONS = {
   "Sword": { cost: 10, weight: 60, damage: "1d8", qualities: ["Melee"] },
   "Torch": { cost: 1, weight: 0, damage: "1d4", qualities: ["Melee"] },
   "Two-handed sword": { cost: 15, weight: 150, damage: "1d10", qualities: ["Melee", "Slow", "Two-handed"] },
-  "War hammer": { cost: 5, weight: 30, damage: "1d6", qualities: ["Blunt", "Melee"] }
+  "War hammer": { cost: 5, weight: 30, damage: "1d6", qualities: ["Blunt", "Melee"] },
+  // Entangle (from the Teamster background's own flavor text) isn't a
+  // mechanical WEAPON_QUALITIES entry anywhere else in this table — no
+  // special-condition rules exist to hook it into, so it's flavor-only here.
+  // `reach` (feet) is a melee-weapon-only field distinct from `ranges`
+  // (OSE's three-tier short/medium/long to-hit bands for Missile-quality
+  // weapons) — a Whip strikes at a distance without being thrown, so it
+  // doesn't fit that shape. Not consumed anywhere in the app yet (no
+  // reach-based to-hit rules implemented); reference/flavor only for now.
+  "Whip": { cost: 5, weight: 20, damage: "1d2", qualities: ["Melee"], reach: 5 },
+  "Bull Whip": { cost: 10, weight: 30, damage: "1d2", qualities: ["Melee"], reach: 10 }
 };
 
 export const AMMUNITION = {
@@ -1379,8 +1390,11 @@ export const AMMUNITION = {
 
 export const ARMOR = {
   "Unarmoured": { ac: { descending: 9, ascending: 10 }, cost: 0, weight: 0 },
+  "Gambeson": { ac: { descending: 8, ascending: 11 }, cost: 10, weight: 100 },
   "Leather": { ac: { descending: 7, ascending: 12 }, cost: 20, weight: 200 },
+  "Scale mail": { ac: { descending: 6, ascending: 13 }, cost: 30, weight: 300 },
   "Chain mail": { ac: { descending: 5, ascending: 14 }, cost: 40, weight: 400 },
+  "Banded mail": { ac: { descending: 4, ascending: 15 }, cost: 50, weight: 450 },
   "Plate mail": { ac: { descending: 3, ascending: 16 }, cost: 60, weight: 500 },
   "Shield": { ac: { descending: -1, ascending: 1 }, cost: 10, weight: 100 },
   "Helmet": { ac: { descending: 0, ascending: 0 }, cost: 10, weight: 50 }
@@ -1743,7 +1757,7 @@ export const WEAPON_PRIORITY = {
     "Thief":      ["Sword", "Short sword", "Dagger", "Club"],
 };
 
-export const ARMOR_PRIORITY = ["Plate mail", "Chain mail", "Leather"];
+export const ARMOR_PRIORITY = ["Plate mail", "Banded mail", "Chain mail", "Scale mail", "Leather", "Gambeson"];
 
 // Races whose Combat racial ability says "no longbows or two-handed swords"
 // (Dwarf, Halfling, Gnome) — they get the largest equivalent weapon they can
@@ -1794,33 +1808,168 @@ export function substituteSmallRaceWeapon(weaponText, race, limitSmallRaceShortS
 }
 
 // Aliases between background weapon display-string spelling and the WEAPONS
-// table's own key spelling, beyond the generic parenthetical/quantity
-// stripping normalizeBackgroundWeaponName() already does.
-const BACKGROUND_WEAPON_NAME_ALIASES = { Longbow: "Long bow", Shortbow: "Short bow", Shortsword: "Short sword" };
+// table's own key spelling. Two kinds:
+//   1. Pure spelling/casing variants (Longbow -> Long bow, plural "daggers"
+//      from the "N x daggers" quantity-prefix stripping -> Dagger).
+//   2. Deliberate equivalences for flavor-only civilian tools with no
+//      WEAPONS entry of their own, so purchaseEquipment() can still resolve
+//      a class-legality/cost check for them instead of always treating them
+//      as valueless — mapped to the closest real weapon by damage die and
+//      handling (e.g. a Pitchfork behaves like a Spear, a Walking stick like
+//      a Club). This doesn't rename the display string (still shown as
+//      "Pitchfork (1d6)", not "Spear") — only the mechanical lookup changes.
+const BACKGROUND_WEAPON_NAME_ALIASES = {
+    Longbow: "Long bow", Shortbow: "Short bow", Shortsword: "Short sword",
+    daggers: "Dagger",
+    Awl: "Dagger", "Jewelled dagger": "Dagger", Razor: "Dagger",
+    Scissors: "Dagger", "Stage sword": "Dagger",
+    "Belaying pin": "Club", Hammer: "Club", "Walking stick": "Club",
+    "Pick axe": "Hand axe", Pitchfork: "Spear",
+    Rock: "Rock, Thrown 10/30/50",
+};
+
+// A handful of the flavor-item equivalences above share their alias
+// target's damage/qualities for combat purposes but aren't actually worth
+// the same — a Jewelled dagger is worth far more than a plain Dagger, a
+// Stage sword (a theatrical prop) far less. Consulted in two places:
+// crediting an unusable item's cash value (weaponCredit's !bgWeaponUsable
+// branch), and buyMeleeWeapon's sell-for-upgrade check for a class-legal
+// item (sold toward a better weapon rather than wielded, when that's an
+// improvement) — never affects damage/legality, which still comes from
+// the WEAPONS entry via BACKGROUND_WEAPON_NAME_ALIASES. Items aliased
+// above but not listed here (Scissors, Belaying pin, Walking stick,
+// Pitchfork, the "daggers" plural) are worth the same as their alias
+// target — no override needed. Whip isn't aliased at all (it's its own
+// WEAPONS entry) but is listed here at its own real cost anyway, purely to
+// opt it into the sell-for-upgrade check below — a TWO_HANDED_CANDIDATE_CLASS
+// with a background Whip sells it toward their preferred weapon (a Sword)
+// whenever that's affordable, rather than being stuck with a 1d2 weapon
+// while carrying enough gold to buy something better.
+const BACKGROUND_WEAPON_VALUE_OVERRIDES = {
+    "Jewelled dagger": 25, "Stage sword": 1, Awl: 1, Razor: 2, Hammer: 2, "Pick axe": 5,
+    Whip: 5,
+};
+
+/**
+ * Strip a background weapon display string down to its bare name — a
+ * leading "N x " quantity prefix and everything from the first "(" onward
+ * (damage die, ammo suffix, etc.) — with no alias applied yet. Shared by
+ * normalizeBackgroundWeaponName() (which applies BACKGROUND_WEAPON_NAME_ALIASES
+ * on top) and callers that need to know whether an alias substitution
+ * actually happened (compare this against the normalized key).
+ * @param {string} weaponText - background weapon display string
+ * @returns {string} bare name, pre-alias
+ */
+function getBackgroundWeaponBareName(weaponText) {
+    let name = weaponText.replace(/^\d+\s*x\s*/i, '');
+    const parenIdx = name.indexOf('(');
+    if (parenIdx !== -1) name = name.slice(0, parenIdx).trim();
+    return name;
+}
 
 /**
  * Reduce a background weapon's display string (e.g. "Longbow (1d6) + 10
  * arrows", "Sword (1d8)") to whatever WEAPONS-table key it might correspond
  * to, so purchaseEquipment() can recognize a background weapon that's
- * already class-legal instead of buying a redundant duplicate. Strips a
- * leading "N x " quantity prefix and everything from the first "(" onward,
- * then applies BACKGROUND_WEAPON_NAME_ALIASES. Returns a best-guess name
- * whether or not it turns out to exist in WEAPONS — callers must check that
- * themselves. Most background weapons (e.g. "Stage sword", "Rock", "Walking
- * stick") are flavor-only civilian items with no WEAPONS entry at all and
- * simply won't match; plural quantity-prefixed ones (e.g. "3 x daggers
- * (1d4)" strips to lowercase-plural "daggers", not "Dagger") also won't
- * match today — an acceptably conservative gap, not a bug, since the
- * fallback is just to treat them as flavor items too, same as any other
- * non-matching weapon.
+ * already class-legal instead of buying a redundant duplicate. Applies
+ * BACKGROUND_WEAPON_NAME_ALIASES (including the deliberate flavor-item
+ * equivalences documented there) on top of getBackgroundWeaponBareName().
+ * Returns a best-guess name whether or not it turns out to exist in
+ * WEAPONS — callers must check that themselves. A handful of background
+ * weapons still have no real or equivalent WEAPONS entry and simply won't
+ * match.
  * @param {string} weaponText - background weapon display string
  * @returns {string} best-guess WEAPONS-table key
  */
 function normalizeBackgroundWeaponName(weaponText) {
-    let name = weaponText.replace(/^\d+\s*x\s*/i, '');
-    const parenIdx = name.indexOf('(');
-    if (parenIdx !== -1) name = name.slice(0, parenIdx).trim();
+    const name = getBackgroundWeaponBareName(weaponText);
     return BACKGROUND_WEAPON_NAME_ALIASES[name] || name;
+}
+
+// Weapons usable by literally every class, regardless of that class's own
+// CLASS_INFO weapons list — both for background-weapon recognition and
+// general purchase eligibility (WEAPON_PRIORITY fallback lists are
+// per-class and unaffected, so this doesn't make any class default to
+// shopping for these; it only makes them legal to already own/buy).
+const UNIVERSALLY_USABLE_WEAPONS = new Set(["Staff", "Rock, Thrown 10/30/50"]);
+
+// Weapons usable by any class only when inherited from their own
+// background — narrower than UNIVERSALLY_USABLE_WEAPONS: not added to
+// `allowedWeapons` at all, so a class can't shop for one, but a background
+// that happens to hand them one is still honored instead of being treated
+// as unusable.
+const BACKGROUND_UNIVERSAL_WEAPONS = new Set(["Whip", "Bull Whip"]);
+
+// Full-bundle ammunition each background's partial starter ammo (e.g.
+// Hunter's "10 arrows", Innkeeper's "10 bolts") is proportionally valued
+// against — Arrows (quiver of 20) 5gp -> 0.25gp/arrow; Crossbow bolts
+// (case of 30) 10gp -> 0.3333gp/bolt.
+const AMMO_BUNDLES = {
+    arrows: { bundleName: "Arrows (quiver of 20)", bundleQty: 20 },
+    bolts:  { bundleName: "Crossbow bolts (case of 30)", bundleQty: 30 },
+};
+
+/**
+ * Parse a background weapon's "+ N ammoType" suffix (e.g. "Longbow (1d6) +
+ * 10 arrows") into its display fragment and cash value proportional to the
+ * matching full purchasable bundle. Returns null when there's no such
+ * suffix or the ammo word isn't a recognized AMMO_BUNDLES type.
+ * @param {string} weaponText - substituted background weapon display string
+ * @returns {?{detail: string, qty: number, value: number, bundleName: string, bundleCost: number}}
+ */
+function parseBackgroundAmmo(weaponText) {
+    const match = weaponText?.match(/\+\s*(\d+)\s+(\S+)\s*$/);
+    if (!match) return null;
+    const qty = parseInt(match[1], 10);
+    const bundle = AMMO_BUNDLES[match[2].toLowerCase()];
+    const bundleCost = bundle ? AMMUNITION[bundle.bundleName]?.cost : null;
+    if (!bundle || bundleCost == null) return null;
+    return {
+        detail: `${qty} ${match[2]}`, qty,
+        // Rounded to 2 decimals (matches the app's fractional-gold precision
+        // elsewhere) — a straight fraction (e.g. 10/30 bolts) doesn't
+        // terminate cleanly and would otherwise leak repeating-decimal noise
+        // (33.333333333333336gp) into gold and every downstream log line.
+        value: Math.round((qty / bundle.bundleQty) * bundleCost * 100) / 100,
+        bundleName: bundle.bundleName, bundleCost,
+    };
+}
+
+/**
+ * Some background `item` entries represent cash or a sellable valuable
+ * rather than a physical thing to carry — the Money Lender's bare "50gp",
+ * or the Jeweller's "Ostentatious Jewellery (25gp)" (a named valuable with
+ * its worth stated inline, same convention as a weapon's damage die). Both
+ * convert straight to starting gold; there's no "wear/wield it instead"
+ * alternative for either the way there is for weapons/armor, so unlike
+ * BACKGROUND_WEAPON_VALUE_OVERRIDES this always converts, unconditionally.
+ * @param {string} itemText - background item display string
+ * @returns {?number} gold value if this item is cash/a priced valuable, else null
+ */
+function extractBackgroundItemCashValue(itemText) {
+    const bareCash = itemText.match(/^(\d+)\s*gp$/i);
+    if (bareCash) return parseInt(bareCash[1], 10);
+    const valuable = itemText.match(/\((\d+)\s*gp\)\s*$/i);
+    if (valuable) return parseInt(valuable[1], 10);
+    return null;
+}
+
+// Aliases between background *armor* display-string spelling and the ARMOR
+// table's own key spelling — every background's armor field is either
+// "Unarmored" (American spelling; ARMOR's own "no armor" entry is spelled
+// "Unarmoured") or "Chain Mail" (capital M; ARMOR's key is "Chain mail").
+const BACKGROUND_ARMOR_NAME_ALIASES = { "Unarmored": "Unarmoured", "Chain Mail": "Chain mail" };
+
+/**
+ * Reduce a background's armor field to whatever ARMOR-table key it
+ * corresponds to. Unlike weapons, background armor values are always
+ * complete ARMOR-table names (no damage-die/quantity suffix to strip) — this
+ * only exists to bridge the spelling/casing mismatch above.
+ * @param {string} armorText - background armor field, e.g. "Chain Mail"
+ * @returns {string} ARMOR-table key
+ */
+function normalizeBackgroundArmorName(armorText) {
+    return BACKGROUND_ARMOR_NAME_ALIASES[armorText] || armorText;
 }
 
 // Classes whose default melee loadout is a one-handed weapon + Shield (Sword,
@@ -1909,6 +2058,12 @@ export function purchaseEquipment(className, startingGold, dexModifier, backgrou
         weapons: [], armor: null, shield: false,
         items: [], startingAC: 10 + dexModifier, goldRemaining: 0
     };
+    // Per-item purchase log for the console breakdown at the bottom of this
+    // function — every gold-spending line below pushes here alongside its
+    // `gold -=` so the log can never drift out of sync with what was actually
+    // charged. Background-carried-through items are logged too (at 0gp) so
+    // it's clear they weren't skipped, just free.
+    const purchaseLog = [];
 
     const baseClass = className.replace(/_CLASS$/, '');
     const classInfo = CLASS_INFO[baseClass];
@@ -1924,8 +2079,16 @@ export function purchaseEquipment(className, startingGold, dexModifier, backgrou
     const substitutedBgWeapon = background?.weapon ? substituteSmallRaceWeapon(background.weapon, race, limitSmallRaceShortSword) : null;
     const bgWeaponKey  = substitutedBgWeapon ? normalizeBackgroundWeaponName(substitutedBgWeapon) : null;
     const bgWeaponData = bgWeaponKey ? WEAPONS[bgWeaponKey] : null;
-    const allowedWeapons = new Set(classInfo?.weapons || []);
-    const bgWeaponUsable = !!(bgWeaponData && allowedWeapons.has(bgWeaponKey));
+    const bgAmmo = substitutedBgWeapon ? parseBackgroundAmmo(substitutedBgWeapon) : null;
+    // Staff is usable by every class outright (both for background
+    // recognition and general purchase eligibility below) — broader than
+    // BACKGROUND_UNIVERSAL_WEAPONS, which only covers background carry-through.
+    const allowedWeapons = new Set([...(classInfo?.weapons || []), ...UNIVERSALLY_USABLE_WEAPONS]);
+    // Whip is usable by any class if their background happens to provide
+    // one, even though it's not on that class's own weapons list and isn't
+    // something they'd otherwise shop for — narrower than making it
+    // universally purchasable.
+    const bgWeaponUsable = !!(bgWeaponData && (allowedWeapons.has(bgWeaponKey) || BACKGROUND_UNIVERSAL_WEAPONS.has(bgWeaponKey)));
     // True for any ranged-only weapon (Long bow, Short bow, Crossbow, Sling) —
     // dual-use throwables like Dagger/Hand axe/Spear also carry "Missile" but
     // are fundamentally melee weapons (they also carry "Melee"), so they must
@@ -1964,13 +2127,77 @@ export function purchaseEquipment(className, startingGold, dexModifier, backgrou
     const bgWeaponUnclaimed = isRangedCandidate && bgWeaponIsRanged && !bgWeaponIsDedicatedRanged;
     const bgWeaponForMelee  = bgWeaponUsable && !bgWeaponForRanged && !bgWeaponUnclaimed;
 
+    // Weapon pricing credit: if the character doesn't end up with the exact
+    // weapon their background lists — either downgraded by race substitution
+    // (a small race's Longbow became a cheaper Short bow) or entirely unusable
+    // by this class (a Cleric's background Sword) — credit the gold value gap
+    // instead of silently absorbing it. bgWeaponUnclaimed (a background
+    // Sling/Crossbow this class *could* use but the tool prefers not to
+    // auto-equip over its own preferred bow) is excluded — that weapon isn't
+    // actually unusable, just not auto-selected, so no credit applies. Only
+    // meaningful when the background weapon is a real WEAPONS-table item to
+    // begin with — most backgrounds (Rock, Walking stick, etc.) are
+    // flavor-only with no WEAPONS entry and nothing to credit. When the
+    // weapon is entirely unusable its starter ammo (bgAmmo) is credited too,
+    // at its own proportional value — see parseBackgroundAmmo() — since
+    // there's no bow left to fire it from either. When the weapon is
+    // downgraded-but-still-usable, its ammo is handled separately in
+    // buyRangedWeapon() (sell it toward a full bundle, or just keep it).
+    let weaponCredit = 0;
+    if (background?.weapon) {
+        const originalKey     = normalizeBackgroundWeaponName(background.weapon);
+        const originalCost    = WEAPONS[originalKey]?.cost;
+        const bareName        = getBackgroundWeaponBareName(substitutedBgWeapon);
+        const substitutedCost = BACKGROUND_WEAPON_VALUE_OVERRIDES[bareName] ?? bgWeaponData?.cost;
+        if (!bgWeaponUsable) {
+            if (!bgWeaponUnclaimed) weaponCredit = (substitutedCost ?? 0) + (bgAmmo?.value ?? 0);
+        } else if (originalKey !== bgWeaponKey && originalCost != null && substitutedCost != null) {
+            weaponCredit = Math.max(0, originalCost - substitutedCost);
+        }
+    }
+    gold += weaponCredit;
+
     // Only shown as a loose flavor item when it doesn't satisfy an actual
-    // equipment slot above — once claimed as the melee or ranged weapon, it's
-    // shown as that weapon instead (see buyMeleeWeapon/buyRangedWeapon).
-    if (substitutedBgWeapon && !bgWeaponForMelee && !bgWeaponForRanged) result.items.push(`${substitutedBgWeapon} (background)`);
-    if (background?.armor)  result.items.push(`${background.armor} (background)`);
+    // equipment slot above and wasn't cashed out above — once claimed as the
+    // melee/ranged weapon or credited as gold, it's represented that way
+    // instead (see buyMeleeWeapon/buyRangedWeapon and weaponCredit above).
+    if (substitutedBgWeapon && !bgWeaponForMelee && !bgWeaponForRanged && weaponCredit === 0) {
+        result.items.push(`${substitutedBgWeapon} (background)`);
+    } else if (weaponCredit > 0 && !bgWeaponUsable) {
+        purchaseLog.push(`${substitutedBgWeapon} — unusable by ${baseClass}, credited +${weaponCredit}gp instead`);
+    } else if (weaponCredit > 0) {
+        // Downgraded-but-still-usable case (bgWeaponForRanged/bgWeaponForMelee
+        // already claimed it and logged its own "0gp (background)" line) —
+        // this credit is a price-gap bonus on top of keeping the weapon, not
+        // a replacement for it, so the wording must not say "unusable" or
+        // "instead" here.
+        const originalKeyForLog = normalizeBackgroundWeaponName(background.weapon);
+        purchaseLog.push(`${bgWeaponKey} downgraded from ${originalKeyForLog} for a small race — credited +${weaponCredit}gp price difference`);
+    }
+    const bgArmorKey = background?.armor ? normalizeBackgroundArmorName(background.armor) : null;
+    const bgArmorUsable = !!(bgArmorKey && bgArmorKey !== 'Unarmoured' && ARMOR[bgArmorKey] && allowedArmors.includes(bgArmorKey));
+    const armorCredit = (bgArmorKey && bgArmorKey !== 'Unarmoured' && !bgArmorUsable) ? (ARMOR[bgArmorKey]?.cost ?? 0) : 0;
+    gold += armorCredit;
+    if (background?.armor && !bgArmorUsable && armorCredit === 0) {
+        // "Unarmored" (nothing to claim or credit) or a genuinely unrecognized
+        // armor string — shown as-is, same as always.
+        result.items.push(`${background.armor} (background)`);
+    } else if (armorCredit > 0) {
+        purchaseLog.push(`${background.armor} — unusable by ${baseClass}, credited +${armorCredit}gp instead`);
+    }
+    // bgArmorUsable armor is claimed for free below (see the armor-purchase
+    // loop), not shown as a flavor item — it's represented as result.armor.
     const bgItems = Array.isArray(background?.item) ? background.item : (background?.item ? [background.item] : []);
-    bgItems.forEach(i => { if (i) result.items.push(i); });
+    bgItems.forEach(i => {
+        if (!i) return;
+        const cashValue = extractBackgroundItemCashValue(i);
+        if (cashValue != null) {
+            gold += cashValue;
+            purchaseLog.push(`${i} — converted to +${cashValue}gp starting gold`);
+        } else {
+            result.items.push(i);
+        }
+    });
 
     // Name of the melee weapon actually purchased, tracked separately from
     // result.weapons (which may also gain a ranged weapon below) so the
@@ -1978,11 +2205,89 @@ export function purchaseEquipment(className, startingGold, dexModifier, backgrou
     // quality — a purchased bow also carries "Two-handed" (needs both hands
     // to draw) but doesn't preclude carrying a shield on the back.
     let meleeWeaponName = null;
+    // The cost of whichever weapon this class would buy if there were no
+    // background weapon at all — used only to decide whether selling a
+    // near-worthless background item (see UNIVERSALLY_USABLE_WEAPONS below)
+    // is what bridges the gap to affording it. Doesn't mutate anything.
+    const getPreferredMeleeCost = () => {
+        if (isTwoHandedCandidate) {
+            const preferred = isSmallRace
+                ? (SHORT_SWORD_LIMITED_RACES.has(normalizeRaceName(race)) && limitSmallRaceShortSword ? "Short sword" : "Sword")
+                : (wantsTwoHanded ? "Two-handed sword" : "Sword");
+            if (allowedWeapons.has(preferred) && WEAPONS[preferred]) return WEAPONS[preferred].cost;
+        }
+        for (const wName of (WEAPON_PRIORITY[baseClass] || [])) {
+            if (allowedWeapons.has(wName) && WEAPONS[wName]) return WEAPONS[wName].cost;
+        }
+        return null;
+    };
+
     const buyMeleeWeapon = () => {
         if (bgWeaponForMelee) {
-            result.weapons.push(bgWeaponKey);
-            meleeWeaponName = bgWeaponKey;
-            return;
+            const bareName = getBackgroundWeaponBareName(substitutedBgWeapon);
+            // A near-worthless combat item (a Rock, 0.1gp — via
+            // UNIVERSALLY_USABLE_WEAPONS) or a valuable heirloom whose true
+            // worth is captured by BACKGROUND_WEAPON_VALUE_OVERRIDES (a
+            // Jewelled dagger, worth 25gp despite fighting exactly like a
+            // 3gp Dagger) doesn't lock the character into wielding it over
+            // a real weapon — it's sold whenever the class has (or, with
+            // its sale price added in, would have) a real preferred weapon
+            // to spend the money on instead. Sale happens even when the
+            // preferred weapon was already affordable without any help —
+            // simply dropping the item without credit or a flavor mention
+            // would both lose its value and make it vanish from the sheet,
+            // which is exactly the failure mode this whole credit mechanism
+            // exists to avoid (see weaponCredit above). Only when there's
+            // no affordable preferred weapon even with the item's help does
+            // it stay unsold, kept and wielded for free (the else branch
+            // below) — nothing gained by selling it in that case.
+            const isNearWorthless = UNIVERSALLY_USABLE_WEAPONS.has(bgWeaponKey) && bgWeaponData.cost > 0 && bgWeaponData.cost < 1;
+            const saleValue = BACKGROUND_WEAPON_VALUE_OVERRIDES[bareName] ?? (isNearWorthless ? bgWeaponData.cost : null);
+            let claimForFree = true;
+            if (saleValue != null) {
+                const preferredCost = getPreferredMeleeCost();
+                if (preferredCost != null && (gold >= preferredCost || gold + saleValue >= preferredCost)) {
+                    gold += saleValue;
+                    purchaseLog.push(`${substitutedBgWeapon} sold for ${saleValue}gp`);
+                    claimForFree = false;
+                }
+            }
+            if (!claimForFree) {
+                // Falls through to the normal purchase logic below instead
+                // of claiming/returning — the now-affordable (or
+                // always-affordable) preferred weapon gets bought there.
+            } else {
+                // When the background weapon only matches via a
+                // BACKGROUND_WEAPON_NAME_ALIASES equivalence (e.g. a
+                // Farmer's "Pitchfork" treated as a Spear) rather than being
+                // the real thing, show both names — "Pitchfork (1d6) (as
+                // Spear)" — so the flavor name isn't silently replaced by the
+                // mechanical one. The damage die stays in the displayed
+                // string (not stripped) so the sheet template's own
+                // damage-die detection renders it verbatim instead of
+                // failing a WEAPONS[name] lookup on the combined string and
+                // showing no damage at all. Exception: when the WEAPONS key
+                // is just the bare name's own fuller/canonical form (e.g.
+                // "Rock" -> "Rock, Thrown 10/30/50"), it's the same item,
+                // not a substitution — show the flavor text as-is, no
+                // "(as ...)" suffix. A literal match (e.g. Weaponsmith's
+                // "Sword (1d8)") collapses to the bare key so the sheet's
+                // own damage-die lookup re-derives "(1d8)" instead of
+                // showing a redundant background tag — UNLESS the
+                // background text carries something beyond a plain damage
+                // die (Teamster's "Whip (1d2, hits entangle)"), which has no
+                // other home and would otherwise vanish entirely.
+                const isPlainDamageForm = bareName === bgWeaponKey
+                    && substitutedBgWeapon === `${bgWeaponKey} (${bgWeaponData.damage})`;
+                const displayName = isPlainDamageForm ? bgWeaponKey
+                    : bareName === bgWeaponKey ? substitutedBgWeapon
+                    : bgWeaponKey.startsWith(bareName) ? substitutedBgWeapon
+                    : `${substitutedBgWeapon} (as ${bgWeaponKey})`;
+                result.weapons.push(displayName);
+                meleeWeaponName = bgWeaponKey;
+                purchaseLog.push(`${displayName} — 0gp (background)`);
+                return;
+            }
         }
         if (isTwoHandedCandidate) {
             const preferred = isSmallRace
@@ -1991,6 +2296,7 @@ export function purchaseEquipment(className, startingGold, dexModifier, backgrou
             if (allowedWeapons.has(preferred) && WEAPONS[preferred] && WEAPONS[preferred].cost <= gold) {
                 result.weapons.push(preferred); gold -= WEAPONS[preferred].cost; result.items.push(preferred);
                 meleeWeaponName = preferred;
+                purchaseLog.push(`${preferred} — ${WEAPONS[preferred].cost}gp`);
                 return;
             }
         }
@@ -2002,39 +2308,75 @@ export function purchaseEquipment(className, startingGold, dexModifier, backgrou
             if (allowedWeapons.has(wName) && WEAPONS[wName] && WEAPONS[wName].cost <= gold) {
                 result.weapons.push(wName); gold -= WEAPONS[wName].cost; result.items.push(wName);
                 meleeWeaponName = wName;
+                purchaseLog.push(`${wName} — ${WEAPONS[wName].cost}gp`);
                 break;
             }
         }
     };
 
-    // A Long bow or Short bow needs a quiver of arrows to actually shoot —
-    // bought alongside it (gold permitting) whether the bow was freshly
-    // purchased or recognized from the background. Only these two: Crossbow
-    // and Sling are never claimed via bgWeaponForRanged (see
-    // DEDICATED_RANGED_WEAPONS) and never chosen as rangedPreferred below, so
-    // buyAmmoFor() is only ever called with "Long bow" or "Short bow".
-    const AMMO_FOR_WEAPON = { "Long bow": "Arrows (quiver of 20)", "Short bow": "Arrows (quiver of 20)" };
+    // A Long bow, Short bow, or Sling needs ammo to actually shoot — bought
+    // alongside it (gold permitting) whether it was freshly purchased or
+    // recognized from the background. Sling stones are free
+    // (AMMUNITION["Sling stones"].cost === 0) but still listed so a freshly
+    // bought Sling shows its ammo like the bows do. Crossbow is never
+    // claimed via bgWeaponForRanged (see DEDICATED_RANGED_WEAPONS) and never
+    // appears in rangedFallbackChain below, so buyAmmoFor() is only ever
+    // called with "Long bow", "Short bow", or "Sling".
+    const AMMO_FOR_WEAPON = { "Long bow": "Arrows (quiver of 20)", "Short bow": "Arrows (quiver of 20)", "Sling": "Sling stones" };
     const buyAmmoFor = (weaponName) => {
         const ammo = AMMO_FOR_WEAPON[weaponName];
         if (ammo && AMMUNITION[ammo] && AMMUNITION[ammo].cost <= gold) {
             result.items.push(ammo); gold -= AMMUNITION[ammo].cost;
+            purchaseLog.push(`${ammo} — ${AMMUNITION[ammo].cost}gp`);
         }
     };
 
     // RANGED_WEAPON_CANDIDATE_CLASSES also get a ranged weapon sized for
     // their race — Long bow normally, Short bow for Dwarf/Halfling/Gnome
-    // (same "no longbows" restriction as their Combat ability).
+    // (same "no longbows" restriction as their Combat ability) — falling
+    // back to a cheaper option when the preferred one isn't affordable,
+    // same pattern as the melee WEAPON_PRIORITY fallback loop.
+    const rangedFallbackChain = isSmallRace ? ["Short bow", "Sling"] : ["Long bow", "Short bow", "Sling"];
     const buyRangedWeapon = () => {
         if (!isRangedCandidate) return;
         if (bgWeaponForRanged) {
             result.weapons.push(bgWeaponKey);
-            buyAmmoFor(bgWeaponKey);
+            purchaseLog.push(`${bgWeaponKey} — 0gp (background)`);
+            // The background's own weapon text already includes its ammo (e.g.
+            // Hunter's "Longbow (1d6) + 10 arrows") — never buy a fresh
+            // "Arrows (quiver of 20)" *on top of* it for free (that would
+            // silently charge for ammo the character already had). Instead,
+            // sell the partial starter ammo at its proportional value (see
+            // parseBackgroundAmmo()) and put that credit toward a full
+            // bundle, so the character only pays the net difference — e.g.
+            // Hunter's 10 arrows (2.5gp) toward a 5gp quiver of 20 nets 2.5gp.
+            // If even the discounted bundle isn't affordable, fall back to
+            // just keeping the original partial ammo for free. Only the ammo
+            // fragment is ever pushed as an item, never the full
+            // "Shortbow (1d6) + 10 arrows" string — that contains a
+            // damage-die notation, which the sheet template sweeps into the
+            // Weapons box as its own slot, duplicating the bow already listed
+            // via result.weapons above.
+            if (bgAmmo) {
+                const netCost = bgAmmo.bundleCost - bgAmmo.value;
+                if (netCost <= gold) {
+                    gold -= netCost;
+                    result.items.push(bgAmmo.bundleName);
+                    purchaseLog.push(`${bgAmmo.bundleName} — ${bgAmmo.bundleCost}gp, net ${netCost}gp after selling starting ${bgAmmo.detail} (background) for ${bgAmmo.value}gp`);
+                } else {
+                    result.items.push(`${bgAmmo.detail} (background)`);
+                    purchaseLog.push(`${bgAmmo.detail} — 0gp (background, net ${netCost}gp upgrade to ${bgAmmo.bundleName} not affordable)`);
+                }
+            }
             return;
         }
-        const rangedPreferred = isSmallRace ? "Short bow" : "Long bow";
-        if (allowedWeapons.has(rangedPreferred) && WEAPONS[rangedPreferred] && WEAPONS[rangedPreferred].cost <= gold) {
-            result.weapons.push(rangedPreferred); gold -= WEAPONS[rangedPreferred].cost; result.items.push(rangedPreferred);
-            buyAmmoFor(rangedPreferred);
+        for (const rName of rangedFallbackChain) {
+            if (allowedWeapons.has(rName) && WEAPONS[rName] && WEAPONS[rName].cost <= gold) {
+                result.weapons.push(rName); gold -= WEAPONS[rName].cost; result.items.push(rName);
+                purchaseLog.push(`${rName} — ${WEAPONS[rName].cost}gp`);
+                buyAmmoFor(rName);
+                break;
+            }
         }
     };
 
@@ -2049,10 +2391,35 @@ export function purchaseEquipment(className, startingGold, dexModifier, backgrou
         buyRangedWeapon();
     }
 
-    for (const aName of ARMOR_PRIORITY) {
-        if (allowedArmors.includes(aName) && ARMOR[aName] && ARMOR[aName].cost <= gold) {
-            result.armor = aName; gold -= ARMOR[aName].cost; break;
-        }
+    // A Magic-User tries to own both their primary weapon (usually a
+    // Dagger, or whatever they ended up with above) AND a Staff — a
+    // spell-focus/walking-stick item as much as a weapon — rather than
+    // just one or the other. This is a deliberate second purchase, gold
+    // permitting, specific to Magic-User (not a general "every class buys
+    // two weapons" rule); Staff itself is legal for every class (see
+    // UNIVERSALLY_USABLE_WEAPONS) but only Magic-User actively shops for one.
+    if (baseClass === "Magic-User" && meleeWeaponName !== "Staff" && WEAPONS["Staff"] && WEAPONS["Staff"].cost <= gold) {
+        result.weapons.push("Staff"); gold -= WEAPONS["Staff"].cost; result.items.push("Staff");
+        purchaseLog.push(`Staff — ${WEAPONS["Staff"].cost}gp (Magic-User owns both)`);
+    }
+
+    // Unlike a class-legal background weapon (always used as-is, no
+    // auto-upgrade), armor is the one slot where the character's own gold
+    // can buy something strictly better than the free background piece —
+    // so check whether they can actually afford an upgrade before settling
+    // for it. No credit for "passing up" the free armor: nothing of value
+    // is lost by choosing to pay for better gear instead of wearing worse
+    // free gear, unlike the class-illegal case where the background armor
+    // is unusable no matter what.
+    const bestAffordableArmor = ARMOR_PRIORITY.find(aName => allowedArmors.includes(aName) && ARMOR[aName] && ARMOR[aName].cost <= gold);
+    const bgArmorAC = bgArmorUsable ? ARMOR[bgArmorKey].ac.ascending : -Infinity;
+    const bestAffordableAC = bestAffordableArmor ? ARMOR[bestAffordableArmor].ac.ascending : -Infinity;
+    if (bgArmorUsable && bgArmorAC >= bestAffordableAC) {
+        result.armor = bgArmorKey;
+        purchaseLog.push(`${bgArmorKey} — 0gp (background)`);
+    } else if (bestAffordableArmor) {
+        result.armor = bestAffordableArmor; gold -= ARMOR[bestAffordableArmor].cost;
+        purchaseLog.push(`${bestAffordableArmor} — ${ARMOR[bestAffordableArmor].cost}gp${bgArmorUsable ? ` (better than free background ${bgArmorKey})` : ''}`);
     }
 
     // No shield with a two-handed melee weapon in hand (a literal Two-handed
@@ -2062,18 +2429,20 @@ export function purchaseEquipment(className, startingGold, dexModifier, backgrou
     const wieldingTwoHanded = WEAPONS[meleeWeaponName]?.qualities?.includes("Two-handed") ?? false;
     if (allowsShield && !wieldingTwoHanded && ARMOR["Shield"] && ARMOR["Shield"].cost <= gold) {
         result.shield = true; gold -= ARMOR["Shield"].cost;
+        purchaseLog.push(`Shield — ${ARMOR["Shield"].cost}gp`);
     }
 
     for (const { name, cost } of (CLASS_SPECIFIC_GEAR[baseClass] || [])) {
-        if (cost <= gold) { result.items.push(name); gold -= cost; }
+        if (cost <= gold) { result.items.push(name); gold -= cost; purchaseLog.push(`${name} — ${cost}gp`); }
     }
 
     for (const { name, cost } of DUNGEONEERING_BUNDLE) {
-        if (cost <= gold) { result.items.push(name); gold -= cost; }
+        if (cost <= gold) { result.items.push(name); gold -= cost; purchaseLog.push(`${name} — ${cost}gp`); }
     }
 
     if (ARMOR["Helmet"] && ARMOR["Helmet"].cost <= gold) {
         result.items.push("Helmet"); gold -= ARMOR["Helmet"].cost;
+        purchaseLog.push(`Helmet — ${ARMOR["Helmet"].cost}gp`);
     }
 
     const armorAC  = result.armor ? ARMOR[result.armor].ac.ascending : 10;
@@ -2082,12 +2451,21 @@ export function purchaseEquipment(className, startingGold, dexModifier, backgrou
 
     console.log('\n=== Equipment Purchases ===');
     console.log(`Starting gold: ${startingGold} gp`);
+    if (purchaseLog.length) {
+        console.log('Purchase breakdown:');
+        purchaseLog.forEach(line => console.log(`  - ${line}`));
+    }
     if (result.weapons.length) console.log(`Weapons: ${result.weapons.join(', ')}`);
     if (result.armor)          console.log(`Armor: ${result.armor}`);
     if (result.shield)         console.log(`Shield: yes`);
     const purchasedItems = result.items.filter(i => !i.includes('(background)'));
     if (purchasedItems.length) console.log(`Items: ${purchasedItems.join(', ')}`);
-    console.log(`AC: ${result.startingAC}  |  Gold remaining: ${result.goldRemaining} gp`);
+    // Rounded for this debug line only (result.goldRemaining itself stays
+    // unrounded — the sheet's own displayed "Starting Gold" line already
+    // rounds via cs-core.js's formatGold()). Ammo-value credits (see
+    // parseBackgroundAmmo()) can otherwise leave float noise here even
+    // though the credit itself was already rounded to 2 decimals.
+    console.log(`AC: ${result.startingAC}  |  Gold remaining: ${Math.round(result.goldRemaining * 100) / 100} gp`);
     console.log('===========================\n');
 
     return result;
@@ -2122,7 +2500,7 @@ export const backgroundTables = {
         { profession: "Shepherd",   item: ["Pole (10' long, wooden)"],              weapon: "Sling (1d4) + 10 stones",     armor: "Unarmored" },
         { profession: "Tailor",     item: ["Needle", "Thread", "Bag of buttons"],   weapon: "Scissors (1d4)",              armor: "Unarmored" },
         { profession: "Trader",     item: ["Rare, fragrant spices"],                weapon: "Crossbow (1d6) + 10 bolts",   armor: "Unarmored" },
-        { profession: "Weaver",     item: ["Hand Loom", "Yarn"],                    weapon: "Scissors (1d3)",              armor: "Unarmored" }
+        { profession: "Weaver",     item: ["Hand Loom", "Yarn"],                    weapon: "Scissors (1d4)",              armor: "Unarmored" }
     ],
     3: [
         { profession: "Bowyer",       item: ["Saw"],                                 weapon: "Longbow (1d6) + 10 arrows",   armor: "Unarmored" },
@@ -2139,7 +2517,7 @@ export const backgroundTables = {
         { profession: "Trapper",      item: ["Bear trap (1d6)"],                     weapon: "Club (1d4)",                  armor: "Unarmored" }
     ],
     4: [
-        { profession: "Armourer",      item: ["Chain mail"],                          weapon: "War hammer (1d6)",            armor: "Chain Mail" },
+        { profession: "Armourer",      item: [],                                      weapon: "War hammer (1d6)",            armor: "Chain Mail" },
         { profession: "Barber Surgeon",item: ["Bottle of strong spirits"],            weapon: "Razor (1d4)",                 armor: "Unarmored" },
         { profession: "Blacksmith",    item: ["Tongs", "Apron"],                      weapon: "War hammer (1d6)",            armor: "Unarmored" },
         { profession: "Carpenter",     item: ["Saw"],                                 weapon: "Hand axe (1d6)",              armor: "Unarmored" },

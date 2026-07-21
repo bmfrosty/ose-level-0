@@ -92,5 +92,10 @@ BASIC_VS_ADVANCED_CLASSES.md
 .local-review/
 CHARACTER_CREATION_*
 
+# Ad-hoc regression test scripts (direct purchaseEquipment()/etc. Node
+# scripts written while developing a feature) — dev-only, not part of the
+# shipped app or an official test suite.
+dev-tests/
+
 legacy-functions.txt
 race-reference.txt
