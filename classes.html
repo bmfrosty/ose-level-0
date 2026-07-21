@@ -259,8 +259,8 @@
         </div>
     </nav>
 
-    <h1>B/X &amp; OSE Class Tables</h1>
-    <p class="subtitle">Smoothified progressions — to-hit bonus and saving throws for all classes, levels 1–14</p>
+    <h1 id="page-heading">B/X &amp; OSE Class Tables</h1>
+    <p class="subtitle" id="page-subtitle">Smoothified progressions — to-hit bonus and saving throws for all classes, levels 1–14</p>
 
     <div class="intro-box">
         <p><strong>Smoothified Mode</strong> uses gradual attack bonus and saving throw progressions instead of the original 1981 B/X D&amp;D and OSE big jumps. All classes advance every 1–2 levels. Demihuman level limits are removed — all classes reach level 14.</p>
@@ -494,6 +494,12 @@
             document.querySelectorAll('.class-btn').forEach(b => b.classList.remove('active'));
             document.getElementById('btn-shopping').classList.add('active');
             document.getElementById('print-hint').textContent = 'Prints this weapons, armor, and equipment reference';
+            // The page heading/subtitle aren't hidden by @media print (only
+            // nav/.class-group/.print-bar/.intro-box are), so a printed
+            // Shopping page would otherwise still say "Class Tables" above
+            // the pricing tables.
+            document.getElementById('page-heading').textContent = 'B/X & OSE Shopping Reference';
+            document.getElementById('page-subtitle').textContent = 'Weapons, armor, ammunition, and general equipment pricing';
 
             document.getElementById('class-display').innerHTML = `
                 <h2>🛒 Shopping — Equipment &amp; Pricing</h2>
@@ -528,6 +534,8 @@
             document.getElementById('btn-' + classKey).classList.add('active');
             document.getElementById('print-bar').style.display = '';
             document.getElementById('print-hint').textContent = 'Opens a print-optimized view for the selected class';
+            document.getElementById('page-heading').textContent = 'B/X & OSE Class Tables';
+            document.getElementById('page-subtitle').textContent = 'Smoothified progressions — to-hit bonus and saving throws for all classes, levels 1–14';
 
             const note = CLASS_NOTES[classKey];
             const noteHtml = note
