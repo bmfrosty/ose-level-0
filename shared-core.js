@@ -2264,8 +2264,17 @@ export function purchaseEquipment(className, startingGold, dexModifier, backgrou
                 // is just the bare name's own fuller/canonical form (e.g.
                 // "Rock" -> "Rock, Thrown 10/30/50"), it's the same item,
                 // not a substitution — show the flavor text as-is, no
-                // "(as ...)" suffix.
-                const displayName = bareName === bgWeaponKey ? bgWeaponKey
+                // "(as ...)" suffix. A literal match (e.g. Weaponsmith's
+                // "Sword (1d8)") collapses to the bare key so the sheet's
+                // own damage-die lookup re-derives "(1d8)" instead of
+                // showing a redundant background tag — UNLESS the
+                // background text carries something beyond a plain damage
+                // die (Teamster's "Whip (1d2, hits entangle)"), which has no
+                // other home and would otherwise vanish entirely.
+                const isPlainDamageForm = bareName === bgWeaponKey
+                    && substitutedBgWeapon === `${bgWeaponKey} (${bgWeaponData.damage})`;
+                const displayName = isPlainDamageForm ? bgWeaponKey
+                    : bareName === bgWeaponKey ? substitutedBgWeapon
                     : bgWeaponKey.startsWith(bareName) ? substitutedBgWeapon
                     : `${substitutedBgWeapon} (as ${bgWeaponKey})`;
                 result.weapons.push(displayName);
@@ -2299,13 +2308,15 @@ export function purchaseEquipment(className, startingGold, dexModifier, backgrou
         }
     };
 
-    // A Long bow or Short bow needs a quiver of arrows to actually shoot —
-    // bought alongside it (gold permitting) whether the bow was freshly
-    // purchased or recognized from the background. Only these two: Crossbow
-    // and Sling are never claimed via bgWeaponForRanged (see
-    // DEDICATED_RANGED_WEAPONS) and never chosen as rangedPreferred below, so
-    // buyAmmoFor() is only ever called with "Long bow" or "Short bow".
-    const AMMO_FOR_WEAPON = { "Long bow": "Arrows (quiver of 20)", "Short bow": "Arrows (quiver of 20)" };
+    // A Long bow, Short bow, or Sling needs ammo to actually shoot — bought
+    // alongside it (gold permitting) whether it was freshly purchased or
+    // recognized from the background. Sling stones are free
+    // (AMMUNITION["Sling stones"].cost === 0) but still listed so a freshly
+    // bought Sling shows its ammo like the bows do. Crossbow is never
+    // claimed via bgWeaponForRanged (see DEDICATED_RANGED_WEAPONS) and never
+    // appears in rangedFallbackChain below, so buyAmmoFor() is only ever
+    // called with "Long bow", "Short bow", or "Sling".
+    const AMMO_FOR_WEAPON = { "Long bow": "Arrows (quiver of 20)", "Short bow": "Arrows (quiver of 20)", "Sling": "Sling stones" };
     const buyAmmoFor = (weaponName) => {
         const ammo = AMMO_FOR_WEAPON[weaponName];
         if (ammo && AMMUNITION[ammo] && AMMUNITION[ammo].cost <= gold) {
@@ -2316,7 +2327,10 @@ export function purchaseEquipment(className, startingGold, dexModifier, backgrou
 
     // RANGED_WEAPON_CANDIDATE_CLASSES also get a ranged weapon sized for
     // their race — Long bow normally, Short bow for Dwarf/Halfling/Gnome
-    // (same "no longbows" restriction as their Combat ability).
+    // (same "no longbows" restriction as their Combat ability) — falling
+    // back to a cheaper option when the preferred one isn't affordable,
+    // same pattern as the melee WEAPON_PRIORITY fallback loop.
+    const rangedFallbackChain = isSmallRace ? ["Short bow", "Sling"] : ["Long bow", "Short bow", "Sling"];
     const buyRangedWeapon = () => {
         if (!isRangedCandidate) return;
         if (bgWeaponForRanged) {
@@ -2350,11 +2364,13 @@ export function purchaseEquipment(className, startingGold, dexModifier, backgrou
             }
             return;
         }
-        const rangedPreferred = isSmallRace ? "Short bow" : "Long bow";
-        if (allowedWeapons.has(rangedPreferred) && WEAPONS[rangedPreferred] && WEAPONS[rangedPreferred].cost <= gold) {
-            result.weapons.push(rangedPreferred); gold -= WEAPONS[rangedPreferred].cost; result.items.push(rangedPreferred);
-            purchaseLog.push(`${rangedPreferred} — ${WEAPONS[rangedPreferred].cost}gp`);
-            buyAmmoFor(rangedPreferred);
+        for (const rName of rangedFallbackChain) {
+            if (allowedWeapons.has(rName) && WEAPONS[rName] && WEAPONS[rName].cost <= gold) {
+                result.weapons.push(rName); gold -= WEAPONS[rName].cost; result.items.push(rName);
+                purchaseLog.push(`${rName} — ${WEAPONS[rName].cost}gp`);
+                buyAmmoFor(rName);
+                break;
+            }
         }
     };
 
