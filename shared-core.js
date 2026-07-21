@@ -2195,23 +2195,25 @@ export function purchaseEquipment(className, startingGold, dexModifier, backgrou
             // worth is captured by BACKGROUND_WEAPON_VALUE_OVERRIDES (a
             // Jewelled dagger, worth 25gp despite fighting exactly like a
             // 3gp Dagger) doesn't lock the character into wielding it over
-            // a real weapon. Three cases: (1) the class's normal preferred
-            // weapon is already affordable without any help — buy that
-            // instead, falling through below, and don't bother selling the
-            // item at all; (2) it's only affordable once the item's sale
-            // value is added in — sell it and fall through; (3) still not
-            // affordable even with it — keep it for free, wielded, same as
-            // any other background weapon (the else branch below).
+            // a real weapon — it's sold whenever the class has (or, with
+            // its sale price added in, would have) a real preferred weapon
+            // to spend the money on instead. Sale happens even when the
+            // preferred weapon was already affordable without any help —
+            // simply dropping the item without credit or a flavor mention
+            // would both lose its value and make it vanish from the sheet,
+            // which is exactly the failure mode this whole credit mechanism
+            // exists to avoid (see weaponCredit above). Only when there's
+            // no affordable preferred weapon even with the item's help does
+            // it stay unsold, kept and wielded for free (the else branch
+            // below) — nothing gained by selling it in that case.
             const isNearWorthless = UNIVERSALLY_USABLE_WEAPONS.has(bgWeaponKey) && bgWeaponData.cost > 0 && bgWeaponData.cost < 1;
             const saleValue = BACKGROUND_WEAPON_VALUE_OVERRIDES[bareName] ?? (isNearWorthless ? bgWeaponData.cost : null);
             let claimForFree = true;
             if (saleValue != null) {
                 const preferredCost = getPreferredMeleeCost();
-                if (preferredCost != null && gold >= preferredCost) {
-                    claimForFree = false;
-                } else if (preferredCost != null && gold + saleValue >= preferredCost) {
+                if (preferredCost != null && (gold >= preferredCost || gold + saleValue >= preferredCost)) {
                     gold += saleValue;
-                    purchaseLog.push(`${substitutedBgWeapon} sold for ${saleValue}gp — the difference needed to afford a better weapon`);
+                    purchaseLog.push(`${substitutedBgWeapon} sold for ${saleValue}gp`);
                     claimForFree = false;
                 }
             }
@@ -2222,9 +2224,9 @@ export function purchaseEquipment(className, startingGold, dexModifier, backgrou
             } else {
                 // When the background weapon only matches via a
                 // BACKGROUND_WEAPON_NAME_ALIASES equivalence (e.g. a
-                // Mason's "Rock" treated as a Dagger) rather than being the
-                // real thing, show both names — "Rock (1d4) (as Dagger)" —
-                // so the flavor name isn't silently replaced by the
+                // Farmer's "Pitchfork" treated as a Spear) rather than being
+                // the real thing, show both names — "Pitchfork (1d6) (as
+                // Spear)" — so the flavor name isn't silently replaced by the
                 // mechanical one. The damage die stays in the displayed
                 // string (not stripped) so the sheet template's own
                 // damage-die detection renders it verbatim instead of
