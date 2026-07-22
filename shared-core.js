@@ -1740,6 +1740,13 @@ export const DUNGEONEERING_BUNDLE = [
     { name: "Crowbar",                    cost: 10 },
 ];
 
+// A handful of background `item` entries are just a differently-worded
+// version of a DUNGEONEERING_BUNDLE entry (Sailor/Teamster/Executioner's
+// "50' Rope" vs. the bundle's own "Rope (50')") — without this, the bundle
+// purchase below would buy a redundant second rope on top of the free one,
+// same class of bug as the original redundant-ammo-purchase this PR fixed.
+const BACKGROUND_ITEM_NAME_ALIASES = { "50' Rope": "Rope (50')" };
+
 export const CLASS_SPECIFIC_GEAR = {
     "Cleric": [{ name: "Holy symbol",    cost: 25 }],
     "Thief":  [{ name: "Thieves' tools", cost: 25 }],
@@ -1865,6 +1872,20 @@ function getBackgroundWeaponBareName(weaponText) {
     const parenIdx = name.indexOf('(');
     if (parenIdx !== -1) name = name.slice(0, parenIdx).trim();
     return name;
+}
+
+/**
+ * Extract a background weapon's leading "N x " quantity prefix (e.g.
+ * Juggler's "3 x daggers"), defaulting to 1 when there isn't one. Used to
+ * scale the unusable-item credit in purchaseEquipment() — a class that
+ * can't use any of the 3 daggers should be credited for all 3, not just
+ * one.
+ * @param {string} weaponText - background weapon display string
+ * @returns {number} quantity, defaulting to 1
+ */
+function getBackgroundWeaponQuantity(weaponText) {
+    const match = weaponText.match(/^(\d+)\s*x\s*/i);
+    return match ? parseInt(match[1], 10) : 1;
 }
 
 /**
@@ -2150,7 +2171,11 @@ export function purchaseEquipment(className, startingGold, dexModifier, backgrou
         const bareName        = getBackgroundWeaponBareName(substitutedBgWeapon);
         const substitutedCost = BACKGROUND_WEAPON_VALUE_OVERRIDES[bareName] ?? bgWeaponData?.cost;
         if (!bgWeaponUsable) {
-            if (!bgWeaponUnclaimed) weaponCredit = (substitutedCost ?? 0) + (bgAmmo?.value ?? 0);
+            // Credit every copy, not just one — Juggler's "3 x daggers" is
+            // worth 3x a single Dagger's cost when a Cleric can't use any
+            // of them.
+            const quantity = getBackgroundWeaponQuantity(background.weapon);
+            if (!bgWeaponUnclaimed) weaponCredit = (substitutedCost ?? 0) * quantity + (bgAmmo?.value ?? 0);
         } else if (originalKey !== bgWeaponKey && originalCost != null && substitutedCost != null) {
             weaponCredit = Math.max(0, originalCost - substitutedCost);
         }
@@ -2432,11 +2457,22 @@ export function purchaseEquipment(className, startingGold, dexModifier, backgrou
         purchaseLog.push(`Shield — ${ARMOR["Shield"].cost}gp`);
     }
 
+    // Names already sitting for free in result.items from the bgItems loop
+    // above — either verbatim (Acolyte's background "Holy symbol" exactly
+    // matches CLASS_SPECIFIC_GEAR's Cleric entry) or under a differently-
+    // worded alias (Sailor/Teamster/Executioner's "50' Rope" vs.
+    // DUNGEONEERING_BUNDLE's "Rope (50')") — skipped below in both fixed
+    // purchase lists so a background item is never bought a second time,
+    // same class of bug as the original redundant-ammo-purchase this PR fixed.
+    const bgProvidedItemNames = new Set([...bgItems, ...bgItems.map(i => BACKGROUND_ITEM_NAME_ALIASES[i]).filter(Boolean)]);
+
     for (const { name, cost } of (CLASS_SPECIFIC_GEAR[baseClass] || [])) {
+        if (bgProvidedItemNames.has(name)) continue;
         if (cost <= gold) { result.items.push(name); gold -= cost; purchaseLog.push(`${name} — ${cost}gp`); }
     }
 
     for (const { name, cost } of DUNGEONEERING_BUNDLE) {
+        if (bgProvidedItemNames.has(name)) continue;
         if (cost <= gold) { result.items.push(name); gold -= cost; purchaseLog.push(`${name} — ${cost}gp`); }
     }
 
@@ -2514,7 +2550,7 @@ export const backgroundTables = {
         { profession: "Limner",       item: ["Lantern", "2 x Oil flasks", "Paint"],  weapon: "Staff (1d4)",                 armor: "Unarmored" },
         { profession: "Sailor",       item: ["Bottle of rum", "50' Rope"],           weapon: "Belaying pin (1d4)",          armor: "Unarmored" },
         { profession: "Teamster",     item: ["50' Rope"],                            weapon: "Whip (1d2, hits entangle)",   armor: "Unarmored" },
-        { profession: "Trapper",      item: ["Bear trap (1d6)"],                     weapon: "Club (1d4)",                  armor: "Unarmored" }
+        { profession: "Trapper",      item: ["Bear trap"],                           weapon: "Club (1d4)",                  armor: "Unarmored" }
     ],
     4: [
         { profession: "Armourer",      item: [],                                      weapon: "War hammer (1d6)",            armor: "Chain Mail" },
