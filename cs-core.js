@@ -957,7 +957,7 @@ export function renderCharacterSheetHTML(sheet) {
                 return `<div style='text-align:right;'>
                     ${statParts.length ? `<div style='display:flex;flex-wrap:wrap;justify-content:flex-end;'>${dots(statParts)}</div>` : ''}
                     ${hpParts.length  ? `<div style='display:flex;flex-wrap:wrap;justify-content:flex-end;'>${dots(hpParts)}</div>`  : ''}
-                    ${eq.hasEquipmentCredit ? `<div style='font-size:0.85em;font-style:italic;color:#888;'>* includes background-equipment credit (house rule, not SRD/book)</div>` : ''}
+                    ${eq.hasEquipmentCredit ? `<div style='font-size:0.85em;font-style:italic;color:#555;'>* includes background-equipment credit (house rule, not SRD/book)</div>` : ''}
                 </div>`;
             })()}
         </div>
