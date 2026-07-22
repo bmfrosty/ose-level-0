@@ -229,7 +229,9 @@
             th, body.dark-mode th { background-color: #6a1b9a; color: white; }
             tr:nth-child(even), body.dark-mode tr:nth-child(even) { background-color: #faf0ff; }
             tr:hover, body.dark-mode tr:hover { background-color: transparent; }
-            .table-note, body.dark-mode .table-note { color: #666; }
+            .table-note, body.dark-mode .table-note {
+                color: #000; margin: 3px 0 6px; font-size: 9px; line-height: 1.3;
+            }
             .class-note, .fighter-note { display: none; }
             /* Shopping only: keep Weapons+Armor together on page 1, start
                Ammunition (and General Items right after it) on page 2.
@@ -507,9 +509,12 @@
                     Rock (Thrown) and Whip — including Entangle (save vs. death ray or be
                     entangled; referee-adjudicated, not automated) — are Rules Cyclopedia
                     rules, not OSE Advanced Fantasy; Bull Whip is this app's own split of one
-                    flexible-length whip. Both background-only, never shopped for. This app
-                    also credits/converts some background gear into starting gold (its own
-                    addition, not SRD/book) — marked "*" on a character sheet's Starting Gold.
+                    flexible-length whip. A player could shop for any of these at the table;
+                    this app's auto-purchase logic just never picks Rock by default, and
+                    doesn't treat Whip/Bull Whip as a legal purchase at all (background-only
+                    in its own data model). This app also credits/converts some background
+                    gear into starting gold (its own addition, not SRD/book) — marked "*" on a
+                    character sheet's Starting Gold.
                 </p>
                 ${buildWeaponsTable()}
                 <h2>Armor</h2>

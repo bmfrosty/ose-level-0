@@ -2199,7 +2199,11 @@ export function purchaseEquipment(className, startingGold, dexModifier, backgrou
         if (!bgWeaponUsable) {
             // Credit every copy, not just one — Juggler's "3 x daggers" is
             // worth 3x a single Dagger's cost when a Cleric can't use any
-            // of them.
+            // of them. bgAmmo.value is deliberately NOT scaled by quantity:
+            // no current quantity-prefixed background weapon ("N x daggers")
+            // carries an ammo suffix, so this is unreachable today — but if
+            // a future background ever combines both (e.g. "2 x Short bows
+            // + 5 arrows"), bgAmmo.value would need multiplying too.
             const quantity = getBackgroundWeaponQuantity(background.weapon);
             if (!bgWeaponUnclaimed) weaponCredit = (substitutedCost ?? 0) * quantity + (bgAmmo?.value ?? 0);
         } else if (originalKey !== bgWeaponKey && originalCost != null && substitutedCost != null) {
