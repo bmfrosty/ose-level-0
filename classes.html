@@ -504,31 +504,12 @@
             document.getElementById('class-display').innerHTML = `
                 <h2>🛒 Shopping — Equipment &amp; Pricing</h2>
                 <p class="table-note">
-                    Every weapon the generator's equipment-purchasing logic recognizes —
-                    including small-race substitutions (Short bow, Short sword). Not every
-                    weapon here is purchasable by every class; see each class's own page for
-                    its specific weapon restrictions. Whip and Bull Whip are only ever
-                    inherited from a background, never shopped for.
-                </p>
-                <p class="table-note">
-                    Rock (Thrown) and Whip are drawn from the Rules Cyclopedia — a separate
-                    copyrighted D&amp;D (BECMI) source, not the OSE Advanced Fantasy Player's
-                    Tome. Bull Whip is this app's own addition: the Cyclopedia describes one
-                    flexible 5'-30' whip rather than two fixed-length weapons, so we split it
-                    into a shorter and longer version with our own book-plausible cost/weight.
-                </p>
-                <p class="table-note">
-                    Entangle (Rules Cyclopedia rule): instead of damage, a hit forces a save
-                    vs. death ray or the target is entangled until they save. Referee-adjudicated,
-                    not automated.
-                </p>
-                <p class="table-note">
-                    This app also converts or credits some background-provided gear into
-                    starting gold — when a class can't use it, when it's downgraded for a
-                    small race, or when trading up to a better weapon is worth more than
-                    keeping it. This equipment-economy layer is this app's own addition for
-                    background fairness; it isn't part of the SRD or any sourcebook. A
-                    character sheet marks its Starting Gold with a "*" whenever this applied.
+                    Rock (Thrown) and Whip — including Entangle (save vs. death ray or be
+                    entangled; referee-adjudicated, not automated) — are Rules Cyclopedia
+                    rules, not OSE Advanced Fantasy; Bull Whip is this app's own split of one
+                    flexible-length whip. Both background-only, never shopped for. This app
+                    also credits/converts some background gear into starting gold (its own
+                    addition, not SRD/book) — marked "*" on a character sheet's Starting Gold.
                 </p>
                 ${buildWeaponsTable()}
                 <h2>Armor</h2>
