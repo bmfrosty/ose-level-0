@@ -410,7 +410,7 @@ export async function expandCompactV3(cp, precomp = {}, { silent = false } = {})
     const hdSides = CLASS_HD[CODE_TO_CLASSNAME[cp.c]] || 6;
 
     // ── Equipment: v3 derives at render time; v2 reads stored fields ──────────
-    let eqWeapons, eqArmor, eqShield, eqItems, eqAC, eqGoldRemaining;
+    let eqWeapons, eqArmor, eqShield, eqItems, eqAC, eqGoldRemaining, eqHasCredit;
     if (cp.v === 3) {
         // cp.nl0 ("No Level 0 Equipment", redefined 2026-07-08): whether this
         // character keeps its 0-level background equipment once past level 0.
@@ -425,6 +425,7 @@ export async function expandCompactV3(cp, precomp = {}, { silent = false } = {})
         eqItems        = eq.items;
         eqAC           = eq.startingAC;
         eqGoldRemaining = eq.goldRemaining;
+        eqHasCredit    = eq.hasEquipmentCredit;
     } else {
         eqWeapons      = cp.w  || [];
         eqArmor        = cp.ar || null;
@@ -432,6 +433,9 @@ export async function expandCompactV3(cp, precomp = {}, { silent = false } = {})
         eqItems        = cp.it || [];
         eqAC           = cp.ac || 10;
         eqGoldRemaining = cp.g || 0;
+        // v2-encoded characters predate this house-rule-credit flag — there's
+        // no stored signal to recover it from, so it's simply not shown.
+        eqHasCredit    = false;
     }
 
     const sd = {
@@ -453,7 +457,8 @@ export async function expandCompactV3(cp, precomp = {}, { silent = false } = {})
                       forLevelXP: character.xp.forCurrentLevel,
                       forNext: character.xp.forNextLevel, bonus: xpBonusStr },
         equipment: { armor: eqArmor, shield: eqShield, items: eqItems,
-                     startingAC: eqAC, startingGold: eqGoldRemaining, startingHD: `1d${hdSides}` },
+                     startingAC: eqAC, startingGold: eqGoldRemaining, startingHD: `1d${hdSides}`,
+                     hasEquipmentCredit: eqHasCredit },
         spellSlots: character.spellSlots || null,
         turnUndead: character.turnUndead || null,
         cp, campaignHash,

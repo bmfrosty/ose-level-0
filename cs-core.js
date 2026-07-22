@@ -637,6 +637,15 @@ export function renderCharacterSheetHTML(sheet) {
         const display = dmg ? `${w} (${dmg})` : w;
         return `<div${margin}><strong>Weapon:</strong> ${display}</div>`;
     }).join('');
+    // Entangle (Whip/Bull Whip) is a real Rules Cyclopedia rule (p.66) — a
+    // separate copyrighted D&D (BECMI) source, not OSE Advanced Fantasy —
+    // see COPYRIGHTED-rules-cyclopedia-weapon-whip.txt. Not an app mechanic
+    // (no combat-round/status-effect tracking exists here), so it's
+    // surfaced as a footnote rather than automated, same pattern as
+    // classFootnoteHTML.
+    const entangleFootnoteHTML = _weaponSlots.some(w => w && /hits entangle/i.test(w))
+        ? `<div style='margin-top:4px;font-size:0.8em;font-style:italic;color:#555;'>* Choose damage or entangle before rolling; entangle: save vs. death ray or be unable to act.</div>`
+        : '';
 
     // ── Abilities section ────────────────────────────────────────────────────
     const sec = sheet.abilitiesSection;
@@ -871,6 +880,7 @@ export function renderCharacterSheetHTML(sheet) {
                 <div style='${sectionHeader}'>WEAPONS, ARMOR, AND SKILLS</div>
                 <div style='${box}'>
                     ${weaponLinesHTML}
+                    ${entangleFootnoteHTML}
                     <div style='margin-top: 2px;'><strong>Armor:</strong>${armorForBox ? ` ${armorForBox}` : ''}</div>
                     ${hasShield ? `<div style='margin-top: 2px;'><strong>Shield:</strong> Yes (+1 AC)</div>` : ''}
                     <div style='margin-top: 2px;'><strong>Helmet:</strong>${hasHelmet ? ' Yes' : ''}</div>
@@ -930,7 +940,7 @@ export function renderCharacterSheetHTML(sheet) {
                 const statParts = [];
                 if (startingACDisplay !== null && startingACDisplay !== undefined) statParts.push(`Starting AC: ${startingACDisplay}`);
                 if (eq.startingHD)    statParts.push(`Starting HD: ${eq.startingHD}`);
-                if (startingGold !== null) statParts.push(`Starting Gold: ${formatGold(startingGold)} gp`);
+                if (startingGold !== null) statParts.push(`Starting Gold: ${formatGold(startingGold)} gp${eq.hasEquipmentCredit ? '*' : ''}`);
                 // Was a separate, broken duplicate of calculateModifier() that
                 // could only ever return -1/0/+1 (same bug class as the
                 // getConMod() fixed in cs-sheet-page.js) -- since editState is
@@ -947,6 +957,7 @@ export function renderCharacterSheetHTML(sheet) {
                 return `<div style='text-align:right;'>
                     ${statParts.length ? `<div style='display:flex;flex-wrap:wrap;justify-content:flex-end;'>${dots(statParts)}</div>` : ''}
                     ${hpParts.length  ? `<div style='display:flex;flex-wrap:wrap;justify-content:flex-end;'>${dots(hpParts)}</div>`  : ''}
+                    ${eq.hasEquipmentCredit ? `<div style='font-size:0.85em;font-style:italic;color:#888;'>* includes background-equipment credit (house rule, not SRD/book)</div>` : ''}
                 </div>`;
             })()}
         </div>
