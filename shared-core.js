@@ -1358,6 +1358,14 @@ export const WEAPONS = {
   "Mace": { cost: 5, weight: 30, damage: "1d6", qualities: ["Blunt", "Melee"] },
   "Oil (flask), burning": { cost: 2, weight: 0, damage: "1d8", qualities: ["Missile", "Splash weapon"], ranges: { short: 10, medium: 30, long: 50 } },
   "Pole arm": { cost: 7, weight: 150, damage: "1d10", qualities: ["Brace", "Melee", "Slow", "Two-handed"] },
+  // BOOK: a thrown rock is a real weapon entry in the Rules Cyclopedia
+  // (p.62-63) — a separate copyrighted D&D (BECMI) source, not OSE
+  // Advanced Fantasy (see the COPYRIGHTED-rules-cyclopedia-* naming
+  // distinction elsewhere in this repo) — not something we invented from
+  // whole cloth. We haven't transcribed that page's exact stat block here
+  // (no verbatim source text on hand to verify against), so treat cost/
+  // weight/damage/ranges below as our own book-plausible estimate pending
+  // a check against the actual page.
   "Rock, Thrown 10/30/50": { cost: 0.1, weight: 10, damage: "1d3", qualities: ["Melee", "Missile"], ranges: { short: 10, medium: 30, long: 50 } },
   "Short bow": { cost: 25, weight: 30, damage: "1d6", qualities: ["Missile", "Two-handed"], ranges: { short: 50, medium: 100, long: 150 } },
   "Short sword": { cost: 7, weight: 30, damage: "1d6", qualities: ["Melee"] },
@@ -1369,14 +1377,24 @@ export const WEAPONS = {
   "Torch": { cost: 1, weight: 0, damage: "1d4", qualities: ["Melee"] },
   "Two-handed sword": { cost: 15, weight: 150, damage: "1d10", qualities: ["Melee", "Slow", "Two-handed"] },
   "War hammer": { cost: 5, weight: 30, damage: "1d6", qualities: ["Blunt", "Melee"] },
-  // Entangle (from the Teamster background's own flavor text) isn't a
-  // mechanical WEAPON_QUALITIES entry anywhere else in this table — no
-  // special-condition rules exist to hook it into, so it's flavor-only here.
+  // BOOK: the Whip's Entangle option (save vs. death ray or be entangled —
+  // can't attack, cast, or move until the save succeeds) is a real Rules
+  // Cyclopedia rule (p.66) — a separate copyrighted D&D (BECMI) source,
+  // not OSE Advanced Fantasy — not a homebrew note; see
+  // COPYRIGHTED-rules-cyclopedia-weapon-whip.txt. It isn't a mechanical
+  // WEAPON_QUALITIES entry anywhere else in this table and no
+  // saving-throw-vs-attack-effect system exists in this app yet, so it
+  // stays flavor-only for now (surfaced in the background weapon's own
+  // display text, e.g. "Whip (1d2, hits entangle)", not as a WEAPONS field).
   // `reach` (feet) is a melee-weapon-only field distinct from `ranges`
   // (OSE's three-tier short/medium/long to-hit bands for Missile-quality
   // weapons) — a Whip strikes at a distance without being thrown, so it
   // doesn't fit that shape. Not consumed anywhere in the app yet (no
   // reach-based to-hit rules implemented); reference/flavor only for now.
+  // The book describes a single Whip of flexible 5'-30' length rather than
+  // two fixed items — HOMEBREW: split into two fixed-length weapons (Whip/
+  // Bull Whip) with book-plausible cost/weight/reach we chose ourselves,
+  // since the book doesn't give discrete stats for shorter/longer versions.
   "Whip": { cost: 5, weight: 20, damage: "1d2", qualities: ["Melee"], reach: 5 },
   "Bull Whip": { cost: 10, weight: 30, damage: "1d2", qualities: ["Melee"], reach: 10 }
 };
@@ -1740,6 +1758,13 @@ export const DUNGEONEERING_BUNDLE = [
     { name: "Crowbar",                    cost: 10 },
 ];
 
+// A handful of background `item` entries are just a differently-worded
+// version of a DUNGEONEERING_BUNDLE entry (Sailor/Teamster/Executioner's
+// "50' Rope" vs. the bundle's own "Rope (50')") — without this, the bundle
+// purchase below would buy a redundant second rope on top of the free one,
+// same class of bug as the original redundant-ammo-purchase this PR fixed.
+const BACKGROUND_ITEM_NAME_ALIASES = { "50' Rope": "Rope (50')" };
+
 export const CLASS_SPECIFIC_GEAR = {
     "Cleric": [{ name: "Holy symbol",    cost: 25 }],
     "Thief":  [{ name: "Thieves' tools", cost: 25 }],
@@ -1865,6 +1890,20 @@ function getBackgroundWeaponBareName(weaponText) {
     const parenIdx = name.indexOf('(');
     if (parenIdx !== -1) name = name.slice(0, parenIdx).trim();
     return name;
+}
+
+/**
+ * Extract a background weapon's leading "N x " quantity prefix (e.g.
+ * Juggler's "3 x daggers"), defaulting to 1 when there isn't one. Used to
+ * scale the unusable-item credit in purchaseEquipment() — a class that
+ * can't use any of the 3 daggers should be credited for all 3, not just
+ * one.
+ * @param {string} weaponText - background weapon display string
+ * @returns {number} quantity, defaulting to 1
+ */
+function getBackgroundWeaponQuantity(weaponText) {
+    const match = weaponText.match(/^(\d+)\s*x\s*/i);
+    return match ? parseInt(match[1], 10) : 1;
 }
 
 /**
@@ -2056,7 +2095,15 @@ export function purchaseEquipment(className, startingGold, dexModifier, backgrou
     let gold = startingGold;
     const result = {
         weapons: [], armor: null, shield: false,
-        items: [], startingAC: 10 + dexModifier, goldRemaining: 0
+        items: [], startingAC: 10 + dexModifier, goldRemaining: 0,
+        // True whenever this app's own house-rule equipment economy (not
+        // SRD/book rules) affected this character's starting gold: a
+        // background weapon/armor credited as cash because the class
+        // couldn't use it or it was downgraded, a cash-like background item
+        // converted to gold, or a background weapon sold toward a better
+        // one. Surfaced on the character sheet as a footnote — see the
+        // Shopping page's own note on this system for the full explanation.
+        hasEquipmentCredit: false,
     };
     // Per-item purchase log for the console breakdown at the bottom of this
     // function — every gold-spending line below pushes here alongside its
@@ -2150,12 +2197,21 @@ export function purchaseEquipment(className, startingGold, dexModifier, backgrou
         const bareName        = getBackgroundWeaponBareName(substitutedBgWeapon);
         const substitutedCost = BACKGROUND_WEAPON_VALUE_OVERRIDES[bareName] ?? bgWeaponData?.cost;
         if (!bgWeaponUsable) {
-            if (!bgWeaponUnclaimed) weaponCredit = (substitutedCost ?? 0) + (bgAmmo?.value ?? 0);
+            // Credit every copy, not just one — Juggler's "3 x daggers" is
+            // worth 3x a single Dagger's cost when a Cleric can't use any
+            // of them. bgAmmo.value is deliberately NOT scaled by quantity:
+            // no current quantity-prefixed background weapon ("N x daggers")
+            // carries an ammo suffix, so this is unreachable today — but if
+            // a future background ever combines both (e.g. "2 x Short bows
+            // + 5 arrows"), bgAmmo.value would need multiplying too.
+            const quantity = getBackgroundWeaponQuantity(background.weapon);
+            if (!bgWeaponUnclaimed) weaponCredit = (substitutedCost ?? 0) * quantity + (bgAmmo?.value ?? 0);
         } else if (originalKey !== bgWeaponKey && originalCost != null && substitutedCost != null) {
             weaponCredit = Math.max(0, originalCost - substitutedCost);
         }
     }
     gold += weaponCredit;
+    if (weaponCredit > 0) result.hasEquipmentCredit = true;
 
     // Only shown as a loose flavor item when it doesn't satisfy an actual
     // equipment slot above and wasn't cashed out above — once claimed as the
@@ -2178,6 +2234,7 @@ export function purchaseEquipment(className, startingGold, dexModifier, backgrou
     const bgArmorUsable = !!(bgArmorKey && bgArmorKey !== 'Unarmoured' && ARMOR[bgArmorKey] && allowedArmors.includes(bgArmorKey));
     const armorCredit = (bgArmorKey && bgArmorKey !== 'Unarmoured' && !bgArmorUsable) ? (ARMOR[bgArmorKey]?.cost ?? 0) : 0;
     gold += armorCredit;
+    if (armorCredit > 0) result.hasEquipmentCredit = true;
     if (background?.armor && !bgArmorUsable && armorCredit === 0) {
         // "Unarmored" (nothing to claim or credit) or a genuinely unrecognized
         // armor string — shown as-is, same as always.
@@ -2193,6 +2250,7 @@ export function purchaseEquipment(className, startingGold, dexModifier, backgrou
         const cashValue = extractBackgroundItemCashValue(i);
         if (cashValue != null) {
             gold += cashValue;
+            result.hasEquipmentCredit = true;
             purchaseLog.push(`${i} — converted to +${cashValue}gp starting gold`);
         } else {
             result.items.push(i);
@@ -2248,6 +2306,7 @@ export function purchaseEquipment(className, startingGold, dexModifier, backgrou
                 const preferredCost = getPreferredMeleeCost();
                 if (preferredCost != null && (gold >= preferredCost || gold + saleValue >= preferredCost)) {
                     gold += saleValue;
+                    result.hasEquipmentCredit = true;
                     purchaseLog.push(`${substitutedBgWeapon} sold for ${saleValue}gp`);
                     claimForFree = false;
                 }
@@ -2361,6 +2420,7 @@ export function purchaseEquipment(className, startingGold, dexModifier, backgrou
                 const netCost = bgAmmo.bundleCost - bgAmmo.value;
                 if (netCost <= gold) {
                     gold -= netCost;
+                    result.hasEquipmentCredit = true;
                     result.items.push(bgAmmo.bundleName);
                     purchaseLog.push(`${bgAmmo.bundleName} — ${bgAmmo.bundleCost}gp, net ${netCost}gp after selling starting ${bgAmmo.detail} (background) for ${bgAmmo.value}gp`);
                 } else {
@@ -2432,11 +2492,22 @@ export function purchaseEquipment(className, startingGold, dexModifier, backgrou
         purchaseLog.push(`Shield — ${ARMOR["Shield"].cost}gp`);
     }
 
+    // Names already sitting for free in result.items from the bgItems loop
+    // above — either verbatim (Acolyte's background "Holy symbol" exactly
+    // matches CLASS_SPECIFIC_GEAR's Cleric entry) or under a differently-
+    // worded alias (Sailor/Teamster/Executioner's "50' Rope" vs.
+    // DUNGEONEERING_BUNDLE's "Rope (50')") — skipped below in both fixed
+    // purchase lists so a background item is never bought a second time,
+    // same class of bug as the original redundant-ammo-purchase this PR fixed.
+    const bgProvidedItemNames = new Set([...bgItems, ...bgItems.map(i => BACKGROUND_ITEM_NAME_ALIASES[i]).filter(Boolean)]);
+
     for (const { name, cost } of (CLASS_SPECIFIC_GEAR[baseClass] || [])) {
+        if (bgProvidedItemNames.has(name)) continue;
         if (cost <= gold) { result.items.push(name); gold -= cost; purchaseLog.push(`${name} — ${cost}gp`); }
     }
 
     for (const { name, cost } of DUNGEONEERING_BUNDLE) {
+        if (bgProvidedItemNames.has(name)) continue;
         if (cost <= gold) { result.items.push(name); gold -= cost; purchaseLog.push(`${name} — ${cost}gp`); }
     }
 
@@ -2514,7 +2585,7 @@ export const backgroundTables = {
         { profession: "Limner",       item: ["Lantern", "2 x Oil flasks", "Paint"],  weapon: "Staff (1d4)",                 armor: "Unarmored" },
         { profession: "Sailor",       item: ["Bottle of rum", "50' Rope"],           weapon: "Belaying pin (1d4)",          armor: "Unarmored" },
         { profession: "Teamster",     item: ["50' Rope"],                            weapon: "Whip (1d2, hits entangle)",   armor: "Unarmored" },
-        { profession: "Trapper",      item: ["Bear trap (1d6)"],                     weapon: "Club (1d4)",                  armor: "Unarmored" }
+        { profession: "Trapper",      item: ["Bear trap"],                           weapon: "Club (1d4)",                  armor: "Unarmored" }
     ],
     4: [
         { profession: "Armourer",      item: [],                                      weapon: "War hammer (1d6)",            armor: "Chain Mail" },
